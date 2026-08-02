@@ -32,7 +32,16 @@ export class EvolutionService {
           return data;
         }
         if (typeof data === 'object') {
-          const message = data.message || data.error || data.err;
+          // NestJS/Evolution API anidan a veces el error en data.response (ej: response: { message: ["Invalid integration"] })
+          const nested = data.response;
+          let message = null;
+          if (nested && typeof nested === 'object') {
+            message = nested.message || nested.error || nested.err;
+          }
+          if (!message) {
+            message = data.message || data.error || data.err;
+          }
+
           if (message) {
             if (Array.isArray(message)) {
               return message.join(', ');
@@ -61,6 +70,7 @@ export class EvolutionService {
         instanceName,
         token: this.generateRandomToken(),
         qrcode: true,
+        integration: 'WHATSAPP-BAILEYS',
         webhook: null, // Opcional: configurar si deseamos webhooks locales
       });
 
