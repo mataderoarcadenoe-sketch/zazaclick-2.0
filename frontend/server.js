@@ -1,6 +1,10 @@
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
+import http from 'node:http';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const DIST = path.join(__dirname, 'dist');
@@ -22,7 +26,6 @@ const server = http.createServer((req, res) => {
   let filePath = path.join(DIST, req.url === '/' ? 'index.html' : req.url);
   const ext = path.extname(filePath);
 
-  // If file exists, serve it; otherwise serve index.html (SPA fallback)
   if (!fs.existsSync(filePath) || !ext) {
     filePath = path.join(DIST, 'index.html');
   }
