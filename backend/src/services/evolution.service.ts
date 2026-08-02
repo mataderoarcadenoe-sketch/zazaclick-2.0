@@ -151,7 +151,10 @@ export class EvolutionService {
    */
   public static async sendTextMessage(instanceName: string, number: string, text: string): Promise<boolean> {
     try {
-      const cleanNumber = number.replace(/\D/g, '');
+      let cleanNumber = number.replace(/\D/g, '');
+      if (cleanNumber.length === 9 && cleanNumber.startsWith('9')) {
+        cleanNumber = `51${cleanNumber}`;
+      }
       const response = await api.post(`/message/sendText/${instanceName}`, {
         number: cleanNumber,
         text: text,

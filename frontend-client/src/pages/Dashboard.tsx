@@ -210,10 +210,15 @@ export default function DashboardPage() {
     setTestResult(null);
 
     try {
+      let formattedNumber = testNumber.trim();
+      if (formattedNumber.length === 9 && formattedNumber.startsWith('9')) {
+        formattedNumber = `51${formattedNumber}`;
+      }
+
       const res = await api.post('/instances/send', {
         instanceName: testInstance,
         apiKey: inst.api_key,
-        number: testNumber.trim(),
+        number: formattedNumber,
         text: testText.trim()
       });
 
@@ -766,15 +771,21 @@ echo $response;`;
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Número Destino (con código de país)</label>
-                      <input
-                        type="text"
-                        value={testNumber}
-                        onChange={(e) => setTestNumber(e.target.value.replace(/[^0-9]/g, ''))}
-                        placeholder="Ej: 51987654321"
-                        required
-                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium"
-                      />
+                      <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Número Destino (9 dígitos)</label>
+                      <div className="flex relative items-center w-full">
+                        <div className="px-3.5 py-3 border border-r-0 border-slate-200 dark:border-slate-800/80 bg-slate-100/50 dark:bg-slate-900/50 rounded-l-2xl text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 select-none">
+                          <span>🇵🇪 +51</span>
+                        </div>
+                        <input
+                          type="text"
+                          value={testNumber}
+                          onChange={(e) => setTestNumber(e.target.value.replace(/[^0-9]/g, '').slice(0, 9))}
+                          placeholder="Ej: 987654321"
+                          required
+                          maxLength={9}
+                          className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-r-2xl rounded-l-none text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium"
+                        />
+                      </div>
                     </div>
 
                     <div className="space-y-1.5">
