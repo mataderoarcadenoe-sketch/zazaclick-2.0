@@ -11,10 +11,7 @@ declare global {
 }
 
 export default function AuthPage() {
-  const { login, register, refreshUser } = useAuth();
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { refreshUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { isDark, toggle: toggleDark } = useDarkMode();
@@ -69,27 +66,6 @@ export default function AuthPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim() || !password.trim()) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const res = isLogin
-        ? await login(email.trim(), password.trim())
-        : await register(email.trim(), password.trim());
-
-      if (!res.success) {
-        setError(res.error || 'Operación fallida');
-      }
-    } catch (err) {
-      setError('Error inesperado al conectar.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4 md:p-8 mesh-gradient-light dark:mesh-gradient-dark overflow-hidden transition-colors duration-300">
@@ -168,12 +144,10 @@ export default function AuthPage() {
                 <span className="font-semibold text-sm text-slate-800 dark:text-white">Zaza.click 2.0</span>
               </div>
               <h2 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">
-                {isLogin ? '¡Bienvenido!' : 'Crea tu Cuenta'}
+                ¡Bienvenido a Zaza.click!
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                {isLogin
-                  ? 'Ingresa tus credenciales para administrar tus APIs.'
-                  : 'Regístrate hoy y obtén acceso a tus APIs en segundos.'}
+                Inicia sesión o regístrate con tu cuenta de Google.
               </p>
             </div>
 
@@ -184,80 +158,8 @@ export default function AuthPage() {
             )}
 
             {/* Google Sign-in Button */}
-            <div className="flex flex-col items-center pb-5 mb-5 border-b border-slate-200/50 dark:border-slate-800/50">
+            <div className="flex flex-col items-center pb-5 mb-5">
               <div id="google-btn" className="w-full flex justify-center" />
-              <div className="flex items-center gap-2 w-full my-4">
-                <div className="h-[1px] bg-slate-200 dark:bg-slate-800 flex-1" />
-                <span className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">O con Correo</span>
-                <div className="h-[1px] bg-slate-200 dark:bg-slate-800 flex-1" />
-              </div>
-            </div>
-
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Correo Electrónico</label>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 dark:text-slate-500">
-                    <Mail size={16} />
-                  </span>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="nombre@ejemplo.com"
-                    required
-                    className="w-full pl-10 pr-4 py-3 bg-white/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition-all font-medium"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Contraseña</label>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 dark:text-slate-500">
-                    <Lock size={16} />
-                  </span>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                    className="w-full pl-10 pr-4 py-3 bg-white/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition-all font-medium"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-[0.99] transition-all text-white font-bold text-xs rounded-2xl shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 mt-6 cursor-pointer"
-              >
-                {loading ? (
-                  <span className="w-4.5 h-4.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <Sparkles size={14} />
-                    <span>{isLogin ? 'Iniciar Sesión' : 'Crear Cuenta Gratis'}</span>
-                  </>
-                )}
-              </button>
-            </form>
-
-            {/* Toggle footer */}
-            <div className="pt-6 text-center">
-              <button
-                onClick={() => {
-                  setIsLogin(!isLogin);
-                  setError(null);
-                }}
-                className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors underline cursor-pointer"
-              >
-                {isLogin
-                  ? '¿No tienes cuenta? Regístrate aquí'
-                  : '¿Ya tienes una cuenta? Inicia sesión'}
-              </button>
             </div>
 
           </div>
