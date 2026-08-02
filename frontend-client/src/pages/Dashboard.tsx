@@ -1086,7 +1086,8 @@ echo $response;`;
                             })
                             .map((chat) => {
                               const isActive = selectedChat?.remoteJid === chat.remoteJid;
-                              const isUnread = chat.unreadCount > 0;
+                              const unreadCount = Number(chat.unreadCount) || 0;
+                              const isUnread = unreadCount > 0;
                               const contactName = chat.pushName || chat.remoteJid.split('@')[0];
                               
                               // Extract last message text
@@ -1136,20 +1137,20 @@ echo $response;`;
                                   {/* Details */}
                                   <div className="flex-1 min-w-0 space-y-0.5">
                                     <div className="flex items-center justify-between">
-                                      <span className={`text-xs font-bold truncate ${isActive ? 'text-emerald-500' : 'text-slate-800 dark:text-slate-200'}`}>
+                                      <span className={`text-xs truncate ${isActive ? 'text-emerald-500 font-bold' : isUnread ? 'text-slate-900 dark:text-white font-extrabold' : 'text-slate-800 dark:text-slate-200 font-bold'}`}>
                                         {contactName}
                                       </span>
-                                      <span className="text-[10px] text-slate-400 font-medium">
+                                      <span className={`text-[10px] font-medium ${isUnread ? 'text-emerald-500 font-bold' : 'text-slate-400'}`}>
                                         {formatTimeLocal(chat.lastMessage?.messageTimestamp)}
                                       </span>
                                     </div>
-                                    <div className="flex items-center justify-between">
-                                      <p className="text-[11px] text-slate-405 dark:text-slate-500 truncate font-medium flex items-center gap-1">
+                                    <div className="flex items-center justify-between mt-0.5">
+                                      <p className={`text-[11px] truncate flex-1 flex items-center gap-1 ${isUnread ? 'text-slate-800 dark:text-slate-300 font-semibold' : 'text-slate-500 dark:text-slate-500 font-medium'}`}>
                                         <span className="truncate flex-1"><AppleEmojiText text={lastMsgText} /></span>
                                       </p>
                                       {isUnread && (
-                                        <div className="bg-emerald-500 text-white text-[10px] font-bold px-1.5 min-w-[1.25rem] h-5 rounded-full flex items-center justify-center flex-shrink-0 ml-1 shadow-sm">
-                                          {chat.unreadCount}
+                                        <div className="bg-emerald-500 text-white text-[10px] font-bold px-1.5 min-w-[1.25rem] h-5 rounded-full flex items-center justify-center flex-shrink-0 ml-2 shadow-sm">
+                                          {unreadCount}
                                         </div>
                                       )}
                                     </div>

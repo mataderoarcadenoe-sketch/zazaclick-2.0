@@ -322,13 +322,13 @@ export class EvolutionService {
             originalJid: chat.remoteJid,
             profilePicUrl: chat.profilePicUrl || existing.profilePicUrl,
             pushName: chat.pushName || existing.pushName,
-            unreadCount: (chat.unreadCount || 0) + (existing.unreadCount || 0)
+            unreadCount: (Number(chat.unreadCount) || 0) + (Number(existing.unreadCount) || 0)
           };
           mergedMap.set(realJid, merged);
         } else {
           existing.profilePicUrl = existing.profilePicUrl || chat.profilePicUrl;
           existing.pushName = existing.pushName || chat.pushName;
-          existing.unreadCount = (existing.unreadCount || 0) + (chat.unreadCount || 0);
+          existing.unreadCount = (Number(existing.unreadCount) || 0) + (Number(chat.unreadCount) || 0);
           mergedMap.set(realJid, existing);
         }
       }
