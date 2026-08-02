@@ -169,11 +169,11 @@ export default function AdminDashboardPage() {
         <div className={`h-16 flex items-center ${sidebarOpen ? 'justify-between px-5' : 'justify-center'} border-b border-slate-200/60 dark:border-slate-800/60`}>
           {sidebarOpen && (
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-teal-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
                 <ShieldAlert size={18} />
               </div>
               <span className="font-extrabold text-slate-800 dark:text-white tracking-wide">
-                Zaza.click <span className="text-indigo-500">Admin</span>
+                Zaza.click <span className="text-blue-500">Admin</span>
               </span>
             </div>
           )}
@@ -203,7 +203,7 @@ export default function AdminDashboardPage() {
                   sidebarOpen ? 'px-4 py-3 justify-start' : 'p-3 justify-center'
                 } rounded-2xl transition-all duration-200 relative cursor-pointer ${
                   active 
-                    ? 'bg-gradient-to-r from-indigo-500 to-teal-500 text-white shadow-lg shadow-indigo-500/10 font-bold'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/10 font-bold'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-800 dark:hover:text-white font-medium'
                 }`}
               >
@@ -276,7 +276,7 @@ export default function AdminDashboardPage() {
 
             {/* User Profile Info */}
             <div className="flex items-center gap-2.5 pl-3 border-l border-slate-200 dark:border-slate-800">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-rose-500 to-indigo-500 flex items-center justify-center text-white text-xs font-black shadow-md shadow-rose-500/20 uppercase">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-black shadow-md shadow-blue-500/20 uppercase">
                 {user?.email?.charAt(0)}
               </div>
               <div className="hidden md:flex flex-col text-left">
@@ -297,7 +297,7 @@ export default function AdminDashboardPage() {
               <div className="space-y-6 animate-fadeIn">
                 
                 {/* Admin Welcome Card */}
-                <div className="p-6 bg-gradient-to-r from-rose-500/10 to-indigo-500/5 rounded-3xl border border-rose-500/20 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="p-6 bg-gradient-to-r from-blue-500/10 to-indigo-500/5 rounded-3xl border border-blue-500/20 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div className="space-y-2 text-left relative z-10">
                     <span className="px-2.5 py-1 bg-rose-500/10 border border-rose-500/20 rounded-md text-[9px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest">
                       Admin Controller
@@ -331,7 +331,7 @@ export default function AdminDashboardPage() {
                   </div>
 
                   {/* Backdrop lights */}
-                  <div className="absolute right-0 top-0 w-64 h-64 bg-rose-500/5 rounded-full blur-[80px] pointer-events-none" />
+                  <div className="absolute right-0 top-0 w-64 h-64 bg-blue-500/5 rounded-full blur-[80px] pointer-events-none" />
                 </div>
 
                 {/* System Metrics Stats Grid */}
