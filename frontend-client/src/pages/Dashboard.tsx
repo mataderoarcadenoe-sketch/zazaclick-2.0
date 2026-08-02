@@ -6,8 +6,9 @@ import {
   LogOut, RefreshCw, Plus, Key, Trash2, Smartphone, CheckCircle2, 
   AlertCircle, Copy, Send, LayoutDashboard, Terminal, 
   Moon, Sun, Menu, X, Check, Play, ExternalLink, Sparkles, BookOpen, Clock,
-  MessageSquare, Search, MessageCircle
+  MessageSquare, Search, MessageCircle, Smile
 } from 'lucide-react';
+import EmojiPicker, { Theme, EmojiStyle } from 'emoji-picker-react';
 
 interface Instance {
   id: string;
@@ -73,6 +74,7 @@ export default function DashboardPage() {
   const [chatsError, setChatsError] = useState<string | null>(null);
   const [mediaLoadingStates, setMediaLoadingStates] = useState<Record<string, boolean>>({});
   const [loadedMedia, setLoadedMedia] = useState<Record<string, string>>({}); // Maps message ID to local media source (data URL)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   // Confirm Dialog State
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -1245,26 +1247,48 @@ echo $response;`;
                           </div>
 
                           {/* Chat Window Send Form */}
-                          <form 
-                            onSubmit={handleSendChatMessage}
-                            className="p-4 bg-white dark:bg-slate-900 border-t border-slate-200/50 dark:border-slate-800 flex items-center gap-2"
-                          >
-                            <input
-                              type="text"
-                              value={newMessageText}
-                              onChange={(e) => setNewMessageText(e.target.value)}
-                              placeholder="Escribe un mensaje aquí..."
-                              disabled={sendingMessage}
-                              className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium disabled:opacity-50"
-                            />
-                            <button
-                              type="submit"
-                              disabled={!newMessageText.trim() || sendingMessage}
-                              className="p-2.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white rounded-2xl transition-all shadow-md shadow-emerald-500/20 flex-shrink-0 disabled:opacity-50 disabled:scale-100 disabled:shadow-none cursor-pointer"
+                          <div className="relative">
+                            {showEmojiPicker && (
+                              <div className="absolute bottom-[100%] mb-2 left-4 z-50 animate-fadeIn shadow-premium-lg rounded-2xl overflow-hidden">
+                                <EmojiPicker
+                                  onEmojiClick={(emojiData) => {
+                                    setNewMessageText(prev => prev + emojiData.emoji);
+                                  }}
+                                  theme={isDark ? Theme.DARK : Theme.LIGHT}
+                                  emojiStyle={EmojiStyle.APPLE}
+                                  searchPlaceHolder="Buscar emoji"
+                                  lazyLoadEmojis={true}
+                                />
+                              </div>
+                            )}
+                            <form 
+                              onSubmit={handleSendChatMessage}
+                              className="p-4 bg-white dark:bg-slate-900 border-t border-slate-200/50 dark:border-slate-800 flex items-center gap-2"
                             >
-                              <Send size={14} className={sendingMessage ? 'animate-pulse' : ''} />
-                            </button>
-                          </form>
+                              <button
+                                type="button"
+                                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                                className={`p-2 transition-colors cursor-pointer rounded-xl ${showEmojiPicker ? 'bg-emerald-500/10 text-emerald-500' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                              >
+                                <Smile size={20} />
+                              </button>
+                              <input
+                                type="text"
+                                value={newMessageText}
+                                onChange={(e) => setNewMessageText(e.target.value)}
+                                placeholder="Escribe un mensaje aquí..."
+                                disabled={sendingMessage}
+                                className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium disabled:opacity-50"
+                              />
+                              <button
+                                type="submit"
+                                disabled={!newMessageText.trim() || sendingMessage}
+                                className="p-2.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white rounded-2xl transition-all shadow-md shadow-emerald-500/20 flex-shrink-0 disabled:opacity-50 disabled:scale-100 disabled:shadow-none cursor-pointer"
+                              >
+                                <Send size={14} className={sendingMessage ? 'animate-pulse' : ''} />
+                              </button>
+                            </form>
+                          </div>
 
                         </div>
                       ) : (
