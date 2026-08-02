@@ -1298,7 +1298,6 @@ echo $response;`;
                                   theme={isDark ? Theme.DARK : Theme.LIGHT}
                                   emojiStyle={EmojiStyle.APPLE}
                                   searchPlaceHolder="Buscar emoji"
-                                  lazyLoadEmojis={true}
                                 />
                               </div>
                             )}
