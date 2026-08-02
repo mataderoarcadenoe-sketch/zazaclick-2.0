@@ -13,9 +13,13 @@ import { parse } from '@twemoji/parser';
 
 // Componente para parsear texto y renderizar los mismos Emojis de Apple que usa el selector
 const AppleEmojiText = ({ text }: { text: string }) => {
-  const emojis = parse(text);
+  // Fix para el handshake de Emoji 14.0 con el mismo tono de piel (ej. 🫱🏻‍🫲🏻)
+  // twemoji-parser no lo reconoce como un solo emoji y lo divide en dos manos (🫱🏻 y 🫲🏻)
+  // Lo reemplazamos por el handshake base + tono de piel (🤝🏻) que twemoji parsea correctamente.
+  const normalizedText = text.replace(/\u{1faf1}([\u{1f3fb}-\u{1f3ff}])\u{200d}\u{1faf2}\1/gu, "\u{1f91d}$1");
+  const emojis = parse(normalizedText);
   
-  if (emojis.length === 0) return <>{text}</>;
+  if (emojis.length === 0) return <>{normalizedText}</>;
 
   const nodes = [];
   let lastIndex = 0;
@@ -23,7 +27,7 @@ const AppleEmojiText = ({ text }: { text: string }) => {
   emojis.forEach((emoji, i) => {
     // Texto antes del emoji
     if (emoji.indices[0] > lastIndex) {
-      nodes.push(<span key={`t-${i}`}>{text.substring(lastIndex, emoji.indices[0])}</span>);
+      nodes.push(<span key={`t-${i}`}>{normalizedText.substring(lastIndex, emoji.indices[0])}</span>);
     }
     
     // Extraer el código hex de la URL del parser (ej. 1f600)
@@ -40,8 +44,8 @@ const AppleEmojiText = ({ text }: { text: string }) => {
   });
 
   // Texto restante
-  if (lastIndex < text.length) {
-    nodes.push(<span key="t-end">{text.substring(lastIndex)}</span>);
+  if (lastIndex < normalizedText.length) {
+    nodes.push(<span key="t-end">{normalizedText.substring(lastIndex)}</span>);
   }
 
   return <>{nodes}</>;
