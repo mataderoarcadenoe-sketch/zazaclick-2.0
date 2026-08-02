@@ -1211,10 +1211,11 @@ echo $response;`;
                                     }
 
                                     const text = content.conversation || content.extendedTextMessage?.text || '';
+                                    const TwemojiComponent = (Twemoji as any).default || Twemoji;
                                     return (
-                                      <Twemoji options={{ className: 'emoji', folder: 'svg', ext: '.svg' }}>
+                                      <TwemojiComponent options={{ className: 'emoji', folder: 'svg', ext: '.svg' }}>
                                         <p className="text-[11px] leading-relaxed break-words text-left">{text}</p>
-                                      </Twemoji>
+                                      </TwemojiComponent>
                                     );
                                   };
 
