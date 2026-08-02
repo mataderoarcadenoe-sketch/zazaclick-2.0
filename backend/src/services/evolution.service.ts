@@ -251,6 +251,7 @@ export class EvolutionService {
       const errorMsg = this.parseError(err);
       console.error(`[EvolutionService] Error obteniendo mensajes para ${instanceName}:`, errorMsg);
       return { success: false, error: errorMsg, status: err.response?.status };
+    }
   }
 
   /**

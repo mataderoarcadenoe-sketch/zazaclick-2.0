@@ -228,7 +228,21 @@ export default function DashboardPage() {
     try {
       const res = await api.get(`/instances/chats/${selectedInstanceForChats}`);
       if (res.data?.success) {
-        setChats(res.data.data);
+        const freshChats = res.data.data;
+        setChats(freshChats);
+        
+        // Mantener seleccionado el chat con los datos más recientes en vivo (unreadCount, lastMessage, etc.)
+        if (selectedChat) {
+          const freshSelected = freshChats.find((c: any) => c.remoteJid === selectedChat.remoteJid);
+          if (freshSelected) {
+            const hasNewMessages = freshSelected.lastMessage?.messageTimestamp !== selectedChat.lastMessage?.messageTimestamp;
+            const hasNewUnread = (Number(freshSelected.unreadCount) || 0) !== (Number(selectedChat.unreadCount) || 0);
+            if (hasNewMessages || hasNewUnread) {
+              setSelectedChat(freshSelected);
+            }
+          }
+        }
+        
         setIsServerOffline(false);
       }
     } catch (err: any) {
@@ -251,7 +265,19 @@ export default function DashboardPage() {
   // Fetch messages for a chat
   const fetchMessages = async (silent = false) => {
     if (!selectedInstanceForChats || !selectedChat) return;
-    if (!silent) setMessagesLoading(true);
+    
+    // Evitar parpadeos de carga si ya tenemos mensajes en pantalla
+    const currentJid = messages[0]?.key?.remoteJid;
+    const isDifferentChat = messages.length > 0 && 
+      currentJid !== selectedChat.remoteJid && 
+      currentJid !== selectedChat.originalJid;
+      
+    const shouldShowSpinner = !silent && (messages.length === 0 || isDifferentChat);
+    if (shouldShowSpinner) {
+      setMessagesLoading(true);
+      if (isDifferentChat) setMessages([]);
+    }
+    
     try {
       const remoteJid = selectedChat.remoteJid;
       const originalJid = selectedChat.originalJid;
@@ -1126,7 +1152,22 @@ echo $response;`;
                               const formatTimeLocal = (timestamp: number) => {
                                 if (!timestamp) return '';
                                 const date = new Date(timestamp * (timestamp < 10000000000 ? 1000 : 1));
-                                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                const now = new Date();
+                                
+                                // Check if today
+                                if (date.toDateString() === now.toDateString()) {
+                                  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                }
+                                
+                                // Check if yesterday
+                                const yesterday = new Date(now);
+                                yesterday.setDate(now.getDate() - 1);
+                                if (date.toDateString() === yesterday.toDateString()) {
+                                  return 'Ayer';
+                                }
+                                
+                                // Otherwise return date
+                                return date.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: '2-digit' });
                               };
 
                               return (
