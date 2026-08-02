@@ -8,24 +8,43 @@ import {
   Moon, Sun, Menu, X, Check, Play, ExternalLink, Sparkles, BookOpen, Clock,
   MessageSquare, Search, MessageCircle, Smile
 } from 'lucide-react';
-import EmojiPicker, { Theme, EmojiStyle } from 'emoji-picker-react';
-import twemoji from 'twemoji';
+import EmojiPicker, { Theme, EmojiStyle, Emoji } from 'emoji-picker-react';
+import { parse } from '@twemoji/parser';
 
-// Componente Wrapper para parsear Emojis de forma estructurada y nativa
-const TwemojiWrapper = ({ children, className = '' }: { children: React.ReactNode, className?: string }) => {
-  const rootRef = React.useRef<HTMLDivElement>(null);
+// Componente para parsear texto y renderizar los mismos Emojis de Apple que usa el selector
+const AppleEmojiText = ({ text }: { text: string }) => {
+  const emojis = parse(text);
   
-  React.useEffect(() => {
-    if (rootRef.current) {
-      twemoji.parse(rootRef.current, {
-        className: 'emoji',
-        folder: 'svg',
-        ext: '.svg'
-      });
-    }
-  }, [children]);
+  if (emojis.length === 0) return <>{text}</>;
 
-  return <div ref={rootRef} className={className}>{children}</div>;
+  const nodes = [];
+  let lastIndex = 0;
+
+  emojis.forEach((emoji, i) => {
+    // Texto antes del emoji
+    if (emoji.indices[0] > lastIndex) {
+      nodes.push(<span key={`t-${i}`}>{text.substring(lastIndex, emoji.indices[0])}</span>);
+    }
+    
+    // Extraer el código hex de la URL del parser (ej. 1f600)
+    const hex = emoji.url.split('/').pop()?.replace('.svg', '') || '';
+    
+    // Componente Emoji de Apple idéntico al del picker
+    nodes.push(
+      <span key={`e-${i}`} className="inline-flex items-center align-bottom mx-0.5" style={{ transform: 'translateY(2px)' }}>
+        <Emoji unified={hex} emojiStyle={EmojiStyle.APPLE} size={16} />
+      </span>
+    );
+    
+    lastIndex = emoji.indices[1];
+  });
+
+  // Texto restante
+  if (lastIndex < text.length) {
+    nodes.push(<span key="t-end">{text.substring(lastIndex)}</span>);
+  }
+
+  return <>{nodes}</>;
 };
 
 interface Instance {
@@ -1229,9 +1248,9 @@ echo $response;`;
 
                                     const text = content.conversation || content.extendedTextMessage?.text || '';
                                     return (
-                                      <TwemojiWrapper>
-                                        <p className="text-[11px] leading-relaxed break-words text-left">{text}</p>
-                                      </TwemojiWrapper>
+                                      <p className="text-[11px] leading-relaxed break-words text-left">
+                                        <AppleEmojiText text={text} />
+                                      </p>
                                     );
                                   };
 
@@ -1277,7 +1296,7 @@ echo $response;`;
                                     setNewMessageText(prev => prev + emojiData.emoji);
                                   }}
                                   theme={isDark ? Theme.DARK : Theme.LIGHT}
-                                  emojiStyle={EmojiStyle.TWITTER}
+                                  emojiStyle={EmojiStyle.APPLE}
                                   searchPlaceHolder="Buscar emoji"
                                   lazyLoadEmojis={true}
                                 />
