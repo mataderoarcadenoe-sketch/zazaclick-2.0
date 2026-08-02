@@ -138,6 +138,8 @@ export default function DashboardPage() {
     setTimeout(() => setNotification(null), 3500);
   };
 
+  const [isServerOffline, setIsServerOffline] = useState(false);
+
   const toggleSidebar = () => {
     setSidebarOpen(prev => {
       const next = !prev;
@@ -152,12 +154,14 @@ export default function DashboardPage() {
       const res = await api.get('/instances/list');
       if (res.data?.success) {
         setInstances(res.data.data);
+        setIsServerOffline(false);
       }
     } catch (err: any) {
       if (!silent) {
         setError(err.response?.data?.error || 'Error al cargar instancias');
       } else {
         console.warn('Silently ignoring connection error during polling:', err.message);
+        setIsServerOffline(true);
       }
     } finally {
       if (!silent) setLoading(false);
@@ -219,11 +223,14 @@ export default function DashboardPage() {
       const res = await api.get(`/instances/chats/${selectedInstanceForChats}`);
       if (res.data?.success) {
         setChats(res.data.data);
+        setIsServerOffline(false);
       }
     } catch (err: any) {
       console.warn('Error fetching chats (silent=' + silent + '):', err.message);
       if (!silent) {
         setChatsError(err.response?.data?.error || 'Error al obtener los chats de la línea');
+      } else {
+        setIsServerOffline(true);
       }
     } finally {
       if (!silent) setChatsLoading(false);
@@ -546,6 +553,14 @@ echo $response;`;
         }`}>
           {notification.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <AlertCircle className="w-4 h-4 text-rose-500" />}
           <span>{notification.text}</span>
+        </div>
+      )}
+
+      {/* Offline Banner */}
+      {isServerOffline && (
+        <div className="fixed top-0 left-0 w-full z-[100] bg-amber-500/90 backdrop-blur-sm text-white text-xs font-bold py-1.5 px-4 text-center shadow-md animate-fadeIn flex items-center justify-center gap-2">
+          <RefreshCw size={14} className="animate-spin" />
+          <span>Actualizando servidor (Railway)... Manteniendo la conexión en espera...</span>
         </div>
       )}
 
