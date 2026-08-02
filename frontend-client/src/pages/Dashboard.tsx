@@ -1100,8 +1100,8 @@ echo $response;`;
                                       </span>
                                     </div>
                                     <div className="flex items-center justify-between">
-                                      <p className="text-[11px] text-slate-405 dark:text-slate-500 truncate font-medium">
-                                        {lastMsgText}
+                                      <p className="text-[11px] text-slate-405 dark:text-slate-500 truncate font-medium flex items-center gap-1">
+                                        <span className="truncate flex-1"><AppleEmojiText text={lastMsgText} /></span>
                                       </p>
                                       {isUnread && (
                                         <span className="w-2 h-2 bg-emerald-500 rounded-full flex-shrink-0 ml-1"></span>
