@@ -2,11 +2,10 @@ import React from 'react';
 import { AuthProvider, useAuth } from './services/authContext';
 import AuthPage from './pages/Auth';
 import DashboardPage from './pages/Dashboard';
-import AdminDashboardPage from './pages/AdminDashboard';
 import { Smartphone } from 'lucide-react';
 
 const AppContent: React.FC = () => {
-  const { isAuthenticated, user, loading } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
     return (
@@ -24,8 +23,7 @@ const AppContent: React.FC = () => {
     return <AuthPage />;
   }
 
-  // Render Admin Dashboard if user is admin
-  return user?.role === 'admin' ? <AdminDashboardPage /> : <DashboardPage />;
+  return <DashboardPage />;
 };
 
 function App() {

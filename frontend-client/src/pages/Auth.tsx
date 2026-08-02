@@ -1,14 +1,64 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../services/authContext';
 import { ShieldCheck, Zap, Cpu } from 'lucide-react';
+import api from '../services/api';
+
+declare global {
+  interface Window {
+    google: any;
+  }
+}
 
 export default function AuthPage() {
-  const { login, register } = useAuth();
+  const { login, register, refreshUser } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Dynamically load Google SDK on mount
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      if (window.google) {
+        window.google.accounts.id.initialize({
+          client_id: '6104299697-7dissi3tuvd84q94737nqmsi96nmh2d5.apps.googleusercontent.com',
+          callback: handleGoogleLoginResponse,
+        });
+        window.google.accounts.id.renderButton(
+          document.getElementById('google-btn'),
+          { theme: 'filled_dark', size: 'large', width: '380' }
+        );
+      }
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  const handleGoogleLoginResponse = async (response: any) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await api.post('/auth/google-login', { credential: response.credential });
+      if (res.data?.success && res.data?.token) {
+        localStorage.setItem('saas_auth_token', res.data.token);
+        await refreshUser();
+      } else {
+        setError(res.data?.error || 'Error al conectar con Google');
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Fallo de autenticación con Google');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,6 +153,11 @@ export default function AuthPage() {
                 ⚠️ {error}
               </div>
             )}
+
+            {/* Google Sign-in Button */}
+            <div className="flex justify-center pb-5 mb-5 border-b border-white/5">
+              <div id="google-btn" className="w-full max-w-[380px]" />
+            </div>
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">

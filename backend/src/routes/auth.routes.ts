@@ -3,6 +3,7 @@ import pool from '../config/database';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import { authMiddleware, AuthenticatedRequest } from '../middleware/auth.middleware';
+import { GoogleService } from '../services/google.service';
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'whatsapp-secret-key-2024';
@@ -141,6 +142,86 @@ router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res) => {
   } catch (error: any) {
     console.error('[Auth] Error en GET /me:', error.message);
     res.status(500).json({ success: false, error: 'Error en el servidor' });
+  }
+});
+
+/**
+ * POST /google-login - Iniciar sesión o registrarse usando Google ID Token
+ */
+router.post('/google-login', async (req, res) => {
+  const { credential } = req.body;
+
+  if (!credential) {
+    return res.status(400).json({ success: false, error: 'Token de Google (credential) es requerido' });
+  }
+
+  try {
+    // 1. Verificar el token JWT con Google
+    const googleUser = await GoogleService.verifyToken(credential);
+
+    if (!googleUser || !googleUser.email) {
+      return res.status(401).json({ success: false, error: 'Token de Google inválido o expirado' });
+    }
+
+    const email = googleUser.email.toLowerCase();
+
+    // 2. Buscar si el usuario ya existe en nuestra base de datos
+    let userRes = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    let user;
+
+    if (userRes.rows.length === 0) {
+      // 3. Registrar al usuario si es su primer ingreso
+      const userId = generateId('user');
+      const assignedRole = email === 'syscomecosistemadigital@gmail.com' ? 'admin' : 'client';
+      const randomPassword = await bcrypt.hash(Math.random().toString(36), 10); // Generar contraseña aleatoria inútil para la cuenta OAuth
+
+      await pool.query('BEGIN');
+
+      // Crear registro de usuario
+      await pool.query(
+        'INSERT INTO users (id, email, password, role) VALUES ($1, $2, $3, $4)',
+        [userId, email, randomPassword, assignedRole]
+      );
+
+      // Crear suscripción por defecto al plan básico
+      const subId = generateId('sub');
+      const now = new Date();
+      const endDate = new Date();
+      endDate.setMonth(now.getMonth() + 1);
+
+      await pool.query(`
+        INSERT INTO subscriptions (id, user_id, plan_id, status, start_date, end_date)
+        VALUES ($1, $2, $3, $4, $5, $6)
+      `, [subId, userId, 'plan_basic', 'active', now, endDate]);
+
+      await pool.query('COMMIT');
+
+      // Obtener el registro de usuario recién creado
+      const freshUserRes = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
+      user = freshUserRes.rows[0];
+    } else {
+      user = userRes.rows[0];
+      
+      // Asegurar que syscomecosistemadigital@gmail.com sea admin incluso si ya existía como client
+      if (email === 'syscomecosistemadigital@gmail.com' && user.role !== 'admin') {
+        await pool.query('UPDATE users SET role = \'admin\' WHERE id = $1', [user.id]);
+        user.role = 'admin';
+      }
+    }
+
+    // 4. Generar Token JWT de Zaza.click
+    const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+
+    res.json({
+      success: true,
+      message: 'Autenticación con Google exitosa',
+      token,
+      user: { id: user.id, email: user.email, role: user.role }
+    });
+
+  } catch (error: any) {
+    console.error('[GoogleLogin] Error:', error.message);
+    res.status(500).json({ success: false, error: 'Error en el servidor al autenticar con Google' });
   }
 });
 
