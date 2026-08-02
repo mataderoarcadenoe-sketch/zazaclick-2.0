@@ -311,7 +311,7 @@ echo $response;`;
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
                 <Smartphone size={18} />
               </div>
-              <span className="font-extrabold text-slate-800 dark:text-white tracking-wide">
+              <span className="font-semibold text-slate-800 dark:text-white tracking-wide">
                 Zaza.click <span className="text-emerald-500">2.0</span>
               </span>
             </div>
@@ -392,7 +392,7 @@ echo $response;`;
             >
               <Menu size={20} />
             </button>
-            <h2 className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-white capitalize">
+            <h2 className="text-sm sm:text-base font-semibold text-slate-800 dark:text-white capitalize">
               {menuItems.find(i => i.id === activeTab)?.label || 'Panel'}
             </h2>
           </div>
@@ -401,7 +401,7 @@ echo $response;`;
             {/* Online Status */}
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl border border-emerald-200/50 dark:border-emerald-800/20">
               <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-              <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">En Línea</span>
+              <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">En Línea</span>
             </div>
 
             {/* Dark Mode Toggle */}
@@ -415,7 +415,7 @@ echo $response;`;
 
             {/* User Profile Info */}
             <div className="flex items-center gap-2.5 pl-3 border-l border-slate-200 dark:border-slate-800">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white text-xs font-black shadow-md shadow-emerald-500/20 uppercase">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white text-xs font-bold shadow-md shadow-emerald-500/20 uppercase">
                 {user?.email?.charAt(0)}
               </div>
               <div className="hidden md:flex flex-col text-left">
@@ -439,10 +439,10 @@ echo $response;`;
                 {/* Upgrade/Welcome Card Banner */}
                 <div className="p-6 bg-gradient-to-r from-emerald-500/10 to-teal-500/5 rounded-3xl border border-emerald-500/20 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div className="space-y-2 text-left relative z-10">
-                    <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-md text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
+                    <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-md text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
                       Licencia Activa
                     </span>
-                    <h3 className="text-lg sm:text-xl font-black text-slate-800 dark:text-white">
+                    <h3 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-white">
                       Plan {subscription?.plan_name || 'Básico'}
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 max-w-lg leading-relaxed">
@@ -475,24 +475,24 @@ echo $response;`;
                 {/* Metrics Cards Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm space-y-1.5 text-left">
-                    <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Líneas Vinculadas</span>
-                    <h3 className="text-2xl font-black text-slate-800 dark:text-white">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Líneas Vinculadas</span>
+                    <h3 className="text-2xl font-bold text-slate-800 dark:text-white">
                       {instances.length} / <span className="text-slate-400">{maxInstances}</span>
                     </h3>
                     <p className="text-[10px] text-slate-500">Capacidad disponible para crear instancias.</p>
                   </div>
 
                   <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm space-y-1.5 text-left">
-                    <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest text-emerald-500">Instancias Online</span>
-                    <h3 className="text-2xl font-black text-emerald-500">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest text-emerald-500">Instancias Online</span>
+                    <h3 className="text-2xl font-bold text-emerald-500">
                       {activeInstancesCount} / <span className="text-slate-400">{instances.length || 0}</span>
                     </h3>
                     <p className="text-[10px] text-slate-500">Números con WhatsApp en línea.</p>
                   </div>
 
                   <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm space-y-1.5 text-left">
-                    <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Próxima Renovación</span>
-                    <h3 className="text-2xl font-black text-indigo-500 dark:text-indigo-400 flex items-center gap-1.5">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Próxima Renovación</span>
+                    <h3 className="text-2xl font-bold text-indigo-500 dark:text-indigo-400 flex items-center gap-1.5">
                       <Clock size={20} />
                       <span className="text-lg">
                         {subscription?.end_date ? new Date(subscription.end_date).toLocaleDateString() : 'N/A'}
@@ -505,7 +505,7 @@ echo $response;`;
                 {/* Dashboard Instance Table Summary */}
                 <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-black uppercase tracking-widest text-slate-500">Estado de Líneas</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500">Estado de Líneas</h4>
                     <button 
                       onClick={() => fetchInstances()} 
                       disabled={loading}
@@ -537,9 +537,9 @@ echo $response;`;
                               <td className="py-3.5 text-slate-600 dark:text-slate-400 font-medium">{inst.phone || 'Pendiente vinculación'}</td>
                               <td className="py-3.5">
                                 {inst.status === 'connected' ? (
-                                  <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black text-emerald-600 dark:text-emerald-400 rounded-md">CONNECTED</span>
+                                  <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-bold text-emerald-600 dark:text-emerald-400 rounded-md">CONNECTED</span>
                                 ) : (
-                                  <span className="px-2 py-0.5 bg-slate-500/10 border border-slate-200/50 dark:border-slate-800/50 text-[9px] font-black text-slate-500 rounded-md">DISCONNECTED</span>
+                                  <span className="px-2 py-0.5 bg-slate-500/10 border border-slate-200/50 dark:border-slate-800/50 text-[9px] font-bold text-slate-500 rounded-md">DISCONNECTED</span>
                                 )}
                               </td>
                               <td className="py-3.5 text-right">
@@ -551,7 +551,7 @@ echo $response;`;
                                       setActiveTab('instances');
                                     }
                                   }}
-                                  className="text-[10px] text-emerald-600 dark:text-emerald-400 font-black hover:underline cursor-pointer"
+                                  className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer"
                                 >
                                   {inst.status === 'disconnected' ? 'Vincular QR' : 'Administrar'}
                                 </button>
@@ -572,7 +572,7 @@ echo $response;`;
               <div className="space-y-6 animate-fadeIn">
                 <div className="flex items-center justify-between">
                   <div className="text-left space-y-0.5">
-                    <h3 className="text-base font-black text-slate-800 dark:text-white">Líneas de WhatsApp</h3>
+                    <h3 className="text-base font-bold text-slate-800 dark:text-white">Líneas de WhatsApp</h3>
                     <p className="text-xs text-slate-400">Escanea los códigos QR para iniciar sesión y habilitar los envíos.</p>
                   </div>
                   <button
@@ -616,11 +616,11 @@ echo $response;`;
                         {/* Card Header */}
                         <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800/60 pb-3 relative z-10">
                           <div className="flex items-center gap-2.5">
-                            <span className="font-extrabold text-sm text-slate-800 dark:text-white">{inst.instance_name}</span>
+                            <span className="font-semibold text-sm text-slate-800 dark:text-white">{inst.instance_name}</span>
                             {inst.status === 'connected' ? (
-                              <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black text-emerald-600 dark:text-emerald-400 rounded-md">CONECTADO</span>
+                              <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-bold text-emerald-600 dark:text-emerald-400 rounded-md">CONECTADO</span>
                             ) : (
-                              <span className="px-2 py-0.5 bg-slate-500/10 border border-slate-200/50 dark:border-slate-800/50 text-[9px] font-black text-slate-500 rounded-md">DESCONECTADO</span>
+                              <span className="px-2 py-0.5 bg-slate-500/10 border border-slate-200/50 dark:border-slate-800/50 text-[9px] font-bold text-slate-500 rounded-md">DESCONECTADO</span>
                             )}
                           </div>
 
@@ -709,7 +709,7 @@ echo $response;`;
             {activeTab === 'playground' && (
               <div className="space-y-6 animate-fadeIn">
                 <div className="text-left space-y-0.5">
-                  <h3 className="text-base font-black text-slate-800 dark:text-white">Probar Envío de Mensaje</h3>
+                  <h3 className="text-base font-bold text-slate-800 dark:text-white">Probar Envío de Mensaje</h3>
                   <p className="text-xs text-slate-400">Verifica el funcionamiento de tus instancias enviándote un mensaje de prueba.</p>
                 </div>
 
@@ -718,7 +718,7 @@ echo $response;`;
                   {/* Test Form */}
                   <form onSubmit={handleSendTestMessage} className="md:col-span-7 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 p-6 rounded-3xl shadow-sm space-y-4 text-left">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Seleccionar Instancia</label>
+                      <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Seleccionar Instancia</label>
                       <select
                         value={testInstance}
                         onChange={(e) => {
@@ -738,7 +738,7 @@ echo $response;`;
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Número Destino (con código de país)</label>
+                      <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Número Destino (con código de país)</label>
                       <input
                         type="text"
                         value={testNumber}
@@ -750,7 +750,7 @@ echo $response;`;
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Mensaje de Texto</label>
+                      <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Mensaje de Texto</label>
                       <textarea
                         value={testText}
                         onChange={(e) => setTestText(e.target.value)}
@@ -779,7 +779,7 @@ echo $response;`;
                   {/* Result Box */}
                   <div className="md:col-span-5 space-y-4">
                     <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 p-6 rounded-3xl shadow-sm text-left space-y-3">
-                      <h4 className="text-xs font-black uppercase tracking-widest text-slate-500">Resultado del Envío</h4>
+                      <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500">Resultado del Envío</h4>
                       
                       {testResult ? (
                         <div className={`p-4 rounded-2xl border text-xs font-bold animate-fadeIn ${
@@ -821,16 +821,16 @@ echo $response;`;
             {activeTab === 'docs' && (
               <div className="space-y-6 animate-fadeIn text-left">
                 <div className="space-y-0.5">
-                  <h3 className="text-base font-black text-slate-800 dark:text-white">Documentación de Integración</h3>
+                  <h3 className="text-base font-bold text-slate-800 dark:text-white">Documentación de Integración</h3>
                   <p className="text-xs text-slate-400">Ejemplos para conectar el API de envío con tus sistemas internos y plataformas externas.</p>
                 </div>
 
                 <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-3xl p-5 sm:p-6 shadow-sm space-y-5">
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800/60 pb-3">
-                    <span className="text-xs font-black uppercase tracking-widest text-slate-500">Enviar Mensaje de Texto</span>
+                    <span className="text-xs font-bold uppercase tracking-widest text-slate-500">Enviar Mensaje de Texto</span>
                     
                     {/* Language Selector */}
-                    <div className="flex bg-slate-100 dark:bg-slate-950 p-0.5 rounded-xl border border-slate-200/50 dark:border-slate-800/50 text-[10px] font-black">
+                    <div className="flex bg-slate-100 dark:bg-slate-950 p-0.5 rounded-xl border border-slate-200/50 dark:border-slate-800/50 text-[10px] font-bold">
                       {(['curl', 'js', 'python', 'php'] as const).map(lang => (
                         <button
                           key={lang}
@@ -886,7 +886,7 @@ echo $response;`;
             {activeTab === 'subscription' && (
               <div className="space-y-6 animate-fadeIn text-left">
                 <div className="space-y-0.5">
-                  <h3 className="text-base font-black text-slate-800 dark:text-white">Estado de la Suscripción</h3>
+                  <h3 className="text-base font-bold text-slate-800 dark:text-white">Estado de la Suscripción</h3>
                   <p className="text-xs text-slate-400">Detalles de las características vigentes y límites de tu plan SaaS.</p>
                 </div>
 
@@ -900,8 +900,8 @@ echo $response;`;
                           <Key size={20} />
                         </div>
                         <div>
-                          <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Plan Contratado</span>
-                          <h4 className="text-lg font-black text-slate-800 dark:text-white">{subscription?.plan_name || 'Básico'}</h4>
+                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Plan Contratado</span>
+                          <h4 className="text-lg font-bold text-slate-800 dark:text-white">{subscription?.plan_name || 'Básico'}</h4>
                         </div>
                       </div>
 
@@ -937,7 +937,7 @@ echo $response;`;
                   {/* Reseller Banner Info */}
                   <div className="md:col-span-5 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent border border-indigo-500/20 p-6 rounded-3xl shadow-sm flex flex-col justify-between gap-6 relative overflow-hidden">
                     <div className="space-y-3 relative z-10">
-                      <h4 className="text-sm font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">¿Necesitas más capacidad?</h4>
+                      <h4 className="text-sm font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">¿Necesitas más capacidad?</h4>
                       <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
                         Ofrecemos planes corporativos a medida que se adaptan a las necesidades y volúmenes de tu infraestructura de mensajería empresarial.
                       </p>
@@ -997,7 +997,7 @@ echo $response;`;
             </button>
 
             <div className="space-y-1">
-              <h4 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Escanear WhatsApp QR</h4>
+              <h4 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider">Escanear WhatsApp QR</h4>
               <p className="text-[10px] text-slate-400 font-bold">Instancia: <strong className="text-emerald-500">{activeQrInstance}</strong></p>
             </div>
 
@@ -1048,7 +1048,7 @@ echo $response;`;
             </button>
 
             <div className="space-y-1.5">
-              <h3 className="text-base font-black text-slate-800 dark:text-white">Nueva Instancia de WhatsApp</h3>
+              <h3 className="text-base font-bold text-slate-800 dark:text-white">Nueva Instancia de WhatsApp</h3>
               <p className="text-xs text-slate-400">Las instancias representan las líneas celulares de WhatsApp que vincularás.</p>
             </div>
 
@@ -1060,7 +1060,7 @@ echo $response;`;
 
             <form onSubmit={handleCreateInstance} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Nombre de la Instancia</label>
+                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Nombre de la Instancia</label>
                 <input
                   type="text"
                   value={newInstanceName}

@@ -117,12 +117,12 @@ export default function AuthPage() {
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-xs font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">SaaS Platform</span>
-              <span className="block text-xl font-black text-slate-800 dark:text-white tracking-tight">Zaza.click <span className="text-emerald-500">2.0</span></span>
+              <span className="text-xs font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">SaaS Platform</span>
+              <span className="block text-xl font-bold text-slate-800 dark:text-white tracking-tight">Zaza.click <span className="text-emerald-500">2.0</span></span>
             </div>
           </div>
 
-          <h1 className="text-4xl lg:text-5xl font-black text-slate-800 dark:text-white leading-tight tracking-tight">
+          <h1 className="text-4xl lg:text-5xl font-bold text-slate-800 dark:text-white leading-tight tracking-tight">
             API de WhatsApp <br />
             <span className="bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 bg-clip-text text-transparent">Multi-Inquilino</span> <br />
             para tu negocio.
@@ -138,7 +138,7 @@ export default function AuthPage() {
                 <Zap className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-slate-800 dark:text-white text-xs font-extrabold tracking-tight">Velocidad Instantánea</h4>
+                <h4 className="text-slate-800 dark:text-white text-xs font-semibold tracking-tight">Velocidad Instantánea</h4>
                 <p className="text-slate-500 dark:text-slate-400 text-[11px]">Envíos inmediatos integrados con Evolution API v2 y caché Redis optimizada.</p>
               </div>
             </div>
@@ -148,7 +148,7 @@ export default function AuthPage() {
                 <Cpu className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-slate-800 dark:text-white text-xs font-extrabold tracking-tight">Seguridad y Aislamiento</h4>
+                <h4 className="text-slate-800 dark:text-white text-xs font-semibold tracking-tight">Seguridad y Aislamiento</h4>
                 <p className="text-slate-500 dark:text-slate-400 text-[11px]">Bases de datos aisladas con autenticación segura e instancias encapsuladas.</p>
               </div>
             </div>
@@ -162,12 +162,12 @@ export default function AuthPage() {
             {/* Header */}
             <div className="space-y-1.5 text-center pb-6">
               <div className="md:hidden flex items-center justify-center gap-2 pb-2">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white font-extrabold">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white font-semibold">
                   <Smartphone size={16} />
                 </div>
-                <span className="font-extrabold text-sm text-slate-800 dark:text-white">Zaza.click 2.0</span>
+                <span className="font-semibold text-sm text-slate-800 dark:text-white">Zaza.click 2.0</span>
               </div>
-              <h2 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">
+              <h2 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">
                 {isLogin ? '¡Bienvenido!' : 'Crea tu Cuenta'}
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -188,7 +188,7 @@ export default function AuthPage() {
               <div id="google-btn" className="w-full flex justify-center" />
               <div className="flex items-center gap-2 w-full my-4">
                 <div className="h-[1px] bg-slate-200 dark:bg-slate-800 flex-1" />
-                <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">O con Correo</span>
+                <span className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">O con Correo</span>
                 <div className="h-[1px] bg-slate-200 dark:bg-slate-800 flex-1" />
               </div>
             </div>
@@ -196,7 +196,7 @@ export default function AuthPage() {
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Correo Electrónico</label>
+                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Correo Electrónico</label>
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 dark:text-slate-500">
                     <Mail size={16} />
@@ -213,7 +213,7 @@ export default function AuthPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Contraseña</label>
+                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Contraseña</label>
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 dark:text-slate-500">
                     <Lock size={16} />

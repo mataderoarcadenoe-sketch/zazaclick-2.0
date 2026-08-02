@@ -213,7 +213,7 @@ export default function AdminDashboardPage() {
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
                 <ShieldAlert size={18} />
               </div>
-              <span className="font-extrabold text-slate-800 dark:text-white tracking-wide">
+              <span className="font-semibold text-slate-800 dark:text-white tracking-wide">
                 Zaza.click <span className="text-blue-500">Admin</span>
               </span>
             </div>
@@ -294,7 +294,7 @@ export default function AdminDashboardPage() {
             >
               <Menu size={20} />
             </button>
-            <h2 className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-white capitalize">
+            <h2 className="text-sm sm:text-base font-semibold text-slate-800 dark:text-white capitalize">
               {menuItems.find(i => i.id === activeTab)?.label || 'Panel de Administración'}
             </h2>
           </div>
@@ -303,7 +303,7 @@ export default function AdminDashboardPage() {
             {/* Admin Badge Tag */}
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-950/30 rounded-xl border border-blue-200/50 dark:border-blue-800/20">
               <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
-              <span className="text-[10px] font-black text-blue-700 dark:text-blue-400 uppercase tracking-wider">Super Administrador</span>
+              <span className="text-[10px] font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">Super Administrador</span>
             </div>
 
             {/* Dark Mode Toggle */}
@@ -317,7 +317,7 @@ export default function AdminDashboardPage() {
 
             {/* User Profile Info */}
             <div className="flex items-center gap-2.5 pl-3 border-l border-slate-200 dark:border-slate-800">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-black shadow-md shadow-blue-500/20 uppercase">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shadow-md shadow-blue-500/20 uppercase">
                 {user?.email?.charAt(0)}
               </div>
               <div className="hidden md:flex flex-col text-left">
@@ -341,7 +341,7 @@ export default function AdminDashboardPage() {
                     <ShieldAlert size={20} />
                   </div>
                   <div>
-                    <h4 className="text-xs font-black uppercase tracking-wider">Motor de WhatsApp Desactivado</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-wider">Motor de WhatsApp Desactivado</h4>
                     <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-relaxed mt-0.5">
                       La licencia de Evolution API no está activa. Tus clientes experimentarán errores al intentar crear o conectar líneas. Por favor, realiza la activación.
                     </p>
@@ -366,10 +366,10 @@ export default function AdminDashboardPage() {
                 {/* Admin Welcome Card */}
                 <div className="p-6 bg-gradient-to-r from-blue-500/10 to-indigo-500/5 rounded-3xl border border-blue-500/20 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div className="space-y-2 text-left relative z-10">
-                    <span className="px-2.5 py-1 bg-blue-500/10 border border-blue-500/20 rounded-md text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">
+                    <span className="px-2.5 py-1 bg-blue-500/10 border border-blue-500/20 rounded-md text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">
                       Admin Controller
                     </span>
-                    <h3 className="text-lg sm:text-xl font-black text-slate-800 dark:text-white">
+                    <h3 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-white">
                       Zaza.click 2.0 Control Center
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 max-w-lg leading-relaxed">
@@ -405,32 +405,32 @@ export default function AdminDashboardPage() {
                 {/* System Metrics Stats Grid */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm space-y-1.5 text-left">
-                    <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Clientes</span>
-                    <h3 className="text-2xl font-black text-slate-800 dark:text-white">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Clientes</span>
+                    <h3 className="text-2xl font-bold text-slate-800 dark:text-white">
                       {stats?.total_users ?? 0}
                     </h3>
                     <p className="text-[9px] text-slate-500">Usuarios en la plataforma.</p>
                   </div>
 
                   <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm space-y-1.5 text-left">
-                    <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest text-emerald-500">Planes Activos</span>
-                    <h3 className="text-2xl font-black text-emerald-500">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest text-emerald-500">Planes Activos</span>
+                    <h3 className="text-2xl font-bold text-emerald-500">
                       {stats?.active_subscriptions ?? 0}
                     </h3>
                     <p className="text-[9px] text-slate-500">Licencias habilitadas.</p>
                   </div>
 
                   <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm space-y-1.5 text-left">
-                    <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest font-mono">Líneas Creadas</span>
-                    <h3 className="text-2xl font-black text-slate-800 dark:text-white">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest font-mono">Líneas Creadas</span>
+                    <h3 className="text-2xl font-bold text-slate-800 dark:text-white">
                       {stats?.total_instances ?? 0}
                     </h3>
                     <p className="text-[9px] text-slate-500">Instancias registradas.</p>
                   </div>
 
                   <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm space-y-1.5 text-left">
-                    <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest text-emerald-500">WhatsApp Online</span>
-                    <h3 className="text-2xl font-black text-emerald-500">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest text-emerald-500">WhatsApp Online</span>
+                    <h3 className="text-2xl font-bold text-emerald-500">
                       {stats?.connected_instances ?? 0}
                     </h3>
                     <p className="text-[9px] text-slate-500">Sesiones conectadas en vivo.</p>
@@ -439,7 +439,7 @@ export default function AdminDashboardPage() {
 
                 {/* Access Quick Helper Box */}
                 <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm text-left space-y-3">
-                  <h4 className="text-xs font-black uppercase tracking-widest text-slate-500">Operaciones Rápidas</h4>
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500">Operaciones Rápidas</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-medium">
                     <button 
                       onClick={() => setActiveTab('clients')}
@@ -473,7 +473,7 @@ export default function AdminDashboardPage() {
                 
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-0.5">
-                    <h3 className="text-base font-black text-slate-800 dark:text-white">Gestión de Clientes</h3>
+                    <h3 className="text-base font-bold text-slate-800 dark:text-white">Gestión de Clientes</h3>
                     <p className="text-xs text-slate-400">Visualiza y amplía licencias del SaaS de WhatsApp.</p>
                   </div>
 
@@ -505,7 +505,7 @@ export default function AdminDashboardPage() {
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse text-xs table-container-responsive">
                         <thead>
-                          <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 text-slate-400 font-black uppercase tracking-wider">
+                          <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 text-slate-400 font-bold uppercase tracking-wider">
                             <th className="p-4">Cliente / ID</th>
                             <th className="p-4">Plan Actual</th>
                             <th className="p-4">Estado</th>
@@ -554,11 +554,11 @@ export default function AdminDashboardPage() {
                                     <option value="cancelled">Cancelado</option>
                                   </select>
                                 ) : client.subscription_status === 'active' ? (
-                                  <span className="px-2.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-md font-black text-[9px]">
+                                  <span className="px-2.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-md font-bold text-[9px]">
                                     ACTIVO
                                   </span>
                                 ) : (
-                                  <span className="px-2.5 py-0.5 bg-slate-100 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 text-slate-400 dark:text-slate-500 rounded-md font-black text-[9px]">
+                                  <span className="px-2.5 py-0.5 bg-slate-100 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 text-slate-400 dark:text-slate-500 rounded-md font-bold text-[9px]">
                                     INACTIVO
                                   </span>
                                 )}
@@ -584,7 +584,7 @@ export default function AdminDashboardPage() {
                                 )}
                               </td>
 
-                              <td className="p-4 text-center font-black text-slate-800 dark:text-white">
+                              <td className="p-4 text-center font-bold text-slate-800 dark:text-white">
                                 {client.instances_count}
                               </td>
 
@@ -615,7 +615,7 @@ export default function AdminDashboardPage() {
                                       setNewStatus(client.subscription_status || 'active');
                                       setNewDuration('1');
                                     }}
-                                    className="px-3.5 py-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800 text-[10px] font-black uppercase tracking-wider rounded-xl border border-slate-200/50 dark:border-slate-800/60 transition-colors cursor-pointer"
+                                    className="px-3.5 py-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800 text-[10px] font-bold uppercase tracking-wider rounded-xl border border-slate-200/50 dark:border-slate-800/60 transition-colors cursor-pointer"
                                   >
                                     Modificar Plan
                                   </button>
@@ -636,7 +636,7 @@ export default function AdminDashboardPage() {
               <div className="space-y-6 animate-fadeIn text-left">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <h3 className="text-base font-black text-slate-800 dark:text-white">Salud e Infraestructura</h3>
+                    <h3 className="text-base font-bold text-slate-800 dark:text-white">Salud e Infraestructura</h3>
                     <p className="text-xs text-slate-400">Verifica la latencia de las conexiones del backend del SaaS y el motor Evolution API.</p>
                   </div>
                   <button
@@ -737,7 +737,7 @@ export default function AdminDashboardPage() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-left text-xs">
                         <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200/30 dark:border-slate-800/30">
                           <span className="block text-[10px] text-slate-400 uppercase font-bold">Estado General</span>
-                          <span className={`block font-black mt-1 ${
+                          <span className={`block font-bold mt-1 ${
                             licenseStatus.status === 'active' || licenseStatus.active
                               ? 'text-emerald-500'
                               : 'text-rose-500'
@@ -747,13 +747,13 @@ export default function AdminDashboardPage() {
                         </div>
                         <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200/30 dark:border-slate-800/30">
                           <span className="block text-[10px] text-slate-400 uppercase font-bold">Tipo de Licencia</span>
-                          <span className="block font-black text-slate-700 dark:text-slate-350 mt-1 uppercase">
+                          <span className="block font-bold text-slate-700 dark:text-slate-350 mt-1 uppercase">
                             {licenseStatus.type || 'Community / Free'}
                           </span>
                         </div>
                         <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200/30 dark:border-slate-800/30">
                           <span className="block text-[10px] text-slate-400 uppercase font-bold">Expiración de Clave</span>
-                          <span className="block font-black text-slate-700 dark:text-slate-350 mt-1 font-mono">
+                          <span className="block font-bold text-slate-700 dark:text-slate-350 mt-1 font-mono">
                             {licenseStatus.expires_at || licenseStatus.expiresAt
                               ? new Date(licenseStatus.expires_at || licenseStatus.expiresAt).toLocaleDateString()
                               : 'Sin expiración / Permanente'}
@@ -788,7 +788,7 @@ export default function AdminDashboardPage() {
 
                   {/* Cache & DB connectivity */}
                   <div className="md:col-span-2 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 p-6 rounded-3xl shadow-sm space-y-3">
-                    <h5 className="text-xs font-black uppercase tracking-widest text-slate-500">Servicios Conectados</h5>
+                    <h5 className="text-xs font-bold uppercase tracking-widest text-slate-500">Servicios Conectados</h5>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-medium pt-2">
                       <div className="p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 flex items-center gap-3">
                         <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-500">

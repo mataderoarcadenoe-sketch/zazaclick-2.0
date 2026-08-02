@@ -92,10 +92,10 @@ export default function AuthPage() {
           </div>
           
           <div className="space-y-1">
-            <h2 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">
               Zaza.click <span className="text-emerald-500">2.0 Admin</span>
             </h2>
-            <p className="text-[10px] text-rose-600 dark:text-rose-400 font-black uppercase tracking-widest">
+            <p className="text-[10px] text-rose-600 dark:text-rose-400 font-bold uppercase tracking-widest">
               Acceso Exclusivo de Administrador
             </p>
           </div>
@@ -130,7 +130,7 @@ export default function AuthPage() {
         </div>
 
         {/* Footer */}
-        <div className="text-center text-[9px] font-black text-slate-400 uppercase tracking-widest">
+        <div className="text-center text-[9px] font-bold text-slate-400 uppercase tracking-widest">
           Zaza.click Operations Panel.
         </div>
 
