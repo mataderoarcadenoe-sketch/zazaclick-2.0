@@ -4,7 +4,8 @@ import { useDarkMode } from '../hooks/useDarkMode';
 import api from '../services/api';
 import { 
   LogOut, RefreshCw, Users, ShieldAlert, Check, X, 
-  Moon, Sun, Menu, LayoutDashboard, Settings, Globe, Server, Database, Search
+  Moon, Sun, Menu, LayoutDashboard, Settings, Globe, Server, Database, Search,
+  Key, Rocket
 } from 'lucide-react';
 
 interface ClientUser {
@@ -377,14 +378,20 @@ export default function AdminDashboardPage() {
                       onClick={() => setActiveTab('clients')}
                       className="p-4 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800 border border-slate-200/50 dark:border-slate-800/50 rounded-2xl text-left space-y-1 transition-all cursor-pointer"
                     >
-                      <span className="block font-bold text-slate-800 dark:text-white">🔑 Modificar Licencias</span>
+                      <span className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-white">
+                        <Key size={14} className="text-blue-500" />
+                        <span>Modificar Licencias</span>
+                      </span>
                       <span className="block text-[11px] text-slate-400">Modifica el plan contratado, estado y prorroga meses de vencimiento.</span>
                     </button>
                     <button 
                       onClick={() => setActiveTab('status')}
                       className="p-4 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800 border border-slate-200/50 dark:border-slate-800/50 rounded-2xl text-left space-y-1 transition-all cursor-pointer"
                     >
-                      <span className="block font-bold text-slate-800 dark:text-white">🚀 Monitoreo de API</span>
+                      <span className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-white">
+                        <Rocket size={14} className="text-blue-500" />
+                        <span>Monitoreo de API</span>
+                      </span>
                       <span className="block text-[11px] text-slate-400">Revisa la latencia y comunicación activa del Backend y Evolution API.</span>
                     </button>
                   </div>
