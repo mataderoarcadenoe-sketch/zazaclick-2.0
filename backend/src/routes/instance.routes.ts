@@ -5,6 +5,14 @@ import { EvolutionService } from '../services/evolution.service';
 
 const router = Router();
 
+router.get('/debug-env', (req, res) => {
+  res.json({
+    DATABASE_URL: process.env.DATABASE_URL,
+    EVOLUTION_API_URL: process.env.EVOLUTION_API_URL,
+    EVOLUTION_API_KEY: process.env.EVOLUTION_API_KEY
+  });
+});
+
 /**
  * Generar ID aleatorio
  */
