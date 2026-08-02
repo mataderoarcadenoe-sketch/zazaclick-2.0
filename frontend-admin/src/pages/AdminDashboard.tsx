@@ -5,7 +5,7 @@ import api from '../services/api';
 import { 
   LogOut, RefreshCw, Users, ShieldAlert, Check, X, 
   Moon, Sun, Menu, LayoutDashboard, Settings, Globe, Server, Database, Search,
-  Key, Rocket
+  Key, Rocket, CheckCircle2, AlertCircle
 } from 'lucide-react';
 
 interface ClientUser {
@@ -65,9 +65,12 @@ export default function AdminDashboardPage() {
   const [licenseError, setLicenseError] = useState<string | null>(null);
   const [registerLoading, setRegisterLoading] = useState<boolean>(false);
 
+  // Notification Banner State
+  const [notification, setNotification] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
   const showNotification = (text: string, type: 'success' | 'error' = 'success') => {
-    // Basic fallback alert since admin doesn't use the notification banner state in the original design
-    alert(`${type === 'success' ? '✅' : '❌'} ${text}`);
+    setNotification({ text, type });
+    setTimeout(() => setNotification(null), 3500);
   };
 
   const toggleSidebar = () => {
@@ -198,7 +201,19 @@ export default function AdminDashboardPage() {
   ] as const;
 
   return (
-    <div className="flex h-screen bg-surface-50 dark:bg-surface-950 text-slate-800 dark:text-slate-100 transition-colors duration-300">
+    <div className="flex h-screen bg-surface-50 dark:bg-surface-950 text-slate-800 dark:text-slate-100 transition-colors duration-300 font-sans">
+      
+      {/* Toast Notification */}
+      {notification && (
+        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-2xl border shadow-premium-lg flex items-center gap-2.5 text-xs font-semibold animate-fadeIn ${
+          notification.type === 'success'
+            ? 'bg-emerald-50/90 dark:bg-emerald-950/90 border-emerald-250 dark:border-emerald-800 text-emerald-800 dark:text-emerald-350'
+            : 'bg-rose-50/90 dark:bg-rose-950/90 border-rose-250 dark:border-rose-800 text-rose-800 dark:text-rose-350'
+        }`}>
+          {notification.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <AlertCircle className="w-4 h-4 text-rose-500" />}
+          <span>{notification.text}</span>
+        </div>
+      )}
       
       {/* Sidebar */}
       <aside 
