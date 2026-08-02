@@ -18,6 +18,7 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.2",
+    "react-twemoji": "^0.7.2",
     "sirv-cli": "^3.0.1",
     "tailwindcss": "^4.3.3"
   },

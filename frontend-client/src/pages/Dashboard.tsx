@@ -9,6 +9,7 @@ import {
   MessageSquare, Search, MessageCircle, Smile
 } from 'lucide-react';
 import EmojiPicker, { Theme, EmojiStyle } from 'emoji-picker-react';
+import Twemoji from 'react-twemoji';
 
 interface Instance {
   id: string;
@@ -1210,7 +1211,11 @@ echo $response;`;
                                     }
 
                                     const text = content.conversation || content.extendedTextMessage?.text || '';
-                                    return <p className="text-[11px] leading-relaxed break-words text-left">{text}</p>;
+                                    return (
+                                      <Twemoji options={{ className: 'emoji', folder: 'svg', ext: '.svg' }}>
+                                        <p className="text-[11px] leading-relaxed break-words text-left">{text}</p>
+                                      </Twemoji>
+                                    );
                                   };
 
                                   return (
@@ -1255,7 +1260,7 @@ echo $response;`;
                                     setNewMessageText(prev => prev + emojiData.emoji);
                                   }}
                                   theme={isDark ? Theme.DARK : Theme.LIGHT}
-                                  emojiStyle={EmojiStyle.APPLE}
+                                  emojiStyle={EmojiStyle.TWITTER}
                                   searchPlaceHolder="Buscar emoji"
                                   lazyLoadEmojis={true}
                                 />
