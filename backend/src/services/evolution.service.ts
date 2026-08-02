@@ -64,7 +64,7 @@ export class EvolutionService {
   /**
    * Crear una nueva instancia de WhatsApp para el cliente
    */
-  public static async createInstance(instanceName: string): Promise<{ success: boolean; instance?: any; error?: string }> {
+  public static async createInstance(instanceName: string): Promise<{ success: boolean; instance?: any; error?: string; status?: number }> {
     try {
       const response = await api.post('/instance/create', {
         instanceName,
@@ -84,11 +84,12 @@ export class EvolutionService {
           }
         };
       }
-      return { success: false, error: 'Respuesta inválida de Evolution API' };
+      return { success: false, error: 'Respuesta inválida de Evolution API', status: 502 };
     } catch (err: any) {
       const errorMsg = this.parseError(err);
+      const status = err.response?.status || 500;
       console.error(`[EvolutionService] Error creando instancia ${instanceName}:`, errorMsg);
-      return { success: false, error: errorMsg };
+      return { success: false, error: errorMsg, status };
     }
   }
 

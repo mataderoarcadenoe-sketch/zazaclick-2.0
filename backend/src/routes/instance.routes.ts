@@ -57,7 +57,8 @@ router.post('/create', authMiddleware, async (req: AuthenticatedRequest, res) =>
     const evoResult = await EvolutionService.createInstance(instanceName);
 
     if (!evoResult.success || !evoResult.instance) {
-      return res.status(500).json({ success: false, error: evoResult.error || 'Error al crear la instancia en Evolution API' });
+      const statusCode = evoResult.status || 500;
+      return res.status(statusCode).json({ success: false, error: evoResult.error || 'Error al crear la instancia en Evolution API' });
     }
 
     // 4. Guardar la instancia en la base de datos de Zaza
