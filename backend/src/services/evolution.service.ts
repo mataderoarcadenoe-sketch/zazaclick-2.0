@@ -146,6 +146,20 @@ export class EvolutionService {
   }
 
   /**
+   * Activar la licencia usando el código de callback
+   */
+  public static async activateLicense(code: string): Promise<{ success: boolean; data?: any; error?: string }> {
+    try {
+      const response = await api.get(`/license/activate?code=${code}`);
+      return { success: true, data: response.data };
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || err.message;
+      console.error('[EvolutionService] Error activando licencia con código:', errorMsg);
+      return { success: false, error: errorMsg };
+    }
+  }
+
+  /**
    * Generador de tokens aleatorios para asegurar las instancias de los clientes
    */
   private static generateRandomToken(): string {

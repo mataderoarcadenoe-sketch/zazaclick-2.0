@@ -183,4 +183,25 @@ router.post('/license/register', async (req: AuthenticatedRequest, res) => {
   }
 });
 
+/**
+ * POST /license/activate - Activar la licencia con el código recibido
+ */
+router.post('/license/activate', async (req: AuthenticatedRequest, res) => {
+  const { code } = req.body;
+  if (!code) {
+    return res.status(400).json({ success: false, error: 'code es requerido' });
+  }
+
+  try {
+    const result = await EvolutionService.activateLicense(code);
+    if (result.success) {
+      return res.json({ success: true, data: result.data });
+    }
+    res.status(500).json({ success: false, error: result.error || 'Error al activar la licencia' });
+  } catch (error: any) {
+    console.error('[AdminLicenseActivate] Error:', error.message);
+    res.status(500).json({ success: false, error: 'Error interno al activar licencia' });
+  }
+});
+
 export default router;

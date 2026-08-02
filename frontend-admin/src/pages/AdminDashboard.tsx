@@ -166,6 +166,33 @@ export default function AdminDashboardPage() {
     fetchAdminData();
     checkSystemHealth();
     fetchLicenseStatus();
+
+    // Check if there is an activation code in the URL (from Evolution API redirect)
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    if (code) {
+      // Clear query params from URL so it doesn't run again on reload
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+      const activateLicenseCode = async () => {
+        setLicenseLoading(true);
+        try {
+          const res = await api.post('/admin/license/activate', { code });
+          if (res.data?.success) {
+            showNotification('¡Licencia de Evolution API activada con éxito!', 'success');
+            fetchLicenseStatus();
+          } else {
+            showNotification(res.data?.error || 'Error al completar la activación de licencia', 'error');
+          }
+        } catch (err: any) {
+          showNotification(err.response?.data?.error || 'Error de red al completar activación', 'error');
+        } finally {
+          setLicenseLoading(false);
+        }
+      };
+
+      activateLicenseCode();
+    }
   }, []);
 
   const handleUpdateSubscription = async (clientId: string) => {
