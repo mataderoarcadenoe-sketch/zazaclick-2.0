@@ -251,4 +251,126 @@ router.post('/send', async (req, res) => {
   }
 });
 
+/**
+ * GET /chats/:instanceName - Obtener chats activos del usuario
+ */
+router.get('/chats/:instanceName', authMiddleware, async (req: AuthenticatedRequest, res) => {
+  const { instanceName } = req.params;
+
+  try {
+    // Verificar propiedad de la instancia
+    const verifyRes = await pool.query('SELECT id FROM instances WHERE user_id = $1 AND instance_name = $2', [req.userId, instanceName]);
+    if (verifyRes.rows.length === 0) {
+      return res.status(403).json({ success: false, error: 'Acceso no autorizado.' });
+    }
+
+    const chatsResult = await EvolutionService.getChats(instanceName);
+    if (!chatsResult.success) {
+      return res.status(500).json({ success: false, error: chatsResult.error || 'Error al obtener chats' });
+    }
+
+    // Filtrar broadcasts o difusiones molestas que no son chats reales
+    const cleanChats = (chatsResult.data || []).filter((chat: any) => 
+      chat.remoteJid && chat.remoteJid !== 'status@broadcast'
+    );
+
+    res.json({ success: true, data: cleanChats });
+  } catch (error: any) {
+    console.error('[Instance] Error en GET /chats:', error.message);
+    res.status(500).json({ success: false, error: 'Error interno en el servidor.' });
+  }
+});
+
+/**
+ * POST /chats/:instanceName/messages - Obtener historial de mensajes de un chat
+ */
+router.post('/chats/:instanceName/messages', authMiddleware, async (req: AuthenticatedRequest, res) => {
+  const { instanceName } = req.params;
+  const { remoteJid } = req.body;
+
+  if (!remoteJid) {
+    return res.status(400).json({ success: false, error: 'Falta el parámetro remoteJid' });
+  }
+
+  try {
+    // Verificar propiedad de la instancia
+    const verifyRes = await pool.query('SELECT id FROM instances WHERE user_id = $1 AND instance_name = $2', [req.userId, instanceName]);
+    if (verifyRes.rows.length === 0) {
+      return res.status(403).json({ success: false, error: 'Acceso no autorizado.' });
+    }
+
+    const messagesResult = await EvolutionService.getChatMessages(instanceName, remoteJid);
+    if (!messagesResult.success) {
+      return res.status(500).json({ success: false, error: messagesResult.error || 'Error al obtener mensajes' });
+    }
+
+    const records = messagesResult.data?.messages?.records || messagesResult.data?.records || messagesResult.data || [];
+    res.json({ success: true, data: records });
+  } catch (error: any) {
+    console.error('[Instance] Error en POST /chats/messages:', error.message);
+    res.status(500).json({ success: false, error: 'Error interno en el servidor.' });
+  }
+});
+
+/**
+ * POST /chats/:instanceName/media - Descargar archivo multimedia codificado en Base64
+ */
+router.post('/chats/:instanceName/media', authMiddleware, async (req: AuthenticatedRequest, res) => {
+  const { instanceName } = req.params;
+  const { messageKey, messageContent } = req.body;
+
+  if (!messageKey || !messageContent) {
+    return res.status(400).json({ success: false, error: 'Faltan parámetros requeridos (messageKey, messageContent)' });
+  }
+
+  try {
+    // Verificar propiedad de la instancia
+    const verifyRes = await pool.query('SELECT id FROM instances WHERE user_id = $1 AND instance_name = $2', [req.userId, instanceName]);
+    if (verifyRes.rows.length === 0) {
+      return res.status(403).json({ success: false, error: 'Acceso no autorizado.' });
+    }
+
+    const mediaResult = await EvolutionService.getMediaMessageBase64(instanceName, messageKey, messageContent);
+    if (!mediaResult.success) {
+      return res.status(500).json({ success: false, error: mediaResult.error || 'Error al obtener base64 del archivo' });
+    }
+
+    res.json({ success: true, data: mediaResult.data });
+  } catch (error: any) {
+    console.error('[Instance] Error en POST /chats/media:', error.message);
+    res.status(500).json({ success: false, error: 'Error interno en el servidor.' });
+  }
+});
+
+/**
+ * POST /chats/:instanceName/send - Enviar mensaje de texto desde el chat en vivo
+ */
+router.post('/chats/:instanceName/send', authMiddleware, async (req: AuthenticatedRequest, res) => {
+  const { instanceName } = req.params;
+  const { remoteJid, text } = req.body;
+
+  if (!remoteJid || !text) {
+    return res.status(400).json({ success: false, error: 'Faltan parámetros requeridos (remoteJid, text)' });
+  }
+
+  try {
+    // Verificar propiedad de la instancia
+    const verifyRes = await pool.query('SELECT id FROM instances WHERE user_id = $1 AND instance_name = $2', [req.userId, instanceName]);
+    if (verifyRes.rows.length === 0) {
+      return res.status(403).json({ success: false, error: 'Acceso no autorizado.' });
+    }
+
+    const number = remoteJid.split('@')[0];
+
+    const sent = await EvolutionService.sendTextMessage(instanceName, number, text);
+    if (sent) {
+      return res.json({ success: true, message: 'Mensaje enviado exitosamente.' });
+    }
+    res.status(500).json({ success: false, error: 'Error en el servidor al enviar el mensaje.' });
+  } catch (error: any) {
+    console.error('[Instance] Error en POST /chats/send:', error.message);
+    res.status(500).json({ success: false, error: 'Error interno en el servidor.' });
+  }
+});
+
 export default router;

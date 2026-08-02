@@ -212,6 +212,60 @@ export class EvolutionService {
   }
 
   /**
+   * Obtener chats activos de la instancia
+   */
+  public static async getChats(instanceName: string): Promise<{ success: boolean; data?: any; error?: string }> {
+    try {
+      const response = await api.post(`/chat/findChats/${instanceName}`, {});
+      return { success: true, data: response.data };
+    } catch (err: any) {
+      const errorMsg = this.parseError(err);
+      console.error(`[EvolutionService] Error obteniendo chats para ${instanceName}:`, errorMsg);
+      return { success: false, error: errorMsg };
+    }
+  }
+
+  /**
+   * Obtener mensajes de un chat específico
+   */
+  public static async getChatMessages(instanceName: string, remoteJid: string): Promise<{ success: boolean; data?: any; error?: string }> {
+    try {
+      const response = await api.post(`/chat/findMessages/${instanceName}`, {
+        where: {
+          key: {
+            remoteJid: remoteJid
+          }
+        },
+        limit: 100
+      });
+      return { success: true, data: response.data };
+    } catch (err: any) {
+      const errorMsg = this.parseError(err);
+      console.error(`[EvolutionService] Error obteniendo mensajes para ${remoteJid}:`, errorMsg);
+      return { success: false, error: errorMsg };
+    }
+  }
+
+  /**
+   * Obtener el Base64 de un archivo multimedia
+   */
+  public static async getMediaMessageBase64(instanceName: string, messageKey: any, messageContent: any): Promise<{ success: boolean; data?: any; error?: string }> {
+    try {
+      const response = await api.post(`/chat/getBase64FromMediaMessage/${instanceName}`, {
+        message: {
+          key: messageKey,
+          message: messageContent
+        }
+      });
+      return { success: true, data: response.data };
+    } catch (err: any) {
+      const errorMsg = this.parseError(err);
+      console.error(`[EvolutionService] Error obteniendo base64 de multimedia:`, errorMsg);
+      return { success: false, error: errorMsg };
+    }
+  }
+
+  /**
    * Generador de tokens aleatorios para asegurar las instancias de los clientes
    */
   private static generateRandomToken(): string {

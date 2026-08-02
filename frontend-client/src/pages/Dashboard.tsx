@@ -5,7 +5,8 @@ import api from '../services/api';
 import { 
   LogOut, RefreshCw, Plus, Key, Trash2, Smartphone, CheckCircle2, 
   AlertCircle, Copy, Send, LayoutDashboard, Terminal, 
-  Moon, Sun, Menu, X, Check, Play, ExternalLink, Sparkles, BookOpen, Clock
+  Moon, Sun, Menu, X, Check, Play, ExternalLink, Sparkles, BookOpen, Clock,
+  MessageSquare, Search, MessageCircle
 } from 'lucide-react';
 
 interface Instance {
@@ -33,7 +34,7 @@ export default function DashboardPage() {
   });
 
   // Active Tab/Section State
-  const [activeTab, setActiveTab] = useState<'overview' | 'instances' | 'playground' | 'docs' | 'subscription'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'instances' | 'chats' | 'playground' | 'docs' | 'subscription'>('overview');
 
   // Modal / Form state for new instance
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -58,6 +59,20 @@ export default function DashboardPage() {
 
   // API Docs Language selection
   const [docLang, setDocLang] = useState<'curl' | 'js' | 'python' | 'php'>('curl');
+
+  // Chat States
+  const [selectedInstanceForChats, setSelectedInstanceForChats] = useState<string>('');
+  const [chats, setChats] = useState<any[]>([]);
+  const [chatsLoading, setChatsLoading] = useState(false);
+  const [selectedChat, setSelectedChat] = useState<any | null>(null);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [newMessageText, setNewMessageText] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const [chatsSearchQuery, setChatsSearchQuery] = useState('');
+  const [chatsError, setChatsError] = useState<string | null>(null);
+  const [mediaLoadingStates, setMediaLoadingStates] = useState<Record<string, boolean>>({});
+  const [loadedMedia, setLoadedMedia] = useState<Record<string, string>>({}); // Maps message ID to local media source (data URL)
 
   const showNotification = (text: string, type: 'success' | 'error' = 'success') => {
     setNotification({ text, type });
@@ -129,6 +144,126 @@ export default function DashboardPage() {
       setTestInstance(instances[0].instance_name);
     }
   }, [instances]);
+
+  // Fetch chats list
+  const fetchChats = async (silent = false) => {
+    if (!selectedInstanceForChats) return;
+    if (!silent) setChatsLoading(true);
+    setChatsError(null);
+    try {
+      const res = await api.get(`/instances/chats/${selectedInstanceForChats}`);
+      if (res.data?.success) {
+        setChats(res.data.data);
+      }
+    } catch (err: any) {
+      console.error('Error fetching chats:', err);
+      setChatsError(err.response?.data?.error || 'Error al obtener los chats de la línea');
+    } finally {
+      if (!silent) setChatsLoading(false);
+    }
+  };
+
+  // Fetch messages for a chat
+  const fetchMessages = async (silent = false) => {
+    if (!selectedInstanceForChats || !selectedChat) return;
+    if (!silent) setMessagesLoading(true);
+    try {
+      const remoteJid = selectedChat.remoteJid;
+      const res = await api.post(`/instances/chats/${selectedInstanceForChats}/messages`, { remoteJid });
+      if (res.data?.success) {
+        setMessages(res.data.data);
+      }
+    } catch (err) {
+      console.error('Error fetching messages:', err);
+    } finally {
+      if (!silent) setMessagesLoading(false);
+    }
+  };
+
+  // Download media item
+  const downloadMedia = async (msgId: string, messageKey: any, messageContent: any) => {
+    if (loadedMedia[msgId] || mediaLoadingStates[msgId]) return;
+    
+    setMediaLoadingStates(prev => ({ ...prev, [msgId]: true }));
+    try {
+      const res = await api.post(`/instances/chats/${selectedInstanceForChats}/media`, {
+        messageKey,
+        messageContent
+      });
+      if (res.data?.success) {
+        const base64Data = res.data.data.base64 || res.data.data;
+        const mimetype = messageContent.imageMessage?.mimetype || 
+                         messageContent.audioMessage?.mimetype || 
+                         messageContent.documentMessage?.mimetype || 
+                         'application/octet-stream';
+        
+        const dataUrl = `data:${mimetype};base64,${base64Data}`;
+        setLoadedMedia(prev => ({ ...prev, [msgId]: dataUrl }));
+      }
+    } catch (err) {
+      console.error('Error downloading media:', err);
+    } finally {
+      setMediaLoadingStates(prev => ({ ...prev, [msgId]: false }));
+    }
+  };
+
+  // Send chat message
+  const handleSendChatMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedInstanceForChats || !selectedChat || !newMessageText.trim() || sendingMessage) return;
+
+    setSendingMessage(true);
+    const textToSend = newMessageText.trim();
+    try {
+      const res = await api.post(`/instances/chats/${selectedInstanceForChats}/send`, {
+        remoteJid: selectedChat.remoteJid,
+        text: textToSend
+      });
+      if (res.data?.success) {
+        setNewMessageText('');
+        await fetchMessages(true);
+      }
+    } catch (err: any) {
+      showNotification(err.response?.data?.error || 'Error al enviar mensaje', 'error');
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
+  // Load chats when tab becomes active or instance changes
+  useEffect(() => {
+    if (activeTab === 'chats') {
+      if (!selectedInstanceForChats && instances.length > 0) {
+        const firstConnected = instances.find(i => i.status === 'connected');
+        setSelectedInstanceForChats(firstConnected ? firstConnected.instance_name : instances[0].instance_name);
+      } else {
+        fetchChats();
+      }
+    }
+  }, [activeTab, selectedInstanceForChats, instances]);
+
+  // Poll chats & active chat messages
+  useEffect(() => {
+    if (activeTab !== 'chats' || !selectedInstanceForChats) return;
+
+    const interval = setInterval(() => {
+      fetchChats(true);
+      if (selectedChat) {
+        fetchMessages(true);
+      }
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [activeTab, selectedInstanceForChats, selectedChat]);
+
+  // Load messages when active chat changes
+  useEffect(() => {
+    if (selectedChat) {
+      fetchMessages();
+    } else {
+      setMessages([]);
+    }
+  }, [selectedChat]);
 
   const handleCreateInstance = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -242,6 +377,7 @@ export default function DashboardPage() {
   const menuItems = [
     { id: 'overview', label: 'Resumen', icon: LayoutDashboard },
     { id: 'instances', label: 'Líneas / QR', icon: Smartphone },
+    { id: 'chats', label: 'Chats en Vivo', icon: MessageSquare },
     { id: 'playground', label: 'Probar Envío', icon: Play },
     { id: 'docs', label: 'Documentación API', icon: Terminal },
     { id: 'subscription', label: 'Suscripción', icon: Key },
@@ -733,6 +869,381 @@ echo $response;`;
 
                       </div>
                     ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* CHATS SECTION */}
+            {activeTab === 'chats' && (
+              <div className="space-y-6 animate-fadeIn h-[calc(100vh-140px)] flex flex-col">
+                {/* Header Selector */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left border-b border-slate-200/50 dark:border-slate-800/50 pb-4">
+                  <div className="space-y-0.5">
+                    <h3 className="text-base font-bold text-slate-800 dark:text-white">Chats en Vivo</h3>
+                    <p className="text-xs text-slate-400">Administra tus conversaciones de WhatsApp en tiempo real.</p>
+                  </div>
+                  
+                  {/* Select Instance */}
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs font-semibold text-slate-500 dark:text-slate-405 whitespace-nowrap">Línea:</label>
+                    <select
+                      value={selectedInstanceForChats}
+                      onChange={(e) => {
+                        setSelectedInstanceForChats(e.target.value);
+                        setSelectedChat(null);
+                      }}
+                      className="px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-xl text-xs text-slate-800 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium font-sans"
+                    >
+                      <option value="" disabled>Seleccionar línea...</option>
+                      {instances.map(inst => (
+                        <option key={inst.id} value={inst.instance_name}>
+                          {inst.instance_name} ({inst.status === 'connected' ? 'Conectada' : 'Desconectada'})
+                        </option>
+                      ))}
+                    </select>
+                    <button 
+                      onClick={() => fetchChats(false)}
+                      disabled={chatsLoading}
+                      type="button"
+                      className="p-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 text-slate-600 dark:text-slate-400 cursor-pointer"
+                    >
+                      <RefreshCw size={14} className={chatsLoading ? 'animate-spin' : ''} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Validation warnings */}
+                {instances.length === 0 ? (
+                  <div className="flex-1 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-3xl p-8 flex flex-col items-center justify-center text-center space-y-4">
+                    <Smartphone size={48} className="text-slate-350 dark:text-slate-650" />
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-bold text-slate-850 dark:text-slate-150">No hay líneas vinculadas</h4>
+                      <p className="text-xs text-slate-400 max-w-sm">Crea y escanea una línea de WhatsApp en la pestaña "Líneas / QR" para poder comenzar a chatear.</p>
+                    </div>
+                  </div>
+                ) : !selectedInstanceForChats ? (
+                  <div className="flex-1 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-3xl p-8 flex flex-col items-center justify-center text-center space-y-2">
+                    <p className="text-xs text-slate-400">Por favor, selecciona una línea de WhatsApp en el menú superior.</p>
+                  </div>
+                ) : instances.find(i => i.instance_name === selectedInstanceForChats)?.status !== 'connected' ? (
+                  <div className="flex-1 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-3xl p-8 flex flex-col items-center justify-center text-center space-y-4">
+                    <AlertCircle size={48} className="text-amber-500" />
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-bold text-slate-855 dark:text-slate-145">Línea Desconectada</h4>
+                      <p className="text-xs text-slate-400 max-w-sm">La línea "{selectedInstanceForChats}" no está vinculada. Por favor, ve a la pestaña "Líneas / QR", obtén el código QR y escanéalo con tu teléfono.</p>
+                    </div>
+                  </div>
+                ) : (
+                  /* Connected Chat Interface */
+                  <div className="flex-1 min-h-0 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-3xl overflow-hidden grid grid-cols-1 md:grid-cols-12 shadow-sm text-left">
+                    
+                    {/* LEFT PANEL: Chats List */}
+                    <div className="md:col-span-4 border-r border-slate-200/60 dark:border-slate-800 flex flex-col min-h-0">
+                      {/* Search Bar */}
+                      <div className="p-4 border-b border-slate-150 dark:border-slate-800 relative">
+                        <input
+                          type="text"
+                          placeholder="Buscar conversación..."
+                          value={chatsSearchQuery}
+                          onChange={(e) => setChatsSearchQuery(e.target.value)}
+                          className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium"
+                        />
+                        <Search size={14} className="absolute left-7 top-1/2 -translate-y-1/2 text-slate-400" />
+                      </div>
+
+                      {/* Chats List Body */}
+                      <div className="flex-1 overflow-y-auto min-h-0 divide-y divide-slate-100 dark:divide-slate-800/40">
+                        {chatsLoading && chats.length === 0 ? (
+                          <div className="p-4 text-center text-xs text-slate-400 animate-pulse">Cargando conversaciones...</div>
+                        ) : chatsError ? (
+                          <div className="p-4 text-center text-xs text-red-500">{chatsError}</div>
+                        ) : chats.length === 0 ? (
+                          <div className="p-4 text-center text-xs text-slate-400">No se encontraron conversaciones activas.</div>
+                        ) : (
+                          chats
+                            .filter(chat => {
+                              const name = (chat.pushName || chat.remoteJid || '').toLowerCase();
+                              return name.includes(chatsSearchQuery.toLowerCase());
+                            })
+                            .map((chat) => {
+                              const isActive = selectedChat?.remoteJid === chat.remoteJid;
+                              const isUnread = chat.unreadCount > 0;
+                              const contactName = chat.pushName || chat.remoteJid.split('@')[0];
+                              
+                              // Extract last message text
+                              const content = chat.lastMessage?.message;
+                              let lastMsgText = '';
+                              if (content) {
+                                if (content.conversation) {
+                                  lastMsgText = content.conversation;
+                                } else if (content.extendedTextMessage?.text) {
+                                  lastMsgText = content.extendedTextMessage.text;
+                                } else if (content.imageMessage) {
+                                  lastMsgText = '📷 Imagen';
+                                } else if (content.audioMessage) {
+                                  lastMsgText = '🎵 Audio';
+                                } else if (content.documentMessage) {
+                                  lastMsgText = '📄 Documento';
+                                } else {
+                                  lastMsgText = chat.lastMessage?.messageType 
+                                    ? `[${chat.lastMessage.messageType.replace('Message', '')}]` 
+                                    : 'Mensaje';
+                                }
+                              }
+
+                              // Helper for timestamp formatting
+                              const formatTimeLocal = (timestamp: number) => {
+                                if (!timestamp) return '';
+                                const date = new Date(timestamp * (timestamp < 10000000000 ? 1000 : 1));
+                                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                              };
+
+                              return (
+                                <button
+                                  key={chat.remoteJid}
+                                  onClick={() => setSelectedChat(chat)}
+                                  type="button"
+                                  className={`w-full p-4 flex items-center gap-3 text-left transition-colors border-l-4 cursor-pointer ${isActive ? 'bg-slate-50 dark:bg-slate-950/20 border-emerald-500' : 'border-transparent hover:bg-slate-50/50 dark:hover:bg-slate-950/10'}`}
+                                >
+                                  {/* Profile Photo */}
+                                  <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 relative overflow-hidden border border-slate-200/50 dark:border-slate-700/50">
+                                    {chat.profilePicUrl ? (
+                                      <img src={chat.profilePicUrl} alt="" className="w-full h-full object-cover" />
+                                    ) : (
+                                      <MessageCircle size={18} className="text-slate-400" />
+                                    )}
+                                  </div>
+
+                                  {/* Details */}
+                                  <div className="flex-1 min-w-0 space-y-0.5">
+                                    <div className="flex items-center justify-between">
+                                      <span className={`text-xs font-bold truncate ${isActive ? 'text-emerald-500' : 'text-slate-800 dark:text-slate-200'}`}>
+                                        {contactName}
+                                      </span>
+                                      <span className="text-[10px] text-slate-400 font-medium">
+                                        {formatTimeLocal(chat.lastMessage?.messageTimestamp)}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                      <p className="text-[11px] text-slate-405 dark:text-slate-500 truncate font-medium">
+                                        {lastMsgText}
+                                      </p>
+                                      {isUnread && (
+                                        <span className="w-2 h-2 bg-emerald-500 rounded-full flex-shrink-0 ml-1"></span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </button>
+                              );
+                            })
+                        )}
+                      </div>
+                    </div>
+
+                    {/* RIGHT PANEL: Message Area */}
+                    <div className="md:col-span-8 flex flex-col min-h-0 bg-slate-50/30 dark:bg-slate-950/10">
+                      {selectedChat ? (
+                        <div className="flex-1 flex flex-col min-h-0">
+                          
+                          {/* Chat Window Header */}
+                          <div className="p-4 bg-white dark:bg-slate-900 border-b border-slate-200/50 dark:border-slate-800 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden border border-slate-200/50 dark:border-slate-700/50">
+                                {selectedChat.profilePicUrl ? (
+                                  <img src={selectedChat.profilePicUrl} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                  <MessageCircle size={18} className="text-slate-400" />
+                                )}
+                              </div>
+                              <div className="text-left">
+                                <h4 className="text-xs font-bold text-slate-800 dark:text-white">
+                                  {selectedChat.pushName || selectedChat.remoteJid.split('@')[0]}
+                                </h4>
+                                <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 block">
+                                  {selectedChat.remoteJid}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Chat Window Messages */}
+                          <div className="flex-1 overflow-y-auto p-4 space-y-3.5 min-h-0 flex flex-col">
+                            {messagesLoading && messages.length === 0 ? (
+                              <div className="my-auto text-center text-xs text-slate-400 animate-pulse">Cargando conversación...</div>
+                            ) : messages.length === 0 ? (
+                              <div className="my-auto text-center text-xs text-slate-400">No hay mensajes en este chat.</div>
+                            ) : (
+                              messages
+                                .slice()
+                                .reverse()
+                                .map((msg) => {
+                                  const fromMe = msg.key?.fromMe;
+                                  const date = new Date(msg.messageTimestamp * (msg.messageTimestamp < 10000000000 ? 1000 : 1));
+                                  const timestamp = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                  const msgId = msg.id;
+
+                                  // Determine checks icon
+                                  let statusIcon = null;
+                                  if (fromMe && msg.MessageUpdate) {
+                                    const statuses = msg.MessageUpdate.map((u: any) => u.status);
+                                    if (statuses.includes('READ')) {
+                                      statusIcon = <span className="text-[9px] text-sky-500 font-bold ml-1">✓✓</span>;
+                                    } else if (statuses.includes('DELIVERY_ACK')) {
+                                      statusIcon = <span className="text-[9px] text-slate-450 font-bold ml-1">✓✓</span>;
+                                    } else if (statuses.includes('SERVER_ACK')) {
+                                      statusIcon = <span className="text-[9px] text-slate-450 font-bold ml-1">✓</span>;
+                                    }
+                                  }
+
+                                  // Render Message Content
+                                  const renderMessageContent = () => {
+                                    const content = msg.message;
+                                    if (!content) return null;
+
+                                    if (content.imageMessage) {
+                                      if (loadedMedia[msgId]) {
+                                        return (
+                                          <div className="space-y-1.5 text-left">
+                                            <img 
+                                              src={loadedMedia[msgId]} 
+                                              alt="WhatsApp" 
+                                              className="max-w-[240px] rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer hover:opacity-90 transition-opacity" 
+                                              onClick={() => {
+                                                const w = window.open();
+                                                if (w) w.document.write(`<img src="${loadedMedia[msgId]}" style="max-width:100%; max-height:100vh; display:block; margin:auto;" />`);
+                                              }}
+                                            />
+                                            {content.imageMessage.caption && (
+                                              <p className="text-[11px] leading-relaxed text-slate-700 dark:text-slate-305">{content.imageMessage.caption}</p>
+                                            )}
+                                          </div>
+                                        );
+                                      }
+                                      return (
+                                        <button 
+                                          onClick={() => downloadMedia(msgId, msg.key, content)}
+                                          disabled={mediaLoadingStates[msgId]}
+                                          type="button"
+                                          className="text-[10px] px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold rounded-xl transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                                        >
+                                          {mediaLoadingStates[msgId] ? 'Descargando...' : '📷 Ver Imagen'}
+                                        </button>
+                                      );
+                                    }
+
+                                    if (content.audioMessage) {
+                                      if (loadedMedia[msgId]) {
+                                        return (
+                                          <audio controls src={loadedMedia[msgId]} className="max-w-[240px] mt-1 h-9" />
+                                        );
+                                      }
+                                      return (
+                                        <button 
+                                          onClick={() => downloadMedia(msgId, msg.key, content)}
+                                          disabled={mediaLoadingStates[msgId]}
+                                          type="button"
+                                          className="text-[10px] px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold rounded-xl transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                                        >
+                                          {mediaLoadingStates[msgId] ? 'Descargando...' : '🎵 Escuchar Audio'}
+                                        </button>
+                                      );
+                                    }
+
+                                    if (content.documentMessage) {
+                                      const fileName = content.documentMessage.fileName || 'documento';
+                                      if (loadedMedia[msgId]) {
+                                        return (
+                                          <a 
+                                            href={loadedMedia[msgId]} 
+                                            download={fileName}
+                                            className="text-xs px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-2 rounded-xl text-slate-800 dark:text-slate-200 font-semibold"
+                                          >
+                                            <BookOpen size={14} className="text-emerald-500" />
+                                            <span className="truncate max-w-[150px]">{fileName}</span>
+                                          </a>
+                                        );
+                                      }
+                                      return (
+                                        <button 
+                                          onClick={() => downloadMedia(msgId, msg.key, content)}
+                                          disabled={mediaLoadingStates[msgId]}
+                                          type="button"
+                                          className="text-[10px] px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold rounded-xl transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                                        >
+                                          {mediaLoadingStates[msgId] ? 'Descargando...' : `📄 Descargar ${fileName.slice(0, 10)}...`}
+                                        </button>
+                                      );
+                                    }
+
+                                    const text = content.conversation || content.extendedTextMessage?.text || '';
+                                    return <p className="text-[11px] leading-relaxed break-words text-left">{text}</p>;
+                                  };
+
+                                  return (
+                                    <div 
+                                      key={msgId} 
+                                      className={`flex flex-col max-w-[70%] ${fromMe ? 'self-end items-end' : 'self-start items-start'}`}
+                                    >
+                                      {/* Sender header for groups */}
+                                      {!fromMe && selectedChat.remoteJid.endsWith('@g.us') && msg.pushName && (
+                                        <span className="text-[9px] font-bold text-emerald-500 mb-0.5 ml-1.5">{msg.pushName}</span>
+                                      )}
+
+                                      {/* Bubble */}
+                                      <div className={`p-3 rounded-2xl shadow-sm text-slate-800 dark:text-slate-150 ${fromMe ? 'bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 rounded-tr-none' : 'bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 rounded-tl-none'}`}>
+                                        {renderMessageContent()}
+                                        
+                                        {/* Timestamp and Checks */}
+                                        <div className="flex items-center justify-end mt-1 text-[9px] text-slate-400 dark:text-slate-500 font-medium">
+                                          <span>{timestamp}</span>
+                                          {statusIcon}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })
+                            )}
+                            
+                            {/* Auto-scroll anchor */}
+                            <div ref={(el) => {
+                              if (el && !messagesLoading) {
+                                el.scrollIntoView({ behavior: 'smooth' });
+                              }
+                            }} />
+                          </div>
+
+                          {/* Chat Window Send Form */}
+                          <form 
+                            onSubmit={handleSendChatMessage}
+                            className="p-4 bg-white dark:bg-slate-900 border-t border-slate-200/50 dark:border-slate-800 flex items-center gap-2"
+                          >
+                            <input
+                              type="text"
+                              value={newMessageText}
+                              onChange={(e) => setNewMessageText(e.target.value)}
+                              placeholder="Escribe un mensaje aquí..."
+                              disabled={sendingMessage}
+                              className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium disabled:opacity-50"
+                            />
+                            <button
+                              type="submit"
+                              disabled={!newMessageText.trim() || sendingMessage}
+                              className="p-2.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white rounded-2xl transition-all shadow-md shadow-emerald-500/20 flex-shrink-0 disabled:opacity-50 disabled:scale-100 disabled:shadow-none cursor-pointer"
+                            >
+                              <Send size={14} className={sendingMessage ? 'animate-pulse' : ''} />
+                            </button>
+                          </form>
+
+                        </div>
+                      ) : (
+                        <div className="my-auto text-center space-y-2">
+                          <MessageSquare size={36} className="text-slate-300 dark:text-slate-700 mx-auto animate-bounce" />
+                          <p className="text-xs text-slate-450 dark:text-slate-500">Selecciona una conversación en la lista izquierda para comenzar a chatear.</p>
+                        </div>
+                      )}
+                    </div>
+
                   </div>
                 )}
               </div>
