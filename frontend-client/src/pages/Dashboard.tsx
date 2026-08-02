@@ -95,6 +95,34 @@ export default function DashboardPage() {
     return () => clearInterval(interval);
   }, []);
 
+  // Poll connection status more frequently when QR modal is open to auto-close it
+  useEffect(() => {
+    if (!activeQrInstance) return;
+
+    const checkStatus = async () => {
+      try {
+        const res = await api.get('/instances/list');
+        if (res.data?.success) {
+          const list = res.data.data;
+          setInstances(list);
+          const current = list.find((i: Instance) => i.instance_name === activeQrInstance);
+          if (current && current.status === 'connected') {
+            showNotification(`¡WhatsApp vinculado con éxito en la línea "${activeQrInstance}"! 🎉`);
+            setActiveQrInstance(null);
+            setQrBase64(null);
+          }
+        }
+      } catch (err) {
+        console.error('Error al verificar vinculación:', err);
+      }
+    };
+
+    // Check once immediately, then poll every 3 seconds
+    checkStatus();
+    const interval = setInterval(checkStatus, 3000);
+    return () => clearInterval(interval);
+  }, [activeQrInstance]);
+
   // Sync testInstance default value
   useEffect(() => {
     if (instances.length > 0 && !testInstance) {
