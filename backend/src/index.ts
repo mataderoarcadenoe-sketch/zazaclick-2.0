@@ -4,6 +4,7 @@ import * as dotenv from 'dotenv';
 import { initDatabase } from './config/database';
 import authRoutes from './routes/auth.routes';
 import instanceRoutes from './routes/instance.routes';
+import adminRoutes from './routes/admin.routes';
 
 dotenv.config();
 
@@ -22,6 +23,7 @@ app.use(express.json());
 // Routes Mount
 app.use('/api/auth', authRoutes);
 app.use('/api/instances', instanceRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Root Health Check Route
 app.get('/', (req, res) => {
