@@ -284,6 +284,7 @@ export class EvolutionService {
     const mergedMap = new Map<string, any>();
 
     for (const chat of chats) {
+      if (!chat || !chat.remoteJid) continue;
       if (chat.remoteJid === 'status@broadcast') continue;
 
       let realJid = chat.remoteJid;
