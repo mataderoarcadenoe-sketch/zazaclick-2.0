@@ -115,6 +115,37 @@ export class EvolutionService {
   }
 
   /**
+   * Obtener el estado actual de la licencia de Evolution API
+   */
+  public static async getLicenseStatus(): Promise<{ success: boolean; data?: any; error?: string }> {
+    try {
+      const response = await api.get('/license/status');
+      return { success: true, data: response.data };
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || err.message;
+      console.error('[EvolutionService] Error obteniendo estado de licencia:', errorMsg);
+      return { success: false, error: errorMsg };
+    }
+  }
+
+  /**
+   * Generar la URL de registro de licencia
+   */
+  public static async registerLicense(redirectUri: string): Promise<{ success: boolean; registerUrl?: string; error?: string }> {
+    try {
+      const response = await api.get(`/license/register?redirect_uri=${encodeURIComponent(redirectUri)}`);
+      if (response.data?.register_url || response.data?.url) {
+        return { success: true, registerUrl: response.data.register_url || response.data.url };
+      }
+      return { success: false, error: 'No se generó la URL de registro.' };
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || err.message;
+      console.error('[EvolutionService] Error registrando licencia:', errorMsg);
+      return { success: false, error: errorMsg };
+    }
+  }
+
+  /**
    * Generador de tokens aleatorios para asegurar las instancias de los clientes
    */
   private static generateRandomToken(): string {

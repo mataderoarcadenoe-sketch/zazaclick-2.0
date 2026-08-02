@@ -60,6 +60,10 @@ export default function AdminDashboardPage() {
   // System Health status indicators
   const [healthBackend, setHealthBackend] = useState<'checking' | 'ok' | 'error'>('checking');
   const [healthEvolution, setHealthEvolution] = useState<'checking' | 'ok' | 'error'>('checking');
+  const [licenseStatus, setLicenseStatus] = useState<any>(null);
+  const [licenseLoading, setLicenseLoading] = useState<boolean>(false);
+  const [licenseError, setLicenseError] = useState<string | null>(null);
+  const [registerLoading, setRegisterLoading] = useState<boolean>(false);
 
   const showNotification = (text: string, type: 'success' | 'error' = 'success') => {
     // Basic fallback alert since admin doesn't use the notification banner state in the original design
@@ -89,6 +93,41 @@ export default function AdminDashboardPage() {
       setError(err.response?.data?.error || 'Error al conectar con la API de administración');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchLicenseStatus = async () => {
+    setLicenseLoading(true);
+    setLicenseError(null);
+    try {
+      const res = await api.get('/admin/license/status');
+      if (res.data?.success) {
+        setLicenseStatus(res.data.data);
+      } else {
+        setLicenseError(res.data?.error || 'Error al obtener estado de la licencia');
+      }
+    } catch (e: any) {
+      setLicenseError(e.response?.data?.error || 'Error al conectar con el servidor de licencias');
+    } finally {
+      setLicenseLoading(false);
+    }
+  };
+
+  const handleRegisterLicense = async () => {
+    setRegisterLoading(true);
+    try {
+      const redirectUri = window.location.origin + '/admin';
+      const res = await api.post('/admin/license/register', { redirectUri });
+      if (res.data?.success && res.data?.registerUrl) {
+        window.open(res.data.registerUrl, '_blank');
+        showNotification('Se abrió la página de activación. Completa el registro y luego sincroniza.', 'success');
+      } else {
+        showNotification(res.data?.error || 'No se pudo generar el enlace de registro', 'error');
+      }
+    } catch (e: any) {
+      showNotification(e.response?.data?.error || 'Error de red al registrar licencia', 'error');
+    } finally {
+      setRegisterLoading(false);
     }
   };
 
@@ -123,6 +162,7 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     fetchAdminData();
     checkSystemHealth();
+    fetchLicenseStatus();
   }, []);
 
   const handleUpdateSubscription = async (clientId: string) => {
@@ -293,6 +333,32 @@ export default function AdminDashboardPage() {
           
           <div className="max-w-5xl mx-auto space-y-6">
             
+            {/* Global Warning Banner for Inactive License */}
+            {licenseStatus && !(licenseStatus.status === 'active' || licenseStatus.active) && (
+              <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left animate-fadeIn">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-rose-500/10 rounded-xl text-rose-600">
+                    <ShieldAlert size={20} />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black uppercase tracking-wider">Motor de WhatsApp Desactivado</h4>
+                    <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-relaxed mt-0.5">
+                      La licencia de Evolution API no está activa. Tus clientes experimentarán errores al intentar crear o conectar líneas. Por favor, realiza la activación.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setActiveTab('status');
+                    fetchLicenseStatus();
+                  }}
+                  className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-md transition-colors cursor-pointer whitespace-nowrap self-start sm:self-center"
+                >
+                  Gestionar Licencia
+                </button>
+              </div>
+            )}
+            
             {/* OVERVIEW SECTION */}
             {activeTab === 'overview' && (
               <div className="space-y-6 animate-fadeIn">
@@ -323,6 +389,7 @@ export default function AdminDashboardPage() {
                       onClick={() => {
                         checkSystemHealth();
                         fetchAdminData();
+                        fetchLicenseStatus();
                       }}
                       className="px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl hover-lift shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
                     >
@@ -629,6 +696,94 @@ export default function AdminDashboardPage() {
                     <p className="text-[10.5px] text-slate-400 leading-relaxed font-medium">
                       Servicio de mensajería en vivo. Se comunica directamente con los teléfonos de los clientes para emparejar sesiones e interactuar vía Webhooks.
                     </p>
+                  </div>
+
+                  {/* Evolution API License Status Card */}
+                  <div className="md:col-span-2 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 p-6 rounded-3xl shadow-sm space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-100 dark:border-slate-800/60">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-blue-500/10 rounded-xl text-blue-500">
+                          <Key size={20} />
+                        </div>
+                        <div className="text-left">
+                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest font-mono">Licencia del Motor</span>
+                          <h4 className="text-sm font-bold text-slate-800 dark:text-white">Estado de Licencia Evolution API</h4>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        {licenseLoading ? (
+                          <span className="text-xs text-slate-400 flex items-center gap-1 font-bold">
+                            <RefreshCw size={12} className="animate-spin" />
+                            Consultando...
+                          </span>
+                        ) : (
+                          <button
+                            onClick={fetchLicenseStatus}
+                            className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                            title="Actualizar licencia"
+                          >
+                            <RefreshCw size={14} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {licenseError ? (
+                      <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs rounded-2xl text-left font-semibold">
+                        {licenseError}
+                      </div>
+                    ) : licenseStatus ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-left text-xs">
+                        <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200/30 dark:border-slate-800/30">
+                          <span className="block text-[10px] text-slate-400 uppercase font-bold">Estado General</span>
+                          <span className={`block font-black mt-1 ${
+                            licenseStatus.status === 'active' || licenseStatus.active
+                              ? 'text-emerald-500'
+                              : 'text-rose-500'
+                          }`}>
+                            {licenseStatus.status === 'active' || licenseStatus.active ? 'ACTIVO / VÁLIDO' : 'ACTIVACIÓN REQUERIDA'}
+                          </span>
+                        </div>
+                        <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200/30 dark:border-slate-800/30">
+                          <span className="block text-[10px] text-slate-400 uppercase font-bold">Tipo de Licencia</span>
+                          <span className="block font-black text-slate-700 dark:text-slate-350 mt-1 uppercase">
+                            {licenseStatus.type || 'Community / Free'}
+                          </span>
+                        </div>
+                        <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200/30 dark:border-slate-800/30">
+                          <span className="block text-[10px] text-slate-400 uppercase font-bold">Expiración de Clave</span>
+                          <span className="block font-black text-slate-700 dark:text-slate-350 mt-1 font-mono">
+                            {licenseStatus.expires_at || licenseStatus.expiresAt
+                              ? new Date(licenseStatus.expires_at || licenseStatus.expiresAt).toLocaleDateString()
+                              : 'Sin expiración / Permanente'}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center text-xs py-4 text-slate-400 font-medium">
+                        Cargando información de licencia...
+                      </div>
+                    )}
+
+                    {/* Action button if registration is needed */}
+                    {licenseStatus && !(licenseStatus.status === 'active' || licenseStatus.active) && (
+                      <div className="p-4 bg-blue-500/5 rounded-2xl border border-blue-500/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
+                        <div className="space-y-1">
+                          <h5 className="text-xs font-bold text-blue-600 dark:text-blue-450">Activación Gratuita de Evolution API</h5>
+                          <p className="text-[10.5px] text-slate-400 max-w-xl leading-relaxed">
+                            Esta instalación requiere asociar un correo administrador para habilitar el motor. Haz clic abajo para generar tu link e introducir tu email.
+                          </p>
+                        </div>
+                        <button
+                          onClick={handleRegisterLicense}
+                          disabled={registerLoading}
+                          className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-450 text-white font-bold text-xs rounded-xl shadow-md transition-colors cursor-pointer whitespace-nowrap self-start sm:self-center"
+                        >
+                          {registerLoading ? 'Generando...' : 'Obtener Link de Activación'}
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Cache & DB connectivity */}

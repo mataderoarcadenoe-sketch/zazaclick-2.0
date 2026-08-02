@@ -1,6 +1,7 @@
 import { Router, Response } from 'express';
 import pool from '../config/database';
 import { authMiddleware, adminMiddleware, AuthenticatedRequest } from '../middleware/auth.middleware';
+import { EvolutionService } from '../services/evolution.service';
 
 const router = Router();
 
@@ -142,6 +143,43 @@ router.put('/users/:id/subscription', async (req: AuthenticatedRequest, res) => 
     await pool.query('ROLLBACK');
     console.error('[AdminSubUpdate] Error:', error.message);
     res.status(500).json({ success: false, error: 'Error al actualizar suscripción' });
+  }
+});
+
+/**
+ * GET /license/status - Obtener el estado de la licencia de Evolution API
+ */
+router.get('/license/status', async (req: AuthenticatedRequest, res) => {
+  try {
+    const result = await EvolutionService.getLicenseStatus();
+    if (result.success) {
+      return res.json({ success: true, data: result.data });
+    }
+    res.status(500).json({ success: false, error: result.error || 'Error al obtener estado de licencia' });
+  } catch (error: any) {
+    console.error('[AdminLicenseStatus] Error:', error.message);
+    res.status(500).json({ success: false, error: 'Error interno al consultar licencia' });
+  }
+});
+
+/**
+ * POST /license/register - Generar link de activación de licencia
+ */
+router.post('/license/register', async (req: AuthenticatedRequest, res) => {
+  const { redirectUri } = req.body;
+  if (!redirectUri) {
+    return res.status(400).json({ success: false, error: 'redirectUri es requerido' });
+  }
+
+  try {
+    const result = await EvolutionService.registerLicense(redirectUri);
+    if (result.success) {
+      return res.json({ success: true, registerUrl: result.registerUrl });
+    }
+    res.status(500).json({ success: false, error: result.error || 'Error al registrar licencia' });
+  } catch (error: any) {
+    console.error('[AdminLicenseRegister] Error:', error.message);
+    res.status(500).json({ success: false, error: 'Error interno al registrar licencia' });
   }
 });
 

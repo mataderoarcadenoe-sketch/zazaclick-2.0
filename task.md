@@ -1,0 +1,5 @@
+- `[ ]` Agregar servicio y endpoints de Licencia en el backend (`EvolutionService` y `admin.routes.ts`)
+- `[ ]` Integrar tarjeta de Licencia y monitoreo de expiración en `AdminDashboard.tsx`
+- `[ ]` Probar compilación del backend
+- `[ ]` Probar compilación de admin
+- `[ ]` Guardar y hacer push a GitHub
