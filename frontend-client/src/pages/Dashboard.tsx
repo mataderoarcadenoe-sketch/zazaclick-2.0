@@ -169,7 +169,8 @@ export default function DashboardPage() {
     if (!silent) setMessagesLoading(true);
     try {
       const remoteJid = selectedChat.remoteJid;
-      const res = await api.post(`/instances/chats/${selectedInstanceForChats}/messages`, { remoteJid });
+      const originalJid = selectedChat.originalJid;
+      const res = await api.post(`/instances/chats/${selectedInstanceForChats}/messages`, { remoteJid, originalJid });
       if (res.data?.success) {
         setMessages(res.data.data);
       }

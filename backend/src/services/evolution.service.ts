@@ -276,4 +276,68 @@ export class EvolutionService {
     }
     return token;
   }
+
+  /**
+   * Unificar chats @lid con sus números reales para evitar conversaciones duplicadas
+   */
+  public static mergeChats(chats: any[]): any[] {
+    const mergedMap = new Map<string, any>();
+
+    for (const chat of chats) {
+      if (chat.remoteJid === 'status@broadcast') continue;
+
+      let realJid = chat.remoteJid;
+
+      // Limpiar el sufijo de puerto :0 si existe
+      if (realJid.includes(':0@s.whatsapp.net')) {
+        realJid = realJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
+      }
+
+      // Si es un @lid, intentamos obtener su número real de remoteJidAlt
+      if (realJid.endsWith('@lid') && chat.lastMessage?.key?.remoteJidAlt) {
+        realJid = chat.lastMessage.key.remoteJidAlt;
+      }
+      
+      // Volver a limpiar por si el remoteJidAlt vino con :0
+      if (realJid.includes(':0@s.whatsapp.net')) {
+        realJid = realJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
+      }
+
+      const existing = mergedMap.get(realJid);
+      
+      if (!existing) {
+        // Primer vez que vemos este JID real
+        const newChat = { ...chat, remoteJid: realJid, originalJid: chat.remoteJid };
+        mergedMap.set(realJid, newChat);
+      } else {
+        // Fusionar si ya existía
+        const currentTs = chat.lastMessage?.messageTimestamp || 0;
+        const existingTs = existing.lastMessage?.messageTimestamp || 0;
+        
+        if (currentTs > existingTs) {
+          const merged = { 
+            ...chat, 
+            remoteJid: realJid,
+            originalJid: chat.remoteJid,
+            profilePicUrl: chat.profilePicUrl || existing.profilePicUrl,
+            pushName: chat.pushName || existing.pushName,
+            unreadCount: (chat.unreadCount || 0) + (existing.unreadCount || 0)
+          };
+          mergedMap.set(realJid, merged);
+        } else {
+          existing.profilePicUrl = existing.profilePicUrl || chat.profilePicUrl;
+          existing.pushName = existing.pushName || chat.pushName;
+          existing.unreadCount = (existing.unreadCount || 0) + (chat.unreadCount || 0);
+          mergedMap.set(realJid, existing);
+        }
+      }
+    }
+
+    // Ordenar por el timestamp del último mensaje de forma descendente
+    return Array.from(mergedMap.values()).sort((a, b) => {
+      const tsA = a.lastMessage?.messageTimestamp || 0;
+      const tsB = b.lastMessage?.messageTimestamp || 0;
+      return tsB - tsA;
+    });
+  }
 }

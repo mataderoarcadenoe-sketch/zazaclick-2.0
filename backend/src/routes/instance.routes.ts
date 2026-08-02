@@ -269,10 +269,8 @@ router.get('/chats/:instanceName', authMiddleware, async (req: AuthenticatedRequ
       return res.status(500).json({ success: false, error: chatsResult.error || 'Error al obtener chats' });
     }
 
-    // Filtrar broadcasts o difusiones molestas que no son chats reales
-    const cleanChats = (chatsResult.data || []).filter((chat: any) => 
-      chat.remoteJid && chat.remoteJid !== 'status@broadcast'
-    );
+    // Filtrar broadcasts y unificar chats @lid usando la nueva utilidad
+    const cleanChats = EvolutionService.mergeChats(chatsResult.data || []);
 
     res.json({ success: true, data: cleanChats });
   } catch (error: any) {
@@ -286,7 +284,7 @@ router.get('/chats/:instanceName', authMiddleware, async (req: AuthenticatedRequ
  */
 router.post('/chats/:instanceName/messages', authMiddleware, async (req: AuthenticatedRequest, res) => {
   const { instanceName } = req.params;
-  const { remoteJid } = req.body;
+  const { remoteJid, originalJid } = req.body;
 
   if (!remoteJid) {
     return res.status(400).json({ success: false, error: 'Falta el parámetro remoteJid' });
@@ -299,13 +297,38 @@ router.post('/chats/:instanceName/messages', authMiddleware, async (req: Authent
       return res.status(403).json({ success: false, error: 'Acceso no autorizado.' });
     }
 
+    let allRecords: any[] = [];
+    
+    // Fetch para remoteJid principal
     const messagesResult = await EvolutionService.getChatMessages(instanceName, remoteJid);
     if (!messagesResult.success) {
       return res.status(500).json({ success: false, error: messagesResult.error || 'Error al obtener mensajes' });
     }
-
     const records = messagesResult.data?.messages?.records || messagesResult.data?.records || messagesResult.data || [];
-    res.json({ success: true, data: records });
+    allRecords = allRecords.concat(records);
+
+    // Fetch para originalJid si existe y es diferente (ej. LID unificado)
+    if (originalJid && originalJid !== remoteJid) {
+      const altMessagesResult = await EvolutionService.getChatMessages(instanceName, originalJid);
+      if (altMessagesResult.success) {
+        const altRecords = altMessagesResult.data?.messages?.records || altMessagesResult.data?.records || altMessagesResult.data || [];
+        allRecords = allRecords.concat(altRecords);
+      }
+    }
+
+    // Eliminar duplicados y ordenar por timestamp
+    const uniqueMessages = new Map();
+    for (const msg of allRecords) {
+      if (msg.id) uniqueMessages.set(msg.id, msg);
+    }
+    
+    // Se devuelven tal como los espera el frontend (sin reverse aquí porque el frontend hace slice().reverse())
+    // El frontend renderiza y ordena. Retornaremos la lista descendente como la API original (los más nuevos primero)
+    const sortedMessages = Array.from(uniqueMessages.values()).sort((a, b) => {
+      return (b.messageTimestamp || 0) - (a.messageTimestamp || 0);
+    });
+
+    res.json({ success: true, data: sortedMessages });
   } catch (error: any) {
     console.error('[Instance] Error en POST /chats/messages:', error.message);
     res.status(500).json({ success: false, error: 'Error interno en el servidor.' });
