@@ -154,9 +154,13 @@ export default function DashboardPage() {
         setInstances(res.data.data);
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Error al cargar instancias');
+      if (!silent) {
+        setError(err.response?.data?.error || 'Error al cargar instancias');
+      } else {
+        console.warn('Silently ignoring connection error during polling:', err.message);
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -207,16 +211,20 @@ export default function DashboardPage() {
   // Fetch chats list
   const fetchChats = async (silent = false) => {
     if (!selectedInstanceForChats) return;
-    if (!silent) setChatsLoading(true);
-    setChatsError(null);
+    if (!silent) {
+      setChatsLoading(true);
+      setChatsError(null);
+    }
     try {
       const res = await api.get(`/instances/chats/${selectedInstanceForChats}`);
       if (res.data?.success) {
         setChats(res.data.data);
       }
     } catch (err: any) {
-      console.error('Error fetching chats:', err);
-      setChatsError(err.response?.data?.error || 'Error al obtener los chats de la línea');
+      console.warn('Error fetching chats (silent=' + silent + '):', err.message);
+      if (!silent) {
+        setChatsError(err.response?.data?.error || 'Error al obtener los chats de la línea');
+      }
     } finally {
       if (!silent) setChatsLoading(false);
     }
