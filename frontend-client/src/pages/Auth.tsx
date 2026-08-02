@@ -28,10 +28,17 @@ export default function AuthPage() {
         window.google.accounts.id.initialize({
           client_id: '6104299697-7dissi3tuvd84q94737nqmsi96nmh2d5.apps.googleusercontent.com',
           callback: handleGoogleLoginResponse,
+          auto_select: false
         });
         window.google.accounts.id.renderButton(
           document.getElementById('google-btn'),
-          { theme: 'filled_dark', size: 'large', width: '380' }
+          { 
+            theme: 'filled_dark', 
+            size: 'large', 
+            width: '380',
+            text: 'signin', // Forces generic "Sign In" text instead of personalized "Sign in as..."
+            logo_alignment: 'left'
+          }
         );
       }
     };

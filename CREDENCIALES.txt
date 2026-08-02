@@ -4,5 +4,6 @@ API WPS
 
 URL:
 
-
-/browser
+Portal del Cliente: https://zaza-click-frontend-production.up.railway.app
+Panel del Administrador: https://zaza-click-admin-production.up.railway.app
+API REST Backend: https://zaza-click-20-production.up.railway.app
