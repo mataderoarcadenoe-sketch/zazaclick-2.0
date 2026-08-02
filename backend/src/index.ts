@@ -8,11 +8,11 @@ import instanceRoutes from './routes/instance.routes';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = parseInt(process.env.PORT || '5000', 10);
 
 // Middlewares
 app.use(cors({
-  origin: '*', // Permitir conexiones desde cualquier origen para desarrollo
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-tenant-id']
 }));
@@ -28,6 +28,7 @@ app.get('/', (req, res) => {
     status: 'ok',
     service: 'Zaza.click 2.0 - WhatsApp API SaaS Gateway',
     version: '2.0.0',
+    port: PORT,
     timestamp: new Date().toISOString()
   });
 });
@@ -38,12 +39,11 @@ async function startServer() {
     console.log('🔄 Inicializando base de datos...');
     await initDatabase();
     
-    app.listen(PORT, () => {
-      console.log(`🚀 Servidor ejecutándose en el puerto http://localhost:${PORT}`);
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 Servidor ejecutándose exitosamente en http://0.0.0.0:${PORT}`);
     });
   } catch (error) {
-    console.error('❌ Error al iniciar el servidor:', error);
-    process.exit(1);
+    console.error('❌ Error fatal al iniciar el servidor:', error);
   }
 }
 

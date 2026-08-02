@@ -6,12 +6,14 @@ dotenv.config();
 const dbUrl = process.env.DATABASE_URL;
 
 if (!dbUrl) {
-  console.error('❌ ERROR: DATABASE_URL no configurada en el archivo .env');
+  console.warn('⚠️ WARNING: DATABASE_URL no configurada en el entorno.');
 }
+
+const isLocalOrInternal = !dbUrl || dbUrl.includes('localhost') || dbUrl.includes('127.0.0.1') || dbUrl.includes('railway.internal');
 
 const pool = new Pool({
   connectionString: dbUrl,
-  ssl: dbUrl && dbUrl.includes('localhost') ? false : { rejectUnauthorized: false },
+  ssl: isLocalOrInternal ? false : { rejectUnauthorized: false },
   max: 5,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 10000,
@@ -30,13 +32,18 @@ pool.on('error', (err) => {
  */
 export async function initDatabase() {
   try {
+    if (!dbUrl) {
+      console.warn('⚠️ Skipping DB init: DATABASE_URL missing.');
+      return;
+    }
+
     // 1. Tabla de Usuarios
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id VARCHAR(255) PRIMARY KEY,
         email VARCHAR(255) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
-        role VARCHAR(50) DEFAULT 'client', -- 'admin', 'client'
+        role VARCHAR(50) DEFAULT 'client',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
@@ -72,7 +79,7 @@ export async function initDatabase() {
         id VARCHAR(255) PRIMARY KEY,
         user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         plan_id VARCHAR(255) NOT NULL REFERENCES plans(id),
-        status VARCHAR(50) DEFAULT 'active', -- 'active', 'expired', 'cancelled'
+        status VARCHAR(50) DEFAULT 'active',
         start_date TIMESTAMP NOT NULL,
         end_date TIMESTAMP NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -86,7 +93,7 @@ export async function initDatabase() {
         user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         instance_name VARCHAR(255) UNIQUE NOT NULL,
         phone VARCHAR(50),
-        status VARCHAR(50) DEFAULT 'disconnected', -- 'disconnected', 'connecting', 'connected'
+        status VARCHAR(50) DEFAULT 'disconnected',
         api_key VARCHAR(255) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -96,7 +103,6 @@ export async function initDatabase() {
     console.log('🚀 [Database] Estructura de base de datos inicializada exitosamente.');
   } catch (error: any) {
     console.error('❌ [Database] Error inicializando tablas:', error.message);
-    throw error;
   }
 }
 
