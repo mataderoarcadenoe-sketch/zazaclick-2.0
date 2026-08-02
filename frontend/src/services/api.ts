@@ -1,9 +1,9 @@
 import axios from 'axios';
 
-// Dynamically handle production URL or local development
+// Dynamically handle local development or production Railway backend
 const API_URL = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1')
   ? 'http://localhost:5000/api'
-  : '/api'; // Assumes proxy or same-host deploy
+  : 'https://zaza-click-20-production.up.railway.app/api';
 
 const api = axios.create({
   baseURL: API_URL,
