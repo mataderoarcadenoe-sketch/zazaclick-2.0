@@ -266,7 +266,9 @@ router.get('/chats/:instanceName', authMiddleware, async (req: AuthenticatedRequ
 
     const chatsResult = await EvolutionService.getChats(instanceName);
     if (!chatsResult.success) {
-      return res.status(500).json({ success: false, error: chatsResult.error || 'Error al obtener chats' });
+      const statusCode = chatsResult.status === 404 ? 404 : 500;
+      const cleanError = chatsResult.status === 404 ? 'La instancia de WhatsApp no está conectada o no existe.' : (chatsResult.error || 'Error al obtener chats');
+      return res.status(statusCode).json({ success: false, error: cleanError });
     }
 
     // Filtrar broadcasts y unificar chats @lid usando la nueva utilidad
@@ -302,7 +304,9 @@ router.post('/chats/:instanceName/messages', authMiddleware, async (req: Authent
     // Fetch para remoteJid principal
     const messagesResult = await EvolutionService.getChatMessages(instanceName, remoteJid);
     if (!messagesResult.success) {
-      return res.status(500).json({ success: false, error: messagesResult.error || 'Error al obtener mensajes' });
+      const statusCode = messagesResult.status === 404 ? 404 : 500;
+      const cleanError = messagesResult.status === 404 ? 'La instancia de WhatsApp no está conectada o no existe.' : (messagesResult.error || 'Error al obtener mensajes');
+      return res.status(statusCode).json({ success: false, error: cleanError });
     }
     const records = messagesResult.data?.messages?.records || messagesResult.data?.records || messagesResult.data || [];
     allRecords = allRecords.concat(records);

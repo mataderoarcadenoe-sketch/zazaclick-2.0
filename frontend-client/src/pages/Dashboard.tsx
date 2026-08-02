@@ -161,7 +161,13 @@ export default function DashboardPage() {
         setError(err.response?.data?.error || 'Error al cargar instancias');
       } else {
         console.warn('Silently ignoring connection error during polling:', err.message);
+      }
+      
+      // Solo marcar servidor como desconectado si no hay respuesta del servidor (caída/reinicio)
+      if (!err.response) {
         setIsServerOffline(true);
+      } else {
+        setIsServerOffline(false);
       }
     } finally {
       if (!silent) setLoading(false);
@@ -229,8 +235,13 @@ export default function DashboardPage() {
       console.warn('Error fetching chats (silent=' + silent + '):', err.message);
       if (!silent) {
         setChatsError(err.response?.data?.error || 'Error al obtener los chats de la línea');
-      } else {
+      }
+      
+      // Solo marcar servidor como desconectado si no hay respuesta del servidor (caída/reinicio)
+      if (!err.response) {
         setIsServerOffline(true);
+      } else {
+        setIsServerOffline(false);
       }
     } finally {
       if (!silent) setChatsLoading(false);

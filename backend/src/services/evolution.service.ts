@@ -222,21 +222,21 @@ export class EvolutionService {
   /**
    * Obtener chats activos de la instancia
    */
-  public static async getChats(instanceName: string): Promise<{ success: boolean; data?: any; error?: string }> {
+  public static async getChats(instanceName: string): Promise<{ success: boolean; data?: any; error?: string; status?: number }> {
     try {
       const response = await api.post(`/chat/findChats/${instanceName}`, {});
       return { success: true, data: response.data };
     } catch (err: any) {
       const errorMsg = this.parseError(err);
       console.error(`[EvolutionService] Error obteniendo chats para ${instanceName}:`, errorMsg);
-      return { success: false, error: errorMsg };
+      return { success: false, error: errorMsg, status: err.response?.status };
     }
   }
 
   /**
    * Obtener mensajes de un chat específico
    */
-  public static async getChatMessages(instanceName: string, remoteJid: string): Promise<{ success: boolean; data?: any; error?: string }> {
+  public static async getChatMessages(instanceName: string, remoteJid: string): Promise<{ success: boolean; data?: any; error?: string; status?: number }> {
     try {
       const response = await api.post(`/chat/findMessages/${instanceName}`, {
         where: {
@@ -249,9 +249,8 @@ export class EvolutionService {
       return { success: true, data: response.data };
     } catch (err: any) {
       const errorMsg = this.parseError(err);
-      console.error(`[EvolutionService] Error obteniendo mensajes para ${remoteJid}:`, errorMsg);
-      return { success: false, error: errorMsg };
-    }
+      console.error(`[EvolutionService] Error obteniendo mensajes para ${instanceName}:`, errorMsg);
+      return { success: false, error: errorMsg, status: err.response?.status };
   }
 
   /**
