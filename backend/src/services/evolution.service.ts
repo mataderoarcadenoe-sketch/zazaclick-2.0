@@ -22,6 +22,37 @@ const api = axios.create({
 export class EvolutionService {
 
   /**
+   * Extrae y formatea el mensaje de error de una excepción de Axios
+   */
+  private static parseError(err: any): string {
+    if (err.response) {
+      const data = err.response.data;
+      if (data) {
+        if (typeof data === 'string') {
+          return data;
+        }
+        if (typeof data === 'object') {
+          const message = data.message || data.error || data.err;
+          if (message) {
+            if (Array.isArray(message)) {
+              return message.join(', ');
+            }
+            if (typeof message === 'object') {
+              return JSON.stringify(message);
+            }
+            return String(message);
+          }
+        }
+      }
+      return `Error ${err.response.status}: ${err.response.statusText || 'Petición incorrecta'}`;
+    }
+    if (err.request) {
+      return 'No se recibió respuesta del servidor de Evolution API. Verifica que esté en línea.';
+    }
+    return err.message;
+  }
+
+  /**
    * Crear una nueva instancia de WhatsApp para el cliente
    */
   public static async createInstance(instanceName: string): Promise<{ success: boolean; instance?: any; error?: string }> {
@@ -38,7 +69,7 @@ export class EvolutionService {
       }
       return { success: false, error: 'Respuesta inválida de Evolution API' };
     } catch (err: any) {
-      const errorMsg = err.response?.data?.message || err.message;
+      const errorMsg = this.parseError(err);
       console.error(`[EvolutionService] Error creando instancia ${instanceName}:`, errorMsg);
       return { success: false, error: errorMsg };
     }
@@ -68,7 +99,7 @@ export class EvolutionService {
       }
       return { success: false, error: 'No se generó el código QR' };
     } catch (err: any) {
-      const errorMsg = err.response?.data?.message || err.message;
+      const errorMsg = this.parseError(err);
       return { success: false, error: errorMsg };
     }
   }
@@ -122,7 +153,7 @@ export class EvolutionService {
       const response = await api.get('/license/status');
       return { success: true, data: response.data };
     } catch (err: any) {
-      const errorMsg = err.response?.data?.message || err.message;
+      const errorMsg = this.parseError(err);
       console.error('[EvolutionService] Error obteniendo estado de licencia:', errorMsg);
       return { success: false, error: errorMsg };
     }
@@ -139,7 +170,7 @@ export class EvolutionService {
       }
       return { success: false, error: 'No se generó la URL de registro.' };
     } catch (err: any) {
-      const errorMsg = err.response?.data?.message || err.message;
+      const errorMsg = this.parseError(err);
       console.error('[EvolutionService] Error registrando licencia:', errorMsg);
       return { success: false, error: errorMsg };
     }
@@ -153,7 +184,7 @@ export class EvolutionService {
       const response = await api.get(`/license/activate?code=${code}`);
       return { success: true, data: response.data };
     } catch (err: any) {
-      const errorMsg = err.response?.data?.message || err.message;
+      const errorMsg = this.parseError(err);
       console.error('[EvolutionService] Error activando licencia con código:', errorMsg);
       return { success: false, error: errorMsg };
     }
