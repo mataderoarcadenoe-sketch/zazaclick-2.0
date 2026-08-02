@@ -72,6 +72,14 @@ export class EvolutionService {
         qrcode: true,
         integration: 'WHATSAPP-BAILEYS',
         webhook: null, // Opcional: configurar si deseamos webhooks locales
+        settings: {
+          alwaysOnline: true,
+          rejectCall: false,
+          groupsIgnore: false,
+          readMessages: false,
+          readStatus: false,
+          syncFullHistory: false
+        }
       });
 
       if (response.data?.instance) {
