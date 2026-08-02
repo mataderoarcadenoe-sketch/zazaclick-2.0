@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../services/authContext';
-import { ShieldCheck, Zap, Cpu } from 'lucide-react';
+import { ShieldCheck, Zap, Cpu, Sparkles, Mail, Lock, Moon, Sun, Smartphone } from 'lucide-react';
+import { useDarkMode } from '../hooks/useDarkMode';
 import api from '../services/api';
 
 declare global {
@@ -16,6 +17,7 @@ export default function AuthPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { isDark, toggle: toggleDark } = useDarkMode();
 
   // Dynamically load Google SDK on mount
   useEffect(() => {
@@ -33,10 +35,10 @@ export default function AuthPage() {
         window.google.accounts.id.renderButton(
           document.getElementById('google-btn'),
           { 
-            theme: 'filled_dark', 
+            theme: isDark ? 'filled_dark' : 'outline', 
             size: 'large', 
             width: '380',
-            text: 'signin', // Forces generic "Sign In" text instead of personalized "Sign in as..."
+            text: 'signin',
             logo_alignment: 'left'
           }
         );
@@ -47,7 +49,7 @@ export default function AuthPage() {
     return () => {
       document.body.removeChild(script);
     };
-  }, []);
+  }, [isDark]); // Re-render button theme when isDark changes
 
   const handleGoogleLoginResponse = async (response: any) => {
     setLoading(true);
@@ -90,117 +92,155 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0F19] bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] flex items-center justify-center p-4">
-      {/* Background glow effects */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen relative flex items-center justify-center p-4 md:p-8 mesh-gradient-light dark:mesh-gradient-dark overflow-hidden transition-colors duration-300">
+      {/* Light Nodes */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-500/10 dark:bg-emerald-500/5 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-teal-500/10 dark:bg-teal-500/5 blur-[120px] pointer-events-none" />
 
-      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-12 gap-8 items-center relative z-10">
+      {/* Floating Theme Button */}
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-50">
+        <button
+          onClick={toggleDark}
+          className="p-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-200/50 dark:border-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 hover-lift shadow-sm text-slate-600 dark:text-slate-300 cursor-pointer"
+          aria-label="Cambiar tema"
+        >
+          {isDark ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-indigo-600" />}
+        </button>
+      </div>
+
+      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 items-center relative z-10">
         
         {/* Marketing Info Panel */}
-        <div className="md:col-span-6 space-y-6 text-left pr-4 hidden md:block">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-emerald-500">
+        <div className="md:col-span-6 space-y-6 text-left hidden md:block animate-fadeIn">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl text-white shadow-md shadow-emerald-500/20">
               <ShieldCheck className="w-6 h-6" />
             </div>
-            <span className="text-xl font-extrabold text-white tracking-wide">Zaza.click <span className="text-emerald-500">2.0</span></span>
+            <div>
+              <span className="text-xs font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">SaaS Platform</span>
+              <span className="block text-xl font-black text-slate-800 dark:text-white tracking-tight">Zaza.click <span className="text-emerald-500">2.0</span></span>
+            </div>
           </div>
 
-          <h1 className="text-4xl font-extrabold text-white leading-tight">
-            La API de WhatsApp <br />
-            <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">Más rápida y confiable</span> <br />
+          <h1 className="text-4xl lg:text-5xl font-black text-slate-800 dark:text-white leading-tight tracking-tight">
+            API de WhatsApp <br />
+            <span className="bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 bg-clip-text text-transparent">Multi-Inquilino</span> <br />
             para tu negocio.
           </h1>
 
-          <p className="text-gray-400 text-sm leading-relaxed">
-            Conecta tu WhatsApp en segundos, crea múltiples instancias independientes y envía notificaciones, recordatorios o mensajes automáticos desde tus propios sistemas.
+          <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed max-w-md">
+            Conecta instancias ilimitadas, gestiona credenciales de forma aislada, escanear códigos QR instantáneos y empieza a enviar mensajes masivos y notificaciones mediante API en segundos.
           </p>
 
           <div className="space-y-4 pt-4">
-            <div className="flex items-start gap-3">
-              <div className="p-1.5 bg-[#151D30] border border-white/5 rounded-lg text-emerald-400 mt-0.5">
-                <Zap className="w-4 h-4" />
+            <div className="flex items-start gap-3.5 p-3 rounded-2xl bg-white/40 dark:bg-slate-900/40 border border-slate-200/30 dark:border-slate-800/30 hover:border-emerald-500/30 transition-colors">
+              <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-500 mt-0.5">
+                <Zap className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-white text-xs font-bold">Instancias Multi-inquilino</h4>
-                <p className="text-gray-400 text-[11px]">Asigna y controla números de WhatsApp de forma totalmente aislada por cliente.</p>
+                <h4 className="text-slate-800 dark:text-white text-xs font-extrabold tracking-tight">Velocidad Instantánea</h4>
+                <p className="text-slate-500 dark:text-slate-400 text-[11px]">Envíos inmediatos integrados con Evolution API v2 y caché Redis optimizada.</p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <div className="p-1.5 bg-[#151D30] border border-white/5 rounded-lg text-emerald-400 mt-0.5">
-                <Cpu className="w-4 h-4" />
+            <div className="flex items-start gap-3.5 p-3 rounded-2xl bg-white/40 dark:bg-slate-900/40 border border-slate-200/30 dark:border-slate-800/30 hover:border-emerald-500/30 transition-colors">
+              <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-500 mt-0.5">
+                <Cpu className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-white text-xs font-bold">Fácil de Integrar</h4>
-                <p className="text-gray-400 text-[11px]">Documentación sencilla para integrar con PHP, Node, Python, Bubble y más.</p>
+                <h4 className="text-slate-800 dark:text-white text-xs font-extrabold tracking-tight">Seguridad y Aislamiento</h4>
+                <p className="text-slate-500 dark:text-slate-400 text-[11px]">Bases de datos aisladas con autenticación segura e instancias encapsuladas.</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Auth Box */}
-        <div className="md:col-span-6 flex justify-center">
-          <div className="w-full max-w-md bg-[#151D30]/85 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl relative">
+        <div className="md:col-span-6 flex justify-center w-full animate-fadeIn stagger-2">
+          <div className="w-full max-w-md bg-white/70 dark:bg-slate-900/75 backdrop-blur-2xl border border-slate-200/60 dark:border-slate-800/60 p-6 sm:p-8 rounded-3xl shadow-premium relative">
             
             {/* Header */}
-            <div className="space-y-2 text-center pb-6">
-              <h2 className="text-2xl font-bold text-white">
-                {isLogin ? '¡Bienvenido de vuelta!' : 'Crea tu cuenta'}
+            <div className="space-y-1.5 text-center pb-6">
+              <div className="md:hidden flex items-center justify-center gap-2 pb-2">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white font-extrabold">
+                  <Smartphone size={16} />
+                </div>
+                <span className="font-extrabold text-sm text-slate-800 dark:text-white">Zaza.click 2.0</span>
+              </div>
+              <h2 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">
+                {isLogin ? '¡Bienvenido!' : 'Crea tu Cuenta'}
               </h2>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 {isLogin
                   ? 'Ingresa tus credenciales para administrar tus APIs.'
-                  : 'Regístrate hoy y obtén 1 número de WhatsApp gratuito.'}
+                  : 'Regístrate hoy y obtén acceso a tus APIs en segundos.'}
               </p>
             </div>
 
             {error && (
-              <div className="p-3 mb-4 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl text-center font-medium">
+              <div className="p-3.5 mb-4 bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs rounded-2xl text-center font-bold animate-fadeIn">
                 ⚠️ {error}
               </div>
             )}
 
             {/* Google Sign-in Button */}
-            <div className="flex justify-center pb-5 mb-5 border-b border-white/5">
-              <div id="google-btn" className="w-full max-w-[380px]" />
+            <div className="flex flex-col items-center pb-5 mb-5 border-b border-slate-200/50 dark:border-slate-800/50">
+              <div id="google-btn" className="w-full flex justify-center" />
+              <div className="flex items-center gap-2 w-full my-4">
+                <div className="h-[1px] bg-slate-200 dark:bg-slate-800 flex-1" />
+                <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">O con Correo</span>
+                <div className="h-[1px] bg-slate-200 dark:bg-slate-800 flex-1" />
+              </div>
             </div>
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Correo Electrónico</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="ejemplo@empresa.com"
-                  required
-                  className="w-full px-4 py-3 bg-[#1D263B] border border-white/5 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
-                />
+                <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Correo Electrónico</label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 dark:text-slate-500">
+                    <Mail size={16} />
+                  </span>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="nombre@ejemplo.com"
+                    required
+                    className="w-full pl-10 pr-4 py-3 bg-white/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition-all font-medium"
+                  />
+                </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Contraseña</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  className="w-full px-4 py-3 bg-[#1D263B] border border-white/5 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
-                />
+                <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Contraseña</label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 dark:text-slate-500">
+                    <Lock size={16} />
+                  </span>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    className="w-full pl-10 pr-4 py-3 bg-white/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition-all font-medium"
+                  />
+                </div>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 active:scale-[0.99] transition-all text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-500/15 flex items-center justify-center gap-2 mt-6 cursor-pointer"
+                className="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-[0.99] transition-all text-white font-bold text-xs rounded-2xl shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 mt-6 cursor-pointer"
               >
                 {loading ? (
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spinSlow" />
+                  <span className="w-4.5 h-4.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
-                  <span>{isLogin ? 'Iniciar Sesión' : 'Registrar Cuenta'}</span>
+                  <>
+                    <Sparkles size={14} />
+                    <span>{isLogin ? 'Iniciar Sesión' : 'Crear Cuenta Gratis'}</span>
+                  </>
                 )}
               </button>
             </form>
@@ -212,7 +252,7 @@ export default function AuthPage() {
                   setIsLogin(!isLogin);
                   setError(null);
                 }}
-                className="text-[11px] text-gray-400 hover:text-white transition-colors underline cursor-pointer"
+                className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors underline cursor-pointer"
               >
                 {isLogin
                   ? '¿No tienes cuenta? Regístrate aquí'

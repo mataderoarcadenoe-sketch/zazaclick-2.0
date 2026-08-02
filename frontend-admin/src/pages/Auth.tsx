@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../services/authContext';
-import { ShieldAlert } from 'lucide-react';
+import { ShieldAlert, Moon, Sun, Lock } from 'lucide-react';
+import { useDarkMode } from '../hooks/useDarkMode';
 import api from '../services/api';
 
 declare global {
@@ -13,6 +14,7 @@ export default function AuthPage() {
   const { refreshUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { isDark, toggle: toggleDark } = useDarkMode();
 
   // Dynamically load Google SDK on mount
   useEffect(() => {
@@ -30,10 +32,10 @@ export default function AuthPage() {
         window.google.accounts.id.renderButton(
           document.getElementById('google-admin-btn'),
           { 
-            theme: 'filled_dark', 
+            theme: isDark ? 'filled_dark' : 'outline', 
             size: 'large', 
             width: '340',
-            text: 'signin', // Forces generic "Sign In" text instead of personalized "Sign in as..."
+            text: 'signin',
             logo_alignment: 'left'
           }
         );
@@ -44,7 +46,7 @@ export default function AuthPage() {
     return () => {
       document.body.removeChild(script);
     };
-  }, []);
+  }, [isDark]);
 
   const handleGoogleLoginResponse = async (response: any) => {
     setLoading(true);
@@ -65,54 +67,71 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0F19] bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] flex items-center justify-center p-4">
-      {/* Red glow backgrounds for Admin warning vibe */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-500/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen relative flex items-center justify-center p-4 md:p-8 mesh-gradient-light dark:mesh-gradient-dark overflow-hidden transition-colors duration-300">
+      {/* Light Nodes */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-rose-500/10 dark:bg-rose-500/5 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-500/10 dark:bg-emerald-500/5 blur-[120px] pointer-events-none" />
 
-      <div className="w-full max-w-md bg-[#151D30]/85 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl relative z-10 space-y-6">
+      {/* Floating Theme Button */}
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-50">
+        <button
+          onClick={toggleDark}
+          className="p-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-200/50 dark:border-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 hover-lift shadow-sm text-slate-600 dark:text-slate-300 cursor-pointer"
+          aria-label="Cambiar tema"
+        >
+          {isDark ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-indigo-600" />}
+        </button>
+      </div>
+
+      <div className="w-full max-w-md bg-white/70 dark:bg-slate-900/75 backdrop-blur-2xl border border-slate-200/60 dark:border-slate-800/60 p-6 sm:p-8 rounded-3xl shadow-premium relative z-10 space-y-6 animate-fadeIn">
         
         {/* Header */}
         <div className="space-y-3 text-center">
-          <div className="w-12 h-12 bg-red-500/10 border border-red-500/20 text-red-500 rounded-2xl flex items-center justify-center mx-auto animate-pulse">
+          <div className="w-12 h-12 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-2xl flex items-center justify-center mx-auto animate-pulse">
             <ShieldAlert className="w-6 h-6" />
           </div>
           
           <div className="space-y-1">
-            <h2 className="text-xl font-bold text-white tracking-wide">
-              Zaza.click <span className="text-emerald-500">2.0</span>
+            <h2 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">
+              Zaza.click <span className="text-emerald-500">2.0 Admin</span>
             </h2>
-            <p className="text-[10px] text-red-400 font-bold uppercase tracking-wider">
+            <p className="text-[10px] text-rose-600 dark:text-rose-400 font-black uppercase tracking-widest">
               Acceso Exclusivo de Administrador
             </p>
           </div>
           
-          <p className="text-xs text-gray-400 max-w-xs mx-auto leading-relaxed">
-            Este portal requiere autenticación de Google de una cuenta autorizada de superadministrador.
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed font-medium">
+            Este portal está restringido exclusivamente a las cuentas registradas con privilegios de administrador.
           </p>
         </div>
 
         {error && (
-          <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl text-center font-medium">
+          <div className="p-3.5 mb-4 bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs rounded-2xl text-center font-bold animate-fadeIn">
             ⚠️ {error}
           </div>
         )}
 
         {/* Google Authentication container */}
-        <div className="flex flex-col items-center justify-center py-4 space-y-4 border-t border-b border-white/5">
+        <div className="flex flex-col items-center justify-center py-6 space-y-4 border-t border-b border-slate-200/50 dark:border-slate-800/50">
           {loading ? (
-            <div className="flex flex-col items-center space-y-2">
-              <span className="w-6 h-6 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spinSlow" />
-              <span className="text-[10px] text-gray-400 font-medium">Validando credenciales...</span>
+            <div className="flex flex-col items-center space-y-2 py-4">
+              <span className="w-6 h-6 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest">Validando cuenta...</span>
             </div>
           ) : (
-            <div id="google-admin-btn" className="w-full max-w-[340px]" />
+            <div className="w-full flex flex-col items-center gap-4">
+              <div id="google-admin-btn" className="w-full flex justify-center" />
+              <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                <Lock size={12} className="text-slate-400" />
+                <span>Conexión cifrada SSL</span>
+              </div>
+            </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="text-center text-[10px] text-gray-500">
-          Zaza.click SaaS Platform Owner Operations.
+        <div className="text-center text-[9px] font-black text-slate-400 uppercase tracking-widest">
+          Zaza.click Operations Panel.
         </div>
 
       </div>
