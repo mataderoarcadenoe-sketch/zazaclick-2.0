@@ -260,9 +260,9 @@ export default function AdminDashboardPage() {
 
           <div className="flex items-center gap-3.5">
             {/* Admin Badge Tag */}
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-rose-50 dark:bg-rose-950/30 rounded-xl border border-rose-200/50 dark:border-rose-800/20">
-              <span className="w-2 h-2 bg-rose-500 rounded-full animate-pulse"></span>
-              <span className="text-[10px] font-black text-rose-700 dark:text-rose-400 uppercase tracking-wider">Super Administrador</span>
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-950/30 rounded-xl border border-blue-200/50 dark:border-blue-800/20">
+              <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+              <span className="text-[10px] font-black text-blue-700 dark:text-blue-400 uppercase tracking-wider">Super Administrador</span>
             </div>
 
             {/* Dark Mode Toggle */}
@@ -299,7 +299,7 @@ export default function AdminDashboardPage() {
                 {/* Admin Welcome Card */}
                 <div className="p-6 bg-gradient-to-r from-blue-500/10 to-indigo-500/5 rounded-3xl border border-blue-500/20 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div className="space-y-2 text-left relative z-10">
-                    <span className="px-2.5 py-1 bg-rose-500/10 border border-rose-500/20 rounded-md text-[9px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest">
+                    <span className="px-2.5 py-1 bg-blue-500/10 border border-blue-500/20 rounded-md text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">
                       Admin Controller
                     </span>
                     <h3 className="text-lg sm:text-xl font-black text-slate-800 dark:text-white">
