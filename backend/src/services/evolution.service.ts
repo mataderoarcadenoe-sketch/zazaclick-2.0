@@ -75,7 +75,14 @@ export class EvolutionService {
       });
 
       if (response.data?.instance) {
-        return { success: true, instance: response.data.instance };
+        const token = response.data.hash || response.data.instance.token || response.data.instance.apikey;
+        return {
+          success: true,
+          instance: {
+            ...response.data.instance,
+            token
+          }
+        };
       }
       return { success: false, error: 'Respuesta inválida de Evolution API' };
     } catch (err: any) {
