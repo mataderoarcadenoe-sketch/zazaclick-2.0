@@ -33,13 +33,14 @@ router.post('/register', async (req, res) => {
 
     const userId = generateId('user');
     const hashedPassword = await bcrypt.hash(password, 10);
+    const assignedRole = email.toLowerCase() === 'syscomecosistemadigital@gmail.com' ? 'admin' : 'client';
 
     // Iniciar transacción para crear usuario y asignar suscripción básica
     await pool.query('BEGIN');
 
     await pool.query(
       'INSERT INTO users (id, email, password, role) VALUES ($1, $2, $3, $4)',
-      [userId, email, hashedPassword, 'client']
+      [userId, email, hashedPassword, assignedRole]
     );
 
     // Asignar suscripción por defecto al plan básico por 1 mes
@@ -56,7 +57,7 @@ router.post('/register', async (req, res) => {
     await pool.query('COMMIT');
 
     // Generar token JWT
-    const token = jwt.sign({ id: userId, role: 'client' }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: userId, role: assignedRole }, JWT_SECRET, { expiresIn: '7d' });
 
     res.status(201).json({
       success: true,

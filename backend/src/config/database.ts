@@ -100,6 +100,13 @@ export async function initDatabase() {
       );
     `);
 
+    // 5. Asegurar rol Administrador para tu correo principal
+    await pool.query(`
+      UPDATE users 
+      SET role = 'admin' 
+      WHERE email = 'syscomecosistemadigital@gmail.com'
+    `);
+
     console.log('🚀 [Database] Estructura de base de datos inicializada exitosamente.');
   } catch (error: any) {
     console.error('❌ [Database] Error inicializando tablas:', error.message);
