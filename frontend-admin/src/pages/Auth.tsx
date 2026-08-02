@@ -67,7 +67,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center p-4 md:p-8 mesh-gradient-light dark:mesh-gradient-dark overflow-hidden transition-colors duration-300">
+    <div className="min-h-screen relative flex items-center justify-center p-4 md:p-8 mesh-gradient overflow-hidden transition-colors duration-300">
       {/* Light Nodes */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-rose-500/10 dark:bg-rose-500/5 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-500/10 dark:bg-emerald-500/5 blur-[120px] pointer-events-none" />

@@ -155,7 +155,7 @@
   }
 
   /* Mesh gradients */
-  .mesh-gradient-light {
+  .mesh-gradient {
     background:
       radial-gradient(at 40% 20%, rgba(37, 211, 102, 0.08) 0px, transparent 50%),
       radial-gradient(at 80% 0%, rgba(6, 182, 212, 0.06) 0px, transparent 50%),
@@ -163,9 +163,10 @@
       radial-gradient(at 80% 80%, rgba(37, 211, 102, 0.04) 0px, transparent 50%),
       radial-gradient(at 0% 100%, rgba(6, 182, 212, 0.06) 0px, transparent 50%),
       #f8fafc;
+    transition: background 0.5s ease;
   }
 
-  .mesh-gradient-dark {
+  body.dark .mesh-gradient {
     background:
       radial-gradient(at 40% 20%, rgba(37, 211, 102, 0.06) 0px, transparent 50%),
       radial-gradient(at 80% 0%, rgba(6, 182, 212, 0.05) 0px, transparent 50%),
