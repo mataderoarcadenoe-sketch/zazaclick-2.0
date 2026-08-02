@@ -804,7 +804,7 @@ echo $response;`;
 
                     <div className="p-5 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 border border-indigo-500/10 rounded-2xl text-left space-y-2">
                       <h5 className="text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
-                        <Sparkles size={14} className="animate-bounceGentle" />
+                        <Sparkles size={14} className="text-indigo-500" />
                         <span>Consejo Rápido</span>
                       </h5>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">

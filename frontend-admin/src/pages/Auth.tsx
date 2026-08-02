@@ -87,7 +87,7 @@ export default function AuthPage() {
         
         {/* Header */}
         <div className="space-y-3 text-center">
-          <div className="w-12 h-12 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-2xl flex items-center justify-center mx-auto animate-pulse">
+          <div className="w-12 h-12 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-2xl flex items-center justify-center mx-auto">
             <ShieldAlert className="w-6 h-6" />
           </div>
           

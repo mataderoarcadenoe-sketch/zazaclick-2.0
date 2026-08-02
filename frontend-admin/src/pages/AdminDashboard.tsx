@@ -362,7 +362,7 @@ export default function AdminDashboardPage() {
 
                   <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm space-y-1.5 text-left">
                     <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest text-emerald-500">WhatsApp Online</span>
-                    <h3 className="text-2xl font-black text-emerald-500 animate-pulse">
+                    <h3 className="text-2xl font-black text-emerald-500">
                       {stats?.connected_instances ?? 0}
                     </h3>
                     <p className="text-[9px] text-slate-500">Sesiones conectadas en vivo.</p>
