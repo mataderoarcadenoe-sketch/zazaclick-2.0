@@ -396,4 +396,34 @@ router.post('/chats/:instanceName/send', authMiddleware, async (req: Authenticat
   }
 });
 
+/**
+ * POST /chats/:instanceName/read - Marcar mensajes como leídos
+ */
+router.post('/chats/:instanceName/read', authMiddleware, async (req: AuthenticatedRequest, res) => {
+  const { instanceName } = req.params;
+  const { remoteJid, messageIds } = req.body;
+
+  if (!remoteJid || !messageIds || !Array.isArray(messageIds) || messageIds.length === 0) {
+    return res.status(400).json({ success: false, error: 'Faltan parámetros requeridos (remoteJid, messageIds array)' });
+  }
+
+  try {
+    // Verificar propiedad de la instancia
+    const verifyRes = await pool.query('SELECT id FROM instances WHERE user_id = $1 AND instance_name = $2', [req.userId, instanceName]);
+    if (verifyRes.rows.length === 0) {
+      return res.status(403).json({ success: false, error: 'Acceso no autorizado.' });
+    }
+
+    const markResult = await EvolutionService.markMessagesAsRead(instanceName, remoteJid, messageIds);
+    if (!markResult.success) {
+      return res.status(500).json({ success: false, error: markResult.error || 'Error al marcar mensajes como leídos' });
+    }
+
+    res.json({ success: true, message: 'Mensajes marcados como leídos.' });
+  } catch (error: any) {
+    console.error('[Instance] Error en POST /chats/read:', error.message);
+    res.status(500).json({ success: false, error: 'Error interno en el servidor.' });
+  }
+});
+
 export default router;

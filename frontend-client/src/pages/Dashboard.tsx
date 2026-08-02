@@ -246,7 +246,28 @@ export default function DashboardPage() {
       const originalJid = selectedChat.originalJid;
       const res = await api.post(`/instances/chats/${selectedInstanceForChats}/messages`, { remoteJid, originalJid });
       if (res.data?.success) {
-        setMessages(res.data.data);
+        const msgs = res.data.data;
+        setMessages(msgs);
+        
+        // Mark as read if the chat has unread messages
+        if (selectedChat.unreadCount && selectedChat.unreadCount > 0) {
+          const unreadMsgs = msgs.filter((m: any) => !m.key.fromMe);
+          if (unreadMsgs.length > 0) {
+            const messageIds = unreadMsgs.slice(0, 10).map((m: any) => m.key.id);
+            api.post(`/instances/chats/${selectedInstanceForChats}/read`, {
+              remoteJid: originalJid || remoteJid,
+              messageIds
+            }).then(() => {
+              // Update local state to clear unread count immediately
+              setChats(prevChats => prevChats.map(c => 
+                (c.remoteJid === selectedChat.remoteJid) ? { ...c, unreadCount: 0 } : c
+              ));
+              setSelectedChat(prev => prev ? { ...prev, unreadCount: 0 } : prev);
+            }).catch(err => {
+              console.error('Error marking messages as read:', err);
+            });
+          }
+        }
       }
     } catch (err) {
       console.error('Error fetching messages:', err);
@@ -1127,7 +1148,9 @@ echo $response;`;
                                         <span className="truncate flex-1"><AppleEmojiText text={lastMsgText} /></span>
                                       </p>
                                       {isUnread && (
-                                        <span className="w-2 h-2 bg-emerald-500 rounded-full flex-shrink-0 ml-1"></span>
+                                        <div className="bg-emerald-500 text-white text-[10px] font-bold px-1.5 min-w-[1.25rem] h-5 rounded-full flex items-center justify-center flex-shrink-0 ml-1 shadow-sm">
+                                          {chat.unreadCount}
+                                        </div>
                                       )}
                                     </div>
                                   </div>

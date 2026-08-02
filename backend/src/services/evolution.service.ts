@@ -341,4 +341,26 @@ export class EvolutionService {
       return tsB - tsA;
     });
   }
+
+  /**
+   * Marcar mensajes como leídos
+   */
+  public static async markMessagesAsRead(instanceName: string, remoteJid: string, messageIds: string[]): Promise<{ success: boolean; data?: any; error?: string }> {
+    try {
+      const readMessages = messageIds.map(id => ({
+        remoteJid,
+        id,
+        fromMe: false
+      }));
+      
+      const response = await api.post(`/chat/markMessageAsRead/${instanceName}`, {
+        readMessages
+      });
+      return { success: true, data: response.data };
+    } catch (err: any) {
+      const errorMsg = this.parseError(err);
+      console.error(`[EvolutionService] Error marcando mensajes como leídos para ${remoteJid}:`, errorMsg);
+      return { success: false, error: errorMsg };
+    }
+  }
 }
