@@ -373,7 +373,7 @@ export default function AdminDashboardPage() {
         {/* Interactive Content Container */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-white dark:bg-slate-950/40 relative">
           
-          <div className="max-w-5xl mx-auto space-y-6">
+          <div className="max-w-7xl mx-auto space-y-6">
             
             {/* Global Warning Banner for Inactive License */}
             {licenseStatus && !(licenseStatus.status === 'active' || licenseStatus.active) && (
