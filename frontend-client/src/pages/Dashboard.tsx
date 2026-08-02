@@ -9,7 +9,24 @@ import {
   MessageSquare, Search, MessageCircle, Smile
 } from 'lucide-react';
 import EmojiPicker, { Theme, EmojiStyle } from 'emoji-picker-react';
-import Twemoji from 'react-twemoji';
+import twemoji from 'twemoji';
+
+// Componente Wrapper para parsear Emojis de forma estructurada y nativa
+const TwemojiWrapper = ({ children, className = '' }: { children: React.ReactNode, className?: string }) => {
+  const rootRef = React.useRef<HTMLDivElement>(null);
+  
+  React.useEffect(() => {
+    if (rootRef.current) {
+      twemoji.parse(rootRef.current, {
+        className: 'emoji',
+        folder: 'svg',
+        ext: '.svg'
+      });
+    }
+  }, [children]);
+
+  return <div ref={rootRef} className={className}>{children}</div>;
+};
 
 interface Instance {
   id: string;
@@ -1211,11 +1228,10 @@ echo $response;`;
                                     }
 
                                     const text = content.conversation || content.extendedTextMessage?.text || '';
-                                    const TwemojiComponent = (Twemoji as any).default || Twemoji;
                                     return (
-                                      <TwemojiComponent options={{ className: 'emoji', folder: 'svg', ext: '.svg' }}>
+                                      <TwemojiWrapper>
                                         <p className="text-[11px] leading-relaxed break-words text-left">{text}</p>
-                                      </TwemojiComponent>
+                                      </TwemojiWrapper>
                                     );
                                   };
 
