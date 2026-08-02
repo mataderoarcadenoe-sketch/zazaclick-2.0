@@ -8,7 +8,8 @@ import instanceRoutes from './routes/instance.routes';
 dotenv.config();
 
 const app = express();
-const PORT = parseInt(process.env.PORT || '5000', 10);
+// Default to 3000 to match Railway default target port or process.env.PORT
+const PORT = parseInt(process.env.PORT || '3000', 10);
 
 // Middlewares
 app.use(cors({
