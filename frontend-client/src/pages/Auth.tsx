@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../services/authContext';
-import { ShieldCheck, Zap, Cpu, Sparkles, Mail, Lock, Moon, Sun, Smartphone } from 'lucide-react';
+import { ShieldCheck, Zap, Cpu, Moon, Sun, Smartphone } from 'lucide-react';
 import { useDarkMode } from '../hooks/useDarkMode';
 import api from '../services/api';
 
@@ -12,7 +12,6 @@ declare global {
 
 export default function AuthPage() {
   const { refreshUser } = useAuth();
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { isDark, toggle: toggleDark } = useDarkMode();
 
@@ -49,7 +48,6 @@ export default function AuthPage() {
   }, [isDark]); // Re-render button theme when isDark changes
 
   const handleGoogleLoginResponse = async (response: any) => {
-    setLoading(true);
     setError(null);
     try {
       const res = await api.post('/auth/google-login', { credential: response.credential });
@@ -61,8 +59,6 @@ export default function AuthPage() {
       }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Fallo de autenticación con Google');
-    } finally {
-      setLoading(false);
     }
   };
 

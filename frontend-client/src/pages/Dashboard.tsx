@@ -262,7 +262,7 @@ export default function DashboardPage() {
               setChats(prevChats => prevChats.map(c => 
                 (c.remoteJid === selectedChat.remoteJid) ? { ...c, unreadCount: 0 } : c
               ));
-              setSelectedChat(prev => prev ? { ...prev, unreadCount: 0 } : prev);
+              setSelectedChat((prev: any) => prev ? { ...prev, unreadCount: 0 } : prev);
             }).catch(err => {
               console.error('Error marking messages as read:', err);
             });
