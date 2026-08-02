@@ -1059,7 +1059,7 @@ echo $response;`;
                     {/* LEFT PANEL: Chats List */}
                     <div className="md:col-span-4 border-r border-slate-200/60 dark:border-slate-800 flex flex-col min-h-0">
                       {/* Search Bar */}
-                      <div className="p-4 border-b border-slate-150 dark:border-slate-800 relative">
+                      <div className="p-4 border-b border-slate-200/60 dark:border-slate-800 relative">
                         <input
                           type="text"
                           placeholder="Buscar conversación..."
