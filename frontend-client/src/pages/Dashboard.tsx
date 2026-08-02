@@ -74,6 +74,22 @@ export default function DashboardPage() {
   const [mediaLoadingStates, setMediaLoadingStates] = useState<Record<string, boolean>>({});
   const [loadedMedia, setLoadedMedia] = useState<Record<string, string>>({}); // Maps message ID to local media source (data URL)
 
+  // Confirm Dialog State
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    isDanger?: boolean;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {}
+  });
+
   const showNotification = (text: string, type: 'success' | 'error' = 'success') => {
     setNotification({ text, type });
     setTimeout(() => setNotification(null), 3500);
@@ -307,32 +323,46 @@ export default function DashboardPage() {
     }
   };
 
-  const handleLogoutInstance = async (instanceName: string) => {
-    if (!confirm(`¿Estás seguro de cerrar sesión en la instancia ${instanceName}?`)) return;
-
-    try {
-      const res = await api.post(`/instances/logout/${instanceName}`);
-      if (res.data?.success) {
-        showNotification('Sesión cerrada correctamente.');
-        fetchInstances(true);
+  const handleLogoutInstance = (instanceName: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Cerrar Sesión',
+      message: `¿Estás seguro de cerrar sesión en la instancia ${instanceName}?`,
+      confirmText: 'Cerrar Sesión',
+      isDanger: true,
+      onConfirm: async () => {
+        try {
+          const res = await api.post(`/instances/logout/${instanceName}`);
+          if (res.data?.success) {
+            showNotification('Sesión cerrada correctamente.');
+            fetchInstances(true);
+          }
+        } catch (err: any) {
+          showNotification(err.response?.data?.error || 'Error al cerrar sesión', 'error');
+        }
       }
-    } catch (err: any) {
-      showNotification(err.response?.data?.error || 'Error al cerrar sesión', 'error');
-    }
+    });
   };
 
-  const handleDeleteInstance = async (instanceName: string) => {
-    if (!confirm(`🚨 ¿Estás seguro de ELIMINAR la instancia ${instanceName}? Esto borrará la sesión de WhatsApp.`)) return;
-
-    try {
-      const res = await api.delete(`/instances/delete/${instanceName}`);
-      if (res.data?.success) {
-        showNotification('Instancia eliminada correctamente.');
-        fetchInstances(true);
+  const handleDeleteInstance = (instanceName: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Eliminar Instancia',
+      message: `¿Estás seguro de ELIMINAR la instancia ${instanceName}? Esto borrará la sesión de WhatsApp de forma permanente.`,
+      confirmText: 'Eliminar Instancia',
+      isDanger: true,
+      onConfirm: async () => {
+        try {
+          const res = await api.delete(`/instances/delete/${instanceName}`);
+          if (res.data?.success) {
+            showNotification('Instancia eliminada correctamente.');
+            fetchInstances(true);
+          }
+        } catch (err: any) {
+          showNotification(err.response?.data?.error || 'Error al eliminar instancia', 'error');
+        }
       }
-    } catch (err: any) {
-      showNotification(err.response?.data?.error || 'Error al eliminar instancia', 'error');
-    }
+    });
   };
 
   const handleSendTestMessage = async (e: React.FormEvent) => {
@@ -1578,6 +1608,45 @@ echo $response;`;
             >
               Listo / Cerrar
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Dialog Modal */}
+      {confirmDialog.isOpen && (
+        <div className="fixed inset-0 z-[60] bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 w-full max-w-sm p-6 sm:p-7 rounded-3xl space-y-5 shadow-premium-lg relative text-center">
+            
+            <div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center ${confirmDialog.isDanger ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
+              <AlertCircle size={24} />
+            </div>
+
+            <div className="space-y-1.5">
+              <h3 className="text-base font-bold text-slate-800 dark:text-white">{confirmDialog.title}</h3>
+              <p className="text-xs text-slate-400">{confirmDialog.message}</p>
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+              >
+                {confirmDialog.cancelText || 'Cancelar'}
+              </button>
+              <button
+                onClick={() => {
+                  setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+                  confirmDialog.onConfirm();
+                }}
+                className={`flex-1 py-2.5 text-white text-xs font-bold rounded-xl shadow-lg transition-colors cursor-pointer ${
+                  confirmDialog.isDanger 
+                    ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-500/15' 
+                    : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/15'
+                }`}
+              >
+                {confirmDialog.confirmText || 'Aceptar'}
+              </button>
+            </div>
           </div>
         </div>
       )}
