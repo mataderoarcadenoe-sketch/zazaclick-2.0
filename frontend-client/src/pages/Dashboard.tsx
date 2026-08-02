@@ -427,7 +427,7 @@ echo $response;`;
         </header>
 
         {/* Interactive Content Container */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-50 dark:bg-slate-950/40 relative">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-white dark:bg-slate-950/40 relative">
           
           {/* Active Section Renderer */}
           <div className="max-w-5xl mx-auto space-y-6">
