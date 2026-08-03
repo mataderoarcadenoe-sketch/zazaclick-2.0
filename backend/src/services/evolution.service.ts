@@ -677,7 +677,7 @@ export class EvolutionService {
    */
   public static async getRawChats(instanceName: string): Promise<any> {
     try {
-      const response = await api.get(`/chat/findChats/${instanceName}`);
+      const response = await api.post(`/chat/findChats/${instanceName}`, {});
       return response.data;
     } catch (err: any) {
       return { success: false, error: err.message };
