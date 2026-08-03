@@ -1442,7 +1442,7 @@ echo $response;`;
                         <div className="flex-1 flex flex-col min-h-0">
                           
                           {/* Chat Window Header */}
-                          <div className="p-4 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md flex items-center justify-between shadow-sm/5">
+                          <div className="p-4 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               {/* Botón volver en mobile */}
                               <button
@@ -1452,7 +1452,7 @@ echo $response;`;
                               >
                                 <ArrowLeft size={18} />
                               </button>
-                              <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center overflow-hidden shadow-sm">
+                              <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center overflow-hidden">
                                 {selectedChat.profilePicUrl ? (
                                   <img src={selectedChat.profilePicUrl} alt="" className="w-full h-full object-cover" />
                                 ) : (
