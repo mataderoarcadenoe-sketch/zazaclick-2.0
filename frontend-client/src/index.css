@@ -218,3 +218,26 @@
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-15px); }
 }
+
+@keyframes paperPlaneFly {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  40% {
+    transform: translate(25px, -25px) scale(0.6) rotate(15deg);
+    opacity: 0;
+  }
+  45% {
+    transform: translate(-20px, 20px) scale(0.6) rotate(0deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.animate-fly {
+  animation: paperPlaneFly 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}

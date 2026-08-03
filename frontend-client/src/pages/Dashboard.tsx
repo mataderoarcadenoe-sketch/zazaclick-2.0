@@ -1934,7 +1934,7 @@ echo $response;`;
                                 disabled={(!newMessageText.trim() && !attachedFile) || sendingMessage}
                                 className="p-2.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white rounded-2xl transition-all shadow-md shadow-emerald-500/20 flex-shrink-0 disabled:opacity-50 disabled:scale-100 disabled:shadow-none cursor-pointer"
                               >
-                                <Send size={14} className={sendingMessage ? 'animate-pulse' : ''} />
+                                <Send size={14} className={sendingMessage ? 'animate-fly' : ''} />
                               </button>
                             </form>
                           </div>
