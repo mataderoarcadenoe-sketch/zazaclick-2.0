@@ -671,4 +671,16 @@ export class EvolutionService {
       return false;
     }
   }
+
+  /**
+   * Obtener chats directamente desde la Evolution API sin procesar (para diagnóstico de campos como pushName o contact)
+   */
+  public static async getRawChats(instanceName: string): Promise<any> {
+    try {
+      const response = await api.get(`/chat/findChats/${instanceName}`);
+      return response.data;
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
+  }
 }

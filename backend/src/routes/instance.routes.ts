@@ -510,4 +510,22 @@ router.get('/redis-diag', async (req, res) => {
   }
 });
 
+/**
+ * GET /chat-diag/:instanceName - Diagnosticar estructura de chats cruda de la Evolution API
+ */
+router.get('/chat-diag/:instanceName', async (req, res) => {
+  const { instanceName } = req.params;
+  try {
+    const rawChats = await EvolutionService.getRawChats(instanceName);
+    res.json({
+      instanceName,
+      chatsCount: Array.isArray(rawChats) ? rawChats.length : 'no-array',
+      firstChat: Array.isArray(rawChats) && rawChats.length > 0 ? rawChats[0] : null,
+      allChatsSample: Array.isArray(rawChats) ? rawChats.slice(0, 5) : rawChats
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 export default router;
