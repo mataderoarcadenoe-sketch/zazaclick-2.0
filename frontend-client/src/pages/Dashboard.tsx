@@ -8,7 +8,7 @@ import {
   AlertCircle, Copy, Send, LayoutDashboard, Terminal, 
   Moon, Sun, Menu, X, Check, Play, ExternalLink, Sparkles, BookOpen, Clock,
   MessageSquare, Search, MessageCircle, Smile, ArrowLeft,
-  Paperclip, FileText, Image, Video, Download, ChevronDown
+  Paperclip, FileText, Image, Video, Download, ChevronDown, Users
 } from 'lucide-react';
 import EmojiPicker, { Theme, EmojiStyle, Emoji } from 'emoji-picker-react';
 import { parse } from '@twemoji/parser';
@@ -121,7 +121,7 @@ export default function DashboardPage() {
   });
 
   // Active Tab/Section State
-  const [activeTab, setActiveTab] = useState<'overview' | 'instances' | 'chats' | 'playground' | 'docs' | 'subscription'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'instances' | 'chats' | 'contacts' | 'playground' | 'docs' | 'subscription'>('overview');
 
   // Modal / Form state for new instance
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -172,6 +172,35 @@ export default function DashboardPage() {
   const [showSandboxInstanceMenu, setShowSandboxInstanceMenu] = useState(false);
   const chatsDropdownRef = useRef<HTMLDivElement>(null);
   const sandboxDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Google Contacts Integration States
+  const [googleConnected, setGoogleConnected] = useState(false);
+  const [googleEmail, setGoogleEmail] = useState<string | null>(null);
+  const [googleContacts, setGoogleContacts] = useState<any[]>([]);
+  const [googleContactsLoading, setGoogleContactsLoading] = useState(false);
+  const [searchContactQuery, setSearchContactQuery] = useState('');
+  const [isSyncingWhatsAppContacts, setIsSyncingWhatsAppContacts] = useState(false);
+  const [showSyncDropdown, setShowSyncDropdown] = useState(false);
+  const syncDropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Contact Form Modal State
+  const [contactModal, setContactModal] = useState<{
+    isOpen: boolean;
+    isEdit: boolean;
+    resourceName: string | null;
+    etag: string | null;
+    givenName: string;
+    familyName: string;
+    phoneNumber: string;
+  }>({
+    isOpen: false,
+    isEdit: false,
+    resourceName: null,
+    etag: null,
+    givenName: '',
+    familyName: '',
+    phoneNumber: ''
+  });
 
   // Refs para scroll inteligente y emoji picker click-outside
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -776,6 +805,171 @@ export default function DashboardPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showSandboxInstanceMenu]);
 
+  // Cerrar select de sincronización de contactos al hacer clic fuera
+  useEffect(() => {
+    if (!showSyncDropdown) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (syncDropdownRef.current && !syncDropdownRef.current.contains(e.target as Node)) {
+        setShowSyncDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showSyncDropdown]);
+
+  // Fetch Google Contacts Connection Status
+  const fetchGoogleContactsStatus = useCallback(async () => {
+    try {
+      const res = await api.get('/instances/google-contacts/status');
+      if (res.data?.success) {
+        setGoogleConnected(res.data.connected);
+        setGoogleEmail(res.data.email || null);
+        if (res.data.connected) {
+          // Cargar contactos
+          setGoogleContactsLoading(true);
+          try {
+            const listRes = await api.get('/instances/google-contacts/list');
+            if (listRes.data?.success) {
+              setGoogleContacts(listRes.data.data || []);
+            }
+          } catch (e) {
+            console.error('Error listando contactos:', e);
+          } finally {
+            setGoogleContactsLoading(false);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching Google Contacts connection status:', err);
+    }
+  }, []);
+
+  // Fetch Contacts from Google People API
+  const fetchGoogleContacts = async () => {
+    setGoogleContactsLoading(true);
+    try {
+      const res = await api.get('/instances/google-contacts/list');
+      if (res.data?.success) {
+        setGoogleContacts(res.data.data || []);
+      }
+    } catch (err: any) {
+      showNotification(err.response?.data?.error || 'Error al obtener contactos de Google', 'error');
+    } finally {
+      setGoogleContactsLoading(false);
+    }
+  };
+
+  // Connect Google Contacts OAuth redirect
+  const handleConnectGoogleContacts = () => {
+    const token = localStorage.getItem('saas_auth_token');
+    const hostUrl = api.defaults.baseURL || '/api';
+    window.location.href = `${hostUrl}/auth/google-contacts/connect?token=${token}`;
+  };
+
+  // Create or Update Contact
+  const handleCreateOrUpdateContact = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { isEdit, resourceName, etag, givenName, familyName, phoneNumber } = contactModal;
+    
+    if (!givenName.trim() || !phoneNumber.trim()) {
+      showNotification('Nombre y Teléfono son requeridos', 'error');
+      return;
+    }
+
+    try {
+      if (isEdit) {
+        const res = await api.put('/instances/google-contacts/update', {
+          resourceName,
+          etag,
+          givenName: givenName.trim(),
+          familyName: familyName.trim() || undefined,
+          phoneNumber: phoneNumber.trim()
+        });
+        if (res.data?.success) {
+          showNotification('Contacto actualizado exitosamente');
+          setContactModal(prev => ({ ...prev, isOpen: false }));
+          fetchGoogleContacts();
+        }
+      } else {
+        const res = await api.post('/instances/google-contacts/create', {
+          givenName: givenName.trim(),
+          familyName: familyName.trim() || undefined,
+          phoneNumber: phoneNumber.trim()
+        });
+        if (res.data?.success) {
+          showNotification('Contacto creado exitosamente en Google Contacts');
+          setContactModal(prev => ({ ...prev, isOpen: false }));
+          fetchGoogleContacts();
+        }
+      }
+    } catch (err: any) {
+      showNotification(err.response?.data?.error || 'Error al guardar contacto', 'error');
+    }
+  };
+
+  // Delete Google Contact
+  const handleDeleteContact = async (resourceName: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: '¿Eliminar Contacto?',
+      message: 'Esta acción eliminará el contacto permanentemente de tu cuenta de Google Contactos y de tu teléfono.',
+      confirmText: 'Eliminar',
+      isDanger: true,
+      onConfirm: async () => {
+        try {
+          const res = await api.post('/instances/google-contacts/delete', { resourceName });
+          if (res.data?.success) {
+            showNotification('Contacto eliminado correctamente.');
+            fetchGoogleContacts();
+          }
+        } catch (err: any) {
+          showNotification(err.response?.data?.error || 'Error al eliminar contacto', 'error');
+        }
+      }
+    });
+  };
+
+  // Import WhatsApp Contacts to Google Contacts
+  const handleSyncWhatsAppContacts = async (instanceName: string) => {
+    if (!instanceName) return;
+    setIsSyncingWhatsAppContacts(true);
+    setShowSyncDropdown(false);
+    showNotification('Sincronizando agenda... Esto puede tardar unos segundos.', 'success');
+    
+    try {
+      const res = await api.post('/instances/google-contacts/sync-whatsapp', { instanceName });
+      if (res.data?.success) {
+        showNotification(res.data.message || 'Sincronización finalizada con éxito.');
+        fetchGoogleContacts();
+      }
+    } catch (err: any) {
+      showNotification(err.response?.data?.error || 'Error durante la sincronización de contactos', 'error');
+    } finally {
+      setIsSyncingWhatsAppContacts(false);
+    }
+  };
+
+  // Check URL parameters for Google Contacts connection status
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const googleContactsStatus = params.get('google_contacts');
+    if (googleContactsStatus === 'success') {
+      showNotification('¡Google Contactos conectado exitosamente!', 'success');
+      setActiveTab('contacts');
+      // Limpiar query params de la URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (googleContactsStatus === 'error') {
+      showNotification('Error al conectar Google Contactos. Inténtalo de nuevo.', 'error');
+      // Limpiar query params de la URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
+  // Cargar estado de Google Contactos al iniciar
+  useEffect(() => {
+    fetchGoogleContactsStatus();
+  }, [fetchGoogleContactsStatus]);
+
   // Auto-scroll inteligente: solo scroll si llegan mensajes nuevos (no en cada render)
   useEffect(() => {
     if (messages.length > 0 && messages.length !== prevMessagesCountRef.current) {
@@ -914,6 +1108,7 @@ export default function DashboardPage() {
     { id: 'overview', label: 'Resumen', icon: LayoutDashboard },
     { id: 'instances', label: 'Líneas / QR', icon: Smartphone },
     { id: 'chats', label: 'Chats en Vivo', icon: MessageSquare },
+    { id: 'contacts', label: 'Agenda (Google)', icon: Users },
     { id: 'playground', label: 'Probar Envío', icon: Play },
     { id: 'docs', label: 'Documentación API', icon: Terminal },
     { id: 'subscription', label: 'Suscripción', icon: Key },
@@ -1650,13 +1845,38 @@ echo $response;`;
                                   <MessageCircle size={18} className="text-slate-400" />
                                 )}
                               </div>
-                              <div className="text-left">
-                                <h4 className="text-xs font-bold text-slate-800 dark:text-white">
-                                  {selectedChat.pushName || selectedChat.remoteJid.split('@')[0]}
-                                </h4>
-                                <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 block">
-                                  {selectedChat.remoteJid}
-                                </span>
+                              <div className="text-left flex items-center">
+                                <div>
+                                  <h4 className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                                    {selectedChat.pushName || selectedChat.remoteJid.split('@')[0]}
+                                    {googleConnected && !selectedChat.remoteJid.endsWith('@g.us') && !googleContacts.some(c => {
+                                      const cleanSaved = c.phoneNumber.replace(/\D/g, '');
+                                      const cleanChat = selectedChat.remoteJid.split('@')[0].replace(/\D/g, '');
+                                      return cleanSaved === cleanChat || (cleanSaved && cleanChat && (cleanSaved.endsWith(cleanChat) || cleanChat.endsWith(cleanSaved)));
+                                    }) && (
+                                      <button
+                                        type="button"
+                                        onClick={() => setContactModal({
+                                          isOpen: true,
+                                          isEdit: false,
+                                          resourceName: null,
+                                          etag: null,
+                                          givenName: selectedChat.pushName || selectedChat.remoteJid.split('@')[0],
+                                          familyName: '',
+                                          phoneNumber: `+${selectedChat.remoteJid.split('@')[0]}`
+                                        })}
+                                        className="px-1.5 py-0.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-[8.5px] rounded-md transition-colors cursor-pointer flex items-center gap-0.5"
+                                        title="Guardar en Google Contactos"
+                                      >
+                                        <Plus size={9} />
+                                        <span>Guardar</span>
+                                      </button>
+                                    )}
+                                  </h4>
+                                  <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 block">
+                                    {selectedChat.remoteJid}
+                                  </span>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -2019,6 +2239,231 @@ echo $response;`;
                       )}
                     </div>
 
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* GOOGLE CONTACTS SECTION */}
+            {activeTab === 'contacts' && (
+              <div className="space-y-6 animate-fadeIn">
+                <div className="text-left space-y-0.5">
+                  <h3 className="text-base font-bold text-slate-800 dark:text-white">Agenda de Contactos</h3>
+                  <p className="text-xs text-slate-400">Sincroniza tus contactos de Google con WhatsApp de forma bidireccional.</p>
+                </div>
+
+                {!googleConnected ? (
+                  // Screen for disconnected state
+                  <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 text-center max-w-2xl mx-auto space-y-6 shadow-premium">
+                    <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-emerald-500/10 to-teal-500/10 flex items-center justify-center text-emerald-500 mx-auto">
+                      <Users size={32} />
+                    </div>
+                    <div className="space-y-2">
+                      <h4 className="text-lg font-bold text-slate-800 dark:text-white">Sincroniza tus contactos en la nube</h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+                        Conecta tu cuenta de Google para sincronizar contactos de forma instantánea. Al crear, editar o eliminar contactos desde este panel, se actualizarán inmediatamente en tu cuenta de Google y se reflejarán en tu celular y chats de WhatsApp.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleConnectGoogleContacts}
+                      className="inline-flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-95 text-white font-bold text-xs rounded-2xl transition-all shadow-md shadow-emerald-500/20 cursor-pointer"
+                    >
+                      <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                        <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.113-5.136 4.113-3.072 0-5.561-2.49-5.561-5.561s2.49-5.561 5.561-5.561c1.396 0 2.67.513 3.655 1.353l3.14-3.14C18.796 3.738 15.748 2.5 12.24 2.5 6.42 2.5 1.7 7.22 1.7 13s4.72 10.5 10.54 10.5c5.8 0 10.46-4.7 10.46-10.5 0-.712-.082-1.395-.224-2.073h-10.236z"/>
+                      </svg>
+                      <span>Conectar con Google Contactos</span>
+                    </button>
+                  </div>
+                ) : (
+                  // Screen for connected state
+                  <div className="space-y-6">
+                    {/* Connection Info header card */}
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-sm text-left">
+                      <div className="flex items-center gap-3.5">
+                        <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center flex-shrink-0">
+                          <Users size={22} />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-sm font-bold text-slate-800 dark:text-white">Google Contactos Activo</h4>
+                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                          </div>
+                          <p className="text-xs text-slate-400 font-medium">Cuenta vinculada: <strong className="text-slate-600 dark:text-slate-300">{googleEmail}</strong></p>
+                        </div>
+                      </div>
+
+                      {/* Header Actions */}
+                      <div className="flex items-center gap-2.5 flex-wrap">
+                        {/* Import/Sync from WhatsApp Dropdown */}
+                        <div className="relative" ref={syncDropdownRef}>
+                          <button
+                            type="button"
+                            onClick={() => setShowSyncDropdown(!showSyncDropdown)}
+                            disabled={isSyncingWhatsAppContacts}
+                            className="px-4 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-2xl transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
+                          >
+                            <RefreshCw size={13} className={isSyncingWhatsAppContacts ? 'animate-spin' : ''} />
+                            <span>Sincronizar Celular</span>
+                          </button>
+                          
+                          {showSyncDropdown && (
+                            <div className="absolute top-[100%] right-0 mt-2 z-50 bg-white dark:bg-slate-900 rounded-2xl shadow-premium-lg p-2 flex flex-col gap-1 min-w-[220px] border border-slate-100 dark:border-slate-800/40 text-left">
+                              <span className="p-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider block border-b border-slate-100 dark:border-slate-800/60 pb-1.5 mb-1.5">Importar desde línea:</span>
+                              {instances.filter(i => i.status === 'connected').length === 0 ? (
+                                <span className="p-3 text-[10px] text-slate-400 dark:text-slate-500 font-bold block text-center">No hay líneas conectadas</span>
+                              ) : (
+                                instances.filter(i => i.status === 'connected').map(inst => (
+                                  <button
+                                    key={inst.id}
+                                    type="button"
+                                    onClick={() => handleSyncWhatsAppContacts(inst.instance_name)}
+                                    className="w-full px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl text-left cursor-pointer transition-colors"
+                                  >
+                                    🚀 {inst.instance_name}
+                                  </button>
+                                ))
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => setContactModal({
+                            isOpen: true,
+                            isEdit: false,
+                            resourceName: null,
+                            etag: null,
+                            givenName: '',
+                            familyName: '',
+                            phoneNumber: ''
+                          })}
+                          className="px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-95 text-white font-bold text-xs rounded-2xl transition-all shadow-md shadow-emerald-500/20 cursor-pointer flex items-center gap-1.5"
+                        >
+                          <Plus size={14} />
+                          <span>Nuevo Contacto</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Contacts Agenda Table list */}
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 space-y-4 shadow-sm text-left">
+                      {/* Search bar input */}
+                      <div className="relative">
+                        <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                          <Search size={15} />
+                        </span>
+                        <input
+                          type="text"
+                          value={searchContactQuery}
+                          onChange={(e) => setSearchContactQuery(e.target.value)}
+                          placeholder="Buscar contactos por nombre, apellido o número..."
+                          className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium"
+                        />
+                      </div>
+
+                      {googleContactsLoading ? (
+                        <div className="py-12 flex flex-col items-center justify-center gap-3 text-slate-400">
+                          <RefreshCw size={24} className="animate-spin text-emerald-500" />
+                          <span className="text-xs font-medium">Cargando contactos de Google...</span>
+                        </div>
+                      ) : (
+                        <div className="overflow-hidden">
+                          {googleContacts.filter(c => {
+                            const q = searchContactQuery.toLowerCase().trim();
+                            if (!q) return true;
+                            return (
+                              c.displayName.toLowerCase().includes(q) ||
+                              c.phoneNumber.toLowerCase().includes(q)
+                            );
+                          }).length === 0 ? (
+                            <div className="py-12 text-center text-slate-400 space-y-2">
+                              <Users size={32} className="mx-auto text-slate-300 dark:text-slate-700 animate-pulse" />
+                              <p className="text-xs font-semibold">No se encontraron contactos en tu agenda</p>
+                              <p className="text-[10px] text-slate-400 dark:text-slate-500">Usa el botón "Nuevo Contacto" o conecta / sincroniza tu celular.</p>
+                            </div>
+                          ) : (
+                            <div className="overflow-x-auto">
+                              <table className="w-full border-collapse">
+                                <thead>
+                                  <tr className="border-b border-slate-100 dark:border-slate-800/40 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                    <th className="pb-3 text-left w-12">Foto</th>
+                                    <th className="pb-3 text-left">Nombre</th>
+                                    <th className="pb-3 text-left">Teléfono</th>
+                                    <th className="pb-3 text-right">Acciones</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 text-xs">
+                                  {googleContacts
+                                    .filter(c => {
+                                      const q = searchContactQuery.toLowerCase().trim();
+                                      if (!q) return true;
+                                      return (
+                                        c.displayName.toLowerCase().includes(q) ||
+                                        c.phoneNumber.toLowerCase().includes(q)
+                                      );
+                                    })
+                                    .map(contact => {
+                                      const initials = contact.givenName ? contact.givenName.charAt(0).toUpperCase() : (contact.displayName ? contact.displayName.charAt(0).toUpperCase() : 'U');
+                                      
+                                      return (
+                                        <tr key={contact.resourceName} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-all">
+                                          <td className="py-3">
+                                            {contact.photoUrl ? (
+                                              <img src={contact.photoUrl} alt={contact.displayName} className="w-8 h-8 rounded-full object-cover" />
+                                            ) : (
+                                              <div className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+                                                {initials}
+                                              </div>
+                                            )}
+                                          </td>
+                                          <td className="py-3 font-semibold text-slate-700 dark:text-slate-200">
+                                            {contact.displayName}
+                                          </td>
+                                          <td className="py-3 font-mono text-slate-500 dark:text-slate-400 font-bold">
+                                            {contact.phoneNumber || 'Sin teléfono'}
+                                          </td>
+                                          <td className="py-3 text-right">
+                                            <div className="flex items-center justify-end gap-1.5">
+                                              <button
+                                                type="button"
+                                                onClick={() => setContactModal({
+                                                  isOpen: true,
+                                                  isEdit: true,
+                                                  resourceName: contact.resourceName,
+                                                  etag: contact.etag,
+                                                  givenName: contact.givenName,
+                                                  familyName: contact.familyName,
+                                                  phoneNumber: contact.phoneNumber
+                                                })}
+                                                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer"
+                                                title="Editar contacto"
+                                              >
+                                                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                                                  <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                                                </svg>
+                                              </button>
+                                              <button
+                                                type="button"
+                                                onClick={() => handleDeleteContact(contact.resourceName)}
+                                                className="p-2 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xl text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                                                title="Eliminar contacto"
+                                              >
+                                                <Trash2 size={13.5} />
+                                              </button>
+                                            </div>
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -2495,6 +2940,84 @@ echo $response;`;
                   className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-[0.99] disabled:opacity-40 text-xs text-white font-bold rounded-2xl shadow-lg shadow-emerald-500/10 transition-all cursor-pointer"
                 >
                   {createLoading ? 'Creando...' : 'Crear Instancia'}
+                </button>
+              </div>
+            </form>
+
+          </div>
+        </div>
+      )}
+      {/* Modal para Crear / Editar Contacto */}
+      {contactModal.isOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 w-full max-w-md p-6 sm:p-7 rounded-3xl space-y-4 shadow-premium-lg relative animate-fadeIn text-left">
+            
+            <button
+              onClick={() => setContactModal(prev => ({ ...prev, isOpen: false }))}
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="space-y-1.5">
+              <h3 className="text-base font-bold text-slate-800 dark:text-white">
+                {contactModal.isEdit ? 'Editar Contacto' : 'Nuevo Contacto en Google'}
+              </h3>
+              <p className="text-xs text-slate-400">
+                {contactModal.isEdit ? 'Edita los datos del contacto en Google.' : 'Registra el contacto directamente en tu cuenta de Google.'}
+              </p>
+            </div>
+
+            <form onSubmit={handleCreateOrUpdateContact} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Nombre</label>
+                <input
+                  type="text"
+                  value={contactModal.givenName}
+                  onChange={(e) => setContactModal(prev => ({ ...prev, givenName: e.target.value }))}
+                  placeholder="Ej: Juan"
+                  required
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Apellido (Opcional)</label>
+                <input
+                  type="text"
+                  value={contactModal.familyName}
+                  onChange={(e) => setContactModal(prev => ({ ...prev, familyName: e.target.value }))}
+                  placeholder="Ej: Pérez"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Teléfono (con Código de País)</label>
+                <input
+                  type="text"
+                  value={contactModal.phoneNumber}
+                  onChange={(e) => setContactModal(prev => ({ ...prev, phoneNumber: e.target.value }))}
+                  placeholder="Ej: +51999888777"
+                  required
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium"
+                />
+              </div>
+
+              <div className="flex gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setContactModal(prev => ({ ...prev, isOpen: false }))}
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-950 dark:hover:bg-slate-800 text-xs text-slate-700 dark:text-slate-300 font-bold rounded-2xl transition-all cursor-pointer border border-slate-200/20"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-[0.99] text-xs text-white font-bold rounded-2xl shadow-lg shadow-emerald-500/10 transition-all cursor-pointer"
+                >
+                  {contactModal.isEdit ? 'Actualizar' : 'Guardar'}
                 </button>
               </div>
             </form>

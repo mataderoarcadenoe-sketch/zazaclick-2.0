@@ -100,7 +100,20 @@ export async function initDatabase() {
       );
     `);
 
-    // 5. Asegurar rol Administrador para tu correo principal
+    // 5. Tabla de Credenciales de Google Contactos
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS google_contacts_credentials (
+        user_id VARCHAR(255) PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        access_token TEXT NOT NULL,
+        refresh_token TEXT NOT NULL,
+        expiry_date BIGINT NOT NULL,
+        google_email VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // 6. Asegurar rol Administrador para tu correo principal
     await pool.query(`
       UPDATE users 
       SET role = 'admin' 
