@@ -1037,7 +1037,7 @@ echo $response;`;
 
                 {/* Metrics Cards Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm space-y-1.5 text-left">
+                  <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 space-y-1.5 text-left">
                     <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Líneas Vinculadas</span>
                     <h3 className="text-2xl font-bold text-slate-800 dark:text-white">
                       {instances.length} / <span className="text-slate-400">{maxInstances}</span>
@@ -1045,7 +1045,7 @@ echo $response;`;
                     <p className="text-[10px] text-slate-500">Capacidad disponible para crear instancias.</p>
                   </div>
 
-                  <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm space-y-1.5 text-left">
+                  <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 space-y-1.5 text-left">
                     <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest text-emerald-500">Instancias Online</span>
                     <h3 className="text-2xl font-bold text-emerald-500">
                       {activeInstancesCount} / <span className="text-slate-400">{instances.length || 0}</span>
@@ -1053,7 +1053,7 @@ echo $response;`;
                     <p className="text-[10px] text-slate-500">Números con WhatsApp en línea.</p>
                   </div>
 
-                  <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm space-y-1.5 text-left">
+                  <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 space-y-1.5 text-left">
                     <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Próxima Renovación</span>
                     <h3 className="text-2xl font-bold text-indigo-500 dark:text-indigo-400 flex items-center gap-1.5">
                       <Clock size={20} />
@@ -1066,7 +1066,7 @@ echo $response;`;
                 </div>
 
                 {/* Dashboard Instance Table Summary */}
-                <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm space-y-4">
+                <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 space-y-4">
                   <div className="flex items-center justify-between">
                     <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500">Estado de Líneas</h4>
                     <button 
@@ -1149,7 +1149,7 @@ echo $response;`;
                 </div>
 
                 {instances.length === 0 ? (
-                  <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-3xl py-20 text-center space-y-4 shadow-sm">
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-3xl py-20 text-center space-y-4">
                     <Smartphone className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto" />
                     <div className="space-y-1">
                       <h4 className="text-sm font-bold text-slate-800 dark:text-white">No tienes instancias activas</h4>
@@ -1169,7 +1169,7 @@ echo $response;`;
                     {instances.map(inst => (
                       <div 
                         key={inst.id} 
-                        className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-3xl p-5 sm:p-6 shadow-sm hover-lift flex flex-col justify-between gap-5 relative overflow-hidden"
+                        className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-3xl p-5 sm:p-6 hover-lift flex flex-col justify-between gap-5 relative overflow-hidden"
                       >
                         {/* Background light indicator */}
                         <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-[60px] pointer-events-none ${
@@ -1717,7 +1717,7 @@ echo $response;`;
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
                   
                   {/* Test Form */}
-                  <form onSubmit={handleSendTestMessage} className="md:col-span-7 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 p-6 rounded-3xl shadow-sm space-y-4 text-left">
+                  <form onSubmit={handleSendTestMessage} className="md:col-span-7 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 p-6 rounded-3xl space-y-4 text-left">
                     <div className="space-y-1.5">
                       <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Seleccionar Instancia</label>
                       <select
@@ -1785,7 +1785,7 @@ echo $response;`;
 
                   {/* Result Box */}
                   <div className="md:col-span-5 space-y-4">
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 p-6 rounded-3xl shadow-sm text-left space-y-3">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 p-6 rounded-3xl text-left space-y-3">
                       <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500">Resultado del Envío</h4>
                       
                       {testResult ? (
@@ -1832,7 +1832,7 @@ echo $response;`;
                   <p className="text-xs text-slate-400">Ejemplos para conectar el API de envío con tus sistemas internos y plataformas externas.</p>
                 </div>
 
-                <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-3xl p-5 sm:p-6 shadow-sm space-y-5">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-3xl p-5 sm:p-6 space-y-5">
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800/60 pb-3">
                     <span className="text-xs font-bold uppercase tracking-widest text-slate-500">Enviar Mensaje de Texto</span>
                     
@@ -1900,7 +1900,7 @@ echo $response;`;
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
                   
                   {/* Plan specs */}
-                  <div className="md:col-span-7 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 p-6 rounded-3xl shadow-sm flex flex-col justify-between gap-6">
+                  <div className="md:col-span-7 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 p-6 rounded-3xl flex flex-col justify-between gap-6">
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-500">
@@ -1942,7 +1942,7 @@ echo $response;`;
                   </div>
 
                   {/* Reseller Banner Info */}
-                  <div className="md:col-span-5 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent border border-indigo-500/20 p-6 rounded-3xl shadow-sm flex flex-col justify-between gap-6 relative overflow-hidden">
+                  <div className="md:col-span-5 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent border border-indigo-500/20 p-6 rounded-3xl flex flex-col justify-between gap-6 relative overflow-hidden">
                     <div className="space-y-3 relative z-10">
                       <h4 className="text-sm font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">¿Necesitas más capacidad?</h4>
                       <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
