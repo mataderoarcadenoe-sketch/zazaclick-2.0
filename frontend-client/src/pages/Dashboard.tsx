@@ -1396,7 +1396,7 @@ echo $response;`;
                                   {/* Details */}
                                   <div className="flex-1 min-w-0 space-y-1">
                                     <div className="flex items-center justify-between">
-                                      <span className={`text-xs truncate ${isActive ? 'text-emerald-600 dark:text-emerald-400 font-bold' : isUnread ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-500 dark:text-slate-400 font-normal'}`}>
+                                      <span className={`text-xs truncate ${isActive || isUnread ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-500 dark:text-slate-400 font-normal'}`}>
                                         {contactName}
                                       </span>
                                       <span className={`text-[10px] font-medium ${isUnread ? 'text-emerald-500 font-bold' : 'text-slate-400'}`}>
