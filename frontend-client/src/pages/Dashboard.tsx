@@ -382,6 +382,7 @@ export default function DashboardPage() {
           
           api.post(`/instances/chats/${instance}/read`, {
             remoteJid: originalJid || remoteJid,
+            phoneJid: targetJid, // Enviar JID unificado (teléfono) para limpiar Redis correctamente
             messageIds
           }).catch(err => {
             console.error('Error marking messages as read:', err);

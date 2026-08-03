@@ -409,7 +409,7 @@ router.post('/chats/:instanceName/send', authMiddleware, async (req: Authenticat
  */
 router.post('/chats/:instanceName/read', authMiddleware, async (req: AuthenticatedRequest, res) => {
   const { instanceName } = req.params;
-  const { remoteJid, messageIds } = req.body;
+  const { remoteJid, phoneJid, messageIds } = req.body;
 
   if (!remoteJid) {
     return res.status(400).json({ success: false, error: 'Faltan parámetros requeridos (remoteJid)' });
@@ -423,13 +423,13 @@ router.post('/chats/:instanceName/read', authMiddleware, async (req: Authenticat
     }
 
     if (messageIds && Array.isArray(messageIds) && messageIds.length > 0) {
-      const markResult = await EvolutionService.markMessagesAsRead(instanceName, remoteJid, messageIds);
+      const markResult = await EvolutionService.markMessagesAsRead(instanceName, remoteJid, messageIds, phoneJid);
       if (!markResult.success) {
         return res.status(500).json({ success: false, error: markResult.error || 'Error al marcar mensajes como leídos' });
       }
     } else {
       // Registrar de todos modos el timestamp en la caché local para forzar el contador a 0 en la UI
-      EvolutionService.recordReadTimestamp(instanceName, remoteJid);
+      EvolutionService.recordReadTimestamp(instanceName, remoteJid, phoneJid);
     }
 
     res.json({ success: true, message: 'Mensajes marcados como leídos.' });

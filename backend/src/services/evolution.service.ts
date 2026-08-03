@@ -466,7 +466,7 @@ export class EvolutionService {
   /**
    * Registrar manualmente un timestamp de lectura para un JID (tanto original como unificado)
    */
-  public static recordReadTimestamp(instanceName: string, remoteJid: string): void {
+  public static recordReadTimestamp(instanceName: string, remoteJid: string, phoneJid?: string): void {
     let unifiedJid = remoteJid;
     if (unifiedJid.endsWith('@lid') && this.lidCache.has(unifiedJid)) {
       unifiedJid = this.lidCache.get(unifiedJid)!;
@@ -478,18 +478,27 @@ export class EvolutionService {
     const nowInMs = Date.now() + 2000; // Guardar en milisegundos con 2 segundos de margen
     this.lastReadTimestamps.set(`${instanceName}:${remoteJid}`, nowInMs);
     this.lastReadTimestamps.set(`${instanceName}:${unifiedJid}`, nowInMs);
+    if (phoneJid) {
+      this.lastReadTimestamps.set(`${instanceName}:${phoneJid}`, nowInMs);
+    }
     
-    // Resetear contadores de no leídos en Redis al instante
-    redis.set(`unread:${instanceName}:${remoteJid}`, 0).catch(err => console.error('[Redis] Error al resetear JID:', err.message));
-    redis.set(`unread:${instanceName}:${unifiedJid}`, 0).catch(err => console.error('[Redis] Error al resetear JID unificado:', err.message));
+    // Resetear contadores de no leídos en Redis al instante para todas las variantes
+    const jids = new Set<string>();
+    if (remoteJid) jids.add(remoteJid);
+    if (unifiedJid) jids.add(unifiedJid);
+    if (phoneJid) jids.add(phoneJid);
+
+    for (const jid of jids) {
+      redis.set(`unread:${instanceName}:${jid}`, 0).catch(err => console.error(`[Redis] Error al resetear JID ${jid}:`, err.message));
+    }
     
-    console.log(`[EvolutionService] Registrada marca de lectura para ${instanceName}:${remoteJid} / ${unifiedJid} a las ${nowInMs}`);
+    console.log(`[EvolutionService] Registrada marca de lectura para ${instanceName}:${remoteJid} / ${unifiedJid} (phone: ${phoneJid}) a las ${nowInMs}`);
   }
 
   /**
    * Marcar mensajes como leídos
    */
-  public static async markMessagesAsRead(instanceName: string, remoteJid: string, messageIds: string[]): Promise<{ success: boolean; data?: any; error?: string }> {
+  public static async markMessagesAsRead(instanceName: string, remoteJid: string, messageIds: string[], phoneJid?: string): Promise<{ success: boolean; data?: any; error?: string }> {
     try {
       // Resolver el JID unificado (teléfono real) para que coincida exactamente con las claves de mensajes de la base de datos de Evolution
       let unifiedJid = remoteJid;
@@ -514,6 +523,13 @@ export class EvolutionService {
             fromMe: false
           });
         }
+        if (phoneJid && phoneJid !== remoteJid && phoneJid !== unifiedJid) {
+          readMessages.push({
+            remoteJid: phoneJid,
+            id,
+            fromMe: false
+          });
+        }
       }
       
       const response = await api.post(`/chat/markMessageAsRead/${instanceName}`, {
@@ -521,7 +537,7 @@ export class EvolutionService {
       });
 
       // Guardar el timestamp actual de lectura
-      this.recordReadTimestamp(instanceName, remoteJid);
+      this.recordReadTimestamp(instanceName, remoteJid, phoneJid);
 
       return { success: true, data: response.data };
     } catch (err: any) {
@@ -529,7 +545,7 @@ export class EvolutionService {
       console.error(`[EvolutionService] Error marcando mensajes como leídos para ${remoteJid}:`, errorMsg);
       
       // Registrar de todos modos de manera preventiva por si la API falla pero queremos limpiar la UI
-      this.recordReadTimestamp(instanceName, remoteJid);
+      this.recordReadTimestamp(instanceName, remoteJid, phoneJid);
       
       return { success: false, error: errorMsg };
     }
