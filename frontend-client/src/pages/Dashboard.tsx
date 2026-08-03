@@ -13,7 +13,7 @@ import EmojiPicker, { Theme, EmojiStyle, Emoji } from 'emoji-picker-react';
 import { parse } from '@twemoji/parser';
 
 // Componente para parsear texto y renderizar los mismos Emojis de Apple que usa el selector
-const AppleEmojiText = ({ text }: { text: string }) => {
+const AppleEmojiText = ({ text, size }: { text: string; size?: number }) => {
   // Fix para el handshake de Emoji 14.0 con el mismo tono de piel (ej. 🫱🏻‍🫲🏻)
   // twemoji-parser no lo reconoce como un solo emoji y lo divide en dos manos (🫱🏻 y 🫲🏻)
   // Lo reemplazamos por el handshake base + tono de piel (🤝🏻) que twemoji parsea correctamente.
@@ -21,6 +21,18 @@ const AppleEmojiText = ({ text }: { text: string }) => {
   const emojis = parse(normalizedText);
   
   if (emojis.length === 0) return <>{normalizedText}</>;
+
+  // Verificar si el texto consiste unicamente de emojis y espacios/saltos de línea
+  const strippedText = normalizedText.replace(/\s/g, '');
+  const emojisLengthSum = emojis.reduce((sum, e) => sum + (e.indices[1] - e.indices[0]), 0);
+  const isOnlyEmojis = strippedText.length === emojisLengthSum;
+
+  let emojiSize = size || 15;
+  if (!size && isOnlyEmojis) {
+    if (emojis.length === 1) emojiSize = 36;
+    else if (emojis.length === 2) emojiSize = 30;
+    else if (emojis.length === 3) emojiSize = 24;
+  }
 
   const nodes = [];
   let lastIndex = 0;
@@ -37,7 +49,7 @@ const AppleEmojiText = ({ text }: { text: string }) => {
     // Componente Emoji de Apple idéntico al del picker
     nodes.push(
       <span key={`e-${i}`} className="inline-flex items-center align-middle mx-0.5">
-        <Emoji unified={hex} emojiStyle={EmojiStyle.APPLE} size={15} />
+        <Emoji unified={hex} emojiStyle={EmojiStyle.APPLE} size={emojiSize} />
       </span>
     );
     
@@ -1368,7 +1380,8 @@ echo $response;`;
                                   lastMsgText = '🎥 Video';
                                 } else if (content.audioMessage) {
                                   lastMsgText = '🎵 Audio';
-                                        lastMsgText = chat.lastMessage?.messageType 
+                                } else {
+                                  lastMsgText = chat.lastMessage?.messageType 
                                     ? `[${chat.lastMessage.messageType.replace('Message', '')}]` 
                                     : 'Mensaje';
                                 }
@@ -1402,7 +1415,7 @@ echo $response;`;
                                       </div>
                                       <div className="flex items-center justify-between mt-1">
                                         <p className={`text-[11px] leading-relaxed pb-0.5 truncate flex-1 flex items-center gap-1 ${isUnread ? 'text-slate-800 dark:text-slate-200 font-semibold' : 'text-slate-400 dark:text-slate-500 font-normal'}`}>
-                                          <span className="flex-1 block truncate"><AppleEmojiText text={lastMsgText} /></span>
+                                          <span className="flex-1 block truncate"><AppleEmojiText text={lastMsgText} size={13} /></span>
                                         </p>
                                         {isUnread && (
                                           <div className="bg-emerald-500 text-white text-[10px] font-bold px-1.5 min-w-[1.25rem] h-5 rounded-full flex items-center justify-center flex-shrink-0 ml-2 shadow-sm">
