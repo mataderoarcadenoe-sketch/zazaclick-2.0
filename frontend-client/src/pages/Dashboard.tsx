@@ -1392,10 +1392,15 @@ echo $response;`;
                                     key={chat.remoteJid}
                                     onClick={() => setSelectedChat(chat)}
                                     type="button"
-                                    className={`w-full py-3.5 px-3.5 flex items-center gap-3 text-left transition-all duration-300 cursor-pointer rounded-2xl ${isActive ? 'bg-gradient-to-r from-emerald-500/10 to-teal-500/5 dark:from-emerald-950/40 dark:to-teal-950/20 shadow-sm' : 'hover:bg-white/45 dark:hover:bg-slate-800/20'}`}
+                                    className={`w-full py-3.5 px-3.5 flex items-center gap-3 text-left transition-all duration-300 cursor-pointer rounded-2xl relative ${isActive ? 'bg-gradient-to-r from-emerald-500/10 to-teal-500/5 dark:from-emerald-950/40 dark:to-teal-950/20 shadow-sm' : 'hover:bg-white/45 dark:hover:bg-slate-800/20'}`}
                                   >
+                                    {/* Active indicator pill */}
+                                    {isActive && (
+                                      <div className="absolute left-0.5 top-1/2 -translate-y-1/2 w-1 h-6 bg-emerald-500 rounded-r-full" />
+                                    )}
+
                                     {/* Profile Photo */}
-                                    <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center flex-shrink-0 relative overflow-hidden shadow-sm">
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 relative overflow-hidden shadow-sm transition-all duration-300 ${isActive ? 'ring-2 ring-emerald-500/30' : isUnread ? 'ring-2 ring-emerald-500/70' : 'bg-white dark:bg-slate-800'}`}>
                                       {chat.profilePicUrl ? (
                                         <img src={chat.profilePicUrl} alt="" className="w-full h-full object-cover" />
                                       ) : (
@@ -1418,7 +1423,7 @@ echo $response;`;
                                           <span className="flex-1 block truncate"><AppleEmojiText text={lastMsgText} size={13} /></span>
                                         </p>
                                         {isUnread && (
-                                          <div className="bg-emerald-500 text-white text-[10px] font-bold px-1.5 min-w-[1.25rem] h-5 rounded-full flex items-center justify-center flex-shrink-0 ml-2 shadow-sm">
+                                          <div className="bg-emerald-500 text-white text-[10px] font-bold px-1.5 min-w-[1.25rem] h-5 rounded-full flex items-center justify-center flex-shrink-0 ml-2 shadow-sm animate-pulseGlow">
                                             {unreadCount}
                                           </div>
                                         )}
@@ -1432,7 +1437,7 @@ echo $response;`;
                     </div>
 
                     {/* RIGHT PANEL: Message Area */}
-                    <div className={`md:col-span-8 flex-col min-h-0 bg-white/20 dark:bg-slate-900/10 w-full md:w-auto ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
+                    <div className={`md:col-span-8 flex-col min-h-0 bg-gradient-to-b from-slate-50/50 via-slate-100/20 to-indigo-50/15 dark:from-slate-950/65 dark:via-slate-900/40 dark:to-slate-950/55 w-full md:w-auto ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
                       {selectedChat ? (
                         <div className="flex-1 flex flex-col min-h-0">
                           
@@ -1466,7 +1471,7 @@ echo $response;`;
                           </div>
 
                           {/* Chat Window Messages */}
-                          <div className="flex-1 overflow-y-auto p-4 space-y-3.5 min-h-0 flex flex-col">
+                          <div className="flex-1 overflow-y-auto p-4 space-y-3.5 min-h-0 flex flex-col bg-gradient-to-b from-teal-50/15 via-indigo-50/25 to-emerald-50/15 dark:from-slate-950/35 dark:via-slate-900/20 dark:to-slate-950/30">
                             {messagesLoading && messages.length === 0 ? (
                               <div className="my-auto text-center text-xs text-slate-400 animate-pulse">Cargando conversación...</div>
                             ) : messages.length === 0 ? (
@@ -1659,7 +1664,7 @@ echo $response;`;
                             )}
                             <form 
                               onSubmit={handleSendChatMessage}
-                              className="p-4 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md flex items-center gap-2.5"
+                              className="p-4 bg-transparent flex items-center gap-2.5"
                             >
                               <button
                                 ref={emojiButtonRef}
@@ -1675,7 +1680,7 @@ echo $response;`;
                                 onChange={(e) => setNewMessageText(e.target.value)}
                                 placeholder="Escribe un mensaje aquí..."
                                 disabled={sendingMessage}
-                                className="flex-1 px-4 py-3 bg-white/60 dark:bg-slate-900/40 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 font-medium disabled:opacity-50 transition-all shadow-sm"
+                                className="flex-1 px-4 py-3 bg-white/95 dark:bg-slate-900/95 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 font-medium disabled:opacity-50 transition-all shadow-premium"
                               />
                               <button
                                 type="submit"
