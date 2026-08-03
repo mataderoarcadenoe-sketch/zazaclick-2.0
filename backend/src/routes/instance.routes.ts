@@ -19,12 +19,15 @@ function generateId(prefix: string): string {
 router.post('/create', authMiddleware, async (req: AuthenticatedRequest, res) => {
   const { instanceName } = req.body;
 
+  console.log(`[Create] INICIO — userId=${req.userId} instanceName=${instanceName}`);
+
   if (!instanceName || !/^[a-zA-Z0-9_-]+$/.test(instanceName)) {
     return res.status(400).json({ success: false, error: 'Nombre de instancia inválido. Solo letras, números, guiones y guiones bajos.' });
   }
 
   try {
     // 1. Verificar límites de la suscripción del usuario
+    console.log(`[Create] PASO 1 — Consultando suscripción para userId=${req.userId}`);
     const subRes = await pool.query(`
       SELECT p.max_instances
       FROM subscriptions s
@@ -33,29 +36,35 @@ router.post('/create', authMiddleware, async (req: AuthenticatedRequest, res) =>
       ORDER BY s.created_at DESC LIMIT 1
     `, [req.userId]);
 
-    if (subRes.rows.length === 0) {
+    console.log(`[Create] PASO 1 result — rows=${subRes?.rows?.length}`);
+
+    if (!subRes || !subRes.rows || subRes.rows.length === 0) {
       return res.status(403).json({ success: false, error: 'No tienes una suscripción activa para crear instancias.' });
     }
 
     const maxInstances = subRes.rows[0].max_instances;
+    console.log(`[Create] PASO 2 — maxInstances=${maxInstances}`);
 
     // Contar instancias actuales creadas por el usuario
     const currentInstancesRes = await pool.query('SELECT COUNT(*) FROM instances WHERE user_id = $1', [req.userId]);
     const currentCount = parseInt(currentInstancesRes.rows[0].count);
+    console.log(`[Create] PASO 2 — currentCount=${currentCount}`);
 
     if (currentCount >= maxInstances) {
-      return res.status(400).json({ success: false, error: `Límite alcanzado: Tu plan actual solo permite un máximo de ${maxInstances} instancia(s).` });
+      return res.status(400).json({ success: false, error: `Límite alcanzado: Tu plan actual solo permite un máximo de ${maxInstances} instancia(s). Elimina una instancia primero.` });
     }
 
     // 2. Verificar si el nombre de instancia ya está tomado en nuestra BD
+    console.log(`[Create] PASO 3 — Verificando nombre ${instanceName}`);
     const nameCheck = await pool.query('SELECT id FROM instances WHERE instance_name = $1', [instanceName]);
     if (nameCheck.rows.length > 0) {
       return res.status(400).json({ success: false, error: 'El nombre de esta instancia ya está en uso. Elige otro.' });
     }
 
     // 3. Crear la instancia en el motor de Evolution API
-    console.log(`[Instance] Creando instancia ${instanceName} en Evolution API...`);
+    console.log(`[Create] PASO 4 — Llamando a Evolution API para crear ${instanceName}`);
     const evoResult = await EvolutionService.createInstance(instanceName);
+    console.log(`[Create] PASO 4 result — success=${evoResult.success} error=${evoResult.error}`);
 
     if (!evoResult.success || !evoResult.instance) {
       const statusCode = evoResult.status || 500;
@@ -63,6 +72,7 @@ router.post('/create', authMiddleware, async (req: AuthenticatedRequest, res) =>
     }
 
     // 4. Guardar la instancia en la base de datos de Zaza
+    console.log(`[Create] PASO 5 — Guardando instancia en BD`);
     const instanceId = generateId('inst');
     const apiKey = evoResult.instance.token;
 
@@ -70,6 +80,8 @@ router.post('/create', authMiddleware, async (req: AuthenticatedRequest, res) =>
       INSERT INTO instances (id, user_id, instance_name, status, api_key)
       VALUES ($1, $2, $3, $4, $5)
     `, [instanceId, req.userId, instanceName, 'disconnected', apiKey]);
+
+    console.log(`[Create] ÉXITO — Instancia ${instanceName} creada correctamente`);
 
     res.status(201).json({
       success: true,
@@ -83,10 +95,12 @@ router.post('/create', authMiddleware, async (req: AuthenticatedRequest, res) =>
     });
 
   } catch (error: any) {
-    console.error('[Instance] Error en POST /create:', error.message);
-    res.status(500).json({ success: false, error: 'Error en el servidor al crear la instancia' });
+    console.error('[Create] ERROR en POST /create:', error.message);
+    console.error('[Create] STACK:', error.stack);
+    res.status(500).json({ success: false, error: `Error en el servidor: ${error.message}` });
   }
 });
+
 
 /**
  * GET /list - Listar instancias del cliente y actualizar sus estados en vivo
