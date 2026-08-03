@@ -620,7 +620,7 @@ export class EvolutionService {
           ]
         }
       });
-      return response.status === 200 || response.data?.success === true;
+      return response.status === 200 || response.status === 201 || response.data?.success === true;
     } catch (err: any) {
       console.error(`[EvolutionService] Error configurando webhook para ${instanceName}:`, err.message);
       return false;
