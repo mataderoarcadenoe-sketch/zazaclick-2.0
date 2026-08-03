@@ -1371,10 +1371,7 @@ echo $response;`;
                                   lastMsgText = '🎥 Video';
                                 } else if (content.audioMessage) {
                                   lastMsgText = '🎵 Audio';
-                                } else if (content.documentMessage) {
-                                  lastMsgText = '📄 Documento';
-                                } else {
-                                  lastMsgText = chat.lastMessage?.messageType 
+                                        lastMsgText = chat.lastMessage?.messageType 
                                     ? `[${chat.lastMessage.messageType.replace('Message', '')}]` 
                                     : 'Mensaje';
                                 }
@@ -1385,7 +1382,7 @@ echo $response;`;
                                   key={chat.remoteJid}
                                   onClick={() => setSelectedChat(chat)}
                                   type="button"
-                                  className={`w-full p-4 flex items-center gap-3 text-left transition-colors border-l-4 cursor-pointer ${isActive ? 'bg-slate-50 dark:bg-slate-950/20 border-emerald-500' : 'border-transparent hover:bg-slate-50/50 dark:hover:bg-slate-950/10'}`}
+                                  className={`w-full py-[18px] px-4 flex items-center gap-3 text-left transition-colors border-l-4 cursor-pointer ${isActive ? 'bg-slate-50 dark:bg-slate-950/20 border-emerald-500' : 'border-transparent hover:bg-slate-50/50 dark:hover:bg-slate-950/10'}`}
                                 >
                                   {/* Profile Photo */}
                                   <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 relative overflow-hidden border border-slate-200/50 dark:border-slate-700/50">
@@ -1397,7 +1394,7 @@ echo $response;`;
                                   </div>
 
                                   {/* Details */}
-                                  <div className="flex-1 min-w-0 space-y-0.5">
+                                  <div className="flex-1 min-w-0 space-y-1">
                                     <div className="flex items-center justify-between">
                                       <span className={`text-xs truncate ${isActive ? 'text-emerald-600 dark:text-emerald-400 font-bold' : isUnread ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-500 dark:text-slate-400 font-normal'}`}>
                                         {contactName}
@@ -1406,8 +1403,8 @@ echo $response;`;
                                         {formatTimeLocal(chat.lastMessage?.messageTimestamp)}
                                       </span>
                                     </div>
-                                    <div className="flex items-center justify-between mt-0.5">
-                                      <p className={`text-[11px] truncate flex-1 flex items-center gap-1 ${isUnread ? 'text-slate-800 dark:text-slate-200 font-semibold' : 'text-slate-400 dark:text-slate-500 font-normal'}`}>
+                                    <div className="flex items-center justify-between mt-1">
+                                      <p className={`text-[11px] leading-relaxed pb-0.5 truncate flex-1 flex items-center gap-1 ${isUnread ? 'text-slate-800 dark:text-slate-200 font-semibold' : 'text-slate-400 dark:text-slate-500 font-normal'}`}>
                                         <span className="truncate flex-1"><AppleEmojiText text={lastMsgText} /></span>
                                       </p>
                                       {isUnread && (
