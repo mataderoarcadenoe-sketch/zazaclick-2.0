@@ -2084,7 +2084,7 @@ echo $response;`;
                     <span className="text-xs font-bold uppercase tracking-widest text-slate-500">Enviar Mensaje de Texto</span>
                     
                     {/* Language Selector */}
-                    <div className="flex bg-slate-100 dark:bg-slate-950 p-0.5 rounded-xl border border-slate-200/50 dark:border-slate-800/50 text-[10px] font-bold">
+                    <div className="flex bg-slate-100 dark:bg-slate-950 p-0.5 rounded-xl text-[10px] font-bold">
                       {(['curl', 'js', 'python', 'php'] as const).map(lang => (
                         <button
                           key={lang}
@@ -2108,13 +2108,13 @@ echo $response;`;
 
                     {/* Code Container */}
                     <div className="relative group">
-                      <pre className="bg-slate-950 text-emerald-400 dark:text-emerald-300 font-mono text-[10.5px] p-5 rounded-2xl overflow-x-auto leading-relaxed border border-slate-800 shadow-inner">
+                      <pre className="bg-slate-950 text-emerald-400 dark:text-emerald-300 font-mono text-[10.5px] p-5 rounded-2xl overflow-x-auto leading-relaxed shadow-inner">
                         {getDocCode()}
                       </pre>
                       
                       <button
                         onClick={() => copyToClipboard(getDocCode())}
-                        className="absolute top-3 right-3 p-2 bg-slate-900/60 hover:bg-slate-900 text-slate-400 hover:text-white rounded-lg border border-slate-800/40 hover-lift shadow transition-all cursor-pointer opacity-100 group-hover:opacity-100"
+                        className="absolute top-3 right-3 p-2 bg-slate-900/60 hover:bg-slate-900 text-slate-400 hover:text-white rounded-lg hover-lift shadow transition-all cursor-pointer opacity-100 group-hover:opacity-100"
                         title="Copiar código"
                       >
                         <Copy size={13} />
@@ -2125,7 +2125,7 @@ echo $response;`;
                   {/* API response specifications */}
                   <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800/40">
                     <h5 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Respuesta Esperada (JSON)</h5>
-                    <pre className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200/50 dark:border-slate-800/50 p-4 rounded-xl font-mono text-[10px] text-slate-600 dark:text-slate-400 overflow-x-auto">
+                    <pre className="bg-slate-50 dark:bg-slate-950/40 p-4 rounded-xl font-mono text-[10px] text-slate-600 dark:text-slate-400 overflow-x-auto">
 {`{
   "success": true,
   "message": "Mensaje enviado exitosamente en vivo 🚀"
