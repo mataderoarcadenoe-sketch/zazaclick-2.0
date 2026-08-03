@@ -22,11 +22,15 @@ router.post('/whatsapp', async (req, res) => {
     const eventUpper = event.toUpperCase().replace('.', '_');
 
     if (eventUpper === 'MESSAGES_UPSERT') {
-      const msg = data.message || data;
-      const key = msg.key;
+      // En Evolution API v2, data contiene el objeto del mensaje completo de Baileys
+      // data.key tiene las propiedades fromMe, remoteJid, id
+      // data.message tiene el contenido del mensaje
+      const key = data.key;
       if (key) {
         const fromMe = key.fromMe;
         const remoteJid = key.remoteJid;
+
+        console.log(`📬 [Webhook] Procesando mensaje. fromMe: ${fromMe}, remoteJid: ${remoteJid}`);
 
         // Limpiar el JID
         let cleanJid = remoteJid;
@@ -50,7 +54,9 @@ router.post('/whatsapp', async (req, res) => {
         }
 
         // Emitir el mensaje recibido para que la UI lo pinte al instante
-        io.to(roomName).emit('message:received', msg);
+        io.to(roomName).emit('message:received', data);
+      } else {
+        console.warn('⚠️ [Webhook] No se pudo extraer la propiedad "key" de data:', data);
       }
     } 
     else if (eventUpper === 'CHATS_UPDATE' || eventUpper === 'MESSAGES_UPDATE') {
