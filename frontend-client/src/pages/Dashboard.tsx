@@ -1382,7 +1382,7 @@ echo $response;`;
                                   key={chat.remoteJid}
                                   onClick={() => setSelectedChat(chat)}
                                   type="button"
-                                  className={`w-full py-[18px] px-4 flex items-center gap-3 text-left transition-colors border-l-4 cursor-pointer ${isActive ? 'bg-slate-50 dark:bg-slate-950/20 border-emerald-500' : 'border-transparent hover:bg-slate-50/50 dark:hover:bg-slate-950/10'}`}
+                                  className={`w-full py-[18px] px-4 flex items-center gap-3 text-left transition-colors cursor-pointer border-b border-slate-100/80 dark:border-slate-800/30 ${isActive ? 'bg-slate-100/70 dark:bg-slate-800/40' : 'hover:bg-slate-50/50 dark:hover:bg-slate-950/10'}`}
                                 >
                                   {/* Profile Photo */}
                                   <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 relative overflow-hidden border border-slate-200/50 dark:border-slate-700/50">
