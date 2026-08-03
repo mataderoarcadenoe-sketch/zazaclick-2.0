@@ -501,6 +501,8 @@ export default function DashboardPage() {
         cleanJid = cleanJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
       }
 
+      const fromMe = newMsg.key?.fromMe;
+
       // 1. Si es el chat abierto actualmente, añadirlo a la lista de mensajes en tiempo real
       const targetJid = selectedChatRef.current?.remoteJid;
       if (cleanJid === targetJid) {
@@ -511,7 +513,7 @@ export default function DashboardPage() {
         });
       }
 
-      // 2. Mover el chat al inicio de la lista lateral y actualizar su lastMessage
+      // 2. Mover el chat al inicio de la lista lateral y actualizar su lastMessage y unreadCount
       setChats(prevChats => {
         const chatIdx = prevChats.findIndex(c => c.remoteJid === cleanJid);
         if (chatIdx === -1) {
@@ -520,8 +522,19 @@ export default function DashboardPage() {
           return prevChats;
         }
 
+        const oldChat = prevChats[chatIdx];
+
+        // Incrementar el contador de no leídos si el mensaje no es nuestro y no tenemos el chat abierto
+        let newUnreadCount = Number(oldChat.unreadCount) || 0;
+        if (!fromMe && cleanJid !== selectedChatRef.current?.remoteJid) {
+          newUnreadCount += 1;
+        } else if (cleanJid === selectedChatRef.current?.remoteJid) {
+          newUnreadCount = 0; // Forzar a 0 si está abierto
+        }
+
         const updatedChat = {
-          ...prevChats[chatIdx],
+          ...oldChat,
+          unreadCount: newUnreadCount,
           lastMessage: {
             ...newMsg,
             messageTimestamp: newMsg.messageTimestamp
