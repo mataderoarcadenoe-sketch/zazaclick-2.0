@@ -312,16 +312,27 @@ export class EvolutionService {
         realJid = realJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
       }
 
+      // Obtener el contador de mensajes no leídos tolerando 'unreadMessages' y 'unreadCount'
+      const chatUnread = chat.unreadMessages !== undefined ? chat.unreadMessages : chat.unreadCount;
+      const unreadCountNum = Number(chatUnread) || 0;
+
       const existing = mergedMap.get(realJid);
       
       if (!existing) {
         // Primer vez que vemos este JID real
-        const newChat = { ...chat, remoteJid: realJid, originalJid: chat.remoteJid };
+        const newChat = { 
+          ...chat, 
+          remoteJid: realJid, 
+          originalJid: chat.remoteJid,
+          unreadCount: unreadCountNum
+        };
         mergedMap.set(realJid, newChat);
       } else {
         // Fusionar si ya existía
         const currentTs = chat.lastMessage?.messageTimestamp || 0;
         const existingTs = existing.lastMessage?.messageTimestamp || 0;
+        
+        const totalUnread = (Number(existing.unreadCount) || 0) + unreadCountNum;
         
         if (currentTs > existingTs) {
           const merged = { 
@@ -330,13 +341,13 @@ export class EvolutionService {
             originalJid: chat.remoteJid,
             profilePicUrl: chat.profilePicUrl || existing.profilePicUrl,
             pushName: chat.pushName || existing.pushName,
-            unreadCount: (Number(chat.unreadCount) || 0) + (Number(existing.unreadCount) || 0)
+            unreadCount: totalUnread
           };
           mergedMap.set(realJid, merged);
         } else {
           existing.profilePicUrl = existing.profilePicUrl || chat.profilePicUrl;
           existing.pushName = existing.pushName || chat.pushName;
-          existing.unreadCount = (Number(existing.unreadCount) || 0) + (Number(chat.unreadCount) || 0);
+          existing.unreadCount = totalUnread;
           mergedMap.set(realJid, existing);
         }
       }
