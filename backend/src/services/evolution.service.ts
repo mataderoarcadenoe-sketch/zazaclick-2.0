@@ -316,7 +316,7 @@ export class EvolutionService {
   /**
    * Unificar chats @lid con sus números reales para evitar conversaciones duplicadas
    */
-  public static async mergeChats(instanceName: string, chats: any[]): Promise<any[]> {
+  public static mergeChats(instanceName: string, chats: any[]): any[] {
     const mergedMap = new Map<string, any>();
 
     for (const chat of chats) {
@@ -348,9 +348,14 @@ export class EvolutionService {
           realJid = chat.contact.id;
         } else if (chat.contact?.remoteJid && chat.contact.remoteJid.endsWith('@s.whatsapp.net')) {
           realJid = chat.contact.remoteJid;
+        } else if (this.lidCache.has(realJid)) {
+          realJid = this.lidCache.get(realJid)!;
         } else {
-          // Último recurso: Resolver llamando a la API en caliente
-          realJid = await this.resolveLidToPhone(instanceName, realJid);
+          // Lanzar resolución en segundo plano sin await para no colgar la UI del usuario
+          const currentLid = realJid;
+          this.resolveLidToPhone(instanceName, currentLid).catch(err => {
+            console.warn(`[EvolutionService] Error en resolución background de LID ${currentLid}:`, err.message);
+          });
         }
       }
       

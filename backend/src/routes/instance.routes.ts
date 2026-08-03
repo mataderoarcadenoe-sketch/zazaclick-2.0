@@ -272,7 +272,7 @@ router.get('/chats/:instanceName', authMiddleware, async (req: AuthenticatedRequ
     }
 
     // Filtrar broadcasts y unificar chats @lid usando la nueva utilidad
-    const cleanChats = await EvolutionService.mergeChats(instanceName, chatsResult.data || []);
+    const cleanChats = EvolutionService.mergeChats(instanceName, chatsResult.data || []);
 
     res.json({ success: true, data: cleanChats });
   } catch (error: any) {
