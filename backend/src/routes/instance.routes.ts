@@ -459,4 +459,19 @@ router.get('/webhook-diag/:instanceName', async (req, res) => {
   }
 });
 
+/**
+ * GET /db-diag - Diagnosticar tablas de instancias en producción
+ */
+router.get('/db-diag', async (req, res) => {
+  try {
+    const dbInstances = await pool.query('SELECT id, instance_name, status, phone FROM instances');
+    res.json({
+      success: true,
+      instances: dbInstances.rows
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 export default router;
