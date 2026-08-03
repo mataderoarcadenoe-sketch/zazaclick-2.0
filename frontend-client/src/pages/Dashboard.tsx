@@ -498,10 +498,7 @@ export default function DashboardPage() {
       const msgJid = newMsg.key?.remoteJid;
       if (!msgJid) return;
 
-      let cleanJid = msgJid;
-      if (cleanJid.includes(':0@s.whatsapp.net')) {
-        cleanJid = cleanJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
-      }
+      let cleanJid = msgJid.replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net');
 
       const fromMe = newMsg.key?.fromMe;
 

@@ -37,11 +37,7 @@ router.post('/whatsapp', async (req, res) => {
 
         console.log(`📬 [Webhook] Procesando mensaje. id: ${msgId}, fromMe: ${fromMe}, remoteJid: ${remoteJid}`);
 
-        // Limpiar el JID
-        let cleanJid = remoteJid;
-        if (cleanJid.includes(':0@s.whatsapp.net')) {
-          cleanJid = cleanJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
-        }
+        let cleanJid = remoteJid.replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net');
 
         // Deduplicación preventiva por ID de mensaje
         let isDuplicate = false;
@@ -83,10 +79,7 @@ router.post('/whatsapp', async (req, res) => {
       for (const update of chatUpdates) {
         const remoteJid = update.id || update.remoteJid;
         if (remoteJid) {
-          let cleanJid = remoteJid;
-          if (cleanJid.includes(':0@s.whatsapp.net')) {
-            cleanJid = cleanJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
-          }
+          let cleanJid = remoteJid.replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net');
 
           // Si el unreadCount viene en 0
           if (update.unreadCount === 0 || update.unreadMessages === 0 || update.status === 'READ') {

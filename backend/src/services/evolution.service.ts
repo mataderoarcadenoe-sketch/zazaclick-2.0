@@ -294,10 +294,7 @@ export class EvolutionService {
           if (contact && contact.remoteJid) {
             const name = contact.name || contact.pushName || contact.shortName;
             if (name) {
-              let cleanJid = contact.remoteJid;
-              if (cleanJid.includes(':0@s.whatsapp.net')) {
-                cleanJid = cleanJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
-              }
+              let cleanJid = contact.remoteJid.replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net');
               instanceMap.set(cleanJid, name);
             }
           }
@@ -406,12 +403,7 @@ export class EvolutionService {
       if (!chat || !chat.remoteJid) continue;
       if (chat.remoteJid === 'status@broadcast') continue;
 
-      let realJid = chat.remoteJid;
-
-      // Limpiar el sufijo de puerto :0 si existe
-      if (realJid.includes(':0@s.whatsapp.net')) {
-        realJid = realJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
-      }
+      let realJid = chat.remoteJid.replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net');
 
       // Si es un @lid, intentamos obtener su número real de múltiples lugares posibles
       if (realJid.endsWith('@lid')) {
@@ -442,10 +434,7 @@ export class EvolutionService {
         }
       }
       
-      // Volver a limpiar por si el JID resuelto vino con :0
-      if (realJid.includes(':0@s.whatsapp.net')) {
-        realJid = realJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
-      }
+      realJid = realJid.replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net');
 
       // Obtener el contador de mensajes no leídos tolerando la base de datos de Zaza o la API de Evolution
       let unreadCountNum = 0;
@@ -556,12 +545,9 @@ export class EvolutionService {
    * Registrar manualmente un timestamp de lectura para un JID (tanto original como unificado)
    */
   public static recordReadTimestamp(instanceName: string, remoteJid: string, phoneJid?: string): void {
-    let unifiedJid = remoteJid;
+    let unifiedJid = remoteJid.replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net');
     if (unifiedJid.endsWith('@lid') && this.lidCache.has(unifiedJid)) {
       unifiedJid = this.lidCache.get(unifiedJid)!;
-    }
-    if (unifiedJid.includes(':0@s.whatsapp.net')) {
-      unifiedJid = unifiedJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
     }
 
     const nowInMs = Date.now() + 2000; // Guardar en milisegundos con 2 segundos de margen
@@ -590,12 +576,9 @@ export class EvolutionService {
   public static async markMessagesAsRead(instanceName: string, remoteJid: string, messageIds: string[], phoneJid?: string): Promise<{ success: boolean; data?: any; error?: string }> {
     try {
       // Resolver el JID unificado (teléfono real) para que coincida exactamente con las claves de mensajes de la base de datos de Evolution
-      let unifiedJid = remoteJid;
+      let unifiedJid = remoteJid.replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net');
       if (unifiedJid.endsWith('@lid') && this.lidCache.has(unifiedJid)) {
         unifiedJid = this.lidCache.get(unifiedJid)!;
-      }
-      if (unifiedJid.includes(':0@s.whatsapp.net')) {
-        unifiedJid = unifiedJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
       }
 
       const readMessages: any[] = [];
@@ -679,10 +662,7 @@ export class EvolutionService {
             if (msg.key && msg.key.fromMe === false && msg.status !== 'READ') {
               const jid = msg.key.remoteJid;
               if (jid) {
-                let cleanJid = jid;
-                if (cleanJid.includes(':0@s.whatsapp.net')) {
-                  cleanJid = cleanJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
-                }
+                let cleanJid = jid.replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net');
                 const redisKey = `unread:${instanceName}:${cleanJid}`;
                 pipeline.incr(redisKey);
               }
@@ -806,11 +786,7 @@ export class EvolutionService {
     if (!contactName || !jid) return;
 
     try {
-      // Limpiar JID
-      let cleanJid = jid;
-      if (cleanJid.includes(':0@s.whatsapp.net')) {
-        cleanJid = cleanJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
-      }
+      let cleanJid = jid.replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net');
 
       const redisKey = `contact:${instanceName}:${cleanJid}`;
       
@@ -836,10 +812,7 @@ export class EvolutionService {
    */
   public static async getContactName(instanceName: string, jid: string): Promise<string | null> {
     try {
-      let cleanJid = jid;
-      if (cleanJid.includes(':0@s.whatsapp.net')) {
-        cleanJid = cleanJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
-      }
+      let cleanJid = jid.replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net');
       const redisKey = `contact:${instanceName}:${cleanJid}`;
       return await redis.hget(redisKey, 'name');
     } catch {
