@@ -34,40 +34,44 @@ export class EvolutionService {
    * Extrae y formatea el mensaje de error de una excepción de Axios
    */
   private static parseError(err: any): string {
-    if (err.response) {
-      const data = err.response.data;
-      if (data) {
-        if (typeof data === 'string') {
-          return data;
-        }
-        if (typeof data === 'object') {
-          // NestJS/Evolution API anidan a veces el error en data.response (ej: response: { message: ["Invalid integration"] })
-          const nested = data.response;
-          let message = null;
-          if (nested && typeof nested === 'object') {
-            message = nested.message || nested.error || nested.err;
+    try {
+      if (err.response) {
+        const data = err.response.data;
+        if (data) {
+          if (typeof data === 'string') {
+            return data;
           }
-          if (!message) {
-            message = data.message || data.error || data.err;
-          }
+          if (typeof data === 'object') {
+            // NestJS/Evolution API anidan a veces el error en data.response
+            const nested = data.response;
+            let message = null;
+            if (nested && typeof nested === 'object') {
+              message = nested.message || nested.error || nested.err;
+            }
+            if (!message) {
+              message = data.message || data.error || data.err;
+            }
 
-          if (message) {
-            if (Array.isArray(message)) {
-              return message.join(', ');
+            if (message) {
+              if (Array.isArray(message)) {
+                return message.join(', ');
+              }
+              if (typeof message === 'object') {
+                return JSON.stringify(message);
+              }
+              return String(message);
             }
-            if (typeof message === 'object') {
-              return JSON.stringify(message);
-            }
-            return String(message);
           }
         }
+        return `Error ${err.response.status}: ${err.response.statusText || 'Petición incorrecta'}`;
       }
-      return `Error ${err.response.status}: ${err.response.statusText || 'Petición incorrecta'}`;
+      if (err.request) {
+        return 'No se recibió respuesta del servidor de Evolution API. Verifica que esté en línea.';
+      }
+      return err.message || 'Error desconocido';
+    } catch {
+      return err?.message || 'Error desconocido al procesar la respuesta';
     }
-    if (err.request) {
-      return 'No se recibió respuesta del servidor de Evolution API. Verifica que esté en línea.';
-    }
-    return err.message;
   }
 
   public static async createInstance(instanceName: string): Promise<{ success: boolean; instance?: any; error?: string; status?: number }> {
@@ -76,6 +80,14 @@ export class EvolutionService {
       const webhookUrl = `${BACKEND_URL}/api/webhooks/whatsapp`;
         
       console.log(`🔌 [EvolutionService] Registrando webhook en creación: ${webhookUrl}`);
+
+      // Intentar eliminar la instancia en Evolution por si existe con el mismo nombre (limpieza previa)
+      try {
+        await api.delete(`/instance/delete/${instanceName}`);
+        console.log(`🧹 [EvolutionService] Instancia previa ${instanceName} eliminada en Evolution antes de crear.`);
+      } catch {
+        // Ignorar error si la instancia no existia en Evolution
+      }
 
       const response = await api.post('/instance/create', {
         instanceName,
