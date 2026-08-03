@@ -202,6 +202,13 @@ export default function DashboardPage() {
     phoneNumber: ''
   });
 
+  // Lightbox Media Viewer State
+  const [lightboxMedia, setLightboxMedia] = useState<{
+    url: string;
+    type: 'image' | 'video';
+    caption?: string;
+  } | null>(null);
+
   // Refs para scroll inteligente y emoji picker click-outside
   const bottomRef = useRef<HTMLDivElement>(null);
   const prevMessagesCountRef = useRef<number>(0);
@@ -1931,10 +1938,11 @@ echo $response;`;
                                               src={loadedMedia[msgId]} 
                                               alt="WhatsApp Media" 
                                               className="max-w-[240px] rounded-2xl cursor-pointer hover:opacity-95 transition-opacity" 
-                                              onClick={() => {
-                                                const w = window.open();
-                                                if (w) w.document.write(`<img src="${loadedMedia[msgId]}" style="max-width:100%; max-height:100vh; display:block; margin:auto;" />`);
-                                              }}
+                                              onClick={() => setLightboxMedia({
+                                                url: loadedMedia[msgId],
+                                                type: 'image',
+                                                caption: content.imageMessage.caption || undefined
+                                              })}
                                             />
                                             {content.imageMessage.caption && (
                                               <p className="text-[11px] leading-relaxed text-slate-700 dark:text-slate-300 mt-1">{content.imageMessage.caption}</p>
@@ -2039,11 +2047,27 @@ echo $response;`;
                                       if (isLoaded) {
                                         return (
                                           <div className="space-y-1.5 text-left">
-                                            <video 
-                                              controls 
-                                              src={loadedMedia[msgId]} 
-                                              className="max-w-[240px] rounded-2xl" 
-                                            />
+                                            <div 
+                                              onClick={() => setLightboxMedia({
+                                                url: loadedMedia[msgId],
+                                                type: 'video',
+                                                caption: content.videoMessage.caption || undefined
+                                              })}
+                                              className="max-w-[240px] rounded-2xl overflow-hidden relative cursor-pointer group shadow-sm hover:opacity-95 transition-all"
+                                            >
+                                              <video 
+                                                src={loadedMedia[msgId]} 
+                                                className="w-full h-auto object-cover max-h-[160px]" 
+                                                muted
+                                                playsInline
+                                              />
+                                              {/* Play Overlay */}
+                                              <div className="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-black/30 transition-colors">
+                                                <div className="p-3 bg-white/90 dark:bg-slate-900/90 rounded-full shadow-lg text-slate-800 dark:text-white group-hover:scale-105 transition-transform">
+                                                  <Play size={20} fill="currentColor" className="ml-0.5 text-emerald-500" />
+                                                </div>
+                                              </div>
+                                            </div>
                                             {content.videoMessage.caption && (
                                               <p className="text-[11px] leading-relaxed text-slate-700 dark:text-slate-300 mt-1">{content.videoMessage.caption}</p>
                                             )}
@@ -3023,6 +3047,75 @@ echo $response;`;
             </form>
 
           </div>
+        </div>
+      )}
+
+      {/* Lightbox para videos e imágenes (Estilo WhatsApp Web) */}
+      {lightboxMedia && (
+        <div className="fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-md flex flex-col justify-between animate-fadeIn">
+          {/* Top Header Bar */}
+          <div className="p-4 flex items-center justify-between text-white relative z-10 select-none">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-slate-800/80 flex items-center justify-center">
+                {lightboxMedia.type === 'image' ? <Image size={15} className="text-emerald-400" /> : <Video size={15} className="text-emerald-400" />}
+              </div>
+              <span className="text-xs font-bold text-slate-300">
+                {lightboxMedia.type === 'image' ? 'Visualizador de Imagen' : 'Reproductor de Video'}
+              </span>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-3">
+              <a
+                href={lightboxMedia.url}
+                download={`zaza-media-${Date.now()}`}
+                target="_blank"
+                rel="noreferrer"
+                className="p-2 bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white rounded-xl hover-lift shadow transition-all cursor-pointer flex items-center justify-center"
+                title="Descargar archivo"
+              >
+                <Download size={16} />
+              </a>
+              <button
+                onClick={() => setLightboxMedia(null)}
+                className="p-2 bg-slate-800/80 hover:bg-rose-600 hover:text-white text-slate-300 rounded-xl transition-all cursor-pointer flex items-center justify-center"
+                title="Cerrar"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          </div>
+
+          {/* Middle Media Container */}
+          <div className="flex-1 flex items-center justify-center p-4 relative min-h-0" onClick={() => setLightboxMedia(null)}>
+            <div className="relative" onClick={(e) => e.stopPropagation()}>
+              {lightboxMedia.type === 'image' ? (
+                <img 
+                  src={lightboxMedia.url} 
+                  alt="Zoomed Media" 
+                  className="max-w-full max-h-[75vh] md:max-h-[80vh] rounded-2xl shadow-2xl object-contain animate-scaleIn select-none" 
+                />
+              ) : (
+                <video 
+                  src={lightboxMedia.url} 
+                  controls 
+                  autoPlay
+                  className="max-w-full max-h-[75vh] md:max-h-[80vh] rounded-2xl shadow-2xl object-contain animate-scaleIn" 
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Bottom Caption Bar */}
+          {lightboxMedia.caption ? (
+            <div className="p-5 bg-gradient-to-t from-black/80 to-transparent text-white text-center pb-8 z-10 select-none">
+              <p className="text-xs font-medium max-w-xl mx-auto leading-relaxed">
+                <AppleEmojiText text={lightboxMedia.caption} />
+              </p>
+            </div>
+          ) : (
+            <div className="h-10" />
+          )}
         </div>
       )}
 
