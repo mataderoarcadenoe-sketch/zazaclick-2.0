@@ -271,8 +271,8 @@ router.get('/chats/:instanceName', authMiddleware, async (req: AuthenticatedRequ
       return res.status(statusCode).json({ success: false, error: cleanError });
     }
 
-    // Obtener los contadores de no leídos en tiempo real de la base de datos Postgres
-    const dbUnreadCounts = await EvolutionService.getUnreadCountsFromDb(instanceName);
+    // Obtener los contadores de no leídos en tiempo real consultando findMessages de la API REST
+    const dbUnreadCounts = await EvolutionService.getUnreadCountsFromApi(instanceName);
 
     // Filtrar broadcasts y unificar chats @lid usando la nueva utilidad
     const cleanChats = EvolutionService.mergeChats(instanceName, chatsResult.data || [], dbUnreadCounts);

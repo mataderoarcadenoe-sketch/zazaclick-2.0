@@ -2,7 +2,6 @@ import axios from 'axios';
 import * as dotenv from 'dotenv';
 import http from 'http';
 import https from 'https';
-import pool from '../config/database';
 
 dotenv.config();
 
@@ -503,44 +502,34 @@ export class EvolutionService {
   }
 
   /**
-   * Obtener los contadores de mensajes no leídos agrupados por remoteJid directamente desde Postgres
+   * Obtener los contadores de mensajes no leídos agrupados por remoteJid llamando a findMessages de la API (evita acceso directo a Postgres)
    */
-  public static async getUnreadCountsFromDb(instanceName: string): Promise<Map<string, number>> {
+  public static async getUnreadCountsFromApi(instanceName: string): Promise<Map<string, number>> {
     const unreadMap = new Map<string, number>();
     try {
-      // 1. Buscar el ID de la instancia de la base de datos de Evolution API
-      const instRes = await pool.query('SELECT id FROM "Instance" WHERE name = $1 LIMIT 1', [instanceName]);
-      if (instRes.rows.length === 0) {
-        return unreadMap;
-      }
-      const instanceId = instRes.rows[0].id;
-
-      // 2. Contar los mensajes no leídos agrupados por remoteJid (key->>'remoteJid')
-      const query = `
-        SELECT 
-          key->>'remoteJid' as remote_jid,
-          COUNT(*)::int as count
-        FROM "Message"
-        WHERE "instanceId" = $1
-          AND key->>'fromMe' = 'false'
-          AND "status" <> 'READ'
-        GROUP BY key->>'remoteJid'
-      `;
-      const msgRes = await pool.query(query, [instanceId]);
-      
-      for (const row of msgRes.rows) {
-        if (row.remote_jid) {
-          const jid = row.remote_jid;
-          unreadMap.set(jid, Number(row.count) || 0);
-          
-          // Limpiar :0 si viene en la clave
-          if (jid.includes(':0@s.whatsapp.net')) {
-            unreadMap.set(jid.replace(':0@s.whatsapp.net', '@s.whatsapp.net'), Number(row.count) || 0);
+      const msgsResult = await api.post(`/chat/findMessages/${instanceName}`, { limit: 300 });
+      const records = msgsResult.data?.messages?.records || msgsResult.data?.records || msgsResult.data || [];
+      if (Array.isArray(records)) {
+        for (const msg of records) {
+          // Si el mensaje es recibido y no ha sido leído, lo contamos
+          if (msg.key && msg.key.fromMe === false && msg.status !== 'READ') {
+            const jid = msg.key.remoteJid;
+            if (jid) {
+              let unifiedJid = jid;
+              if (unifiedJid.endsWith('@lid') && this.lidCache.has(unifiedJid)) {
+                unifiedJid = this.lidCache.get(unifiedJid)!;
+              }
+              if (unifiedJid.includes(':0@s.whatsapp.net')) {
+                unifiedJid = unifiedJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
+              }
+              unreadMap.set(unifiedJid, (unreadMap.get(unifiedJid) || 0) + 1);
+              unreadMap.set(jid, (unreadMap.get(jid) || 0) + 1);
+            }
           }
         }
       }
     } catch (err: any) {
-      console.error('[EvolutionService] Error en getUnreadCountsFromDb:', err.message);
+      console.error('[EvolutionService] Error en getUnreadCountsFromApi:', err.message);
     }
     return unreadMap;
   }
