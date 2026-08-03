@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import redis from '../config/redis';
 import { getIO } from '../config/socket';
+import { EvolutionService } from '../services/evolution.service';
 
 const router = Router();
 
@@ -14,12 +15,15 @@ router.post('/whatsapp', async (req, res) => {
     return res.status(200).json({ success: false, error: 'Payload de webhook incompleto' });
   }
 
-  console.log(`📬 [Webhook] Recibido evento "${event}" para la instancia "${instance}"`);
+  // No loguear cada evento de contacto para no saturar los logs
+  const eventUpper = event.toUpperCase().replace('.', '_');
+  if (eventUpper !== 'CONTACTS_UPSERT' && eventUpper !== 'CONTACTS_UPDATE') {
+    console.log(`📬 [Webhook] Recibido evento "${event}" para la instancia "${instance}"`);
+  }
 
   try {
     const io = getIO();
     const roomName = `instance_${instance}`;
-    const eventUpper = event.toUpperCase().replace('.', '_');
 
     if (eventUpper === 'MESSAGES_UPSERT') {
       // En Evolution API v2, data contiene el objeto del mensaje completo de Baileys
@@ -97,6 +101,30 @@ router.post('/whatsapp', async (req, res) => {
             });
           }
         }
+      }
+    }
+    else if (eventUpper === 'CONTACTS_UPSERT' || eventUpper === 'CONTACTS_UPDATE') {
+      // Procesar sincronización de nombres de contactos (agenda y pushName)
+      const contacts = Array.isArray(data) ? data : [data];
+      let savedCount = 0;
+      
+      for (const contact of contacts) {
+        const jid = contact.id || contact.remoteJid;
+        if (!jid) continue;
+        
+        // 'name' = nombre guardado en la agenda del celular (si llega)
+        // 'notify' = pushName / nombre de perfil de WhatsApp
+        const agendaName = contact.name || undefined;
+        const notifyName = contact.notify || contact.pushName || undefined;
+        
+        if (agendaName || notifyName) {
+          await EvolutionService.saveContactName(instance, jid, agendaName, notifyName);
+          savedCount++;
+        }
+      }
+      
+      if (savedCount > 0) {
+        console.log(`📇 [Webhook] CONTACTS_UPSERT: ${savedCount} contactos procesados para ${instance}`);
       }
     }
 

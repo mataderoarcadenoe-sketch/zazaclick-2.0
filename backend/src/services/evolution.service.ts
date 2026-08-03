@@ -463,11 +463,19 @@ export class EvolutionService {
         }
       }
 
-      // Intentar recuperar el nombre del contacto de la agenda en caché o del lastMessage
+      // Intentar recuperar el nombre del contacto: 1) Redis (agenda sync), 2) caché en memoria, 3) pushName del chat
       let displayName = chat.pushName;
-      const instanceMap = this.contactsCache.get(instanceName);
-      if (instanceMap) {
-        displayName = instanceMap.get(realJid) || instanceMap.get(chat.remoteJid) || displayName;
+      
+      // Buscar en Redis (nombres de agenda sincronizados via CONTACTS_UPSERT)
+      const agendaName = await EvolutionService.getContactName(instanceName, realJid);
+      if (agendaName) {
+        displayName = agendaName;
+      } else {
+        // Fallback a caché en memoria (findContacts)
+        const instanceMap = this.contactsCache.get(instanceName);
+        if (instanceMap) {
+          displayName = instanceMap.get(realJid) || instanceMap.get(chat.remoteJid) || displayName;
+        }
       }
       
       // Fallback a lastMessage.pushName si no hay nombre de agenda y el último mensaje fue recibido de ellos
@@ -720,7 +728,9 @@ export class EvolutionService {
           events: [
             'MESSAGES_UPSERT',
             'CHATS_UPDATE',
-            'MESSAGES_UPDATE'
+            'MESSAGES_UPDATE',
+            'CONTACTS_UPSERT',
+            'CONTACTS_UPDATE'
           ]
         }
       });
@@ -752,6 +762,62 @@ export class EvolutionService {
       return response.data;
     } catch (err: any) {
       return { success: false, error: err.message };
+    }
+  }
+
+  /**
+   * Guardar el nombre de un contacto en Redis (desde CONTACTS_UPSERT webhook).
+   * Prioriza el campo 'name' (agenda del celular) sobre 'notify' (pushName/perfil).
+   */
+  public static async saveContactName(
+    instanceName: string,
+    jid: string,
+    name?: string,
+    notify?: string
+  ): Promise<void> {
+    // Solo guardar si hay un nombre real (agenda o notify)
+    const contactName = name || notify;
+    if (!contactName || !jid) return;
+
+    try {
+      // Limpiar JID
+      let cleanJid = jid;
+      if (cleanJid.includes(':0@s.whatsapp.net')) {
+        cleanJid = cleanJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
+      }
+
+      const redisKey = `contact:${instanceName}:${cleanJid}`;
+      
+      // Si tiene nombre de agenda (name), guardar con flag 'agenda' para darle prioridad
+      if (name) {
+        await redis.hset(redisKey, 'name', name, 'source', 'agenda');
+        console.log(`📇 [Contacts] Guardado nombre de AGENDA para ${cleanJid}: "${name}"`);
+      } else if (notify) {
+        // Solo guardar notify si no hay ya un nombre de agenda
+        const existing = await redis.hget(redisKey, 'source');
+        if (existing !== 'agenda') {
+          await redis.hset(redisKey, 'name', notify, 'source', 'notify');
+          console.log(`📇 [Contacts] Guardado pushName/notify para ${cleanJid}: "${notify}"`);
+        }
+      }
+    } catch (err: any) {
+      console.error(`[Contacts] Error guardando nombre de contacto:`, err.message);
+    }
+  }
+
+  /**
+   * Obtener el nombre de un contacto desde Redis.
+   */
+  public static async getContactName(instanceName: string, jid: string): Promise<string | null> {
+    try {
+      let cleanJid = jid;
+      if (cleanJid.includes(':0@s.whatsapp.net')) {
+        cleanJid = cleanJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
+      }
+      const redisKey = `contact:${instanceName}:${cleanJid}`;
+      return await redis.hget(redisKey, 'name');
+    } catch {
+      return null;
     }
   }
 }
