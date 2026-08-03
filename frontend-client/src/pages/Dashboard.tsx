@@ -1837,7 +1837,7 @@ echo $response;`;
                                   className="w-full px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center gap-2 cursor-pointer transition-colors"
                                 >
                                   <Image size={15} className="text-emerald-500" />
-                                  <span>📷 Imagen</span>
+                                  <span>Imagen</span>
                                 </button>
                                 <button
                                   type="button"
@@ -1845,7 +1845,7 @@ echo $response;`;
                                   className="w-full px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center gap-2 cursor-pointer transition-colors"
                                 >
                                   <Video size={15} className="text-blue-500" />
-                                  <span>🎥 Video</span>
+                                  <span>Video</span>
                                 </button>
                                 <button
                                   type="button"
@@ -1853,7 +1853,7 @@ echo $response;`;
                                   className="w-full px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center gap-2 cursor-pointer transition-colors"
                                 >
                                   <FileText size={15} className="text-indigo-500" />
-                                  <span>📄 Documento</span>
+                                  <span>Documento</span>
                                 </button>
                               </div>
                             )}
@@ -1932,9 +1932,9 @@ echo $response;`;
                               <button
                                 type="submit"
                                 disabled={(!newMessageText.trim() && !attachedFile) || sendingMessage}
-                                className="p-2.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white rounded-2xl transition-all shadow-md shadow-emerald-500/20 flex-shrink-0 disabled:opacity-50 disabled:scale-100 disabled:shadow-none cursor-pointer overflow-visible"
+                                className="p-2.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white rounded-2xl transition-all shadow-md shadow-emerald-500/20 flex-shrink-0 disabled:opacity-50 disabled:scale-100 disabled:shadow-none cursor-pointer"
                               >
-                                <Send size={14} className={`overflow-visible ${sendingMessage ? 'animate-fly' : ''}`} />
+                                <Send size={14} className={sendingMessage ? 'animate-fly' : ''} />
                               </button>
                             </form>
                           </div>
