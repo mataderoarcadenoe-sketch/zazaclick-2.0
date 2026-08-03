@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../services/authContext';
 import { useDarkMode } from '../hooks/useDarkMode';
 import api from '../services/api';
+import { io, Socket } from 'socket.io-client';
 import { 
   LogOut, RefreshCw, Plus, Key, Trash2, Smartphone, CheckCircle2, 
   AlertCircle, Copy, Send, LayoutDashboard, Terminal, 
@@ -160,6 +161,8 @@ export default function DashboardPage() {
   const readChatsRef = useRef<Set<string>>(new Set());
   // Ref para guardar el JID del chat anterior y evitar parpadeos al actualizar el mismo chat
   const prevSelectedJidRef = useRef<string | null>(null);
+  // Ref para almacenar el WebSocket de Socket.io
+  const socketRef = useRef<Socket | null>(null);
 
   // Confirm Dialog State
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -464,19 +467,105 @@ export default function DashboardPage() {
     }
   }, [activeTab, selectedInstanceForChats, instances]);
 
-  // Poll chats & active chat messages (usando refs para evitar stale closures)
+  // Administrar la conexión a Socket.io en tiempo real
+  useEffect(() => {
+    if (activeTab !== 'chats' || !selectedInstanceForChats) {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+      return;
+    }
+
+    const socketUrl = api.defaults.baseURL ? api.defaults.baseURL.replace('/api', '') : window.location.origin;
+    console.log('🔌 [Socket.io] Conectando al WebSocket de Zaza en:', socketUrl);
+
+    const socket = io(socketUrl, {
+      transports: ['websocket'],
+      autoConnect: true
+    });
+
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
+      console.log('✅ [Socket.io] Conexión establecida con éxito.');
+      socket.emit('join_instance', selectedInstanceForChats);
+    });
+
+    socket.on('message:received', (newMsg: any) => {
+      const msgJid = newMsg.key?.remoteJid;
+      if (!msgJid) return;
+
+      let cleanJid = msgJid;
+      if (cleanJid.includes(':0@s.whatsapp.net')) {
+        cleanJid = cleanJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
+      }
+
+      // 1. Si es el chat abierto actualmente, añadirlo a la lista de mensajes en tiempo real
+      const targetJid = selectedChatRef.current?.remoteJid;
+      if (cleanJid === targetJid) {
+        setMessages(prev => {
+          const exists = prev.some(m => m.key?.id === newMsg.key?.id);
+          if (exists) return prev;
+          return [...prev, newMsg];
+        });
+      }
+
+      // 2. Mover el chat al inicio de la lista lateral y actualizar su lastMessage
+      setChats(prevChats => {
+        const chatIdx = prevChats.findIndex(c => c.remoteJid === cleanJid);
+        if (chatIdx === -1) {
+          // Si es un chat nuevo que no estaba en el sidebar, hacemos un reload rápido
+          fetchChats(true);
+          return prevChats;
+        }
+
+        const updatedChat = {
+          ...prevChats[chatIdx],
+          lastMessage: {
+            ...newMsg,
+            messageTimestamp: newMsg.messageTimestamp
+          }
+        };
+
+        const remainingChats = prevChats.filter(c => c.remoteJid !== cleanJid);
+        return [updatedChat, ...remainingChats];
+      });
+    });
+
+    socket.on('unread_update', ({ remoteJid, unreadCount }: { remoteJid: string, unreadCount: number }) => {
+      // Actualizar el contador lateral en caliente
+      setChats(prevChats => prevChats.map(c => {
+        if (c.remoteJid === remoteJid) {
+          if (c.remoteJid === selectedChatRef.current?.remoteJid) {
+            return { ...c, unreadCount: 0 };
+          }
+          return { ...c, unreadCount };
+        }
+        return c;
+      }));
+    });
+
+    socket.on('disconnect', () => {
+      console.log('❌ [Socket.io] Conexión perdida.');
+    });
+
+    return () => {
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  }, [activeTab, selectedInstanceForChats]);
+
+  // Polling de respaldo súper lento (cada 25 segundos) solo para asegurar sincronización en caídas de red
   useEffect(() => {
     if (activeTab !== 'chats' || !selectedInstanceForChats) return;
 
     const interval = setInterval(() => {
       fetchChats(true);
-      if (selectedChatRef.current) {
-        fetchMessages(true, selectedChatRef.current, selectedInstanceRef.current);
-      }
-    }, 4000);
+    }, 25000);
 
     return () => clearInterval(interval);
-  }, [activeTab, selectedInstanceForChats, fetchMessages]);
+  }, [activeTab, selectedInstanceForChats]);
 
   // Load messages when active chat changes
   useEffect(() => {

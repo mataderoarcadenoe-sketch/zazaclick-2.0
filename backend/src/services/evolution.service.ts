@@ -2,6 +2,7 @@ import axios from 'axios';
 import * as dotenv from 'dotenv';
 import http from 'http';
 import https from 'https';
+import redis from '../config/redis';
 
 dotenv.config();
 
@@ -72,12 +73,15 @@ export class EvolutionService {
    */
   public static async createInstance(instanceName: string): Promise<{ success: boolean; instance?: any; error?: string; status?: number }> {
     try {
+      const BACKEND_URL = process.env.BACKEND_URL || 'https://zaza-click-20-production.up.railway.app';
       const response = await api.post('/instance/create', {
         instanceName,
         token: this.generateRandomToken(),
         qrcode: true,
         integration: 'WHATSAPP-BAILEYS',
-        webhook: null, // Opcional: configurar si deseamos webhooks locales
+        webhook: `${BACKEND_URL}/api/webhooks/whatsapp`,
+        webhook_by_events: true,
+        webhook_events: ['MESSAGES_UPSERT', 'CHATS_UPDATE', 'MESSAGES_UPDATE'],
         settings: {
           alwaysOnline: true,
           rejectCall: false,
@@ -473,6 +477,11 @@ export class EvolutionService {
     const nowInMs = Date.now() + 2000; // Guardar en milisegundos con 2 segundos de margen
     this.lastReadTimestamps.set(`${instanceName}:${remoteJid}`, nowInMs);
     this.lastReadTimestamps.set(`${instanceName}:${unifiedJid}`, nowInMs);
+    
+    // Resetear contadores de no leídos en Redis al instante
+    redis.set(`unread:${instanceName}:${remoteJid}`, 0).catch(err => console.error('[Redis] Error al resetear JID:', err.message));
+    redis.set(`unread:${instanceName}:${unifiedJid}`, 0).catch(err => console.error('[Redis] Error al resetear JID unificado:', err.message));
+    
     console.log(`[EvolutionService] Registrada marca de lectura para ${instanceName}:${remoteJid} / ${unifiedJid} a las ${nowInMs}`);
   }
 
@@ -531,29 +540,64 @@ export class EvolutionService {
   public static async getUnreadCountsFromApi(instanceName: string): Promise<Map<string, number>> {
     const unreadMap = new Map<string, number>();
     try {
-      const msgsResult = await api.post(`/chat/findMessages/${instanceName}`, { limit: 300 });
-      const records = msgsResult.data?.messages?.records || msgsResult.data?.records || msgsResult.data || [];
-      if (Array.isArray(records)) {
-        for (const msg of records) {
-          // Si el mensaje es recibido y no ha sido leído, lo contamos
-          if (msg.key && msg.key.fromMe === false && msg.status !== 'READ') {
-            const jid = msg.key.remoteJid;
-            if (jid) {
-              let unifiedJid = jid;
-              if (unifiedJid.endsWith('@lid') && this.lidCache.has(unifiedJid)) {
-                unifiedJid = this.lidCache.get(unifiedJid)!;
+      const pattern = `unread:${instanceName}:*`;
+      const keys = await redis.keys(pattern);
+
+      if (keys.length > 0) {
+        // Consultar de forma masiva en pipeline para máxima velocidad (1ms)
+        const pipeline = redis.pipeline();
+        for (const key of keys) {
+          pipeline.get(key);
+        }
+        const results = await pipeline.exec();
+
+        for (let i = 0; i < keys.length; i++) {
+          const key = keys[i];
+          const val = results ? results[i][1] : null;
+          const remoteJid = key.replace(`unread:${instanceName}:`, '');
+          const count = Number(val) || 0;
+          if (count > 0) {
+            unreadMap.set(remoteJid, count);
+          }
+        }
+      } else {
+        // Fallback: Si Redis está vacío (ej: reinicio), poblar desde findMessages de la API
+        console.log(`ℹ️ [Redis] Inicializando caché de no leídos para ${instanceName} desde mensajes históricos...`);
+        const msgsResult = await api.post(`/chat/findMessages/${instanceName}`, { limit: 300 });
+        const records = msgsResult.data?.messages?.records || msgsResult.data?.records || msgsResult.data || [];
+        if (Array.isArray(records)) {
+          const pipeline = redis.pipeline();
+          for (const msg of records) {
+            if (msg.key && msg.key.fromMe === false && msg.status !== 'READ') {
+              const jid = msg.key.remoteJid;
+              if (jid) {
+                let cleanJid = jid;
+                if (cleanJid.includes(':0@s.whatsapp.net')) {
+                  cleanJid = cleanJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
+                }
+                const redisKey = `unread:${instanceName}:${cleanJid}`;
+                pipeline.incr(redisKey);
               }
-              if (unifiedJid.includes(':0@s.whatsapp.net')) {
-                unifiedJid = unifiedJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
-              }
-              unreadMap.set(unifiedJid, (unreadMap.get(unifiedJid) || 0) + 1);
-              unreadMap.set(jid, (unreadMap.get(jid) || 0) + 1);
+            }
+          }
+          await pipeline.exec();
+
+          // Obtener los datos recién ingresados a Redis
+          const newKeys = await redis.keys(pattern);
+          if (newKeys.length > 0) {
+            const getPipeline = redis.pipeline();
+            newKeys.forEach(k => getPipeline.get(k));
+            const vals = await getPipeline.exec();
+            for (let i = 0; i < newKeys.length; i++) {
+              const rJid = newKeys[i].replace(`unread:${instanceName}:`, '');
+              const count = Number(vals ? vals[i][1] : 0) || 0;
+              unreadMap.set(rJid, count);
             }
           }
         }
       }
     } catch (err: any) {
-      console.error('[EvolutionService] Error en getUnreadCountsFromApi:', err.message);
+      console.error('[EvolutionService] Error en getUnreadCountsFromApi (Redis):', err.message);
     }
     return unreadMap;
   }

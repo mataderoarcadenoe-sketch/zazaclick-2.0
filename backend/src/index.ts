@@ -1,10 +1,13 @@
 import express from 'express';
 import cors from 'cors';
 import * as dotenv from 'dotenv';
+import { createServer } from 'http';
+import { initSocket } from './config/socket';
 import { initDatabase } from './config/database';
 import authRoutes from './routes/auth.routes';
 import instanceRoutes from './routes/instance.routes';
 import adminRoutes from './routes/admin.routes';
+import webhookRoutes from './routes/webhook.routes';
 
 dotenv.config();
 
@@ -24,6 +27,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/instances', instanceRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/webhooks', webhookRoutes);
 
 // Root Health Check Route
 app.get('/', (req, res) => {
@@ -42,8 +46,11 @@ async function startServer() {
     console.log('🔄 Inicializando base de datos...');
     await initDatabase();
     
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Servidor ejecutándose exitosamente en http://0.0.0.0:${PORT}`);
+    const server = createServer(app);
+    initSocket(server);
+    
+    server.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 Servidor Express + Socket.io ejecutándose exitosamente en http://0.0.0.0:${PORT}`);
     });
   } catch (error) {
     console.error('❌ Error fatal al iniciar el servidor:', error);
