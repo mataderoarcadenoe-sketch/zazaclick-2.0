@@ -80,7 +80,7 @@ export class EvolutionService {
         qrcode: true,
         integration: 'WHATSAPP-BAILEYS',
         webhook: `${BACKEND_URL}/api/webhooks/whatsapp`,
-        webhook_by_events: true,
+        webhook_by_events: false,
         webhook_events: ['MESSAGES_UPSERT', 'CHATS_UPDATE', 'MESSAGES_UPDATE'],
         settings: {
           alwaysOnline: true,
@@ -611,7 +611,7 @@ export class EvolutionService {
       const response = await api.post(`/webhook/set/${instanceName}`, {
         enabled: true,
         url: `${BACKEND_URL}/api/webhooks/whatsapp`,
-        byEvents: true,
+        webhookByEvents: false,
         events: [
           'MESSAGES_UPSERT',
           'CHATS_UPDATE',
