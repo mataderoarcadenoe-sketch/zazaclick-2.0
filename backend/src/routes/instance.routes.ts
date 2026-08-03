@@ -6,13 +6,16 @@ import redis from '../config/redis';
 
 const router = Router();
 
-router.get('/debug-env', (req, res) => {
-  res.json({
-    DATABASE_URL: process.env.DATABASE_URL ? 'PRESENT' : 'MISSING',
-    EVOLUTION_API_URL: process.env.EVOLUTION_API_URL,
-    EVOLUTION_API_KEY: process.env.EVOLUTION_API_KEY ? 'PRESENT' : 'MISSING',
-    REDIS_URL: process.env.REDIS_URL ? 'PRESENT' : 'MISSING'
-  });
+router.get('/debug-messages/:instanceName', async (req, res) => {
+  const { instanceName } = req.params;
+  const { remoteJid } = req.query;
+  if (!remoteJid) return res.status(400).send("Falta remoteJid");
+  try {
+    const result = await EvolutionService.getChatMessages(instanceName, remoteJid as string);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).send(err.message);
+  }
 });
 
 /**
