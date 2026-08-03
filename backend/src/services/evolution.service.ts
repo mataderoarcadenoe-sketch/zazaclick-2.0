@@ -94,9 +94,18 @@ export class EvolutionService {
         token: this.generateRandomToken(),
         qrcode: true,
         integration: 'WHATSAPP-BAILEYS',
-        webhook: webhookUrl,
-        webhook_by_events: false,
-        webhook_events: ['MESSAGES_UPSERT', 'CHATS_UPDATE', 'MESSAGES_UPDATE'],
+        webhook: {
+          enabled: true,
+          url: webhookUrl,
+          byEvents: false,
+          events: [
+            'MESSAGES_UPSERT',
+            'CHATS_UPDATE',
+            'MESSAGES_UPDATE',
+            'CONTACTS_UPSERT',
+            'CONTACTS_UPDATE'
+          ]
+        },
         settings: {
           alwaysOnline: true,
           rejectCall: false,
