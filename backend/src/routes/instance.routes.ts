@@ -6,6 +6,15 @@ import redis from '../config/redis';
 
 const router = Router();
 
+router.get('/debug-env', (req, res) => {
+  res.json({
+    DATABASE_URL: process.env.DATABASE_URL ? 'PRESENT' : 'MISSING',
+    EVOLUTION_API_URL: process.env.EVOLUTION_API_URL,
+    EVOLUTION_API_KEY: process.env.EVOLUTION_API_KEY ? 'PRESENT' : 'MISSING',
+    REDIS_URL: process.env.REDIS_URL ? 'PRESENT' : 'MISSING'
+  });
+});
+
 /**
  * Generar ID aleatorio
  */
