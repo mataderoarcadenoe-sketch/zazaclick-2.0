@@ -601,4 +601,27 @@ export class EvolutionService {
     }
     return unreadMap;
   }
+
+  /**
+   * Configurar webhook para una instancia existente en Evolution API
+   */
+  public static async configureWebhook(instanceName: string): Promise<boolean> {
+    try {
+      const BACKEND_URL = process.env.BACKEND_URL || 'https://zaza-click-20-production.up.railway.app';
+      const response = await api.post(`/webhook/set/${instanceName}`, {
+        enabled: true,
+        url: `${BACKEND_URL}/api/webhooks/whatsapp`,
+        byEvents: true,
+        events: [
+          'MESSAGES_UPSERT',
+          'CHATS_UPDATE',
+          'MESSAGES_UPDATE'
+        ]
+      });
+      return response.status === 200 || response.data?.success === true;
+    } catch (err: any) {
+      console.error(`[EvolutionService] Error configurando webhook para ${instanceName}:`, err.message);
+      return false;
+    }
+  }
 }
