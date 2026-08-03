@@ -616,6 +616,18 @@ export class EvolutionService {
   }
 
   /**
+   * Reiniciar la conexión de una instancia en Evolution API
+   */
+  public static async restartInstance(instanceName: string): Promise<any> {
+    try {
+      const response = await api.post(`/instance/restart/${instanceName}`);
+      return { success: true, data: response.data };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
+  }
+
+  /**
    * Configurar webhook para una instancia existente en Evolution API
    */
   public static async configureWebhook(instanceName: string): Promise<boolean> {
