@@ -683,4 +683,16 @@ export class EvolutionService {
       return { success: false, error: err.message };
     }
   }
+
+  /**
+   * Obtener contactos directamente desde la Evolution API sin procesar (para diagnóstico de agenda del teléfono)
+   */
+  public static async getRawContacts(instanceName: string): Promise<any> {
+    try {
+      const response = await api.post(`/contact/findContacts/${instanceName}`, {});
+      return response.data;
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
+  }
 }

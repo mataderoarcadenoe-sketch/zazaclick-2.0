@@ -528,4 +528,22 @@ router.get('/chat-diag/:instanceName', async (req, res) => {
   }
 });
 
+/**
+ * GET /contact-diag/:instanceName - Diagnosticar estructura de contactos de Evolution API
+ */
+router.get('/contact-diag/:instanceName', async (req, res) => {
+  const { instanceName } = req.params;
+  try {
+    const rawContacts = await EvolutionService.getRawContacts(instanceName);
+    res.json({
+      instanceName,
+      contactsCount: Array.isArray(rawContacts) ? rawContacts.length : 'no-array',
+      firstContact: Array.isArray(rawContacts) && rawContacts.length > 0 ? rawContacts[0] : null,
+      allContactsSample: Array.isArray(rawContacts) ? rawContacts.slice(0, 5) : rawContacts
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 export default router;
