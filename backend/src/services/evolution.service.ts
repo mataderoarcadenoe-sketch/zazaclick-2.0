@@ -476,8 +476,17 @@ export class EvolutionService {
    */
   public static async markMessagesAsRead(instanceName: string, remoteJid: string, messageIds: string[]): Promise<{ success: boolean; data?: any; error?: string }> {
     try {
+      // Resolver el JID unificado (teléfono real) para que coincida exactamente con las claves de mensajes de la base de datos de Evolution
+      let unifiedJid = remoteJid;
+      if (unifiedJid.endsWith('@lid') && this.lidCache.has(unifiedJid)) {
+        unifiedJid = this.lidCache.get(unifiedJid)!;
+      }
+      if (unifiedJid.includes(':0@s.whatsapp.net')) {
+        unifiedJid = unifiedJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
+      }
+
       const readMessages = messageIds.map(id => ({
-        remoteJid,
+        remoteJid: unifiedJid, // Usar el JID de teléfono unificado
         id,
         fromMe: false
       }));
