@@ -21,6 +21,7 @@ const api = axios.create({
 
 export class EvolutionService {
   private static lidCache = new Map<string, string>();
+  private static lastReadTimestamps = new Map<string, number>();
 
   /**
    * Extrae y formatea el mensaje de error de una excepción de Axios
@@ -370,6 +371,21 @@ export class EvolutionService {
         : chat.unreadCount;
       const unreadCountNum = Number(chatUnread) || 0;
 
+      // Aplicar el override del contador de mensajes no leídos si el último mensaje es anterior al timestamp de lectura marcado
+      const cacheKey = `${instanceName}:${realJid}`;
+      const lastRead = this.lastReadTimestamps.get(cacheKey);
+      
+      let finalUnreadCount = unreadCountNum;
+      if (lastRead !== undefined) {
+        const lastMsgTimestamp = chat.lastMessage?.messageTimestamp || 0;
+        if (lastMsgTimestamp <= lastRead) {
+          finalUnreadCount = 0;
+        } else {
+          // Ha llegado un mensaje nuevo después de marcar como leído, borrar caché
+          this.lastReadTimestamps.delete(cacheKey);
+        }
+      }
+
       const existing = mergedMap.get(realJid);
       
       if (!existing) {
@@ -378,7 +394,7 @@ export class EvolutionService {
           ...chat, 
           remoteJid: realJid, 
           originalJid: chat.remoteJid,
-          unreadCount: unreadCountNum
+          unreadCount: finalUnreadCount
         };
         mergedMap.set(realJid, newChat);
       } else {
@@ -387,7 +403,7 @@ export class EvolutionService {
         const existingTs = existing.lastMessage?.messageTimestamp || 0;
         
         // Tomar el valor máximo en lugar de sumar para evitar duplicar el contador si ambos registros de chat lo traen
-        const totalUnread = Math.max(Number(existing.unreadCount) || 0, unreadCountNum);
+        const totalUnread = Math.max(Number(existing.unreadCount) || 0, finalUnreadCount);
         
         if (currentTs > existingTs) {
           const merged = { 
@@ -421,6 +437,15 @@ export class EvolutionService {
    */
   public static async markMessagesAsRead(instanceName: string, remoteJid: string, messageIds: string[]): Promise<{ success: boolean; data?: any; error?: string }> {
     try {
+      // Registrar en caché de lectura usando el JID unificado para mergeChats
+      let unifiedJid = remoteJid;
+      if (unifiedJid.endsWith('@lid') && this.lidCache.has(unifiedJid)) {
+        unifiedJid = this.lidCache.get(unifiedJid)!;
+      }
+      if (unifiedJid.includes(':0@s.whatsapp.net')) {
+        unifiedJid = unifiedJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
+      }
+
       const readMessages = messageIds.map(id => ({
         remoteJid,
         id,
@@ -430,6 +455,11 @@ export class EvolutionService {
       const response = await api.post(`/chat/markMessageAsRead/${instanceName}`, {
         readMessages
       });
+
+      // Guardar el timestamp actual de lectura en segundos (con un pequeño margen de 2 segundos en el futuro para evitar problemas de latencia)
+      const nowInSeconds = Math.floor(Date.now() / 1000) + 2;
+      this.lastReadTimestamps.set(`${instanceName}:${unifiedJid}`, nowInSeconds);
+
       return { success: true, data: response.data };
     } catch (err: any) {
       const errorMsg = this.parseError(err);
