@@ -397,7 +397,12 @@ export class EvolutionService {
       
       let finalUnreadCount = unreadCountNum;
       if (lastRead !== undefined) {
-        const lastMsgTimestamp = chat.lastMessage?.messageTimestamp || 0;
+        let lastMsgTimestamp = chat.lastMessage?.messageTimestamp || 0;
+        if (lastMsgTimestamp > 0 && lastMsgTimestamp < 10000000000) {
+          // Convertir segundos a milisegundos
+          lastMsgTimestamp = lastMsgTimestamp * 1000;
+        }
+
         if (lastMsgTimestamp <= lastRead) {
           finalUnreadCount = 0;
         } else {
@@ -465,10 +470,10 @@ export class EvolutionService {
       unifiedJid = unifiedJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
     }
 
-    const nowInSeconds = Math.floor(Date.now() / 1000) + 2;
-    this.lastReadTimestamps.set(`${instanceName}:${remoteJid}`, nowInSeconds);
-    this.lastReadTimestamps.set(`${instanceName}:${unifiedJid}`, nowInSeconds);
-    console.log(`[EvolutionService] Registrada marca de lectura para ${instanceName}:${remoteJid} / ${unifiedJid} a las ${nowInSeconds}`);
+    const nowInMs = Date.now() + 2000; // Guardar en milisegundos con 2 segundos de margen
+    this.lastReadTimestamps.set(`${instanceName}:${remoteJid}`, nowInMs);
+    this.lastReadTimestamps.set(`${instanceName}:${unifiedJid}`, nowInMs);
+    console.log(`[EvolutionService] Registrada marca de lectura para ${instanceName}:${remoteJid} / ${unifiedJid} a las ${nowInMs}`);
   }
 
   /**
