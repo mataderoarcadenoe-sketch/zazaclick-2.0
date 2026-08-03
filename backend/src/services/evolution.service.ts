@@ -1,5 +1,7 @@
 import axios from 'axios';
 import * as dotenv from 'dotenv';
+import http from 'http';
+import https from 'https';
 
 dotenv.config();
 
@@ -17,6 +19,8 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 15000,
+  httpAgent: new http.Agent({ keepAlive: true, maxSockets: 100 }),
+  httpsAgent: new https.Agent({ keepAlive: true, maxSockets: 100 }),
 });
 
 export class EvolutionService {
@@ -307,9 +311,14 @@ export class EvolutionService {
         console.log(`[EvolutionService] LID ${lid} resuelto exitosamente a ${resolvedJid}`);
         return resolvedJid;
       }
+      
+      // Si la API respondió pero no trajo un JID válido de teléfono, guardamos el LID en caché apuntando a sí mismo (evita reintentos infinitos)
+      this.lidCache.set(lid, lid);
       return lid;
     } catch (err: any) {
       console.warn(`[EvolutionService] No se pudo resolver el LID ${lid}:`, err.message);
+      // Guardar en caché el error para evitar reintentar en el próximo polling
+      this.lidCache.set(lid, lid);
       return lid;
     }
   }
