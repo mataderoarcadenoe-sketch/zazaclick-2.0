@@ -20,6 +20,7 @@ const api = axios.create({
 });
 
 export class EvolutionService {
+  private static lidCache = new Map<string, string>();
 
   /**
    * Extrae y formatea el mensaje de error de una excepción de Axios
@@ -286,9 +287,36 @@ export class EvolutionService {
   }
 
   /**
+   * Resuelve un LID de WhatsApp (@lid) a su número de teléfono real (@s.whatsapp.net) llamando a fetchProfile
+   */
+  public static async resolveLidToPhone(instanceName: string, lid: string): Promise<string> {
+    try {
+      if (this.lidCache.has(lid)) {
+        return this.lidCache.get(lid)!;
+      }
+
+      console.log(`[EvolutionService] Resolviendo LID ${lid} a teléfono real mediante API...`);
+      const response = await api.post(`/chat/fetchProfile/${instanceName}`, {
+        number: lid
+      });
+
+      const resolvedJid = response.data?.jid || response.data?.remoteJid || response.data?.id;
+      if (resolvedJid && resolvedJid.endsWith('@s.whatsapp.net')) {
+        this.lidCache.set(lid, resolvedJid);
+        console.log(`[EvolutionService] LID ${lid} resuelto exitosamente a ${resolvedJid}`);
+        return resolvedJid;
+      }
+      return lid;
+    } catch (err: any) {
+      console.warn(`[EvolutionService] No se pudo resolver el LID ${lid}:`, err.message);
+      return lid;
+    }
+  }
+
+  /**
    * Unificar chats @lid con sus números reales para evitar conversaciones duplicadas
    */
-  public static mergeChats(chats: any[]): any[] {
+  public static async mergeChats(instanceName: string, chats: any[]): Promise<any[]> {
     const mergedMap = new Map<string, any>();
 
     for (const chat of chats) {
@@ -302,12 +330,31 @@ export class EvolutionService {
         realJid = realJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
       }
 
-      // Si es un @lid, intentamos obtener su número real de remoteJidAlt
-      if (realJid.endsWith('@lid') && chat.lastMessage?.key?.remoteJidAlt) {
-        realJid = chat.lastMessage.key.remoteJidAlt;
+      // Si es un @lid, intentamos obtener su número real de múltiples lugares posibles
+      if (realJid.endsWith('@lid')) {
+        if (chat.remoteJidAlt && chat.remoteJidAlt.endsWith('@s.whatsapp.net')) {
+          realJid = chat.remoteJidAlt;
+        } else if (chat.jidAlt && chat.jidAlt.endsWith('@s.whatsapp.net')) {
+          realJid = chat.jidAlt;
+        } else if (chat.lastMessage?.key?.remoteJidAlt && chat.lastMessage.key.remoteJidAlt.endsWith('@s.whatsapp.net')) {
+          realJid = chat.lastMessage.key.remoteJidAlt;
+        } else if (chat.lastMessage?.remoteJidAlt && chat.lastMessage.remoteJidAlt.endsWith('@s.whatsapp.net')) {
+          realJid = chat.lastMessage.remoteJidAlt;
+        } else if (chat.contact?.remoteJidAlt && chat.contact.remoteJidAlt.endsWith('@s.whatsapp.net')) {
+          realJid = chat.contact.remoteJidAlt;
+        } else if (chat.contact?.jidAlt && chat.contact.jidAlt.endsWith('@s.whatsapp.net')) {
+          realJid = chat.contact.jidAlt;
+        } else if (chat.contact?.id && chat.contact.id.endsWith('@s.whatsapp.net')) {
+          realJid = chat.contact.id;
+        } else if (chat.contact?.remoteJid && chat.contact.remoteJid.endsWith('@s.whatsapp.net')) {
+          realJid = chat.contact.remoteJid;
+        } else {
+          // Último recurso: Resolver llamando a la API en caliente
+          realJid = await this.resolveLidToPhone(instanceName, realJid);
+        }
       }
       
-      // Volver a limpiar por si el remoteJidAlt vino con :0
+      // Volver a limpiar por si el JID resuelto vino con :0
       if (realJid.includes(':0@s.whatsapp.net')) {
         realJid = realJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
       }
