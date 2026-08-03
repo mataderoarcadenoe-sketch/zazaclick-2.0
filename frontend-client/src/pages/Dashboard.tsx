@@ -511,6 +511,16 @@ export default function DashboardPage() {
           if (exists) return prev;
           return [...prev, newMsg];
         });
+
+        // Si es un mensaje recibido en el chat abierto, informar al backend inmediatamente para limpiar Redis
+        if (!fromMe && selectedInstanceRef.current) {
+          const originalJid = selectedChatRef.current?.originalJid;
+          const msgId = newMsg.key?.id || newMsg.id;
+          api.post(`/instances/chats/${selectedInstanceRef.current}/read`, {
+            remoteJid: originalJid || cleanJid,
+            messageIds: msgId ? [msgId] : []
+          }).catch(err => console.error('Error auto-marking read on WebSocket message:', err));
+        }
       }
 
       // 2. Mover el chat al inicio de la lista lateral y actualizar su lastMessage y unreadCount
