@@ -7,7 +7,7 @@ dotenv.config();
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '6104299697-7dissi3tuvd84q94737nqmsi96nmh2d5.apps.googleusercontent.com';
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
-const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'https://zaza-click-20-production.up.railway.app/api/instances/google-contacts/callback';
+const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'https://zaza-click-20-production.up.railway.app/api/auth/google-contacts/callback';
 
 export class GoogleContactsService {
   
