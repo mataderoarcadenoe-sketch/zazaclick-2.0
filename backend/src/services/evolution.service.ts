@@ -2,6 +2,7 @@ import axios from 'axios';
 import * as dotenv from 'dotenv';
 import http from 'http';
 import https from 'https';
+import pool from '../config/database';
 
 dotenv.config();
 
@@ -326,7 +327,7 @@ export class EvolutionService {
   /**
    * Unificar chats @lid con sus números reales para evitar conversaciones duplicadas
    */
-  public static mergeChats(instanceName: string, chats: any[]): any[] {
+  public static mergeChats(instanceName: string, chats: any[], dbUnreadCounts?: Map<string, number>): any[] {
     const mergedMap = new Map<string, any>();
 
     for (const chat of chats) {
@@ -374,11 +375,18 @@ export class EvolutionService {
         realJid = realJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
       }
 
-      // Obtener el contador de mensajes no leídos tolerando 'unreadMessages' y 'unreadCount' de manera segura (evitando que null anule unreadCount)
-      const chatUnread = (chat.unreadMessages !== undefined && chat.unreadMessages !== null) 
-        ? chat.unreadMessages 
-        : chat.unreadCount;
-      const unreadCountNum = Number(chatUnread) || 0;
+      // Obtener el contador de mensajes no leídos tolerando la base de datos de Zaza o la API de Evolution
+      let unreadCountNum = 0;
+      if (dbUnreadCounts) {
+        const countReal = dbUnreadCounts.get(realJid) || 0;
+        const countOrig = dbUnreadCounts.get(chat.remoteJid) || 0;
+        unreadCountNum = Math.max(countReal, countOrig);
+      } else {
+        const chatUnread = (chat.unreadMessages !== undefined && chat.unreadMessages !== null) 
+          ? chat.unreadMessages 
+          : chat.unreadCount;
+        unreadCountNum = Number(chatUnread) || 0;
+      }
 
       // Aplicar el override del contador de mensajes no leídos si el último mensaje es anterior al timestamp de lectura marcado
       const cacheKeyReal = `${instanceName}:${realJid}`;
@@ -492,5 +500,48 @@ export class EvolutionService {
       
       return { success: false, error: errorMsg };
     }
+  }
+
+  /**
+   * Obtener los contadores de mensajes no leídos agrupados por remoteJid directamente desde Postgres
+   */
+  public static async getUnreadCountsFromDb(instanceName: string): Promise<Map<string, number>> {
+    const unreadMap = new Map<string, number>();
+    try {
+      // 1. Buscar el ID de la instancia de la base de datos de Evolution API
+      const instRes = await pool.query('SELECT id FROM "Instance" WHERE name = $1 LIMIT 1', [instanceName]);
+      if (instRes.rows.length === 0) {
+        return unreadMap;
+      }
+      const instanceId = instRes.rows[0].id;
+
+      // 2. Contar los mensajes no leídos agrupados por remoteJid (key->>'remoteJid')
+      const query = `
+        SELECT 
+          key->>'remoteJid' as remote_jid,
+          COUNT(*)::int as count
+        FROM "Message"
+        WHERE "instanceId" = $1
+          AND key->>'fromMe' = 'false'
+          AND "status" <> 'READ'
+        GROUP BY key->>'remoteJid'
+      `;
+      const msgRes = await pool.query(query, [instanceId]);
+      
+      for (const row of msgRes.rows) {
+        if (row.remote_jid) {
+          const jid = row.remote_jid;
+          unreadMap.set(jid, Number(row.count) || 0);
+          
+          // Limpiar :0 si viene en la clave
+          if (jid.includes(':0@s.whatsapp.net')) {
+            unreadMap.set(jid.replace(':0@s.whatsapp.net', '@s.whatsapp.net'), Number(row.count) || 0);
+          }
+        }
+      }
+    } catch (err: any) {
+      console.error('[EvolutionService] Error en getUnreadCountsFromDb:', err.message);
+    }
+    return unreadMap;
   }
 }
