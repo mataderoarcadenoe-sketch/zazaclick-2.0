@@ -2488,7 +2488,7 @@ echo $response;`;
                         <button
                           type="button"
                           onClick={() => setShowSandboxInstanceMenu(!showSandboxInstanceMenu)}
-                          className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white hover:bg-slate-100/70 dark:hover:bg-slate-900/60 transition-all font-bold cursor-pointer flex items-center justify-between gap-2 shadow-sm"
+                          className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 rounded-2xl text-xs text-slate-800 dark:text-white hover:bg-slate-100/70 dark:hover:bg-slate-900/60 transition-all font-bold cursor-pointer flex items-center justify-between gap-2 shadow-inner"
                         >
                           {testInstance ? (
                             <div className="flex items-center gap-1.5 truncate">
@@ -2506,7 +2506,7 @@ echo $response;`;
                         </button>
 
                         {showSandboxInstanceMenu && (
-                          <div className="absolute top-[100%] left-0 w-full mt-1.5 z-50 bg-white dark:bg-slate-900 rounded-2xl shadow-premium-lg p-1.5 flex flex-col gap-1 border border-slate-100 dark:border-slate-800/40 text-left animate-fadeIn">
+                          <div className="absolute top-[100%] left-0 w-full mt-1.5 z-50 bg-white dark:bg-slate-900 rounded-2xl shadow-premium-lg p-1.5 flex flex-col gap-1 text-left animate-fadeIn">
                             {instances.length === 0 ? (
                               <span className="p-3 text-[10px] text-slate-400 dark:text-slate-500 font-bold block text-center">No hay instancias creadas</span>
                             ) : (
@@ -2543,8 +2543,8 @@ echo $response;`;
 
                     <div className="space-y-1.5">
                       <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Número Destino (9 dígitos)</label>
-                      <div className="flex relative items-center w-full">
-                        <div className="px-3.5 py-3 border border-r-0 border-slate-200 dark:border-slate-800/80 bg-slate-100/50 dark:bg-slate-900/50 rounded-l-2xl text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 select-none">
+                      <div className="flex relative items-center w-full shadow-inner rounded-2xl overflow-hidden">
+                        <div className="px-3.5 py-3 bg-slate-100/50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 flex items-center gap-1.5 select-none font-bold text-xs">
                           <span>🇵🇪 +51</span>
                         </div>
                         <input
@@ -2554,7 +2554,7 @@ echo $response;`;
                           placeholder="Ej: 987654321"
                           required
                           maxLength={9}
-                          className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-r-2xl rounded-l-none text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium"
+                          className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-950/50 text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 font-medium"
                         />
                       </div>
                     </div>
@@ -2566,7 +2566,7 @@ echo $response;`;
                         onChange={(e) => setTestText(e.target.value)}
                         rows={4}
                         required
-                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium resize-none"
+                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 font-medium resize-none shadow-inner"
                       />
                     </div>
 
