@@ -8,7 +8,7 @@ import {
   AlertCircle, Copy, Send, LayoutDashboard, Terminal, 
   Moon, Sun, Menu, X, Check, Play, ExternalLink, Sparkles, BookOpen, Clock,
   MessageSquare, Search, MessageCircle, Smile, ArrowLeft,
-  Paperclip, FileText, Image, Video, Download
+  Paperclip, FileText, Image, Video, Download, ChevronDown
 } from 'lucide-react';
 import EmojiPicker, { Theme, EmojiStyle, Emoji } from 'emoji-picker-react';
 import { parse } from '@twemoji/parser';
@@ -166,6 +166,12 @@ export default function DashboardPage() {
   const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [attachmentPreview, setAttachmentPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Custom dropdown states
+  const [showChatsInstanceMenu, setShowChatsInstanceMenu] = useState(false);
+  const [showSandboxInstanceMenu, setShowSandboxInstanceMenu] = useState(false);
+  const chatsDropdownRef = useRef<HTMLDivElement>(null);
+  const sandboxDropdownRef = useRef<HTMLDivElement>(null);
 
   // Refs para scroll inteligente y emoji picker click-outside
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -745,6 +751,30 @@ export default function DashboardPage() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showEmojiPicker]);
+
+  // Cerrar select de chats al hacer clic fuera
+  useEffect(() => {
+    if (!showChatsInstanceMenu) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (chatsDropdownRef.current && !chatsDropdownRef.current.contains(e.target as Node)) {
+        setShowChatsInstanceMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showChatsInstanceMenu]);
+
+  // Cerrar select de sandbox al hacer clic fuera
+  useEffect(() => {
+    if (!showSandboxInstanceMenu) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (sandboxDropdownRef.current && !sandboxDropdownRef.current.contains(e.target as Node)) {
+        setShowSandboxInstanceMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showSandboxInstanceMenu]);
 
   // Auto-scroll inteligente: solo scroll si llegan mensajes nuevos (no en cada render)
   useEffect(() => {
@@ -1401,21 +1431,62 @@ echo $response;`;
                   {/* Select Instance */}
                   <div className="flex items-center gap-2">
                     <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">Línea:</label>
-                    <select
-                      value={selectedInstanceForChats}
-                      onChange={(e) => {
-                        setSelectedInstanceForChats(e.target.value);
-                        setSelectedChat(null);
-                      }}
-                      className="px-3 py-1.5 bg-white/60 dark:bg-slate-900/60 rounded-xl text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/10 font-medium font-sans border-0 shadow-inner"
-                    >
-                      <option value="" disabled>Seleccionar línea...</option>
-                      {instances.map(inst => (
-                        <option key={inst.id} value={inst.instance_name}>
-                          {inst.instance_name} ({inst.status === 'connected' ? 'Conectada' : 'Desconectada'})
-                        </option>
-                      ))}
-                    </select>
+                    {/* Custom Select Dropdown */}
+                    <div className="relative" ref={chatsDropdownRef}>
+                      <button
+                        type="button"
+                        onClick={() => setShowChatsInstanceMenu(!showChatsInstanceMenu)}
+                        className="px-3 py-2 bg-white dark:bg-slate-900 rounded-xl text-xs text-slate-800 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-all font-bold cursor-pointer flex items-center justify-between gap-2 shadow-sm relative min-w-[170px]"
+                      >
+                        {selectedInstanceForChats ? (
+                          <div className="flex items-center gap-1.5 truncate">
+                            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                              instances.find(i => i.instance_name === selectedInstanceForChats)?.status === 'connected' ? 'bg-emerald-500' : 'bg-slate-400'
+                            }`} />
+                            <span className="truncate">
+                              {selectedInstanceForChats}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400">Seleccionar línea...</span>
+                        )}
+                        <ChevronDown size={14} className={`text-slate-400 transition-transform duration-200 ${showChatsInstanceMenu ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      {showChatsInstanceMenu && (
+                        <div className="absolute top-[100%] right-0 mt-1.5 z-50 bg-white dark:bg-slate-900 rounded-2xl shadow-premium-lg p-1.5 flex flex-col gap-1 min-w-[200px] border border-slate-100 dark:border-slate-800/40 text-left animate-fadeIn">
+                          {instances.length === 0 ? (
+                            <span className="p-3 text-[10px] text-slate-400 dark:text-slate-500 font-bold block text-center">No hay líneas creadas</span>
+                          ) : (
+                            instances.map(inst => (
+                              <button
+                                key={inst.id}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedInstanceForChats(inst.instance_name);
+                                  setSelectedChat(null);
+                                  setShowChatsInstanceMenu(false);
+                                }}
+                                className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-3 cursor-pointer text-left ${
+                                  selectedInstanceForChats === inst.instance_name 
+                                    ? 'bg-slate-50 dark:bg-slate-800/60 text-slate-800 dark:text-white' 
+                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 hover:text-slate-800 dark:hover:text-white'
+                                }`}
+                              >
+                                <span className="truncate">{inst.instance_name}</span>
+                                <span className={`px-2 py-0.5 rounded-md text-[8.5px] font-bold ${
+                                  inst.status === 'connected' 
+                                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
+                                    : 'bg-slate-100 dark:bg-slate-950 text-slate-500'
+                                }`}>
+                                  {inst.status === 'connected' ? 'En línea' : 'Desconectada'}
+                                </span>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      )}
+                    </div>
                     <button 
                       onClick={() => fetchChats(false)}
                       disabled={chatsLoading}
@@ -1967,22 +2038,62 @@ echo $response;`;
                   <form onSubmit={handleSendTestMessage} className="md:col-span-7 bg-white dark:bg-slate-900 p-6 rounded-3xl space-y-4 text-left">
                     <div className="space-y-1.5">
                       <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Seleccionar Instancia</label>
-                      <select
-                        value={testInstance}
-                        onChange={(e) => {
-                          setTestInstance(e.target.value);
-                          setTestResult(null);
-                        }}
-                        required
-                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium"
-                      >
-                        <option value="" disabled>Elegir instancia...</option>
-                        {instances.map(inst => (
-                          <option key={inst.id} value={inst.instance_name}>
-                            {inst.instance_name} ({inst.status === 'connected' ? 'Conectada' : 'Desconectada'})
-                          </option>
-                        ))}
-                      </select>
+                      {/* Custom Select Dropdown */}
+                      <div className="relative w-full" ref={sandboxDropdownRef}>
+                        <button
+                          type="button"
+                          onClick={() => setShowSandboxInstanceMenu(!showSandboxInstanceMenu)}
+                          className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white hover:bg-slate-100/70 dark:hover:bg-slate-900/60 transition-all font-bold cursor-pointer flex items-center justify-between gap-2 shadow-sm"
+                        >
+                          {testInstance ? (
+                            <div className="flex items-center gap-1.5 truncate">
+                              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                                instances.find(i => i.instance_name === testInstance)?.status === 'connected' ? 'bg-emerald-500' : 'bg-slate-400'
+                              }`} />
+                              <span className="truncate">
+                                {testInstance}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-slate-400 font-medium">Elegir instancia...</span>
+                          )}
+                          <ChevronDown size={14} className={`text-slate-400 transition-transform duration-200 ${showSandboxInstanceMenu ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        {showSandboxInstanceMenu && (
+                          <div className="absolute top-[100%] left-0 w-full mt-1.5 z-50 bg-white dark:bg-slate-900 rounded-2xl shadow-premium-lg p-1.5 flex flex-col gap-1 border border-slate-100 dark:border-slate-800/40 text-left animate-fadeIn">
+                            {instances.length === 0 ? (
+                              <span className="p-3 text-[10px] text-slate-400 dark:text-slate-500 font-bold block text-center">No hay instancias creadas</span>
+                            ) : (
+                              instances.map(inst => (
+                                <button
+                                  key={inst.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setTestInstance(inst.instance_name);
+                                    setTestResult(null);
+                                    setShowSandboxInstanceMenu(false);
+                                  }}
+                                  className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-3 cursor-pointer text-left ${
+                                    testInstance === inst.instance_name 
+                                      ? 'bg-slate-50 dark:bg-slate-800/60 text-slate-800 dark:text-white' 
+                                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 hover:text-slate-800 dark:hover:text-white'
+                                  }`}
+                                >
+                                  <span className="truncate">{inst.instance_name}</span>
+                                  <span className={`px-2 py-0.5 rounded-md text-[8.5px] font-bold ${
+                                    inst.status === 'connected' 
+                                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
+                                      : 'bg-slate-100 dark:bg-slate-950 text-slate-500'
+                                  }`}>
+                                    {inst.status === 'connected' ? 'Conectada' : 'Desconectada'}
+                                  </span>
+                                </button>
+                              ))
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     <div className="space-y-1.5">
