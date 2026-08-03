@@ -372,25 +372,8 @@ export class EvolutionService {
       this.lidCache.set(lid, lid);
       return lid;
     }
-  /**
-   * Obtener el nombre de contacto guardado en Redis (agenda o notify).
-   * Prioriza el nombre de agenda si está disponible.
-   */
-  public static async getContactName(instanceName: string, jid: string): Promise<string | null> {
-    if (!jid) return null;
-    let cleanJid = jid;
-    if (cleanJid.includes(':0@s.whatsapp.net')) {
-      cleanJid = cleanJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
-    }
-    const redisKey = `contact:${instanceName}:${cleanJid}`;
-    try {
-      const name = await redis.hget(redisKey, 'name');
-      return name || null;
-    } catch (err) {
-      console.error(`[EvolutionService] Error fetching contact name for ${cleanJid}:`, err);
-      return null;
-    }
   }
+
 
   /**
    * Unificar chats @lid con sus números reales para evitar conversaciones duplicadas
