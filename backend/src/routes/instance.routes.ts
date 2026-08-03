@@ -18,6 +18,25 @@ router.get('/debug-messages/:instanceName', async (req, res) => {
   }
 });
 
+router.get('/debug-all-messages/:instanceName', async (req, res) => {
+  const { instanceName } = req.params;
+  try {
+    const EVOLUTION_API_URL = process.env.EVOLUTION_API_URL;
+    const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY;
+    const axios = require('axios');
+    const response = await axios.post(`${EVOLUTION_API_URL}/chat/findMessages/${instanceName}`, {
+      limit: 100
+    }, {
+      headers: {
+        'apikey': EVOLUTION_API_KEY
+      }
+    });
+    res.json(response.data);
+  } catch (err: any) {
+    res.status(500).send(err.message);
+  }
+});
+
 /**
  * Generar ID aleatorio
  */
