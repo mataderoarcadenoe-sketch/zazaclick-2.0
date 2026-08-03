@@ -1408,7 +1408,7 @@ echo $response;`;
         <div className={`h-16 flex items-center ${sidebarOpen ? 'justify-between px-5' : 'justify-center'}`}>
           {sidebarOpen && (
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
+              <div className="w-8 h-8 rounded-xl bg-[#00a884] flex items-center justify-center text-white shadow-md shadow-[#00a884]/20">
                 <Smartphone size={18} />
               </div>
               <span className="font-semibold text-slate-800 dark:text-white tracking-wide">
@@ -1442,7 +1442,7 @@ echo $response;`;
                   sidebarOpen ? 'px-4 py-3 justify-start' : 'p-3 justify-center'
                 } rounded-2xl transition-all duration-200 relative cursor-pointer ${
                   active 
-                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/10 font-bold'
+                    ? 'bg-[#00a884] text-white shadow-lg shadow-[#00a884]/20 font-bold'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-800 dark:hover:text-white font-medium'
                 }`}
               >
@@ -1515,7 +1515,7 @@ echo $response;`;
 
             {/* User Profile Info */}
             <div className="flex items-center gap-2.5 pl-1">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white text-xs font-bold shadow-md shadow-emerald-500/20 uppercase">
+              <div className="w-8 h-8 rounded-xl bg-[#00a884] flex items-center justify-center text-white text-xs font-bold shadow-md shadow-[#00a884]/20 uppercase">
                 {user?.email?.charAt(0)}
               </div>
               <div className="hidden md:flex flex-col text-left">
@@ -1537,9 +1537,9 @@ echo $response;`;
               <div className="space-y-6 animate-fadeIn">
                 
                 {/* Upgrade/Welcome Card Banner */}
-                <div className="p-6 bg-gradient-to-r from-emerald-500/10 to-teal-500/5 rounded-3xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="p-6 bg-[#00a884]/10 dark:bg-[#00a884]/5 rounded-3xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div className="space-y-2 text-left relative z-10">
-                    <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-md text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
+                    <span className="px-2.5 py-1 bg-[#00a884]/10 border border-[#00a884]/20 rounded-md text-[9px] font-bold text-[#00a884] dark:text-[#00a884] uppercase tracking-widest">
                       Licencia Activa
                     </span>
                     <h3 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-white">
@@ -1554,7 +1554,7 @@ echo $response;`;
                     <button
                       onClick={() => setShowCreateModal(true)}
                       disabled={instances.length >= maxInstances}
-                      className="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-500/15 flex items-center gap-1.5 transition-all cursor-pointer"
+                      className="px-4 py-2.5 bg-[#00a884] hover:bg-[#008f70] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl shadow-lg shadow-[#00a884]/15 flex items-center gap-1.5 transition-all cursor-pointer"
                     >
                       <Plus size={16} />
                       <span>Nueva Instancia</span>
@@ -1970,11 +1970,11 @@ echo $response;`;
                                     key={chat.remoteJid}
                                     onClick={() => setSelectedChat(chat)}
                                     type="button"
-                                    className={`w-full py-3.5 px-3.5 flex items-center gap-3 text-left transition-all duration-300 cursor-pointer rounded-2xl relative ${isActive ? 'bg-gradient-to-r from-emerald-500/10 to-teal-500/5 dark:from-emerald-950/40 dark:to-teal-950/20' : 'hover:bg-white/45 dark:hover:bg-slate-800/20'}`}
+                                    className={`w-full py-3.5 px-3.5 flex items-center gap-3 text-left transition-all duration-300 cursor-pointer rounded-2xl relative ${isActive ? 'bg-emerald-500/10 dark:bg-emerald-950/40' : 'hover:bg-white/45 dark:hover:bg-slate-800/20'}`}
                                   >
                                     {/* Active indicator pill */}
                                     {isActive && (
-                                      <div className="absolute left-0.5 top-1/2 -translate-y-1/2 w-1 h-6 bg-emerald-500 rounded-r-full" />
+                                      <div className="absolute left-0.5 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#00a884] rounded-r-full" />
                                     )}
 
                                     {/* Profile Photo */}
@@ -2464,7 +2464,7 @@ echo $response;`;
                 {!googleConnected ? (
                   // Screen for disconnected state
                   <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 text-center max-w-2xl mx-auto space-y-6 shadow-premium">
-                    <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-emerald-500/10 to-teal-500/10 flex items-center justify-center text-emerald-500 mx-auto">
+                    <div className="w-16 h-16 rounded-3xl bg-emerald-500/10 flex items-center justify-center text-[#00a884] mx-auto">
                       <Users size={32} />
                     </div>
                     <div className="space-y-2">
@@ -2476,7 +2476,7 @@ echo $response;`;
                     <button
                       type="button"
                       onClick={handleConnectGoogleContacts}
-                      className="inline-flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-95 text-white font-bold text-xs rounded-2xl transition-all shadow-md shadow-emerald-500/20 cursor-pointer"
+                      className="inline-flex items-center gap-2 px-6 py-3.5 bg-[#00a884] hover:bg-[#008f70] active:scale-95 text-white font-bold text-xs rounded-2xl transition-all shadow-md shadow-[#00a884]/20 cursor-pointer"
                     >
                       <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                         <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.113-5.136 4.113-3.072 0-5.561-2.49-5.561-5.561s2.49-5.561 5.561-5.561c1.396 0 2.67.513 3.655 1.353l3.14-3.14C18.796 3.738 15.748 2.5 12.24 2.5 6.42 2.5 1.7 7.22 1.7 13s4.72 10.5 10.54 10.5c5.8 0 10.46-4.7 10.46-10.5 0-.712-.082-1.395-.224-2.073h-10.236z"/>
@@ -2490,13 +2490,13 @@ echo $response;`;
                     {/* Connection Info header card */}
                     <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-sm text-left">
                       <div className="flex items-center gap-3.5">
-                        <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center flex-shrink-0">
+                        <div className="w-12 h-12 rounded-2xl bg-[#00a884]/10 text-[#00a884] flex items-center justify-center flex-shrink-0">
                           <Users size={22} />
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
                             <h4 className="text-sm font-bold text-slate-800 dark:text-white">Google Contactos Activo</h4>
-                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                            <span className="w-2.5 h-2.5 rounded-full bg-[#00a884]" />
                           </div>
                           <p className="text-xs text-slate-400 font-medium">Cuenta vinculada: <strong className="text-slate-600 dark:text-slate-300">{googleEmail}</strong></p>
                         </div>
@@ -2548,7 +2548,7 @@ echo $response;`;
                             familyName: '',
                             phoneNumber: ''
                           })}
-                          className="px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-95 text-white font-bold text-xs rounded-2xl transition-all shadow-md shadow-emerald-500/20 cursor-pointer flex items-center gap-1.5"
+                          className="px-4 py-3 bg-[#00a884] hover:bg-[#008f70] active:scale-95 text-white font-bold text-xs rounded-2xl transition-all shadow-md shadow-[#00a884]/20 cursor-pointer flex items-center gap-1.5"
                         >
                           <Plus size={14} />
                           <span>Nuevo Contacto</span>
@@ -2725,7 +2725,7 @@ echo $response;`;
                               setCreateGroupError(null);
                               setShowCreateGroupModal(true);
                             }}
-                            className="px-3.5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-95 text-white font-bold text-xs rounded-xl transition-all shadow-md shadow-emerald-500/20 cursor-pointer flex items-center gap-1"
+                            className="px-3.5 py-2.5 bg-[#00a884] hover:bg-[#008f70] active:scale-95 text-white font-bold text-xs rounded-xl transition-all shadow-md shadow-[#00a884]/20 cursor-pointer flex items-center gap-1"
                           >
                             <Plus size={13} />
                             <span>Crear Grupo</span>
@@ -3092,7 +3092,7 @@ echo $response;`;
                     <button
                       type="submit"
                       disabled={testLoading || !testInstance || instances.find(i => i.instance_name === testInstance)?.status !== 'connected'}
-                      className="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs rounded-2xl shadow-lg shadow-emerald-500/15 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                      className="w-full py-3.5 bg-[#00a884] hover:bg-[#008f70] active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs rounded-2xl shadow-lg shadow-[#00a884]/15 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                     >
                       {testLoading ? (
                         <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -3456,7 +3456,7 @@ echo $response;`;
                 <button
                   type="submit"
                   disabled={createLoading || !newInstanceName.trim()}
-                  className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-[0.99] disabled:opacity-40 text-xs text-white font-bold rounded-2xl shadow-lg shadow-emerald-500/10 transition-all cursor-pointer"
+                  className="flex-1 py-3 bg-[#00a884] hover:bg-[#008f70] active:scale-[0.99] disabled:opacity-40 text-xs text-white font-bold rounded-2xl shadow-lg shadow-[#00a884]/10 transition-all cursor-pointer"
                 >
                   {createLoading ? 'Creando...' : 'Crear Instancia'}
                 </button>
@@ -3534,7 +3534,7 @@ echo $response;`;
 
                 <button
                   type="submit"
-                  className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-[0.99] text-xs text-white font-bold rounded-2xl shadow-lg shadow-emerald-500/10 transition-all cursor-pointer"
+                  className="flex-1 py-3 bg-[#00a884] hover:bg-[#008f70] active:scale-[0.99] text-xs text-white font-bold rounded-2xl shadow-lg shadow-[#00a884]/10 transition-all cursor-pointer"
                 >
                   {contactModal.isEdit ? 'Actualizar' : 'Guardar'}
                 </button>
@@ -3615,7 +3615,7 @@ echo $response;`;
                 <button
                   type="submit"
                   disabled={createGroupLoading || !createGroupSubject.trim()}
-                  className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-[0.99] disabled:opacity-40 text-xs text-white font-bold rounded-2xl shadow-lg shadow-emerald-500/10 transition-all cursor-pointer"
+                  className="flex-1 py-3 bg-[#00a884] hover:bg-[#008f70] active:scale-[0.99] disabled:opacity-40 text-xs text-white font-bold rounded-2xl shadow-lg shadow-[#00a884]/10 transition-all cursor-pointer"
                 >
                   {createGroupLoading ? 'Creando...' : 'Crear'}
                 </button>
