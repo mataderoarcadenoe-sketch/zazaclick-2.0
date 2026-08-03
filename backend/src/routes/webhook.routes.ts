@@ -14,11 +14,14 @@ router.post('/whatsapp', async (req, res) => {
     return res.status(200).json({ success: false, error: 'Payload de webhook incompleto' });
   }
 
+  console.log(`📬 [Webhook] Recibido evento "${event}" para la instancia "${instance}"`);
+
   try {
     const io = getIO();
     const roomName = `instance_${instance}`;
+    const eventUpper = event.toUpperCase().replace('.', '_');
 
-    if (event === 'messages.upsert') {
+    if (eventUpper === 'MESSAGES_UPSERT') {
       const msg = data.message || data;
       const key = msg.key;
       if (key) {
@@ -37,6 +40,8 @@ router.post('/whatsapp', async (req, res) => {
           await redis.incr(redisKey);
           const newCount = await redis.get(redisKey);
 
+          console.log(`📈 [Webhook] Incrementado no leídos para ${cleanJid} en ${instance} a ${newCount}`);
+
           // Emitir el cambio del contador de no leídos a la sala
           io.to(roomName).emit('unread_update', {
             remoteJid: cleanJid,
@@ -48,7 +53,7 @@ router.post('/whatsapp', async (req, res) => {
         io.to(roomName).emit('message:received', msg);
       }
     } 
-    else if (event === 'chats.update') {
+    else if (eventUpper === 'CHATS_UPDATE' || eventUpper === 'MESSAGES_UPDATE') {
       const chatUpdates = Array.isArray(data) ? data : [data];
       for (const update of chatUpdates) {
         const remoteJid = update.id || update.remoteJid;
@@ -59,9 +64,11 @@ router.post('/whatsapp', async (req, res) => {
           }
 
           // Si el unreadCount viene en 0
-          if (update.unreadCount === 0 || update.unreadMessages === 0) {
+          if (update.unreadCount === 0 || update.unreadMessages === 0 || update.status === 'READ') {
             const redisKey = `unread:${instance}:${cleanJid}`;
             await redis.set(redisKey, 0);
+
+            console.log(`📉 [Webhook] Limpiado contador de no leídos para ${cleanJid} en ${instance}`);
 
             io.to(roomName).emit('unread_update', {
               remoteJid: cleanJid,
