@@ -27,6 +27,8 @@ const api = axios.create({
 export class EvolutionService {
   private static lidCache = new Map<string, string>();
   private static lastReadTimestamps = new Map<string, number>();
+  private static contactsCache = new Map<string, Map<string, string>>(); // Mapea instanceName -> (JID -> name)
+  private static lastContactsFetch = new Map<string, number>(); // Mapea instanceName -> timestamp in ms
 
   /**
    * Extrae y formatea el mensaje de error de una excepción de Axios
@@ -235,12 +237,56 @@ export class EvolutionService {
    */
   public static async getChats(instanceName: string): Promise<{ success: boolean; data?: any; error?: string; status?: number }> {
     try {
+      // Disparar sincronización de contactos de fondo sin bloquear el hilo principal (0ms adicionales de carga)
+      this.syncContactsCache(instanceName).catch(err => {
+        console.warn('[EvolutionService] Sincronización en background falló:', err.message);
+      });
+
       const response = await api.post(`/chat/findChats/${instanceName}`, {});
       return { success: true, data: response.data };
     } catch (err: any) {
       const errorMsg = this.parseError(err);
       console.error(`[EvolutionService] Error obteniendo chats para ${instanceName}:`, errorMsg);
       return { success: false, error: errorMsg, status: err.response?.status };
+    }
+  }
+
+  /**
+   * Sincronizar en segundo plano la agenda de contactos de WhatsApp en una caché interna
+   */
+  public static async syncContactsCache(instanceName: string): Promise<void> {
+    try {
+      const now = Date.now();
+      const lastFetch = this.lastContactsFetch.get(instanceName) || 0;
+      
+      // Sincronizar solo si pasaron más de 5 minutos desde el último fetch
+      if (now - lastFetch < 300000 && this.contactsCache.has(instanceName)) {
+        return;
+      }
+
+      console.log(`👤 [EvolutionService] Sincronizando caché de contactos para ${instanceName}...`);
+      const contacts = await this.getRawContacts(instanceName);
+      
+      if (Array.isArray(contacts)) {
+        const instanceMap = this.contactsCache.get(instanceName) || new Map<string, string>();
+        for (const contact of contacts) {
+          if (contact && contact.remoteJid) {
+            const name = contact.pushName || contact.name || contact.shortName;
+            if (name) {
+              let cleanJid = contact.remoteJid;
+              if (cleanJid.includes(':0@s.whatsapp.net')) {
+                cleanJid = cleanJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
+              }
+              instanceMap.set(cleanJid, name);
+            }
+          }
+        }
+        this.contactsCache.set(instanceName, instanceMap);
+        this.lastContactsFetch.set(instanceName, now);
+        console.log(`👤 [EvolutionService] Sincronizados ${instanceMap.size} contactos para la instancia ${instanceName}`);
+      }
+    } catch (err: any) {
+      console.warn(`[EvolutionService] No se pudo sincronizar la agenda de contactos para ${instanceName}:`, err.message);
     }
   }
 
@@ -417,6 +463,18 @@ export class EvolutionService {
         }
       }
 
+      // Intentar recuperar el nombre del contacto de la agenda en caché o del lastMessage
+      let displayName = chat.pushName;
+      const instanceMap = this.contactsCache.get(instanceName);
+      if (instanceMap) {
+        displayName = instanceMap.get(realJid) || instanceMap.get(chat.remoteJid) || displayName;
+      }
+      
+      // Fallback a lastMessage.pushName si no hay nombre de agenda y el último mensaje fue recibido de ellos
+      if (!displayName && chat.lastMessage && chat.lastMessage.key && chat.lastMessage.key.fromMe === false) {
+        displayName = chat.lastMessage.pushName;
+      }
+
       const existing = mergedMap.get(realJid);
       
       if (!existing) {
@@ -425,6 +483,7 @@ export class EvolutionService {
           ...chat, 
           remoteJid: realJid, 
           originalJid: chat.remoteJid,
+          pushName: displayName || chat.pushName || null,
           unreadCount: finalUnreadCount
         };
         mergedMap.set(realJid, newChat);
@@ -442,13 +501,13 @@ export class EvolutionService {
             remoteJid: realJid,
             originalJid: chat.remoteJid,
             profilePicUrl: chat.profilePicUrl || existing.profilePicUrl,
-            pushName: chat.pushName || existing.pushName,
+            pushName: displayName || chat.pushName || existing.pushName || null,
             unreadCount: totalUnread
           };
           mergedMap.set(realJid, merged);
         } else {
           existing.profilePicUrl = existing.profilePicUrl || chat.profilePicUrl;
-          existing.pushName = existing.pushName || chat.pushName;
+          existing.pushName = displayName || existing.pushName || chat.pushName || null;
           existing.unreadCount = totalUnread;
           mergedMap.set(realJid, existing);
         }
