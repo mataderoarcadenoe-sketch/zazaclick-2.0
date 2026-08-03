@@ -374,14 +374,15 @@ export default function DashboardPage() {
           // Registrar inmediatamente como leído localmente
           readChatsRef.current.add(targetJid);
           
+          // ACTUALIZACIÓN OPTIMISTA: Limpiar el contador de no leídos en React inmediatamente sin esperar la red
+          setChats(prevChats => prevChats.map(c => 
+            (c.remoteJid === targetJid) ? { ...c, unreadCount: 0 } : c
+          ));
+          setSelectedChat((prev: any) => prev ? { ...prev, unreadCount: 0 } : prev);
+          
           api.post(`/instances/chats/${instance}/read`, {
             remoteJid: originalJid || remoteJid,
             messageIds
-          }).then(() => {
-            setChats(prevChats => prevChats.map(c => 
-              (c.remoteJid === targetJid) ? { ...c, unreadCount: 0 } : c
-            ));
-            setSelectedChat((prev: any) => prev ? { ...prev, unreadCount: 0 } : prev);
           }).catch(err => {
             console.error('Error marking messages as read:', err);
           });

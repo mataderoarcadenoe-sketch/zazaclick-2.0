@@ -29,8 +29,9 @@ router.post('/whatsapp', async (req, res) => {
       if (key) {
         const fromMe = key.fromMe;
         const remoteJid = key.remoteJid;
+        const msgId = key.id;
 
-        console.log(`📬 [Webhook] Procesando mensaje. fromMe: ${fromMe}, remoteJid: ${remoteJid}`);
+        console.log(`📬 [Webhook] Procesando mensaje. id: ${msgId}, fromMe: ${fromMe}, remoteJid: ${remoteJid}`);
 
         // Limpiar el JID
         let cleanJid = remoteJid;
@@ -38,8 +39,20 @@ router.post('/whatsapp', async (req, res) => {
           cleanJid = cleanJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
         }
 
-        // Si es un mensaje nuevo entrante, incrementamos contador en Redis
-        if (!fromMe && remoteJid) {
+        // Deduplicación preventiva por ID de mensaje
+        let isDuplicate = false;
+        if (msgId) {
+          const dupKey = `dup:${instance}:${msgId}`;
+          // Usar SET con NX y PX para crear la clave solo si no existe, expirando en 15 segundos
+          const setDup = await redis.set(dupKey, '1', 'PX', 15000, 'NX');
+          if (setDup !== 'OK') {
+            isDuplicate = true;
+            console.log(`⏭️ [Webhook] Mensaje duplicado omitido: ${msgId}`);
+          }
+        }
+
+        // Si es un mensaje nuevo entrante y no es un duplicado, incrementamos contador en Redis
+        if (!fromMe && remoteJid && !isDuplicate) {
           const redisKey = `unread:${instance}:${cleanJid}`;
           await redis.incr(redisKey);
           const newCount = await redis.get(redisKey);
@@ -53,8 +66,10 @@ router.post('/whatsapp', async (req, res) => {
           });
         }
 
-        // Emitir el mensaje recibido para que la UI lo pinte al instante
-        io.to(roomName).emit('message:received', data);
+        // Emitir el mensaje recibido para que la UI lo pinte al instante si no es un duplicado de renderizado
+        if (!isDuplicate) {
+          io.to(roomName).emit('message:received', data);
+        }
       } else {
         console.warn('⚠️ [Webhook] No se pudo extraer la propiedad "key" de data:', data);
       }
