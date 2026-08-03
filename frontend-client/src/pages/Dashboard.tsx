@@ -158,6 +158,8 @@ export default function DashboardPage() {
   const selectedInstanceRef = useRef<string>('');
   // Chats que el usuario ya ha abierto/leído localmente — evita que el polling restaure el badge
   const readChatsRef = useRef<Set<string>>(new Set());
+  // Ref para guardar el JID del chat anterior y evitar parpadeos al actualizar el mismo chat
+  const prevSelectedJidRef = useRef<string | null>(null);
 
   // Confirm Dialog State
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -479,14 +481,21 @@ export default function DashboardPage() {
   // Load messages when active chat changes
   useEffect(() => {
     if (selectedChat) {
-      setMessages([]); // Limpiar mensajes previos al cambiar de chat
-      // Limpiar el JID anterior del set de leídos para que se re-marque al cambiar
-      // (no limpiamos, lo mantenemos para que el polling no restaure el badge de chats anteriores)
-      fetchMessages(false, selectedChat, selectedInstanceForChats);
+      const isSameChat = prevSelectedJidRef.current === selectedChat.remoteJid;
+      prevSelectedJidRef.current = selectedChat.remoteJid;
+      
+      if (!isSameChat) {
+        setMessages([]); // Solo limpiar mensajes si realmente cambiamos de conversación
+        fetchMessages(false, selectedChat, selectedInstanceForChats);
+      } else {
+        // Si es el mismo chat (actualización por polling / mensaje nuevo), fetch silente
+        fetchMessages(true, selectedChat, selectedInstanceForChats);
+      }
     } else {
+      prevSelectedJidRef.current = null;
       setMessages([]);
     }
-  }, [selectedChat, fetchMessages]);
+  }, [selectedChat, fetchMessages, selectedInstanceForChats]);
 
   // Cerrar emoji picker al hacer clic fuera
   useEffect(() => {
