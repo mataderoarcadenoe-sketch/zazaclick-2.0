@@ -536,17 +536,8 @@ export default function DashboardPage() {
 
         const oldChat = prevChats[chatIdx];
 
-        // Incrementar el contador de no leídos si el mensaje no es nuestro y no tenemos el chat abierto
-        let newUnreadCount = Number(oldChat.unreadCount) || 0;
-        if (!fromMe && cleanJid !== selectedChatRef.current?.remoteJid) {
-          newUnreadCount += 1;
-        } else if (cleanJid === selectedChatRef.current?.remoteJid) {
-          newUnreadCount = 0; // Forzar a 0 si está abierto
-        }
-
         const updatedChat = {
           ...oldChat,
-          unreadCount: newUnreadCount,
           lastMessage: {
             ...newMsg,
             messageTimestamp: newMsg.messageTimestamp
