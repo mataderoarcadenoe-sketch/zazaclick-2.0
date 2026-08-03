@@ -276,7 +276,7 @@ router.get('/chats/:instanceName', authMiddleware, async (req: AuthenticatedRequ
     const dbUnreadCounts = await EvolutionService.getUnreadCountsFromApi(instanceName);
 
     // Filtrar broadcasts y unificar chats @lid usando la nueva utilidad
-    const cleanChats = EvolutionService.mergeChats(instanceName, chatsResult.data || [], dbUnreadCounts);
+    const cleanChats = await EvolutionService.mergeChats(instanceName, chatsResult.data || [], dbUnreadCounts);
 
     res.json({ success: true, data: cleanChats });
   } catch (error: any) {
