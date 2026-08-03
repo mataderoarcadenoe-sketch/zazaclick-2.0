@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../services/authContext';
 import { useDarkMode } from '../hooks/useDarkMode';
 import api from '../services/api';
@@ -6,7 +6,7 @@ import {
   LogOut, RefreshCw, Plus, Key, Trash2, Smartphone, CheckCircle2, 
   AlertCircle, Copy, Send, LayoutDashboard, Terminal, 
   Moon, Sun, Menu, X, Check, Play, ExternalLink, Sparkles, BookOpen, Clock,
-  MessageSquare, Search, MessageCircle, Smile
+  MessageSquare, Search, MessageCircle, Smile, ArrowLeft
 } from 'lucide-react';
 import EmojiPicker, { Theme, EmojiStyle, Emoji } from 'emoji-picker-react';
 import { parse } from '@twemoji/parser';
@@ -49,6 +49,37 @@ const AppleEmojiText = ({ text }: { text: string }) => {
   }
 
   return <>{nodes}</>;
+};
+
+// Helper para formatear timestamps (sacado del map para evitar redefiniciones)
+const formatTimeLocal = (timestamp: number) => {
+  if (!timestamp) return '';
+  const date = new Date(timestamp * (timestamp < 10000000000 ? 1000 : 1));
+  const now = new Date();
+  
+  if (date.toDateString() === now.toDateString()) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+  
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) {
+    return 'Ayer';
+  }
+  
+  return date.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: '2-digit' });
+};
+
+// Colores para diferenciar participantes en grupos
+const GROUP_SENDER_COLORS = [
+  'text-emerald-500', 'text-blue-500', 'text-purple-500', 'text-amber-500',
+  'text-rose-500', 'text-cyan-500', 'text-indigo-500', 'text-pink-500',
+  'text-teal-500', 'text-orange-500'
+];
+const getSenderColor = (name: string) => {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return GROUP_SENDER_COLORS[Math.abs(hash) % GROUP_SENDER_COLORS.length];
 };
 
 interface Instance {
@@ -116,6 +147,17 @@ export default function DashboardPage() {
   const [mediaLoadingStates, setMediaLoadingStates] = useState<Record<string, boolean>>({});
   const [loadedMedia, setLoadedMedia] = useState<Record<string, string>>({}); // Maps message ID to local media source (data URL)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  // Refs para scroll inteligente y emoji picker click-outside
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const prevMessagesCountRef = useRef<number>(0);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const emojiButtonRef = useRef<HTMLButtonElement>(null);
+  // Ref para guardar la referencia estable del chat seleccionado para los callbacks del intervalo
+  const selectedChatRef = useRef<any>(null);
+  const selectedInstanceRef = useRef<string>('');
+  // Chats que el usuario ya ha abierto/leído localmente — evita que el polling restaure el badge
+  const readChatsRef = useRef<Set<string>>(new Set());
 
   // Confirm Dialog State
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -229,16 +271,38 @@ export default function DashboardPage() {
       const res = await api.get(`/instances/chats/${selectedInstanceForChats}`);
       if (res.data?.success) {
         const freshChats = res.data.data;
-        setChats(freshChats);
         
-        // Mantener seleccionado el chat con los datos más recientes en vivo (unreadCount, lastMessage, etc.)
+        // El chat actualmente abierto siempre muestra 0
+        // Para chats previamente leídos, permitir que el badge reaparezca si llegan mensajes nuevos
+        const currentSelectedJid = selectedChatRef.current?.remoteJid;
+        const processedChats = freshChats.map((c: any) => {
+          // El chat actualmente abierto siempre muestra 0
+          if (c.remoteJid === currentSelectedJid) {
+            return { ...c, unreadCount: 0 };
+          }
+          // Para chats que marcamos como leídos previamente
+          if (readChatsRef.current.has(c.remoteJid)) {
+            const serverUnread = Number(c.unreadCount) || 0;
+            if (serverUnread === 0) {
+              return c; // Ya está en 0, perfecto
+            }
+            // El servidor dice que hay no leídos: podría ser un mensaje NUEVO que llegó
+            // después de que lo leímos. Removemos del set y dejamos que muestre el badge.
+            readChatsRef.current.delete(c.remoteJid);
+            return c;
+          }
+          return c;
+        });
+        
+        setChats(processedChats);
+        
+        // Mantener seleccionado el chat con los datos más recientes en vivo (lastMessage, etc.)
         if (selectedChat) {
-          const freshSelected = freshChats.find((c: any) => c.remoteJid === selectedChat.remoteJid);
+          const freshSelected = processedChats.find((c: any) => c.remoteJid === selectedChat.remoteJid);
           if (freshSelected) {
             const hasNewMessages = freshSelected.lastMessage?.messageTimestamp !== selectedChat.lastMessage?.messageTimestamp;
-            const hasNewUnread = (Number(freshSelected.unreadCount) || 0) !== (Number(selectedChat.unreadCount) || 0);
-            if (hasNewMessages || hasNewUnread) {
-              setSelectedChat(freshSelected);
+            if (hasNewMessages) {
+              setSelectedChat({ ...freshSelected, unreadCount: 0 });
             }
           }
         }
@@ -262,50 +326,55 @@ export default function DashboardPage() {
     }
   };
 
-  // Fetch messages for a chat
-  const fetchMessages = async (silent = false) => {
-    if (!selectedInstanceForChats || !selectedChat) return;
+  // Fetch messages for a chat (con protección contra race conditions)
+  const fetchMessages = useCallback(async (silent = false, targetChat?: any, targetInstance?: string) => {
+    const chat = targetChat || selectedChatRef.current;
+    const instance = targetInstance || selectedInstanceRef.current;
+    if (!instance || !chat) return;
+    
+    // Capturar el JID objetivo para proteger contra race conditions
+    const targetJid = chat.remoteJid;
     
     // Evitar parpadeos de carga si ya tenemos mensajes en pantalla
-    const currentJid = messages[0]?.key?.remoteJid;
-    const isDifferentChat = messages.length > 0 && 
-      currentJid !== selectedChat.remoteJid && 
-      currentJid !== selectedChat.originalJid;
-      
-    const shouldShowSpinner = !silent && (messages.length === 0 || isDifferentChat);
-    if (shouldShowSpinner) {
+    if (!silent) {
       setMessagesLoading(true);
-      if (isDifferentChat) setMessages([]);
     }
     
     try {
-      const remoteJid = selectedChat.remoteJid;
-      const originalJid = selectedChat.originalJid;
-      const res = await api.post(`/instances/chats/${selectedInstanceForChats}/messages`, { remoteJid, originalJid });
+      const remoteJid = chat.remoteJid;
+      const originalJid = chat.originalJid;
+      const res = await api.post(`/instances/chats/${instance}/messages`, { remoteJid, originalJid });
       if (res.data?.success) {
         const msgs = res.data.data;
+        
+        // Protección contra race condition: solo actualizar si el chat sigue siendo el mismo
+        if (selectedChatRef.current?.remoteJid !== targetJid) return;
+        
         setMessages(msgs);
         
-        // Mark as read if the chat has unread messages
-        if (selectedChat.unreadCount && selectedChat.unreadCount > 0) {
+        // Marcar como leído SIEMPRE al abrir el chat (no silent = primera carga)
+        // También al hacer polling si aún hay mensajes no leídos del servidor
+        const shouldMarkRead = !silent || (chat.unreadCount && chat.unreadCount > 0);
+        
+        if (shouldMarkRead && !readChatsRef.current.has(targetJid) || !silent) {
           const unreadMsgs = msgs.filter((m: any) => !m.key.fromMe);
           let messageIds: string[] = [];
           
           if (unreadMsgs.length > 0) {
-            // Send all unread message IDs (not just 10) to make sure they all get marked as read
             messageIds = unreadMsgs.map((m: any) => m.key.id);
-          } else if (selectedChat.lastMessage?.key?.id) {
-            // Fallback: use the last message ID to mark the chat read
-            messageIds = [selectedChat.lastMessage.key.id];
+          } else if (chat.lastMessage?.key?.id) {
+            messageIds = [chat.lastMessage.key.id];
           }
           
-          api.post(`/instances/chats/${selectedInstanceForChats}/read`, {
+          // Registrar inmediatamente como leído localmente
+          readChatsRef.current.add(targetJid);
+          
+          api.post(`/instances/chats/${instance}/read`, {
             remoteJid: originalJid || remoteJid,
             messageIds
           }).then(() => {
-            // Update local state to clear unread count immediately
             setChats(prevChats => prevChats.map(c => 
-              (c.remoteJid === selectedChat.remoteJid) ? { ...c, unreadCount: 0 } : c
+              (c.remoteJid === targetJid) ? { ...c, unreadCount: 0 } : c
             ));
             setSelectedChat((prev: any) => prev ? { ...prev, unreadCount: 0 } : prev);
           }).catch(err => {
@@ -318,7 +387,7 @@ export default function DashboardPage() {
     } finally {
       if (!silent) setMessagesLoading(false);
     }
-  };
+  }, []);
 
   // Download media item
   const downloadMedia = async (msgId: string, messageKey: any, messageContent: any) => {
@@ -334,6 +403,7 @@ export default function DashboardPage() {
         const base64Data = res.data.data.base64 || res.data.data;
         const mimetype = messageContent.imageMessage?.mimetype || 
                          messageContent.audioMessage?.mimetype || 
+                         messageContent.videoMessage?.mimetype || 
                          messageContent.documentMessage?.mimetype || 
                          'application/octet-stream';
         
@@ -370,40 +440,79 @@ export default function DashboardPage() {
     }
   };
 
+  // Mantener refs sincronizadas para evitar stale closures en el intervalo
+  useEffect(() => {
+    selectedChatRef.current = selectedChat;
+  }, [selectedChat]);
+  useEffect(() => {
+    selectedInstanceRef.current = selectedInstanceForChats;
+    // Limpiar el registro de chats leídos al cambiar de instancia
+    readChatsRef.current.clear();
+  }, [selectedInstanceForChats]);
+
   // Load chats when tab becomes active or instance changes
   useEffect(() => {
     if (activeTab === 'chats') {
       if (!selectedInstanceForChats && instances.length > 0) {
         const firstConnected = instances.find(i => i.status === 'connected');
         setSelectedInstanceForChats(firstConnected ? firstConnected.instance_name : instances[0].instance_name);
-      } else {
+      } else if (selectedInstanceForChats) {
         fetchChats();
       }
     }
   }, [activeTab, selectedInstanceForChats, instances]);
 
-  // Poll chats & active chat messages
+  // Poll chats & active chat messages (usando refs para evitar stale closures)
   useEffect(() => {
     if (activeTab !== 'chats' || !selectedInstanceForChats) return;
 
     const interval = setInterval(() => {
       fetchChats(true);
-      if (selectedChat) {
-        fetchMessages(true);
+      if (selectedChatRef.current) {
+        fetchMessages(true, selectedChatRef.current, selectedInstanceRef.current);
       }
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [activeTab, selectedInstanceForChats, selectedChat]);
+  }, [activeTab, selectedInstanceForChats, fetchMessages]);
 
   // Load messages when active chat changes
   useEffect(() => {
     if (selectedChat) {
-      fetchMessages();
+      setMessages([]); // Limpiar mensajes previos al cambiar de chat
+      // Limpiar el JID anterior del set de leídos para que se re-marque al cambiar
+      // (no limpiamos, lo mantenemos para que el polling no restaure el badge de chats anteriores)
+      fetchMessages(false, selectedChat, selectedInstanceForChats);
     } else {
       setMessages([]);
     }
-  }, [selectedChat]);
+  }, [selectedChat, fetchMessages]);
+
+  // Cerrar emoji picker al hacer clic fuera
+  useEffect(() => {
+    if (!showEmojiPicker) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        emojiPickerRef.current && !emojiPickerRef.current.contains(e.target as Node) &&
+        emojiButtonRef.current && !emojiButtonRef.current.contains(e.target as Node)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showEmojiPicker]);
+
+  // Auto-scroll inteligente: solo scroll si llegan mensajes nuevos (no en cada render)
+  useEffect(() => {
+    if (messages.length > 0 && messages.length !== prevMessagesCountRef.current) {
+      prevMessagesCountRef.current = messages.length;
+      // Pequeño delay para que el DOM se actualice antes del scroll
+      setTimeout(() => {
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 50);
+    }
+  }, [messages.length]);
 
   const handleCreateInstance = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1001,7 +1110,7 @@ echo $response;`;
                         </div>
 
                         {/* Middle: API Credentials */}
-                        <div className="bg-slate-50 dark:bg-slate-950/50 border border-slate-200/50 dark:border-slate-800/50 rounded-2xl p-4.5 space-y-2.5 text-xs text-left relative z-10">
+                        <div className="bg-slate-50 dark:bg-slate-950/50 border border-slate-200/50 dark:border-slate-800/50 rounded-2xl p-5 space-y-2.5 text-xs text-left relative z-10">
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Instance Name</span>
                             <div className="flex items-center gap-2">
@@ -1048,7 +1157,7 @@ echo $response;`;
                   
                   {/* Select Instance */}
                   <div className="flex items-center gap-2">
-                    <label className="text-xs font-semibold text-slate-500 dark:text-slate-405 whitespace-nowrap">Línea:</label>
+                    <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">Línea:</label>
                     <select
                       value={selectedInstanceForChats}
                       onChange={(e) => {
@@ -1078,9 +1187,9 @@ echo $response;`;
                 {/* Validation warnings */}
                 {instances.length === 0 ? (
                   <div className="flex-1 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-3xl p-8 flex flex-col items-center justify-center text-center space-y-4">
-                    <Smartphone size={48} className="text-slate-350 dark:text-slate-650" />
+                    <Smartphone size={48} className="text-slate-300 dark:text-slate-600" />
                     <div className="space-y-1">
-                      <h4 className="text-sm font-bold text-slate-850 dark:text-slate-150">No hay líneas vinculadas</h4>
+                      <h4 className="text-sm font-bold text-slate-800 dark:text-white">No hay líneas vinculadas</h4>
                       <p className="text-xs text-slate-400 max-w-sm">Crea y escanea una línea de WhatsApp en la pestaña "Líneas / QR" para poder comenzar a chatear.</p>
                     </div>
                   </div>
@@ -1092,16 +1201,16 @@ echo $response;`;
                   <div className="flex-1 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-3xl p-8 flex flex-col items-center justify-center text-center space-y-4">
                     <AlertCircle size={48} className="text-amber-500" />
                     <div className="space-y-1">
-                      <h4 className="text-sm font-bold text-slate-855 dark:text-slate-145">Línea Desconectada</h4>
+                      <h4 className="text-sm font-bold text-slate-800 dark:text-white">Línea Desconectada</h4>
                       <p className="text-xs text-slate-400 max-w-sm">La línea "{selectedInstanceForChats}" no está vinculada. Por favor, ve a la pestaña "Líneas / QR", obtén el código QR y escanéalo con tu teléfono.</p>
                     </div>
                   </div>
                 ) : (
                   /* Connected Chat Interface */
-                  <div className="flex-1 min-h-0 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-3xl overflow-hidden grid grid-cols-1 md:grid-cols-12 shadow-sm text-left">
+                  <div className="flex-1 min-h-0 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-3xl overflow-hidden flex md:grid md:grid-cols-12 shadow-sm text-left">
                     
                     {/* LEFT PANEL: Chats List */}
-                    <div className="md:col-span-4 border-r border-slate-200/60 dark:border-slate-800 flex flex-col min-h-0">
+                    <div className={`md:col-span-4 border-r border-slate-200/60 dark:border-slate-800 flex-col min-h-0 w-full md:w-auto ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
                       {/* Search Bar */}
                       <div className="p-4 border-b border-slate-200/60 dark:border-slate-800 relative">
                         <input
@@ -1144,6 +1253,8 @@ echo $response;`;
                                   lastMsgText = content.extendedTextMessage.text;
                                 } else if (content.imageMessage) {
                                   lastMsgText = '📷 Imagen';
+                                } else if (content.videoMessage) {
+                                  lastMsgText = '🎥 Video';
                                 } else if (content.audioMessage) {
                                   lastMsgText = '🎵 Audio';
                                 } else if (content.documentMessage) {
@@ -1154,28 +1265,6 @@ echo $response;`;
                                     : 'Mensaje';
                                 }
                               }
-
-                              // Helper for timestamp formatting
-                              const formatTimeLocal = (timestamp: number) => {
-                                if (!timestamp) return '';
-                                const date = new Date(timestamp * (timestamp < 10000000000 ? 1000 : 1));
-                                const now = new Date();
-                                
-                                // Check if today
-                                if (date.toDateString() === now.toDateString()) {
-                                  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                                }
-                                
-                                // Check if yesterday
-                                const yesterday = new Date(now);
-                                yesterday.setDate(now.getDate() - 1);
-                                if (date.toDateString() === yesterday.toDateString()) {
-                                  return 'Ayer';
-                                }
-                                
-                                // Otherwise return date
-                                return date.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: '2-digit' });
-                              };
 
                               return (
                                 <button
@@ -1196,7 +1285,7 @@ echo $response;`;
                                   {/* Details */}
                                   <div className="flex-1 min-w-0 space-y-0.5">
                                     <div className="flex items-center justify-between">
-                                      <span className={`text-xs truncate ${isActive ? 'text-emerald-600 dark:text-emerald-400 font-bold' : isUnread ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-500 dark:text-slate-450 font-normal'}`}>
+                                      <span className={`text-xs truncate ${isActive ? 'text-emerald-600 dark:text-emerald-400 font-bold' : isUnread ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-500 dark:text-slate-400 font-normal'}`}>
                                         {contactName}
                                       </span>
                                       <span className={`text-[10px] font-medium ${isUnread ? 'text-emerald-500 font-bold' : 'text-slate-400'}`}>
@@ -1204,7 +1293,7 @@ echo $response;`;
                                       </span>
                                     </div>
                                     <div className="flex items-center justify-between mt-0.5">
-                                      <p className={`text-[11px] truncate flex-1 flex items-center gap-1 ${isUnread ? 'text-slate-800 dark:text-slate-200 font-semibold' : 'text-slate-450 dark:text-slate-500 font-normal'}`}>
+                                      <p className={`text-[11px] truncate flex-1 flex items-center gap-1 ${isUnread ? 'text-slate-800 dark:text-slate-200 font-semibold' : 'text-slate-400 dark:text-slate-500 font-normal'}`}>
                                         <span className="truncate flex-1"><AppleEmojiText text={lastMsgText} /></span>
                                       </p>
                                       {isUnread && (
@@ -1222,13 +1311,21 @@ echo $response;`;
                     </div>
 
                     {/* RIGHT PANEL: Message Area */}
-                    <div className="md:col-span-8 flex flex-col min-h-0 bg-slate-50/30 dark:bg-slate-950/10">
+                    <div className={`md:col-span-8 flex-col min-h-0 bg-slate-50/30 dark:bg-slate-950/10 w-full md:w-auto ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
                       {selectedChat ? (
                         <div className="flex-1 flex flex-col min-h-0">
                           
                           {/* Chat Window Header */}
                           <div className="p-4 bg-white dark:bg-slate-900 border-b border-slate-200/50 dark:border-slate-800 flex items-center justify-between">
                             <div className="flex items-center gap-3">
+                              {/* Botón volver en mobile */}
+                              <button
+                                type="button"
+                                onClick={() => setSelectedChat(null)}
+                                className="md:hidden p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-500 dark:text-slate-400 cursor-pointer"
+                              >
+                                <ArrowLeft size={18} />
+                              </button>
                               <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden border border-slate-200/50 dark:border-slate-700/50">
                                 {selectedChat.profilePicUrl ? (
                                   <img src={selectedChat.profilePicUrl} alt="" className="w-full h-full object-cover" />
@@ -1261,18 +1358,23 @@ echo $response;`;
                                   const fromMe = msg.key?.fromMe;
                                   const date = new Date(msg.messageTimestamp * (msg.messageTimestamp < 10000000000 ? 1000 : 1));
                                   const timestamp = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                                  const msgId = msg.id;
+                                  const msgId = msg.id || msg.key?.id || `msg_${msg.messageTimestamp}_${Math.random()}`;
 
                                   // Determine checks icon
                                   let statusIcon = null;
-                                  if (fromMe && msg.MessageUpdate) {
-                                    const statuses = msg.MessageUpdate.map((u: any) => u.status);
-                                    if (statuses.includes('READ')) {
-                                      statusIcon = <span className="text-[9px] text-sky-500 font-bold ml-1">✓✓</span>;
-                                    } else if (statuses.includes('DELIVERY_ACK')) {
-                                      statusIcon = <span className="text-[9px] text-slate-450 font-bold ml-1">✓✓</span>;
-                                    } else if (statuses.includes('SERVER_ACK')) {
-                                      statusIcon = <span className="text-[9px] text-slate-450 font-bold ml-1">✓</span>;
+                                  if (fromMe) {
+                                    if (msg.MessageUpdate) {
+                                      const statuses = msg.MessageUpdate.map((u: any) => u.status);
+                                      if (statuses.includes('READ')) {
+                                        statusIcon = <span className="text-[9px] text-sky-500 font-bold ml-1">✓✓</span>;
+                                      } else if (statuses.includes('DELIVERY_ACK')) {
+                                        statusIcon = <span className="text-[9px] text-slate-400 font-bold ml-1">✓✓</span>;
+                                      } else if (statuses.includes('SERVER_ACK')) {
+                                        statusIcon = <span className="text-[9px] text-slate-400 font-bold ml-1">✓</span>;
+                                      }
+                                    } else {
+                                      // Mensajes enviados sin MessageUpdate aún: mostrar ✓ por defecto
+                                      statusIcon = <span className="text-[9px] text-slate-400 font-bold ml-1">✓</span>;
                                     }
                                   }
 
@@ -1295,7 +1397,7 @@ echo $response;`;
                                               }}
                                             />
                                             {content.imageMessage.caption && (
-                                              <p className="text-[11px] leading-relaxed text-slate-700 dark:text-slate-305">{content.imageMessage.caption}</p>
+                                              <p className="text-[11px] leading-relaxed text-slate-700 dark:text-slate-300">{content.imageMessage.caption}</p>
                                             )}
                                           </div>
                                         );
@@ -1356,6 +1458,33 @@ echo $response;`;
                                       );
                                     }
 
+                                    if (content.videoMessage) {
+                                      if (loadedMedia[msgId]) {
+                                        return (
+                                          <div className="space-y-1.5 text-left">
+                                            <video 
+                                              controls 
+                                              src={loadedMedia[msgId]} 
+                                              className="max-w-[240px] rounded-xl border border-slate-200 dark:border-slate-800" 
+                                            />
+                                            {content.videoMessage.caption && (
+                                              <p className="text-[11px] leading-relaxed text-slate-700 dark:text-slate-300">{content.videoMessage.caption}</p>
+                                            )}
+                                          </div>
+                                        );
+                                      }
+                                      return (
+                                        <button 
+                                          onClick={() => downloadMedia(msgId, msg.key, content)}
+                                          disabled={mediaLoadingStates[msgId]}
+                                          type="button"
+                                          className="text-[10px] px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold rounded-xl transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                                        >
+                                          {mediaLoadingStates[msgId] ? 'Descargando...' : '🎥 Ver Video'}
+                                        </button>
+                                      );
+                                    }
+
                                     const text = content.conversation || content.extendedTextMessage?.text || '';
                                     return (
                                       <p className="text-[11px] leading-relaxed break-words text-left">
@@ -1371,11 +1500,11 @@ echo $response;`;
                                     >
                                       {/* Sender header for groups */}
                                       {!fromMe && selectedChat.remoteJid.endsWith('@g.us') && msg.pushName && (
-                                        <span className="text-[9px] font-bold text-emerald-500 mb-0.5 ml-1.5">{msg.pushName}</span>
+                                        <span className={`text-[9px] font-bold mb-0.5 ml-1.5 ${getSenderColor(msg.pushName)}`}>{msg.pushName}</span>
                                       )}
 
                                       {/* Bubble */}
-                                      <div className={`p-3 rounded-2xl shadow-sm text-slate-800 dark:text-slate-150 ${fromMe ? 'bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 rounded-tr-none' : 'bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 rounded-tl-none'}`}>
+                                      <div className={`p-3 rounded-2xl shadow-sm text-slate-800 dark:text-slate-100 ${fromMe ? 'bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 rounded-tr-none' : 'bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 rounded-tl-none'}`}>
                                         {renderMessageContent()}
                                         
                                         {/* Timestamp and Checks */}
@@ -1389,18 +1518,14 @@ echo $response;`;
                                 })
                             )}
                             
-                            {/* Auto-scroll anchor */}
-                            <div ref={(el) => {
-                              if (el && !messagesLoading) {
-                                el.scrollIntoView({ behavior: 'smooth' });
-                              }
-                            }} />
+                            {/* Auto-scroll anchor (controlado por useEffect inteligente) */}
+                            <div ref={bottomRef} />
                           </div>
 
                           {/* Chat Window Send Form */}
                           <div className="relative">
                             {showEmojiPicker && (
-                              <div className="absolute bottom-[100%] mb-2 left-4 z-50 animate-fadeIn shadow-premium-lg rounded-2xl overflow-hidden">
+                              <div ref={emojiPickerRef} className="absolute bottom-[100%] mb-2 left-4 z-50 animate-fadeIn shadow-premium-lg rounded-2xl overflow-hidden">
                                 <EmojiPicker
                                   onEmojiClick={(emojiData) => {
                                     setNewMessageText(prev => prev + emojiData.emoji);
@@ -1416,6 +1541,7 @@ echo $response;`;
                               className="p-4 bg-white dark:bg-slate-900 border-t border-slate-200/50 dark:border-slate-800 flex items-center gap-2"
                             >
                               <button
+                                ref={emojiButtonRef}
                                 type="button"
                                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                                 className={`p-2 transition-colors cursor-pointer rounded-xl ${showEmojiPicker ? 'bg-emerald-500/10 text-emerald-500' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
@@ -1444,7 +1570,7 @@ echo $response;`;
                       ) : (
                         <div className="my-auto text-center space-y-2">
                           <MessageSquare size={36} className="text-slate-300 dark:text-slate-700 mx-auto animate-bounce" />
-                          <p className="text-xs text-slate-450 dark:text-slate-500">Selecciona una conversación en la lista izquierda para comenzar a chatear.</p>
+                          <p className="text-xs text-slate-400 dark:text-slate-500">Selecciona una conversación en la lista izquierda para comenzar a chatear.</p>
                         </div>
                       )}
                     </div>
@@ -1609,7 +1735,7 @@ echo $response;`;
 
                     {/* Code Container */}
                     <div className="relative group">
-                      <pre className="bg-slate-950 text-emerald-400 dark:text-emerald-300 font-mono text-[10.5px] p-4.5 rounded-2xl overflow-x-auto leading-relaxed border border-slate-850 shadow-inner">
+                      <pre className="bg-slate-950 text-emerald-400 dark:text-emerald-300 font-mono text-[10.5px] p-5 rounded-2xl overflow-x-auto leading-relaxed border border-slate-800 shadow-inner">
                         {getDocCode()}
                       </pre>
                       
@@ -1756,7 +1882,7 @@ echo $response;`;
               <p className="text-[10px] text-slate-400 font-bold">Instancia: <strong className="text-emerald-500">{activeQrInstance}</strong></p>
             </div>
 
-            <div className="w-52 h-52 bg-white rounded-2xl mx-auto flex items-center justify-center border border-slate-250/20 shadow-inner overflow-hidden relative">
+            <div className="w-52 h-52 bg-white rounded-2xl mx-auto flex items-center justify-center border border-slate-200/20 shadow-inner overflow-hidden relative">
               {qrLoading ? (
                 <div className="flex flex-col items-center gap-2">
                   <span className="w-6 h-6 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
@@ -1874,7 +2000,7 @@ echo $response;`;
                     setNewInstanceName('');
                     setCreateError(null);
                   }}
-                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-250 dark:bg-slate-950 dark:hover:bg-slate-800 text-xs text-slate-700 dark:text-slate-300 font-bold rounded-2xl transition-all cursor-pointer border border-slate-200/20"
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-950 dark:hover:bg-slate-800 text-xs text-slate-700 dark:text-slate-300 font-bold rounded-2xl transition-all cursor-pointer border border-slate-200/20"
                 >
                   Cancelar
                 </button>
