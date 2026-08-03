@@ -827,7 +827,7 @@ echo $response;`;
   const maxInstances = subscription?.max_instances || 1;
 
   return (
-    <div className="flex h-screen bg-surface-50 dark:bg-surface-950 text-slate-800 dark:text-slate-100 transition-colors duration-300">
+    <div className="flex h-screen mesh-gradient text-slate-800 dark:text-slate-100 transition-colors duration-300">
       
       {/* Toast Notification */}
       {notification && (
@@ -851,12 +851,12 @@ echo $response;`;
 
       {/* Sidebar */}
       <aside 
-        className={`bg-white dark:bg-slate-900 border-r border-slate-200/60 dark:border-slate-800/60 flex flex-col transition-all duration-300 shadow-premium z-40 ${
+        className={`bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex flex-col transition-all duration-300 shadow-premium z-40 ${
           sidebarOpen ? 'w-64' : 'w-20'
         } ${sidebarOpen ? 'fixed lg:relative h-full' : 'hidden lg:flex'}`}
       >
         {/* Brand header */}
-        <div className={`h-16 flex items-center ${sidebarOpen ? 'justify-between px-5' : 'justify-center'} border-b border-slate-200/60 dark:border-slate-800/60`}>
+        <div className={`h-16 flex items-center ${sidebarOpen ? 'justify-between px-5' : 'justify-center'}`}>
           {sidebarOpen && (
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
@@ -935,7 +935,7 @@ echo $response;`;
       <div className="flex-1 flex flex-col overflow-hidden">
         
         {/* Header Bar */}
-        <header className="h-16 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60 px-6 flex items-center justify-between z-30 transition-colors duration-300">
+        <header className="h-16 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl px-6 flex items-center justify-between z-30 transition-colors duration-300">
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setSidebarOpen(true)}
@@ -950,7 +950,7 @@ echo $response;`;
 
           <div className="flex items-center gap-3.5">
             {/* Online Status */}
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl border border-emerald-200/50 dark:border-emerald-800/20">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl">
               <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
               <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">En Línea</span>
             </div>
@@ -965,7 +965,7 @@ echo $response;`;
             </button>
 
             {/* User Profile Info */}
-            <div className="flex items-center gap-2.5 pl-3 border-l border-slate-200 dark:border-slate-800">
+            <div className="flex items-center gap-2.5 pl-1">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white text-xs font-bold shadow-md shadow-emerald-500/20 uppercase">
                 {user?.email?.charAt(0)}
               </div>
@@ -978,7 +978,7 @@ echo $response;`;
         </header>
 
         {/* Interactive Content Container */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-white dark:bg-slate-950/40 relative">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-transparent relative">
           
           {/* Active Section Renderer */}
           <div className="max-w-7xl mx-auto space-y-6">
@@ -1275,7 +1275,7 @@ echo $response;`;
                         setSelectedInstanceForChats(e.target.value);
                         setSelectedChat(null);
                       }}
-                      className="px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-xl text-xs text-slate-800 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium font-sans"
+                      className="px-3 py-1.5 bg-white/60 dark:bg-slate-900/60 rounded-xl text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/10 font-medium font-sans border-0 shadow-inner"
                     >
                       <option value="" disabled>Seleccionar línea...</option>
                       {instances.map(inst => (
@@ -1288,7 +1288,7 @@ echo $response;`;
                       onClick={() => fetchChats(false)}
                       disabled={chatsLoading}
                       type="button"
-                      className="p-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 text-slate-600 dark:text-slate-400 cursor-pointer"
+                      className="p-2 bg-white/60 dark:bg-slate-900/60 rounded-xl hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-colors disabled:opacity-50 text-slate-600 dark:text-slate-400 cursor-pointer border-0 shadow-sm"
                     >
                       <RefreshCw size={14} className={chatsLoading ? 'animate-spin' : ''} />
                     </button>
@@ -1318,24 +1318,24 @@ echo $response;`;
                   </div>
                 ) : (
                   /* Connected Chat Interface */
-                  <div className="flex-1 min-h-0 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-3xl overflow-hidden flex md:grid md:grid-cols-12 shadow-sm text-left">
+                  <div className="flex-1 min-h-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md rounded-3xl overflow-hidden flex md:grid md:grid-cols-12 shadow-premium-lg text-left">
                     
                     {/* LEFT PANEL: Chats List */}
-                    <div className={`md:col-span-4 border-r border-slate-200/60 dark:border-slate-800 flex-col min-h-0 w-full md:w-auto ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
+                    <div className={`md:col-span-4 bg-slate-50/45 dark:bg-slate-950/20 flex-col min-h-0 w-full md:w-auto ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
                       {/* Search Bar */}
-                      <div className="p-4 border-b border-slate-200/60 dark:border-slate-800 relative">
+                      <div className="p-4 relative">
                         <input
                           type="text"
                           placeholder="Buscar conversación..."
                           value={chatsSearchQuery}
                           onChange={(e) => setChatsSearchQuery(e.target.value)}
-                          className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium"
+                          className="w-full pl-9 pr-4 py-2.5 bg-white/60 dark:bg-slate-900/40 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 font-medium transition-all shadow-sm"
                         />
                         <Search size={14} className="absolute left-7 top-1/2 -translate-y-1/2 text-slate-400" />
                       </div>
 
                       {/* Chats List Body */}
-                      <div className="flex-1 overflow-y-auto min-h-0 divide-y divide-slate-100 dark:divide-slate-800/40">
+                      <div className="flex-1 overflow-y-auto min-h-0 p-2 space-y-1 scrollbar-hide">
                         {chatsLoading && chats.length === 0 ? (
                           <div className="p-4 text-center text-xs text-slate-400 animate-pulse">Cargando conversaciones...</div>
                         ) : chatsError ? (
@@ -1374,57 +1374,57 @@ echo $response;`;
                                 }
                               }
 
-                              return (
-                                <button
-                                  key={chat.remoteJid}
-                                  onClick={() => setSelectedChat(chat)}
-                                  type="button"
-                                  className={`w-full py-[18px] px-4 flex items-center gap-3 text-left transition-colors cursor-pointer border-b border-slate-100/80 dark:border-slate-800/30 ${isActive ? 'bg-slate-100/70 dark:bg-slate-800/40' : 'hover:bg-slate-50/50 dark:hover:bg-slate-950/10'}`}
-                                >
-                                  {/* Profile Photo */}
-                                  <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 relative overflow-hidden border border-slate-200/50 dark:border-slate-700/50">
-                                    {chat.profilePicUrl ? (
-                                      <img src={chat.profilePicUrl} alt="" className="w-full h-full object-cover" />
-                                    ) : (
-                                      <MessageCircle size={18} className="text-slate-400" />
-                                    )}
-                                  </div>
-
-                                  {/* Details */}
-                                  <div className="flex-1 min-w-0 space-y-1">
-                                    <div className="flex items-center justify-between">
-                                      <span className={`text-xs truncate ${isActive || isUnread ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-500 dark:text-slate-400 font-normal'}`}>
-                                        {contactName}
-                                      </span>
-                                      <span className={`text-[10px] font-medium ${isUnread ? 'text-emerald-500 font-bold' : 'text-slate-400'}`}>
-                                        {formatTimeLocal(chat.lastMessage?.messageTimestamp)}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center justify-between mt-1">
-                                      <p className={`text-[11px] leading-relaxed pb-0.5 truncate flex-1 flex items-center gap-1 ${isUnread ? 'text-slate-800 dark:text-slate-200 font-semibold' : 'text-slate-400 dark:text-slate-500 font-normal'}`}>
-                                        <span className="flex-1 block truncate"><AppleEmojiText text={lastMsgText} /></span>
-                                      </p>
-                                      {isUnread && (
-                                        <div className="bg-emerald-500 text-white text-[10px] font-bold px-1.5 min-w-[1.25rem] h-5 rounded-full flex items-center justify-center flex-shrink-0 ml-2 shadow-sm">
-                                          {unreadCount}
-                                        </div>
+                                return (
+                                  <button
+                                    key={chat.remoteJid}
+                                    onClick={() => setSelectedChat(chat)}
+                                    type="button"
+                                    className={`w-full py-3.5 px-3.5 flex items-center gap-3 text-left transition-all duration-300 cursor-pointer rounded-2xl ${isActive ? 'bg-gradient-to-r from-emerald-500/10 to-teal-500/5 dark:from-emerald-950/40 dark:to-teal-950/20 shadow-sm' : 'hover:bg-white/45 dark:hover:bg-slate-800/20'}`}
+                                  >
+                                    {/* Profile Photo */}
+                                    <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center flex-shrink-0 relative overflow-hidden shadow-sm">
+                                      {chat.profilePicUrl ? (
+                                        <img src={chat.profilePicUrl} alt="" className="w-full h-full object-cover" />
+                                      ) : (
+                                        <MessageCircle size={18} className="text-slate-400" />
                                       )}
                                     </div>
-                                  </div>
-                                </button>
-                              );
+
+                                    {/* Details */}
+                                    <div className="flex-1 min-w-0 space-y-1">
+                                      <div className="flex items-center justify-between">
+                                        <span className={`text-xs truncate ${isActive || isUnread ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-500 dark:text-slate-400 font-normal'}`}>
+                                          {contactName}
+                                        </span>
+                                        <span className={`text-[10px] font-medium ${isUnread ? 'text-emerald-500 font-bold' : 'text-slate-400'}`}>
+                                          {formatTimeLocal(chat.lastMessage?.messageTimestamp)}
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center justify-between mt-1">
+                                        <p className={`text-[11px] leading-relaxed pb-0.5 truncate flex-1 flex items-center gap-1 ${isUnread ? 'text-slate-800 dark:text-slate-200 font-semibold' : 'text-slate-400 dark:text-slate-500 font-normal'}`}>
+                                          <span className="flex-1 block truncate"><AppleEmojiText text={lastMsgText} /></span>
+                                        </p>
+                                        {isUnread && (
+                                          <div className="bg-emerald-500 text-white text-[10px] font-bold px-1.5 min-w-[1.25rem] h-5 rounded-full flex items-center justify-center flex-shrink-0 ml-2 shadow-sm">
+                                            {unreadCount}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </button>
+                                );
                             })
                         )}
                       </div>
                     </div>
 
                     {/* RIGHT PANEL: Message Area */}
-                    <div className={`md:col-span-8 flex-col min-h-0 bg-slate-50/30 dark:bg-slate-950/10 w-full md:w-auto ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
+                    <div className={`md:col-span-8 flex-col min-h-0 bg-white/20 dark:bg-slate-900/10 w-full md:w-auto ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
                       {selectedChat ? (
                         <div className="flex-1 flex flex-col min-h-0">
                           
                           {/* Chat Window Header */}
-                          <div className="p-4 bg-white dark:bg-slate-900 border-b border-slate-200/50 dark:border-slate-800 flex items-center justify-between">
+                          <div className="p-4 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md flex items-center justify-between shadow-sm/5">
                             <div className="flex items-center gap-3">
                               {/* Botón volver en mobile */}
                               <button
@@ -1434,7 +1434,7 @@ echo $response;`;
                               >
                                 <ArrowLeft size={18} />
                               </button>
-                              <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden border border-slate-200/50 dark:border-slate-700/50">
+                              <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center overflow-hidden shadow-sm">
                                 {selectedChat.profilePicUrl ? (
                                   <img src={selectedChat.profilePicUrl} alt="" className="w-full h-full object-cover" />
                                 ) : (
@@ -1612,7 +1612,7 @@ echo $response;`;
                                       )}
 
                                       {/* Bubble */}
-                                      <div className={`p-3 rounded-2xl shadow-sm text-slate-800 dark:text-slate-100 ${fromMe ? 'bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 rounded-tr-none' : 'bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 rounded-tl-none'}`}>
+                                      <div className={`p-3 rounded-2xl shadow-sm text-slate-800 dark:text-slate-100 ${fromMe ? 'bg-gradient-to-br from-emerald-100/90 to-teal-50/90 dark:from-emerald-900/40 dark:to-teal-900/30 text-emerald-950 dark:text-emerald-50 rounded-tr-none' : 'bg-gradient-to-br from-indigo-50/90 to-slate-100/90 dark:from-slate-800/80 dark:to-slate-800/40 text-indigo-950 dark:text-slate-100 rounded-tl-none'}`}>
                                         {renderMessageContent()}
                                         
                                         {/* Timestamp and Checks */}
@@ -1646,7 +1646,7 @@ echo $response;`;
                             )}
                             <form 
                               onSubmit={handleSendChatMessage}
-                              className="p-4 bg-white dark:bg-slate-900 border-t border-slate-200/50 dark:border-slate-800 flex items-center gap-2"
+                              className="p-4 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md flex items-center gap-2.5"
                             >
                               <button
                                 ref={emojiButtonRef}
@@ -1662,7 +1662,7 @@ echo $response;`;
                                 onChange={(e) => setNewMessageText(e.target.value)}
                                 placeholder="Escribe un mensaje aquí..."
                                 disabled={sendingMessage}
-                                className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium disabled:opacity-50"
+                                className="flex-1 px-4 py-3 bg-white/60 dark:bg-slate-900/40 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 font-medium disabled:opacity-50 transition-all shadow-sm"
                               />
                               <button
                                 type="submit"
