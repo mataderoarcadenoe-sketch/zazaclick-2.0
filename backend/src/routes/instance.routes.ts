@@ -546,4 +546,53 @@ router.get('/contact-diag/:instanceName', async (req, res) => {
   }
 });
 
+/**
+ * POST /sync-contacts/:instanceName - Forzar sincronización de todos los contactos a Redis
+ */
+router.post('/sync-contacts/:instanceName', async (req, res) => {
+  const { instanceName } = req.params;
+  try {
+    const rawContacts = await EvolutionService.getRawContacts(instanceName);
+    if (!Array.isArray(rawContacts)) {
+      return res.json({ success: false, error: 'No se obtuvieron contactos', data: rawContacts });
+    }
+
+    let savedCount = 0;
+    let withName = 0;
+    let withNotify = 0;
+
+    for (const contact of rawContacts) {
+      const jid = contact.id || contact.remoteJid;
+      if (!jid) continue;
+
+      const agendaName = contact.name || undefined;
+      const notifyName = contact.notify || contact.pushName || undefined;
+
+      if (agendaName) withName++;
+      if (notifyName) withNotify++;
+
+      if (agendaName || notifyName) {
+        await EvolutionService.saveContactName(instanceName, jid, agendaName, notifyName);
+        savedCount++;
+      }
+    }
+
+    res.json({
+      success: true,
+      totalContacts: rawContacts.length,
+      savedToRedis: savedCount,
+      withAgendaName: withName,
+      withNotifyName: withNotify,
+      sample: rawContacts.slice(0, 3).map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        notify: c.notify,
+        pushName: c.pushName
+      }))
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 export default router;
