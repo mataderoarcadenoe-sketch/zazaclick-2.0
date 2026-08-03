@@ -609,14 +609,16 @@ export class EvolutionService {
     try {
       const BACKEND_URL = process.env.BACKEND_URL || 'https://zaza-click-20-production.up.railway.app';
       const response = await api.post(`/webhook/set/${instanceName}`, {
-        enabled: true,
-        url: `${BACKEND_URL}/api/webhooks/whatsapp`,
-        webhookByEvents: false,
-        events: [
-          'MESSAGES_UPSERT',
-          'CHATS_UPDATE',
-          'MESSAGES_UPDATE'
-        ]
+        webhook: {
+          enabled: true,
+          url: `${BACKEND_URL}/api/webhooks/whatsapp`,
+          webhookByEvents: false,
+          events: [
+            'MESSAGES_UPSERT',
+            'CHATS_UPDATE',
+            'MESSAGES_UPDATE'
+          ]
+        }
       });
       return response.status === 200 || response.data?.success === true;
     } catch (err: any) {
