@@ -68,17 +68,10 @@ export class EvolutionService {
     return err.message;
   }
 
-  /**
-   * Crear una nueva instancia de WhatsApp para el cliente
-   */
   public static async createInstance(instanceName: string): Promise<{ success: boolean; instance?: any; error?: string; status?: number }> {
     try {
       const BACKEND_URL = process.env.BACKEND_URL || 'https://zaza-click-20-production.up.railway.app';
-      
-      // Priorizar la red interna privada de Railway para la comunicación local entre contenedores
-      const webhookUrl = process.env.RAILWAY_PRIVATE_DOMAIN
-        ? `http://${process.env.RAILWAY_PRIVATE_DOMAIN}:${process.env.PORT || 3000}/api/webhooks/whatsapp`
-        : `${BACKEND_URL}/api/webhooks/whatsapp`;
+      const webhookUrl = `${BACKEND_URL}/api/webhooks/whatsapp`;
         
       console.log(`🔌 [EvolutionService] Registrando webhook en creación: ${webhookUrl}`);
 
@@ -628,12 +621,9 @@ export class EvolutionService {
   public static async configureWebhook(instanceName: string): Promise<boolean> {
     try {
       const BACKEND_URL = process.env.BACKEND_URL || 'https://zaza-click-20-production.up.railway.app';
-      
-      const webhookUrl = process.env.RAILWAY_PRIVATE_DOMAIN
-        ? `http://${process.env.RAILWAY_PRIVATE_DOMAIN}:${process.env.PORT || 3000}/api/webhooks/whatsapp`
-        : `${BACKEND_URL}/api/webhooks/whatsapp`;
+      const webhookUrl = `${BACKEND_URL}/api/webhooks/whatsapp`;
         
-      console.log(`🔌 [EvolutionService] Sincronizando webhook interno para ${instanceName}: ${webhookUrl}`);
+      console.log(`🔌 [EvolutionService] Sincronizando webhook público para ${instanceName}: ${webhookUrl}`);
 
       const response = await api.post(`/webhook/set/${instanceName}`, {
         webhook: {
