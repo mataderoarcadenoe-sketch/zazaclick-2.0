@@ -1233,7 +1233,7 @@ echo $response;`;
                         </div>
 
                         {/* Middle: API Credentials */}
-                        <div className="bg-slate-50 dark:bg-slate-950/50 border border-slate-200/50 dark:border-slate-800/50 rounded-2xl p-5 space-y-2.5 text-xs text-left relative z-10">
+                        <div className="bg-slate-50 dark:bg-slate-950/50 rounded-2xl p-5 space-y-2.5 text-xs text-left relative z-10">
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Instance Name</span>
                             <div className="flex items-center gap-2">
@@ -1809,7 +1809,7 @@ echo $response;`;
                       )}
                     </div>
 
-                    <div className="p-5 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 border border-indigo-500/10 rounded-2xl text-left space-y-2">
+                    <div className="p-5 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 rounded-2xl text-left space-y-2">
                       <h5 className="text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
                         <Sparkles size={14} className="text-indigo-500" />
                         <span>Consejo Rápido</span>
@@ -1936,7 +1936,7 @@ echo $response;`;
                       </div>
                     </div>
 
-                    <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200/50 dark:border-slate-800/40 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                    <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
                       Para solicitar la ampliación de tu límite de líneas de WhatsApp, modificaciones de plan o cancelación, contacta con tu administrador.
                     </div>
                   </div>
