@@ -7,7 +7,8 @@ import {
   LogOut, RefreshCw, Plus, Key, Trash2, Smartphone, CheckCircle2, 
   AlertCircle, Copy, Send, LayoutDashboard, Terminal, 
   Moon, Sun, Menu, X, Check, Play, ExternalLink, Sparkles, BookOpen, Clock,
-  MessageSquare, Search, MessageCircle, Smile, ArrowLeft
+  MessageSquare, Search, MessageCircle, Smile, ArrowLeft,
+  Paperclip, FileText, Image, Video, Download
 } from 'lucide-react';
 import EmojiPicker, { Theme, EmojiStyle, Emoji } from 'emoji-picker-react';
 import { parse } from '@twemoji/parser';
@@ -160,6 +161,11 @@ export default function DashboardPage() {
   const [mediaLoadingStates, setMediaLoadingStates] = useState<Record<string, boolean>>({});
   const [loadedMedia, setLoadedMedia] = useState<Record<string, string>>({}); // Maps message ID to local media source (data URL)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [attachedFileBase64, setAttachedFileBase64] = useState<string | null>(null);
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const [attachmentPreview, setAttachmentPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Refs para scroll inteligente y emoji picker click-outside
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -369,6 +375,27 @@ export default function DashboardPage() {
         
         setMessages(msgs);
         
+        // Auto-descarga de archivos multimedia recientes en segundo plano
+        const mediaMsgs = msgs.filter((m: any) => 
+          m.message && (m.message.imageMessage || m.message.videoMessage || m.message.audioMessage || m.message.documentMessage)
+        );
+        if (mediaMsgs.length > 0) {
+          setMediaLoadingStates(prevLoading => {
+            setLoadedMedia(prevLoaded => {
+              mediaMsgs.slice(-15).forEach((m: any) => {
+                const mId = m.id || m.key?.id;
+                if (mId && !prevLoaded[mId] && !prevLoading[mId]) {
+                  setTimeout(() => {
+                    downloadMedia(mId, m.key, m.message, instance);
+                  }, 150);
+                }
+              });
+              return prevLoaded;
+            });
+            return prevLoading;
+          });
+        }
+        
         // Marcar como leído SIEMPRE al abrir el chat (no silent = primera carga)
         // También al hacer polling si aún hay mensajes no leídos del servidor
         const shouldMarkRead = !silent || (chat.unreadCount && chat.unreadCount > 0);
@@ -409,12 +436,13 @@ export default function DashboardPage() {
   }, []);
 
   // Download media item
-  const downloadMedia = async (msgId: string, messageKey: any, messageContent: any) => {
-    if (loadedMedia[msgId] || mediaLoadingStates[msgId]) return;
+  const downloadMedia = async (msgId: string, messageKey: any, messageContent: any, instanceName?: string) => {
+    const activeInstance = instanceName || selectedInstanceForChats;
+    if (!activeInstance || loadedMedia[msgId] || mediaLoadingStates[msgId]) return;
     
     setMediaLoadingStates(prev => ({ ...prev, [msgId]: true }));
     try {
-      const res = await api.post(`/instances/chats/${selectedInstanceForChats}/media`, {
+      const res = await api.post(`/instances/chats/${activeInstance}/media`, {
         messageKey,
         messageContent
       });
@@ -436,24 +464,116 @@ export default function DashboardPage() {
     }
   };
 
-  // Send chat message
+  // Trigger file input dialog
+  const handleTriggerFileInput = (type: 'image' | 'video' | 'document') => {
+    setShowAttachMenu(false);
+    if (!fileInputRef.current) return;
+    
+    if (type === 'image') {
+      fileInputRef.current.accept = 'image/*';
+    } else if (type === 'video') {
+      fileInputRef.current.accept = 'video/*';
+    } else {
+      fileInputRef.current.accept = '*/*';
+    }
+    fileInputRef.current.click();
+  };
+
+  // Handle file selection
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setAttachedFile(file);
+    
+    // Generar previsualización
+    if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
+      const previewUrl = URL.createObjectURL(file);
+      setAttachmentPreview(previewUrl);
+    } else {
+      setAttachmentPreview(null);
+    }
+
+    // Convertir a base64
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        const base64String = reader.result.split(',')[1];
+        setAttachedFileBase64(base64String);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Clear current attachment
+  const handleClearAttachment = () => {
+    setAttachedFile(null);
+    setAttachedFileBase64(null);
+    if (attachmentPreview) {
+      URL.revokeObjectURL(attachmentPreview);
+      setAttachmentPreview(null);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Send chat message (handles both text and media)
   const handleSendChatMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedInstanceForChats || !selectedChat || !newMessageText.trim() || sendingMessage) return;
+    if (!selectedInstanceForChats || !selectedChat || sendingMessage) return;
+    
+    // Si no hay archivo ni texto, no hacer nada
+    if (!attachedFile && !newMessageText.trim()) return;
 
     setSendingMessage(true);
-    const textToSend = newMessageText.trim();
     try {
-      const res = await api.post(`/instances/chats/${selectedInstanceForChats}/send`, {
-        remoteJid: selectedChat.remoteJid,
-        text: textToSend
-      });
-      if (res.data?.success) {
-        setNewMessageText('');
-        await fetchMessages(true);
+      if (attachedFile) {
+        // Enviar mensaje multimedia
+        if (!attachedFileBase64) {
+          showNotification('El archivo aún se está procesando. Inténtalo de nuevo en un segundo.', 'error');
+          setSendingMessage(false);
+          return;
+        }
+
+        let mediatype: 'image' | 'video' | 'document' | 'audio' = 'document';
+        if (attachedFile.type.startsWith('image/')) {
+          mediatype = 'image';
+        } else if (attachedFile.type.startsWith('video/')) {
+          mediatype = 'video';
+        } else if (attachedFile.type.startsWith('audio/')) {
+          mediatype = 'audio';
+        }
+
+        const res = await api.post(`/instances/chats/${selectedInstanceForChats}/send-media`, {
+          remoteJid: selectedChat.remoteJid,
+          media: attachedFileBase64,
+          mediatype,
+          mimetype: attachedFile.type,
+          caption: newMessageText.trim() || undefined,
+          fileName: attachedFile.name
+        });
+
+        if (res.data?.success) {
+          setNewMessageText('');
+          handleClearAttachment();
+          await fetchMessages(true);
+        }
+      } else {
+        // Enviar mensaje de texto común
+        const textToSend = newMessageText.trim();
+        const res = await api.post(`/instances/chats/${selectedInstanceForChats}/send`, {
+          remoteJid: selectedChat.remoteJid,
+          text: textToSend
+        });
+        if (res.data?.success) {
+          setNewMessageText('');
+          await fetchMessages(true);
+        }
       }
     } catch (err: any) {
-      showNotification(err.response?.data?.error || 'Error al enviar mensaje', 'error');
+      console.error('Error sending message:', err);
+      showNotification(err.response?.data?.error || 'Error al enviar el mensaje', 'error');
     } finally {
       setSendingMessage(false);
     }
@@ -1510,104 +1630,154 @@ echo $response;`;
                                     if (!content) return null;
 
                                     if (content.imageMessage) {
-                                      if (loadedMedia[msgId]) {
+                                      const isLoaded = !!loadedMedia[msgId];
+                                      const isLoading = !!mediaLoadingStates[msgId];
+                                      
+                                      if (isLoaded) {
                                         return (
                                           <div className="space-y-1.5 text-left">
                                             <img 
                                               src={loadedMedia[msgId]} 
-                                              alt="WhatsApp" 
-                                              className="max-w-[240px] rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer hover:opacity-90 transition-opacity" 
+                                              alt="WhatsApp Media" 
+                                              className="max-w-[240px] rounded-2xl cursor-pointer hover:opacity-95 transition-opacity" 
                                               onClick={() => {
                                                 const w = window.open();
                                                 if (w) w.document.write(`<img src="${loadedMedia[msgId]}" style="max-width:100%; max-height:100vh; display:block; margin:auto;" />`);
                                               }}
                                             />
                                             {content.imageMessage.caption && (
-                                              <p className="text-[11px] leading-relaxed text-slate-700 dark:text-slate-300">{content.imageMessage.caption}</p>
+                                              <p className="text-[11px] leading-relaxed text-slate-700 dark:text-slate-300 mt-1">{content.imageMessage.caption}</p>
                                             )}
                                           </div>
                                         );
                                       }
+                                      
                                       return (
-                                        <button 
+                                        <div 
                                           onClick={() => downloadMedia(msgId, msg.key, content)}
-                                          disabled={mediaLoadingStates[msgId]}
-                                          type="button"
-                                          className="text-[10px] px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold rounded-xl transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                                          className="w-[240px] h-[160px] bg-slate-100 dark:bg-slate-900/60 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800/80 transition-all duration-200 group relative"
                                         >
-                                          {mediaLoadingStates[msgId] ? 'Descargando...' : '📷 Ver Imagen'}
-                                        </button>
+                                          {isLoading ? (
+                                            <div className="p-3 bg-white/80 dark:bg-slate-950/80 rounded-full shadow-md animate-spin">
+                                              <span className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full block" />
+                                            </div>
+                                          ) : (
+                                            <div className="p-3 bg-white/80 dark:bg-slate-950/80 rounded-full shadow-md group-hover:scale-105 transition-transform text-slate-600 dark:text-slate-400">
+                                              <Image size={20} />
+                                            </div>
+                                          )}
+                                          <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                            {isLoading ? 'Descargando...' : 'Ver Imagen'}
+                                          </span>
+                                        </div>
                                       );
                                     }
-
+                                    
                                     if (content.audioMessage) {
-                                      if (loadedMedia[msgId]) {
+                                      const isLoaded = !!loadedMedia[msgId];
+                                      const isLoading = !!mediaLoadingStates[msgId];
+                                      
+                                      if (isLoaded) {
                                         return (
                                           <audio controls src={loadedMedia[msgId]} className="max-w-[240px] mt-1 h-9" />
                                         );
                                       }
+                                      
                                       return (
                                         <button 
                                           onClick={() => downloadMedia(msgId, msg.key, content)}
-                                          disabled={mediaLoadingStates[msgId]}
+                                          disabled={isLoading}
                                           type="button"
-                                          className="text-[10px] px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold rounded-xl transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                                          className="text-[10px] px-3.5 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold rounded-xl transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer animate-pulse"
                                         >
-                                          {mediaLoadingStates[msgId] ? 'Descargando...' : '🎵 Escuchar Audio'}
+                                          {isLoading ? (
+                                            <span className="w-3.5 h-3.5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin block" />
+                                          ) : (
+                                            <Play size={12} className="fill-emerald-500" />
+                                          )}
+                                          <span>{isLoading ? 'Descargando...' : 'Escuchar Nota de Voz'}</span>
                                         </button>
                                       );
                                     }
 
                                     if (content.documentMessage) {
-                                      const fileName = content.documentMessage.fileName || 'documento';
-                                      if (loadedMedia[msgId]) {
-                                        return (
-                                          <a 
-                                            href={loadedMedia[msgId]} 
-                                            download={fileName}
-                                            className="text-xs px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-2 rounded-xl text-slate-800 dark:text-slate-200 font-semibold"
-                                          >
-                                            <BookOpen size={14} className="text-emerald-500" />
-                                            <span className="truncate max-w-[150px]">{fileName}</span>
-                                          </a>
-                                        );
-                                      }
+                                      const fileName = content.documentMessage.fileName || 'Documento';
+                                      const isLoaded = !!loadedMedia[msgId];
+                                      const isLoading = !!mediaLoadingStates[msgId];
+                                      
                                       return (
-                                        <button 
-                                          onClick={() => downloadMedia(msgId, msg.key, content)}
-                                          disabled={mediaLoadingStates[msgId]}
-                                          type="button"
-                                          className="text-[10px] px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold rounded-xl transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                                        <div 
+                                          onClick={isLoaded ? undefined : () => downloadMedia(msgId, msg.key, content)}
+                                          className={`p-3 bg-slate-50 dark:bg-slate-900/60 rounded-2xl text-left flex items-center gap-3 w-[260px] relative overflow-hidden ${!isLoaded ? 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors' : ''}`}
                                         >
-                                          {mediaLoadingStates[msgId] ? 'Descargando...' : `📄 Descargar ${fileName.slice(0, 10)}...`}
-                                        </button>
+                                          <div className="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-600 dark:text-emerald-400">
+                                            <FileText size={20} />
+                                          </div>
+                                          <div className="flex-1 min-w-0 space-y-0.5">
+                                            <p className="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">{fileName}</p>
+                                            <p className="text-[9px] text-slate-400 font-medium">
+                                              {isLoading ? 'Descargando...' : isLoaded ? 'Descargado' : 'Haga clic para descargar'}
+                                            </p>
+                                          </div>
+                                          {isLoaded ? (
+                                            <a 
+                                              href={loadedMedia[msgId]} 
+                                              download={fileName}
+                                              onClick={(e) => e.stopPropagation()}
+                                              className="p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-md transition-colors"
+                                            >
+                                              <Download size={14} />
+                                            </a>
+                                          ) : (
+                                            <div className="p-2 text-slate-400">
+                                              {isLoading ? (
+                                                <span className="w-4 h-4 border-2 border-slate-300 border-t-emerald-500 rounded-full animate-spin block" />
+                                              ) : (
+                                                <Download size={14} />
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
                                       );
                                     }
 
                                     if (content.videoMessage) {
-                                      if (loadedMedia[msgId]) {
+                                      const isLoaded = !!loadedMedia[msgId];
+                                      const isLoading = !!mediaLoadingStates[msgId];
+                                      
+                                      if (isLoaded) {
                                         return (
                                           <div className="space-y-1.5 text-left">
                                             <video 
                                               controls 
                                               src={loadedMedia[msgId]} 
-                                              className="max-w-[240px] rounded-xl border border-slate-200 dark:border-slate-800" 
+                                              className="max-w-[240px] rounded-2xl" 
                                             />
                                             {content.videoMessage.caption && (
-                                              <p className="text-[11px] leading-relaxed text-slate-700 dark:text-slate-300">{content.videoMessage.caption}</p>
+                                              <p className="text-[11px] leading-relaxed text-slate-700 dark:text-slate-300 mt-1">{content.videoMessage.caption}</p>
                                             )}
                                           </div>
                                         );
                                       }
+                                      
                                       return (
-                                        <button 
+                                        <div 
                                           onClick={() => downloadMedia(msgId, msg.key, content)}
-                                          disabled={mediaLoadingStates[msgId]}
-                                          type="button"
-                                          className="text-[10px] px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold rounded-xl transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                                          className="w-[240px] h-[160px] bg-slate-100 dark:bg-slate-900/60 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800/80 transition-all duration-200 group relative"
                                         >
-                                          {mediaLoadingStates[msgId] ? 'Descargando...' : '🎥 Ver Video'}
-                                        </button>
+                                          {isLoading ? (
+                                            <div className="p-3 bg-white/80 dark:bg-slate-950/80 rounded-full shadow-md animate-spin">
+                                              <span className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full block" />
+                                            </div>
+                                          ) : (
+                                            <div className="p-3 bg-white/80 dark:bg-slate-950/80 rounded-full shadow-md group-hover:scale-105 transition-transform text-slate-600 dark:text-slate-400">
+                                              <Video size={20} />
+                                            </div>
+                                          )}
+                                          <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                            {isLoading ? 'Descargando...' : 'Ver Video'}
+                                          </span>
+                                        </div>
                                       );
                                     }
 
@@ -1650,6 +1820,74 @@ echo $response;`;
 
                           {/* Chat Window Send Form */}
                           <div className="relative">
+                            {/* Input Oculto de Archivos */}
+                            <input 
+                              type="file" 
+                              ref={fileInputRef} 
+                              onChange={handleFileChange} 
+                              className="hidden" 
+                            />
+
+                            {/* Menú de Adjuntos Flotante */}
+                            {showAttachMenu && (
+                              <div className="absolute bottom-[100%] mb-2 left-12 z-50 animate-fadeIn bg-white dark:bg-slate-900 shadow-premium-lg rounded-2xl p-2 flex flex-col gap-1 w-40 text-left">
+                                <button
+                                  type="button"
+                                  onClick={() => handleTriggerFileInput('image')}
+                                  className="w-full px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center gap-2 cursor-pointer transition-colors"
+                                >
+                                  <Image size={15} className="text-emerald-500" />
+                                  <span>📷 Imagen</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleTriggerFileInput('video')}
+                                  className="w-full px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center gap-2 cursor-pointer transition-colors"
+                                >
+                                  <Video size={15} className="text-blue-500" />
+                                  <span>🎥 Video</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleTriggerFileInput('document')}
+                                  className="w-full px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center gap-2 cursor-pointer transition-colors"
+                                >
+                                  <FileText size={15} className="text-indigo-500" />
+                                  <span>📄 Documento</span>
+                                </button>
+                              </div>
+                            )}
+
+                            {/* Previsualizador de Adjunto */}
+                            {attachedFile && (
+                              <div className="absolute bottom-[100%] left-0 w-full bg-slate-50 dark:bg-slate-950 p-4 border-t border-slate-100 dark:border-slate-800/40 animate-slideUp z-40 rounded-t-3xl shadow-lg flex items-center gap-4 text-left">
+                                {attachmentPreview ? (
+                                  <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-900 flex items-center justify-center relative shadow-inner">
+                                    {attachedFile.type.startsWith('image/') ? (
+                                      <img src={attachmentPreview} alt="Preview" className="w-full h-full object-cover" />
+                                    ) : (
+                                      <video src={attachmentPreview} className="w-full h-full object-cover" />
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div className="w-16 h-16 rounded-xl bg-slate-200 dark:bg-slate-900 flex items-center justify-center text-slate-500">
+                                    <FileText size={28} />
+                                  </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{attachedFile.name}</p>
+                                  <p className="text-[10px] text-slate-400 font-medium">{(attachedFile.size / (1024 * 1024)).toFixed(2)} MB</p>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={handleClearAttachment}
+                                  className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                                >
+                                  <X size={16} />
+                                </button>
+                              </div>
+                            )}
+
                             {showEmojiPicker && (
                               <div ref={emojiPickerRef} className="absolute bottom-[100%] mb-2 left-4 z-50 animate-fadeIn shadow-premium-lg rounded-2xl overflow-hidden">
                                 <EmojiPicker
@@ -1666,25 +1904,34 @@ echo $response;`;
                               onSubmit={handleSendChatMessage}
                               className="p-4 bg-transparent flex items-center gap-2.5"
                             >
-                              <button
-                                ref={emojiButtonRef}
-                                type="button"
-                                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                                className={`p-2 transition-colors cursor-pointer rounded-xl ${showEmojiPicker ? 'bg-emerald-500/10 text-emerald-500' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
-                              >
-                                <Smile size={20} />
-                              </button>
+                              <div className="flex items-center gap-1 flex-shrink-0">
+                                <button
+                                  ref={emojiButtonRef}
+                                  type="button"
+                                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                                  className={`p-2 transition-colors cursor-pointer rounded-xl ${showEmojiPicker ? 'bg-emerald-500/10 text-emerald-500' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                                >
+                                  <Smile size={20} />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setShowAttachMenu(!showAttachMenu)}
+                                  className={`p-2 transition-colors cursor-pointer rounded-xl ${showAttachMenu ? 'bg-emerald-500/10 text-emerald-500' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                                >
+                                  <Paperclip size={20} />
+                                </button>
+                              </div>
                               <input
                                 type="text"
                                 value={newMessageText}
                                 onChange={(e) => setNewMessageText(e.target.value)}
-                                placeholder="Escribe un mensaje aquí..."
+                                placeholder={attachedFile ? "Escribe un comentario/pie para tu archivo..." : "Escribe un mensaje aquí..."}
                                 disabled={sendingMessage}
                                 className="flex-1 px-4 py-3 bg-white/95 dark:bg-slate-900/95 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 font-medium disabled:opacity-50 transition-all shadow-premium"
                               />
                               <button
                                 type="submit"
-                                disabled={!newMessageText.trim() || sendingMessage}
+                                disabled={(!newMessageText.trim() && !attachedFile) || sendingMessage}
                                 className="p-2.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white rounded-2xl transition-all shadow-md shadow-emerald-500/20 flex-shrink-0 disabled:opacity-50 disabled:scale-100 disabled:shadow-none cursor-pointer"
                               >
                                 <Send size={14} className={sendingMessage ? 'animate-pulse' : ''} />

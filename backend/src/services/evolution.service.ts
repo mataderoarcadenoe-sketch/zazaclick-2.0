@@ -209,6 +209,46 @@ export class EvolutionService {
   }
 
   /**
+   * Enviar un mensaje multimedia (imagen, video, documento, audio) a través de una instancia
+   */
+  public static async sendMediaMessage(
+    instanceName: string,
+    number: string,
+    media: string, // string Base64 o URL
+    mediatype: 'image' | 'video' | 'document' | 'audio',
+    mimetype: string,
+    caption?: string,
+    fileName?: string
+  ): Promise<boolean> {
+    try {
+      let cleanNumber = number.replace(/\D/g, '');
+      if (cleanNumber.length === 9 && cleanNumber.startsWith('9')) {
+        cleanNumber = `51${cleanNumber}`;
+      }
+      
+      const payload: any = {
+        number: cleanNumber,
+        mediatype,
+        mimetype,
+        media,
+      };
+
+      if (caption) {
+        payload.caption = caption;
+      }
+      if (fileName) {
+        payload.fileName = fileName;
+      }
+
+      const response = await api.post(`/message/sendMedia/${instanceName}`, payload);
+      return response.status === 200 || response.status === 201;
+    } catch (err: any) {
+      console.error(`[EvolutionService] Error enviando media (${mediatype}) a ${number}:`, err.message);
+      return false;
+    }
+  }
+
+  /**
    * Obtener el estado actual de la licencia de Evolution API
    */
   public static async getLicenseStatus(): Promise<{ success: boolean; data?: any; error?: string }> {
