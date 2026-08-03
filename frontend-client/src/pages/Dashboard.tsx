@@ -1400,7 +1400,7 @@ echo $response;`;
                                     )}
 
                                     {/* Profile Photo */}
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 relative overflow-hidden shadow-sm transition-all duration-300 ${isActive ? 'ring-2 ring-emerald-500/30' : isUnread ? 'ring-2 ring-emerald-500/70' : 'bg-white dark:bg-slate-800'}`}>
+                                    <div className="w-10 h-10 rounded-full bg-slate-100/80 dark:bg-slate-800/80 flex items-center justify-center flex-shrink-0 relative overflow-hidden">
                                       {chat.profilePicUrl ? (
                                         <img src={chat.profilePicUrl} alt="" className="w-full h-full object-cover" />
                                       ) : (
