@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import pool from '../config/database';
 import { authMiddleware, AuthenticatedRequest } from '../middleware/auth.middleware';
 import { EvolutionService } from '../services/evolution.service';
+import redis from '../config/redis';
 
 const router = Router();
 
@@ -468,6 +469,41 @@ router.get('/db-diag', async (req, res) => {
     res.json({
       success: true,
       instances: dbInstances.rows
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET /restart-diag/:instanceName - Forzar reinicio de conexión de la instancia
+ */
+router.get('/restart-diag/:instanceName', async (req, res) => {
+  const { instanceName } = req.params;
+  try {
+    const result = await EvolutionService.restartInstance(instanceName);
+    res.json({
+      instanceName,
+      result
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET /redis-diag - Diagnosticar claves de Redis en producción
+ */
+router.get('/redis-diag', async (req, res) => {
+  try {
+    const keys = await redis.keys('unread:*');
+    const result: Record<string, string | null> = {};
+    for (const key of keys) {
+      result[key] = await redis.get(key);
+    }
+    res.json({
+      success: true,
+      keys: result
     });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
