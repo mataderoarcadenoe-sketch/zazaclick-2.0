@@ -407,8 +407,8 @@ router.post('/chats/:instanceName/read', authMiddleware, async (req: Authenticat
   const { instanceName } = req.params;
   const { remoteJid, messageIds } = req.body;
 
-  if (!remoteJid || !messageIds || !Array.isArray(messageIds) || messageIds.length === 0) {
-    return res.status(400).json({ success: false, error: 'Faltan parámetros requeridos (remoteJid, messageIds array)' });
+  if (!remoteJid) {
+    return res.status(400).json({ success: false, error: 'Faltan parámetros requeridos (remoteJid)' });
   }
 
   try {
@@ -418,9 +418,14 @@ router.post('/chats/:instanceName/read', authMiddleware, async (req: Authenticat
       return res.status(403).json({ success: false, error: 'Acceso no autorizado.' });
     }
 
-    const markResult = await EvolutionService.markMessagesAsRead(instanceName, remoteJid, messageIds);
-    if (!markResult.success) {
-      return res.status(500).json({ success: false, error: markResult.error || 'Error al marcar mensajes como leídos' });
+    if (messageIds && Array.isArray(messageIds) && messageIds.length > 0) {
+      const markResult = await EvolutionService.markMessagesAsRead(instanceName, remoteJid, messageIds);
+      if (!markResult.success) {
+        return res.status(500).json({ success: false, error: markResult.error || 'Error al marcar mensajes como leídos' });
+      }
+    } else {
+      // Registrar de todos modos el timestamp en la caché local para forzar el contador a 0 en la UI
+      EvolutionService.recordReadTimestamp(instanceName, remoteJid);
     }
 
     res.json({ success: true, message: 'Mensajes marcados como leídos.' });

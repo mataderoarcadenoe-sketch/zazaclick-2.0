@@ -372,8 +372,12 @@ export class EvolutionService {
       const unreadCountNum = Number(chatUnread) || 0;
 
       // Aplicar el override del contador de mensajes no leídos si el último mensaje es anterior al timestamp de lectura marcado
-      const cacheKey = `${instanceName}:${realJid}`;
-      const lastRead = this.lastReadTimestamps.get(cacheKey);
+      const cacheKeyReal = `${instanceName}:${realJid}`;
+      const cacheKeyOrig = `${instanceName}:${chat.remoteJid}`;
+      const lastReadReal = this.lastReadTimestamps.get(cacheKeyReal);
+      const lastReadOrig = this.lastReadTimestamps.get(cacheKeyOrig);
+      
+      const lastRead = lastReadReal !== undefined ? lastReadReal : lastReadOrig;
       
       let finalUnreadCount = unreadCountNum;
       if (lastRead !== undefined) {
@@ -382,7 +386,8 @@ export class EvolutionService {
           finalUnreadCount = 0;
         } else {
           // Ha llegado un mensaje nuevo después de marcar como leído, borrar caché
-          this.lastReadTimestamps.delete(cacheKey);
+          this.lastReadTimestamps.delete(cacheKeyReal);
+          this.lastReadTimestamps.delete(cacheKeyOrig);
         }
       }
 
@@ -433,19 +438,28 @@ export class EvolutionService {
   }
 
   /**
+   * Registrar manualmente un timestamp de lectura para un JID (tanto original como unificado)
+   */
+  public static recordReadTimestamp(instanceName: string, remoteJid: string): void {
+    let unifiedJid = remoteJid;
+    if (unifiedJid.endsWith('@lid') && this.lidCache.has(unifiedJid)) {
+      unifiedJid = this.lidCache.get(unifiedJid)!;
+    }
+    if (unifiedJid.includes(':0@s.whatsapp.net')) {
+      unifiedJid = unifiedJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
+    }
+
+    const nowInSeconds = Math.floor(Date.now() / 1000) + 2;
+    this.lastReadTimestamps.set(`${instanceName}:${remoteJid}`, nowInSeconds);
+    this.lastReadTimestamps.set(`${instanceName}:${unifiedJid}`, nowInSeconds);
+    console.log(`[EvolutionService] Registrada marca de lectura para ${instanceName}:${remoteJid} / ${unifiedJid} a las ${nowInSeconds}`);
+  }
+
+  /**
    * Marcar mensajes como leídos
    */
   public static async markMessagesAsRead(instanceName: string, remoteJid: string, messageIds: string[]): Promise<{ success: boolean; data?: any; error?: string }> {
     try {
-      // Registrar en caché de lectura usando el JID unificado para mergeChats
-      let unifiedJid = remoteJid;
-      if (unifiedJid.endsWith('@lid') && this.lidCache.has(unifiedJid)) {
-        unifiedJid = this.lidCache.get(unifiedJid)!;
-      }
-      if (unifiedJid.includes(':0@s.whatsapp.net')) {
-        unifiedJid = unifiedJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
-      }
-
       const readMessages = messageIds.map(id => ({
         remoteJid,
         id,
@@ -456,14 +470,17 @@ export class EvolutionService {
         readMessages
       });
 
-      // Guardar el timestamp actual de lectura en segundos (con un pequeño margen de 2 segundos en el futuro para evitar problemas de latencia)
-      const nowInSeconds = Math.floor(Date.now() / 1000) + 2;
-      this.lastReadTimestamps.set(`${instanceName}:${unifiedJid}`, nowInSeconds);
+      // Guardar el timestamp actual de lectura
+      this.recordReadTimestamp(instanceName, remoteJid);
 
       return { success: true, data: response.data };
     } catch (err: any) {
       const errorMsg = this.parseError(err);
       console.error(`[EvolutionService] Error marcando mensajes como leídos para ${remoteJid}:`, errorMsg);
+      
+      // Registrar de todos modos de manera preventiva por si la API falla pero queremos limpiar la UI
+      this.recordReadTimestamp(instanceName, remoteJid);
+      
       return { success: false, error: errorMsg };
     }
   }
