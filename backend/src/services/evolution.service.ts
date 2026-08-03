@@ -490,11 +490,21 @@ export class EvolutionService {
         unifiedJid = unifiedJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
       }
 
-      const readMessages = messageIds.map(id => ({
-        remoteJid: unifiedJid, // Usar el JID de teléfono unificado
-        id,
-        fromMe: false
-      }));
+      const readMessages: any[] = [];
+      for (const id of messageIds) {
+        readMessages.push({
+          remoteJid: remoteJid, // JID original (puede ser LID)
+          id,
+          fromMe: false
+        });
+        if (unifiedJid !== remoteJid) {
+          readMessages.push({
+            remoteJid: unifiedJid, // JID unificado (teléfono)
+            id,
+            fromMe: false
+          });
+        }
+      }
       
       const response = await api.post(`/chat/markMessageAsRead/${instanceName}`, {
         readMessages
