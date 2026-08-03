@@ -1630,7 +1630,7 @@ echo $response;`;
                                       )}
 
                                       {/* Bubble */}
-                                      <div className={`p-3 rounded-2xl shadow-sm text-slate-800 dark:text-slate-100 ${fromMe ? 'bg-gradient-to-br from-emerald-100/90 to-teal-50/90 dark:from-emerald-900/40 dark:to-teal-900/30 text-emerald-950 dark:text-emerald-50 rounded-tr-none' : 'bg-gradient-to-br from-indigo-50/90 to-slate-100/90 dark:from-slate-800/80 dark:to-slate-800/40 text-indigo-950 dark:text-slate-100 rounded-tl-none'}`}>
+                                      <div className={`p-3 rounded-2xl text-slate-800 dark:text-slate-100 ${fromMe ? 'bg-gradient-to-br from-emerald-100/90 to-teal-50/90 dark:from-emerald-900/40 dark:to-teal-900/30 text-emerald-950 dark:text-emerald-50 rounded-tr-none' : 'bg-gradient-to-br from-indigo-50/90 to-slate-100/90 dark:from-slate-800/80 dark:to-slate-800/40 text-indigo-950 dark:text-slate-100 rounded-tl-none'}`}>
                                         {renderMessageContent()}
                                         
                                         {/* Timestamp and Checks */}
