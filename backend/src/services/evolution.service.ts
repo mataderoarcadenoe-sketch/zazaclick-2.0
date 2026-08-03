@@ -494,6 +494,9 @@ export class EvolutionService {
         displayName = chat.lastMessage.pushName;
       }
 
+      // Para originalJid: preferir siempre un JID que sea especial (ej. LID o JID con puerto :0)
+      let finalOriginalJid = chat.remoteJid;
+
       const existing = mergedMap.get(realJid);
       
       if (!existing) {
@@ -501,7 +504,7 @@ export class EvolutionService {
         const newChat = { 
           ...chat, 
           remoteJid: realJid, 
-          originalJid: chat.remoteJid,
+          originalJid: finalOriginalJid,
           pushName: displayName || chat.pushName || null,
           unreadCount: finalUnreadCount
         };
@@ -511,14 +514,22 @@ export class EvolutionService {
         const currentTs = chat.lastMessage?.messageTimestamp || 0;
         const existingTs = existing.lastMessage?.messageTimestamp || 0;
         
-        // Tomar el valor máximo en lugar de sumar para evitar duplicar el contador si ambos registros de chat lo traen
+        // Conservar el originalJid especial si alguno de los dos lo es (ej: LID o que contenga ':')
+        let resolvedOriginalJid = existing.originalJid || existing.remoteJid;
+        if (finalOriginalJid && (finalOriginalJid.endsWith('@lid') || finalOriginalJid.includes(':') || !resolvedOriginalJid.endsWith('@lid'))) {
+          // Si el nuevo es un LID o tiene puerto, o el anterior no es un LID (preferir LID sobre todo)
+          if (finalOriginalJid.endsWith('@lid') || !resolvedOriginalJid.endsWith('@lid')) {
+            resolvedOriginalJid = finalOriginalJid;
+          }
+        }
+
         const totalUnread = Math.max(Number(existing.unreadCount) || 0, finalUnreadCount);
         
         if (currentTs > existingTs) {
           const merged = { 
             ...chat, 
             remoteJid: realJid,
-            originalJid: chat.remoteJid,
+            originalJid: resolvedOriginalJid,
             profilePicUrl: chat.profilePicUrl || existing.profilePicUrl,
             pushName: displayName || chat.pushName || existing.pushName || null,
             unreadCount: totalUnread
@@ -528,6 +539,7 @@ export class EvolutionService {
           existing.profilePicUrl = existing.profilePicUrl || chat.profilePicUrl;
           existing.pushName = displayName || existing.pushName || chat.pushName || null;
           existing.unreadCount = totalUnread;
+          existing.originalJid = resolvedOriginalJid;
           mergedMap.set(realJid, existing);
         }
       }

@@ -6,36 +6,7 @@ import redis from '../config/redis';
 
 const router = Router();
 
-router.get('/debug-messages/:instanceName', async (req, res) => {
-  const { instanceName } = req.params;
-  const { remoteJid } = req.query;
-  if (!remoteJid) return res.status(400).send("Falta remoteJid");
-  try {
-    const result = await EvolutionService.getChatMessages(instanceName, remoteJid as string);
-    res.json(result);
-  } catch (err: any) {
-    res.status(500).send(err.message);
-  }
-});
 
-router.get('/debug-all-messages/:instanceName', async (req, res) => {
-  const { instanceName } = req.params;
-  try {
-    const EVOLUTION_API_URL = process.env.EVOLUTION_API_URL;
-    const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY;
-    const axios = require('axios');
-    const response = await axios.post(`${EVOLUTION_API_URL}/chat/findMessages/${instanceName}`, {
-      limit: 100
-    }, {
-      headers: {
-        'apikey': EVOLUTION_API_KEY
-      }
-    });
-    res.json(response.data);
-  } catch (err: any) {
-    res.status(500).send(err.message);
-  }
-});
 
 /**
  * Generar ID aleatorio
@@ -369,10 +340,23 @@ router.post('/chats/:instanceName/messages', authMiddleware, async (req: Authent
       }
     }
 
+    // Fetch para remoteJid con sufijo :0 si es de whatsapp y no tiene sufijo
+    if (remoteJid.endsWith('@s.whatsapp.net') && !remoteJid.includes(':')) {
+      const suffixJid = remoteJid.replace('@s.whatsapp.net', ':0@s.whatsapp.net');
+      if (suffixJid !== originalJid) {
+        const suffixMessagesResult = await EvolutionService.getChatMessages(instanceName, suffixJid);
+        if (suffixMessagesResult.success) {
+          const suffixRecords = suffixMessagesResult.data?.messages?.records || suffixMessagesResult.data?.records || suffixMessagesResult.data || [];
+          allRecords = allRecords.concat(suffixRecords);
+        }
+      }
+    }
+
     // Eliminar duplicados y ordenar por timestamp
     const uniqueMessages = new Map();
     for (const msg of allRecords) {
-      if (msg.id) uniqueMessages.set(msg.id, msg);
+      const msgId = msg.id || msg.key?.id;
+      if (msgId) uniqueMessages.set(msgId, msg);
     }
     
     // Se devuelven tal como los espera el frontend (sin reverse aquí porque el frontend hace slice().reverse())
