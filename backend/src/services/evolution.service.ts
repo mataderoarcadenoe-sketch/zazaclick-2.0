@@ -626,7 +626,8 @@ export class EvolutionService {
     const unreadMap = new Map<string, number>();
     try {
       const pattern = `unread:${instanceName}:*`;
-      const keys = await redis.keys(pattern);
+      const rawKeys = await redis.keys(pattern);
+      const keys = Array.isArray(rawKeys) ? rawKeys : [];
 
       if (keys.length > 0) {
         // Consultar de forma masiva en pipeline para máxima velocidad (1ms)
@@ -635,10 +636,11 @@ export class EvolutionService {
           pipeline.get(key);
         }
         const results = await pipeline.exec();
+        const safeResults = Array.isArray(results) ? results : [];
 
         for (let i = 0; i < keys.length; i++) {
           const key = keys[i];
-          const val = results ? results[i][1] : null;
+          const val = safeResults[i] ? safeResults[i][1] : null;
           const remoteJid = key.replace(`unread:${instanceName}:`, '');
           const count = Number(val) || 0;
           if (count > 0) {
@@ -668,14 +670,16 @@ export class EvolutionService {
           await pipeline.exec();
 
           // Obtener los datos recién ingresados a Redis
-          const newKeys = await redis.keys(pattern);
+          const rawNewKeys = await redis.keys(pattern);
+          const newKeys = Array.isArray(rawNewKeys) ? rawNewKeys : [];
           if (newKeys.length > 0) {
             const getPipeline = redis.pipeline();
             newKeys.forEach(k => getPipeline.get(k));
             const vals = await getPipeline.exec();
+            const safeVals = Array.isArray(vals) ? vals : [];
             for (let i = 0; i < newKeys.length; i++) {
               const rJid = newKeys[i].replace(`unread:${instanceName}:`, '');
-              const count = Number(vals ? vals[i][1] : 0) || 0;
+              const count = Number(safeVals[i] ? safeVals[i][1] : 0) || 0;
               unreadMap.set(rJid, count);
             }
           }
