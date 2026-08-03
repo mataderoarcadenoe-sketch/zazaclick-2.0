@@ -8,7 +8,7 @@ import {
   AlertCircle, Copy, Send, LayoutDashboard, Terminal, 
   Moon, Sun, Menu, X, Check, Play, ExternalLink, Sparkles, BookOpen, Clock,
   MessageSquare, Search, MessageCircle, Smile, ArrowLeft,
-  Paperclip, FileText, Image, Video, Download, ChevronDown, Users
+  Paperclip, FileText, Image, Video, Download, ChevronDown, Users, Users2
 } from 'lucide-react';
 import EmojiPicker, { Theme, EmojiStyle, Emoji } from 'emoji-picker-react';
 import { parse } from '@twemoji/parser';
@@ -121,7 +121,7 @@ export default function DashboardPage() {
   });
 
   // Active Tab/Section State
-  const [activeTab, setActiveTab] = useState<'overview' | 'instances' | 'chats' | 'contacts' | 'playground' | 'docs' | 'subscription'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'instances' | 'chats' | 'contacts' | 'groups' | 'playground' | 'docs' | 'subscription'>('overview');
 
   // Modal / Form state for new instance
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -208,6 +208,25 @@ export default function DashboardPage() {
     type: 'image' | 'video';
     caption?: string;
   } | null>(null);
+
+  // WhatsApp Group Management States
+  const [groups, setGroups] = useState<any[]>([]);
+  const [groupsLoading, setGroupsLoading] = useState(false);
+  const [searchGroupQuery, setSearchGroupQuery] = useState('');
+  const [selectedGroup, setSelectedGroup] = useState<any | null>(null);
+  
+  // Group creation modal state
+  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+  const [createGroupSubject, setCreateGroupSubject] = useState('');
+  const [createGroupParticipants, setCreateGroupParticipants] = useState('');
+  const [createGroupLoading, setCreateGroupLoading] = useState(false);
+  const [createGroupError, setCreateGroupError] = useState<string | null>(null);
+
+  // Participant management state
+  const [addParticipantNumber, setAddParticipantNumber] = useState('');
+  const [addParticipantLoading, setAddParticipantLoading] = useState(false);
+  const [inviteLinkLabel, setInviteLinkLabel] = useState<string | null>(null);
+  const [inviteLinkLoading, setInviteLinkLoading] = useState(false);
 
   // Refs para scroll inteligente y emoji picker click-outside
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -977,6 +996,171 @@ export default function DashboardPage() {
     fetchGoogleContactsStatus();
   }, [fetchGoogleContactsStatus]);
 
+  // Cargar grupos cuando se activa la pestaña y hay instancia seleccionada
+  useEffect(() => {
+    if (activeTab === 'groups' && selectedInstanceForChats) {
+      fetchGroups();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, selectedInstanceForChats]);
+
+  // Fetch WhatsApp Groups
+  const fetchGroups = async () => {
+    if (!selectedInstanceForChats) return;
+    setGroupsLoading(true);
+    try {
+      const res = await api.get(`/instances/groups/${selectedInstanceForChats}`);
+      if (res.data?.success) {
+        const fetchedGroups = res.data.data || [];
+        setGroups(fetchedGroups);
+        
+        // Si hay un grupo seleccionado actualmente, actualizar sus datos locales
+        if (selectedGroup) {
+          const fresh = fetchedGroups.find((g: any) => g.id === selectedGroup.id);
+          if (fresh) {
+            setSelectedGroup(fresh);
+          }
+        }
+      }
+    } catch (err: any) {
+      showNotification(err.response?.data?.error || 'Error al obtener los grupos de WhatsApp', 'error');
+    } finally {
+      setGroupsLoading(false);
+    }
+  };
+
+  // Create Group
+  const handleCreateGroup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedInstanceForChats) return;
+    if (!createGroupSubject.trim()) {
+      setCreateGroupError('El nombre del grupo es obligatorio.');
+      return;
+    }
+
+    setCreateGroupLoading(true);
+    setCreateGroupError(null);
+
+    // Convert string of comma separated phone numbers to array
+    const parts = createGroupParticipants
+      .split(',')
+      .map(p => p.trim())
+      .filter(p => p.length > 0);
+
+    try {
+      const res = await api.post(`/instances/groups/${selectedInstanceForChats}/create`, {
+        subject: createGroupSubject,
+        participants: parts
+      });
+
+      if (res.data?.success) {
+        showNotification('Grupo creado exitosamente');
+        setShowCreateGroupModal(false);
+        setCreateGroupSubject('');
+        setCreateGroupParticipants('');
+        fetchGroups();
+      }
+    } catch (err: any) {
+      setCreateGroupError(err.response?.data?.error || 'Error al crear el grupo');
+    } finally {
+      setCreateGroupLoading(false);
+    }
+  };
+
+  // Update participant action (add, remove, promote, demote)
+  const handleUpdateGroupParticipant = async (action: 'add' | 'remove' | 'promote' | 'demote', targetPhone: string) => {
+    if (!selectedInstanceForChats || !selectedGroup) return;
+
+    try {
+      const cleanPhone = targetPhone.replace(/\D/g, '');
+      const phoneWithSuffix = cleanPhone.includes('@') ? cleanPhone : `${cleanPhone}@s.whatsapp.net`;
+      
+      const res = await api.put(`/instances/groups/${selectedInstanceForChats}/participants`, {
+        groupJid: selectedGroup.id,
+        action,
+        participants: [phoneWithSuffix]
+      });
+
+      if (res.data?.success) {
+        showNotification('Participante actualizado correctamente');
+        fetchGroups();
+      }
+    } catch (err: any) {
+      showNotification(err.response?.data?.error || 'Error al modificar participante', 'error');
+    }
+  };
+
+  // Add a participant from panel input form
+  const handleAddParticipantSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addParticipantNumber.trim() || !selectedGroup) return;
+
+    setAddParticipantLoading(true);
+    try {
+      const cleanPhone = addParticipantNumber.replace(/\D/g, '');
+      const phoneWithSuffix = `${cleanPhone}@s.whatsapp.net`;
+      
+      const res = await api.put(`/instances/groups/${selectedInstanceForChats}/participants`, {
+        groupJid: selectedGroup.id,
+        action: 'add',
+        participants: [phoneWithSuffix]
+      });
+
+      if (res.data?.success) {
+        showNotification('Participante agregado correctamente');
+        setAddParticipantNumber('');
+        fetchGroups();
+      }
+    } catch (err: any) {
+      showNotification(err.response?.data?.error || 'Error al agregar participante', 'error');
+    } finally {
+      setAddParticipantLoading(false);
+    }
+  };
+
+  // Fetch group invite code
+  const handleFetchInviteLink = async (groupJid: string) => {
+    if (!selectedInstanceForChats) return;
+    setInviteLinkLoading(true);
+    try {
+      const res = await api.get(`/instances/groups/${selectedInstanceForChats}/invite-code`, {
+        params: { groupJid }
+      });
+      if (res.data?.success) {
+        const code = res.data.data?.code;
+        if (code) {
+          const link = `https://chat.whatsapp.com/${code}`;
+          setInviteLinkLabel(link);
+          navigator.clipboard.writeText(link);
+          showNotification('¡Enlace de invitación copiado al portapapeles!');
+        } else {
+          showNotification('No se pudo generar el código del grupo', 'error');
+        }
+      }
+    } catch (err: any) {
+      showNotification(err.response?.data?.error || 'Error al obtener código del grupo', 'error');
+    } finally {
+      setInviteLinkLoading(false);
+    }
+  };
+
+  // Revoke group invite code
+  const handleRevokeInviteLink = async (groupJid: string) => {
+    if (!selectedInstanceForChats) return;
+    setInviteLinkLoading(true);
+    try {
+      const res = await api.post(`/instances/groups/${selectedInstanceForChats}/revoke-invite`, { groupJid });
+      if (res.data?.success) {
+        showNotification('Código de invitación revocado con éxito');
+        setInviteLinkLabel(null);
+      }
+    } catch (err: any) {
+      showNotification(err.response?.data?.error || 'Error al revocar código del grupo', 'error');
+    } finally {
+      setInviteLinkLoading(false);
+    }
+  };
+
   // Auto-scroll inteligente: solo scroll si llegan mensajes nuevos (no en cada render)
   useEffect(() => {
     if (messages.length > 0 && messages.length !== prevMessagesCountRef.current) {
@@ -1116,6 +1300,7 @@ export default function DashboardPage() {
     { id: 'instances', label: 'Líneas / QR', icon: Smartphone },
     { id: 'chats', label: 'Chats en Vivo', icon: MessageSquare },
     { id: 'contacts', label: 'Agenda (Google)', icon: Users },
+    { id: 'groups', label: 'Grupos (WhatsApp)', icon: Users2 },
     { id: 'playground', label: 'Probar Envío', icon: Play },
     { id: 'docs', label: 'Documentación API', icon: Terminal },
     { id: 'subscription', label: 'Suscripción', icon: Key },
@@ -2493,6 +2678,316 @@ echo $response;`;
               </div>
             )}
 
+            {/* WHATSAPP GROUPS SECTION */}
+            {activeTab === 'groups' && (
+              <div className="space-y-6 animate-fadeIn">
+                <div className="text-left space-y-0.5">
+                  <h3 className="text-base font-bold text-slate-800 dark:text-white">Grupos de WhatsApp</h3>
+                  <p className="text-xs text-slate-400">Administra los grupos, miembros y accesos de tu línea conectada.</p>
+                </div>
+
+                {!selectedInstanceForChats ? (
+                  // Select instance warning screen
+                  <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 text-center max-w-2xl mx-auto space-y-4 shadow-sm text-left">
+                    <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center mx-auto">
+                      <Smartphone size={26} />
+                    </div>
+                    <div className="space-y-1 text-center">
+                      <h4 className="text-sm font-bold text-slate-800 dark:text-white">Selecciona una línea activa</h4>
+                      <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
+                        Debes seleccionar una instancia de WhatsApp conectada para poder listar y administrar sus grupos.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  // Main group content layout (Split screen: Groups List on left, Selected Group details on right)
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    
+                    {/* Left Column: Groups List */}
+                    <div className="lg:col-span-7 bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 space-y-4 shadow-sm text-left">
+                      <div className="flex items-center justify-between gap-3 flex-wrap">
+                        <h4 className="text-sm font-bold text-slate-800 dark:text-white">Lista de Grupos ({groups.length})</h4>
+                        
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={fetchGroups}
+                            disabled={groupsLoading}
+                            className="p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                            title="Recargar grupos"
+                          >
+                            <RefreshCw size={14} className={groupsLoading ? 'animate-spin' : ''} />
+                          </button>
+                          
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCreateGroupError(null);
+                              setShowCreateGroupModal(true);
+                            }}
+                            className="px-3.5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-95 text-white font-bold text-xs rounded-xl transition-all shadow-md shadow-emerald-500/20 cursor-pointer flex items-center gap-1"
+                          >
+                            <Plus size={13} />
+                            <span>Crear Grupo</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Search Bar */}
+                      <div className="relative">
+                        <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                          <Search size={15} />
+                        </span>
+                        <input
+                          type="text"
+                          value={searchGroupQuery}
+                          onChange={(e) => setSearchGroupQuery(e.target.value)}
+                          placeholder="Buscar grupos por nombre o JID..."
+                          className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium"
+                        />
+                      </div>
+
+                      {groupsLoading && groups.length === 0 ? (
+                        <div className="py-16 flex flex-col items-center justify-center gap-3 text-slate-400">
+                          <RefreshCw size={24} className="animate-spin text-emerald-500" />
+                          <span className="text-xs font-medium">Recuperando grupos de WhatsApp...</span>
+                        </div>
+                      ) : (
+                        <div className="space-y-2.5 max-h-[60vh] overflow-y-auto pr-1">
+                          {groups.filter(g => {
+                            const q = searchGroupQuery.toLowerCase().trim();
+                            if (!q) return true;
+                            const subject = (g.subject || '').toLowerCase();
+                            const jid = (g.id || '').toLowerCase();
+                            return subject.includes(q) || jid.includes(q);
+                          }).length === 0 ? (
+                            <div className="py-12 text-center text-slate-400 space-y-2">
+                              <Users2 size={32} className="mx-auto text-slate-300 dark:text-slate-700 animate-pulse" />
+                              <p className="text-xs font-semibold">No se encontraron grupos</p>
+                              <p className="text-[10px] text-slate-400 dark:text-slate-500">¿Estás seguro de que tu línea de WhatsApp tiene grupos activos?</p>
+                            </div>
+                          ) : (
+                            groups
+                              .filter(g => {
+                                const q = searchGroupQuery.toLowerCase().trim();
+                                if (!q) return true;
+                                const subject = (g.subject || '').toLowerCase();
+                                const jid = (g.id || '').toLowerCase();
+                                return subject.includes(q) || jid.includes(q);
+                              })
+                              .map(group => {
+                                const isSelected = selectedGroup?.id === group.id;
+                                const initials = group.subject ? group.subject.charAt(0).toUpperCase() : 'G';
+                                
+                                return (
+                                  <div
+                                    key={group.id}
+                                    onClick={() => {
+                                      setSelectedGroup(group);
+                                      setInviteLinkLabel(null);
+                                    }}
+                                    className={`p-3.5 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition-all border text-left ${
+                                      isSelected
+                                        ? 'bg-slate-50 dark:bg-slate-800/40 border-emerald-500/30'
+                                        : 'bg-slate-50/50 dark:bg-slate-950/20 border-transparent hover:bg-slate-100/50 dark:hover:bg-slate-800/20'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                      {group.size > 0 && group.subject ? (
+                                        <div className="w-10 h-10 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-sm flex-shrink-0">
+                                          {initials}
+                                        </div>
+                                      ) : (
+                                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center flex-shrink-0">
+                                          <Users2 size={16} />
+                                        </div>
+                                      )}
+                                      
+                                      <div className="min-w-0">
+                                        <h5 className="text-xs font-bold text-slate-800 dark:text-white truncate">
+                                          {group.subject || 'Grupo sin Nombre'}
+                                        </h5>
+                                        <span className="text-[9px] font-mono text-slate-400 dark:text-slate-500 block truncate font-bold select-all">
+                                          {group.id}
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                                      <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-950 text-[9px] font-bold text-slate-500 dark:text-slate-400">
+                                        👥 {group.size || (group.participants ? group.participants.length : 0)} miembros
+                                      </span>
+                                    </div>
+                                  </div>
+                                );
+                              })
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Right Column: Selected Group Detail Panel */}
+                    <div className="lg:col-span-5 space-y-6">
+                      {selectedGroup ? (
+                        <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 space-y-5 shadow-sm text-left">
+                          {/* Panel Header */}
+                          <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/40">
+                            <div className="min-w-0">
+                              <h4 className="text-sm font-bold text-slate-800 dark:text-white leading-tight truncate">{selectedGroup.subject}</h4>
+                              <span className="text-[9px] font-mono text-slate-400 dark:text-slate-500 block truncate max-w-[220px] font-bold select-all" title={selectedGroup.id}>
+                                ID: {selectedGroup.id}
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => setSelectedGroup(null)}
+                              className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer flex items-center justify-center"
+                            >
+                              <X size={15} />
+                            </button>
+                          </div>
+
+                          {/* Group Invite Link Box */}
+                          <div className="p-3.5 bg-slate-50 dark:bg-slate-950/40 rounded-2xl space-y-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Enlace de Invitación</span>
+                              {inviteLinkLabel && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleRevokeInviteLink(selectedGroup.id)}
+                                  className="text-[9px] text-rose-500 hover:text-rose-600 font-bold transition-colors cursor-pointer"
+                                  disabled={inviteLinkLoading}
+                                >
+                                  Revocar
+                                </button>
+                              )}
+                            </div>
+
+                            {inviteLinkLabel ? (
+                              <div className="flex items-center gap-1 bg-white dark:bg-slate-950/50 p-2 rounded-xl border border-slate-100 dark:border-slate-900">
+                                <span className="text-[10px] font-mono text-slate-600 dark:text-slate-300 truncate flex-1">{inviteLinkLabel}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => copyToClipboard(inviteLinkLabel)}
+                                  className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-800 dark:hover:text-white rounded-lg cursor-pointer transition-colors flex items-center justify-center"
+                                  title="Copiar enlace"
+                                >
+                                  <Copy size={12} />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleFetchInviteLink(selectedGroup.id)}
+                                disabled={inviteLinkLoading}
+                                className="w-full py-2 bg-white dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900 border border-slate-200/50 dark:border-slate-900 rounded-xl text-[10px] text-slate-600 dark:text-slate-300 font-bold transition-all flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
+                              >
+                                {inviteLinkLoading ? (
+                                  <RefreshCw size={10} className="animate-spin text-emerald-500" />
+                                ) : (
+                                  <ExternalLink size={10} />
+                                )}
+                                <span>Generar y Copiar Enlace</span>
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Add Participant input form */}
+                          <form onSubmit={handleAddParticipantSubmit} className="space-y-2">
+                            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Agregar Miembro</span>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={addParticipantNumber}
+                                onChange={(e) => setAddParticipantNumber(e.target.value.replace(/[^0-9]/g, ''))}
+                                placeholder="Ej: 51987654321 (con código)"
+                                required
+                                className="flex-1 px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 rounded-xl text-xs text-slate-800 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium"
+                              />
+                              <button
+                                type="submit"
+                                disabled={addParticipantLoading || !addParticipantNumber.trim()}
+                                className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl cursor-pointer transition-all flex-shrink-0"
+                              >
+                                {addParticipantLoading ? 'Agregando...' : 'Agregar'}
+                              </button>
+                            </div>
+                          </form>
+
+                          {/* Participants List */}
+                          <div className="space-y-3.5">
+                            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block border-b border-slate-100 dark:border-slate-800/40 pb-1.5">
+                              Miembros ({selectedGroup.participants ? selectedGroup.participants.length : 0})
+                            </span>
+                            
+                            <div className="space-y-2 max-h-[30vh] overflow-y-auto pr-1">
+                              {(selectedGroup.participants || []).map((participant: any) => {
+                                const cleanId = participant.id.split('@')[0];
+                                const isAdmin = participant.admin === 'admin' || participant.admin === 'superadmin';
+                                
+                                return (
+                                  <div key={participant.id} className="group flex items-center justify-between gap-3 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors">
+                                    <div className="min-w-0">
+                                      <div className="flex items-center gap-1.5">
+                                        <span className="text-xs font-bold text-slate-700 dark:text-slate-200 font-mono truncate">+{cleanId}</span>
+                                        {isAdmin && (
+                                          <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[8.5px] font-bold">
+                                            Admin
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {/* Action Buttons for participant */}
+                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                      {isAdmin ? (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleUpdateGroupParticipant('demote', cleanId)}
+                                          className="p-1 bg-white dark:bg-slate-900 text-slate-400 hover:text-slate-800 dark:hover:text-white rounded-lg border border-slate-100 dark:border-slate-850 cursor-pointer shadow-sm transition-colors text-[9px] font-semibold"
+                                          title="Degradar a miembro"
+                                        >
+                                          Degradar
+                                        </button>
+                                      ) : (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleUpdateGroupParticipant('promote', cleanId)}
+                                          className="p-1 bg-white dark:bg-slate-900 text-slate-400 hover:text-slate-800 dark:hover:text-white rounded-lg border border-slate-100 dark:border-slate-850 cursor-pointer shadow-sm transition-colors text-[9px] font-semibold"
+                                          title="Ascender a admin"
+                                        >
+                                          Promover
+                                        </button>
+                                      )}
+                                      
+                                      <button
+                                        type="button"
+                                        onClick={() => handleUpdateGroupParticipant('remove', cleanId)}
+                                        className="p-1 bg-white hover:bg-rose-50 dark:bg-slate-900 text-slate-400 hover:text-rose-600 rounded-lg border border-slate-100 dark:border-slate-850 cursor-pointer shadow-sm transition-colors flex items-center justify-center"
+                                        title="Eliminar del grupo"
+                                      >
+                                        <Trash2 size={11} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 text-center shadow-sm text-slate-400 space-y-2">
+                          <Users2 size={28} className="mx-auto text-slate-300 dark:text-slate-700 animate-pulse" />
+                          <p className="text-xs font-semibold">Ningún grupo seleccionado</p>
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500">Selecciona un grupo de la lista para administrar sus miembros y enlace.</p>
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* PLAYGROUND SECTION */}
             {activeTab === 'playground' && (
               <div className="space-y-6 animate-fadeIn">
@@ -3042,6 +3537,87 @@ echo $response;`;
                   className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-[0.99] text-xs text-white font-bold rounded-2xl shadow-lg shadow-emerald-500/10 transition-all cursor-pointer"
                 >
                   {contactModal.isEdit ? 'Actualizar' : 'Guardar'}
+                </button>
+              </div>
+            </form>
+
+          </div>
+        </div>
+      )}
+
+      {/* Modal para Crear Grupo de WhatsApp */}
+      {showCreateGroupModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 w-full max-w-md p-6 sm:p-7 rounded-3xl space-y-4 shadow-premium-lg relative animate-fadeIn text-left">
+            
+            <button
+              onClick={() => {
+                setShowCreateGroupModal(false);
+                setCreateGroupSubject('');
+                setCreateGroupParticipants('');
+                setCreateGroupError(null);
+              }}
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="space-y-1.5">
+              <h3 className="text-base font-bold text-slate-800 dark:text-white">Crear Grupo de WhatsApp</h3>
+              <p className="text-xs text-slate-400">Crea un grupo de forma instantánea en tu línea celular de WhatsApp vinculada.</p>
+            </div>
+
+            {createGroupError && (
+              <div className="p-3 mb-2 bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs rounded-xl text-center font-bold">
+                ⚠️ {createGroupError}
+              </div>
+            )}
+
+            <form onSubmit={handleCreateGroup} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Asunto del Grupo (Nombre)</label>
+                <input
+                  type="text"
+                  value={createGroupSubject}
+                  onChange={(e) => setCreateGroupSubject(e.target.value)}
+                  placeholder="Ej: Ventas Urgentes 🚀"
+                  required
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Participantes Iniciales (Números con código de país)</label>
+                <textarea
+                  value={createGroupParticipants}
+                  onChange={(e) => setCreateGroupParticipants(e.target.value)}
+                  placeholder="Separados por comas: 51987654321, 51912345678"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium resize-none"
+                  rows={3}
+                />
+                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Nota: Debes incluir obligatoriamente el código de país.</span>
+              </div>
+
+              <div className="flex gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCreateGroupModal(false);
+                    setCreateGroupSubject('');
+                    setCreateGroupParticipants('');
+                    setCreateGroupError(null);
+                  }}
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-950 dark:hover:bg-slate-800 text-xs text-slate-700 dark:text-slate-300 font-bold rounded-2xl transition-all cursor-pointer border border-slate-200/20"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={createGroupLoading || !createGroupSubject.trim()}
+                  className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-[0.99] disabled:opacity-40 text-xs text-white font-bold rounded-2xl shadow-lg shadow-emerald-500/10 transition-all cursor-pointer"
+                >
+                  {createGroupLoading ? 'Creando...' : 'Crear'}
                 </button>
               </div>
             </form>

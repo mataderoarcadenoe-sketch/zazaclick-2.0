@@ -871,4 +871,85 @@ export class EvolutionService {
       return null;
     }
   }
+
+  /**
+   * Obtener todos los grupos de la instancia
+   */
+  public static async getGroups(instanceName: string): Promise<{ success: boolean; data?: any; error?: string; status?: number }> {
+    try {
+      const response = await api.get(`/group/fetchAllGroups/${instanceName}?getParticipants=true`);
+      return { success: true, data: response.data };
+    } catch (err: any) {
+      const errorMsg = this.parseError(err);
+      console.error(`[EvolutionService] Error obteniendo grupos para ${instanceName}:`, errorMsg);
+      return { success: false, error: errorMsg, status: err.response?.status };
+    }
+  }
+
+  /**
+   * Crear un nuevo grupo de WhatsApp
+   */
+  public static async createGroup(instanceName: string, subject: string, participants: string[]): Promise<{ success: boolean; data?: any; error?: string; status?: number }> {
+    try {
+      const response = await api.post(`/group/create/${instanceName}`, {
+        subject,
+        participants
+      });
+      return { success: true, data: response.data };
+    } catch (err: any) {
+      const errorMsg = this.parseError(err);
+      console.error(`[EvolutionService] Error creando grupo para ${instanceName}:`, errorMsg);
+      return { success: false, error: errorMsg, status: err.response?.status };
+    }
+  }
+
+  /**
+   * Administrar participantes (añadir, remover, promover, degradar)
+   */
+  public static async updateGroupParticipants(
+    instanceName: string,
+    groupJid: string,
+    action: 'add' | 'remove' | 'promote' | 'demote',
+    participants: string[]
+  ): Promise<{ success: boolean; data?: any; error?: string; status?: number }> {
+    try {
+      const response = await api.put(`/group/updateParticipant/${instanceName}?groupJid=${groupJid}`, {
+        action,
+        participants
+      });
+      return { success: true, data: response.data };
+    } catch (err: any) {
+      const errorMsg = this.parseError(err);
+      console.error(`[EvolutionService] Error actualizando participantes para ${instanceName}:`, errorMsg);
+      return { success: false, error: errorMsg, status: err.response?.status };
+    }
+  }
+
+  /**
+   * Obtener enlace de invitación del grupo
+   */
+  public static async getGroupInviteCode(instanceName: string, groupJid: string): Promise<{ success: boolean; data?: any; error?: string; status?: number }> {
+    try {
+      const response = await api.get(`/group/inviteCode/${instanceName}?groupJid=${groupJid}`);
+      return { success: true, data: response.data };
+    } catch (err: any) {
+      const errorMsg = this.parseError(err);
+      console.error(`[EvolutionService] Error obteniendo código de invitación para ${instanceName}:`, errorMsg);
+      return { success: false, error: errorMsg, status: err.response?.status };
+    }
+  }
+
+  /**
+   * Revocar enlace de invitación del grupo
+   */
+  public static async revokeGroupInviteCode(instanceName: string, groupJid: string): Promise<{ success: boolean; data?: any; error?: string; status?: number }> {
+    try {
+      const response = await api.post(`/group/revokeInviteCode/${instanceName}?groupJid=${groupJid}`);
+      return { success: true, data: response.data };
+    } catch (err: any) {
+      const errorMsg = this.parseError(err);
+      console.error(`[EvolutionService] Error revocando código de invitación para ${instanceName}:`, errorMsg);
+      return { success: false, error: errorMsg, status: err.response?.status };
+    }
+  }
 }

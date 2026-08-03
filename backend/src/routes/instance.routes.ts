@@ -815,4 +815,157 @@ router.post('/google-contacts/sync-whatsapp', authMiddleware, async (req: Authen
   }
 });
 
+/**
+ * GET /instances/groups/:instanceName - Obtener todos los grupos de la instancia
+ */
+router.get('/groups/:instanceName', authMiddleware, async (req: AuthenticatedRequest, res) => {
+  const { instanceName } = req.params;
+
+  try {
+    // Verificar propiedad de la instancia
+    const verifyRes = await pool.query('SELECT id FROM instances WHERE user_id = $1 AND instance_name = $2', [req.userId, instanceName]);
+    if (verifyRes.rows.length === 0) {
+      return res.status(403).json({ success: false, error: 'Acceso no autorizado.' });
+    }
+
+    const groupsResult = await EvolutionService.getGroups(instanceName);
+    if (!groupsResult.success) {
+      return res.status(500).json({ success: false, error: groupsResult.error || 'Error al obtener grupos' });
+    }
+
+    res.json({ success: true, data: groupsResult.data });
+  } catch (error: any) {
+    console.error('[Instance] Error en GET /groups:', error.message);
+    res.status(500).json({ success: false, error: 'Error interno en el servidor.' });
+  }
+});
+
+/**
+ * POST /instances/groups/:instanceName/create - Crear un grupo
+ */
+router.post('/groups/:instanceName/create', authMiddleware, async (req: AuthenticatedRequest, res) => {
+  const { instanceName } = req.params;
+  const { subject, participants } = req.body;
+
+  if (!subject) {
+    return res.status(400).json({ success: false, error: 'El nombre del grupo (subject) es requerido.' });
+  }
+
+  try {
+    // Verificar propiedad
+    const verifyRes = await pool.query('SELECT id FROM instances WHERE user_id = $1 AND instance_name = $2', [req.userId, instanceName]);
+    if (verifyRes.rows.length === 0) {
+      return res.status(403).json({ success: false, error: 'Acceso no autorizado.' });
+    }
+
+    // Limpiar teléfonos de los participantes (formato simple esperado por Evolution)
+    const cleanedParticipants = (participants || []).map((num: string) => {
+      const clean = num.replace(/\D/g, '');
+      return clean;
+    });
+
+    const createResult = await EvolutionService.createGroup(instanceName, subject, cleanedParticipants);
+    if (!createResult.success) {
+      return res.status(500).json({ success: false, error: createResult.error || 'Error al crear el grupo' });
+    }
+
+    res.json({ success: true, data: createResult.data });
+  } catch (error: any) {
+    console.error('[Instance] Error en POST /groups/create:', error.message);
+    res.status(500).json({ success: false, error: 'Error interno en el servidor.' });
+  }
+});
+
+/**
+ * PUT /instances/groups/:instanceName/participants - Gestionar miembros (add, remove, promote, demote)
+ */
+router.put('/groups/:instanceName/participants', authMiddleware, async (req: AuthenticatedRequest, res) => {
+  const { instanceName } = req.params;
+  const { groupJid, action, participants } = req.body;
+
+  if (!groupJid || !action || !participants || !Array.isArray(participants)) {
+    return res.status(400).json({ success: false, error: 'Parámetros inválidos (groupJid, action, participants son requeridos).' });
+  }
+
+  try {
+    // Verificar propiedad
+    const verifyRes = await pool.query('SELECT id FROM instances WHERE user_id = $1 AND instance_name = $2', [req.userId, instanceName]);
+    if (verifyRes.rows.length === 0) {
+      return res.status(403).json({ success: false, error: 'Acceso no autorizado.' });
+    }
+
+    const cleanParticipants = participants.map((num: string) => num.replace(/\D/g, ''));
+
+    const updateResult = await EvolutionService.updateGroupParticipants(instanceName, groupJid, action, cleanParticipants);
+    if (!updateResult.success) {
+      return res.status(500).json({ success: false, error: updateResult.error || 'Error al actualizar participantes del grupo' });
+    }
+
+    res.json({ success: true, data: updateResult.data });
+  } catch (error: any) {
+    console.error('[Instance] Error en PUT /groups/participants:', error.message);
+    res.status(500).json({ success: false, error: 'Error interno en el servidor.' });
+  }
+});
+
+/**
+ * GET /instances/groups/:instanceName/invite-code - Obtener enlace de invitación
+ */
+router.get('/groups/:instanceName/invite-code', authMiddleware, async (req: AuthenticatedRequest, res) => {
+  const { instanceName } = req.params;
+  const { groupJid } = req.query;
+
+  if (!groupJid) {
+    return res.status(400).json({ success: false, error: 'El parámetro groupJid es requerido.' });
+  }
+
+  try {
+    // Verificar propiedad
+    const verifyRes = await pool.query('SELECT id FROM instances WHERE user_id = $1 AND instance_name = $2', [req.userId, instanceName]);
+    if (verifyRes.rows.length === 0) {
+      return res.status(403).json({ success: false, error: 'Acceso no autorizado.' });
+    }
+
+    const codeResult = await EvolutionService.getGroupInviteCode(instanceName, groupJid as string);
+    if (!codeResult.success) {
+      return res.status(500).json({ success: false, error: codeResult.error || 'Error al obtener enlace de invitación' });
+    }
+
+    res.json({ success: true, data: codeResult.data });
+  } catch (error: any) {
+    console.error('[Instance] Error en GET /groups/invite-code:', error.message);
+    res.status(500).json({ success: false, error: 'Error interno en el servidor.' });
+  }
+});
+
+/**
+ * POST /instances/groups/:instanceName/revoke-invite - Revocar enlace de invitación
+ */
+router.post('/groups/:instanceName/revoke-invite', authMiddleware, async (req: AuthenticatedRequest, res) => {
+  const { instanceName } = req.params;
+  const { groupJid } = req.body;
+
+  if (!groupJid) {
+    return res.status(400).json({ success: false, error: 'El parámetro groupJid es requerido.' });
+  }
+
+  try {
+    // Verificar propiedad
+    const verifyRes = await pool.query('SELECT id FROM instances WHERE user_id = $1 AND instance_name = $2', [req.userId, instanceName]);
+    if (verifyRes.rows.length === 0) {
+      return res.status(403).json({ success: false, error: 'Acceso no autorizado.' });
+    }
+
+    const revokeResult = await EvolutionService.revokeGroupInviteCode(instanceName, groupJid);
+    if (!revokeResult.success) {
+      return res.status(500).json({ success: false, error: revokeResult.error || 'Error al revocar enlace de invitación' });
+    }
+
+    res.json({ success: true, data: revokeResult.data });
+  } catch (error: any) {
+    console.error('[Instance] Error en POST /groups/revoke-invite:', error.message);
+    res.status(500).json({ success: false, error: 'Error interno en el servidor.' });
+  }
+});
+
 export default router;
