@@ -438,4 +438,25 @@ router.post('/chats/:instanceName/read', authMiddleware, async (req: Authenticat
   }
 });
 
+/**
+ * GET /webhook-diag/:instanceName - Diagnosticar webhook en Evolution API
+ */
+router.get('/webhook-diag/:instanceName', async (req, res) => {
+  const { instanceName } = req.params;
+  try {
+    const diag = await EvolutionService.getWebhookConfig(instanceName);
+    res.json({
+      instanceName,
+      diag,
+      env: {
+        BACKEND_URL: process.env.BACKEND_URL,
+        PORT: process.env.PORT,
+        RAILWAY_PRIVATE_DOMAIN: process.env.RAILWAY_PRIVATE_DOMAIN
+      }
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 export default router;

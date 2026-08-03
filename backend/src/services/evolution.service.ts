@@ -74,12 +74,20 @@ export class EvolutionService {
   public static async createInstance(instanceName: string): Promise<{ success: boolean; instance?: any; error?: string; status?: number }> {
     try {
       const BACKEND_URL = process.env.BACKEND_URL || 'https://zaza-click-20-production.up.railway.app';
+      
+      // Priorizar la red interna privada de Railway para la comunicación local entre contenedores
+      const webhookUrl = process.env.RAILWAY_PRIVATE_DOMAIN
+        ? `http://${process.env.RAILWAY_PRIVATE_DOMAIN}:${process.env.PORT || 3000}/api/webhooks/whatsapp`
+        : `${BACKEND_URL}/api/webhooks/whatsapp`;
+        
+      console.log(`🔌 [EvolutionService] Registrando webhook en creación: ${webhookUrl}`);
+
       const response = await api.post('/instance/create', {
         instanceName,
         token: this.generateRandomToken(),
         qrcode: true,
         integration: 'WHATSAPP-BAILEYS',
-        webhook: `${BACKEND_URL}/api/webhooks/whatsapp`,
+        webhook: webhookUrl,
         webhook_by_events: false,
         webhook_events: ['MESSAGES_UPSERT', 'CHATS_UPDATE', 'MESSAGES_UPDATE'],
         settings: {
@@ -603,15 +611,34 @@ export class EvolutionService {
   }
 
   /**
+   * Obtener la configuración actual del webhook desde la Evolution API
+   */
+  public static async getWebhookConfig(instanceName: string): Promise<any> {
+    try {
+      const response = await api.get(`/webhook/find/${instanceName}`);
+      return { success: true, data: response.data };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
+  }
+
+  /**
    * Configurar webhook para una instancia existente en Evolution API
    */
   public static async configureWebhook(instanceName: string): Promise<boolean> {
     try {
       const BACKEND_URL = process.env.BACKEND_URL || 'https://zaza-click-20-production.up.railway.app';
+      
+      const webhookUrl = process.env.RAILWAY_PRIVATE_DOMAIN
+        ? `http://${process.env.RAILWAY_PRIVATE_DOMAIN}:${process.env.PORT || 3000}/api/webhooks/whatsapp`
+        : `${BACKEND_URL}/api/webhooks/whatsapp`;
+        
+      console.log(`🔌 [EvolutionService] Sincronizando webhook interno para ${instanceName}: ${webhookUrl}`);
+
       const response = await api.post(`/webhook/set/${instanceName}`, {
         webhook: {
           enabled: true,
-          url: `${BACKEND_URL}/api/webhooks/whatsapp`,
+          url: webhookUrl,
           webhookByEvents: false,
           events: [
             'MESSAGES_UPSERT',
