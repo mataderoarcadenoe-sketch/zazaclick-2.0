@@ -292,7 +292,7 @@ export class EvolutionService {
         const instanceMap = this.contactsCache.get(instanceName) || new Map<string, string>();
         for (const contact of contacts) {
           if (contact && contact.remoteJid) {
-            const name = contact.pushName || contact.name || contact.shortName;
+            const name = contact.name || contact.pushName || contact.shortName;
             if (name) {
               let cleanJid = contact.remoteJid;
               if (cleanJid.includes(':0@s.whatsapp.net')) {
@@ -485,8 +485,8 @@ export class EvolutionService {
         }
       }
 
-      // Intentar recuperar el nombre del contacto: 1) Redis (agenda sync), 2) caché en memoria, 3) pushName del chat
-      let displayName = chat.pushName;
+      // Intentar recuperar el nombre del contacto: 1) Redis (agenda sync), 2) caché en memoria, 3) nombre de la agenda en el chat, 4) pushName del chat
+      let displayName = chat.name || chat.pushName;
       
       // Buscar en Redis (nombres de agenda sincronizados via CONTACTS_UPSERT)
       const agendaName = await EvolutionService.getContactName(instanceName, realJid);
