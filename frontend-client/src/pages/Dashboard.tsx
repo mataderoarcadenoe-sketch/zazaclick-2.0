@@ -511,7 +511,7 @@ export default function DashboardPage() {
         setMessages(prev => {
           const exists = prev.some(m => m.key?.id === newMsg.key?.id);
           if (exists) return prev;
-          return [...prev, newMsg];
+          return [newMsg, ...prev];
         });
 
         // Si es un mensaje recibido en el chat abierto, informar al backend inmediatamente para limpiar Redis
