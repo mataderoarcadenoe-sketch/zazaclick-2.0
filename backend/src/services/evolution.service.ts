@@ -689,7 +689,7 @@ export class EvolutionService {
    */
   public static async getRawContacts(instanceName: string): Promise<any> {
     try {
-      const response = await api.post(`/contact/findContacts/${instanceName}`, {});
+      const response = await api.post(`/chat/findContacts/${instanceName}`, {});
       return response.data;
     } catch (err: any) {
       return { success: false, error: err.message };
