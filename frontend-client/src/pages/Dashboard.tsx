@@ -1341,7 +1341,7 @@ echo $response;`;
                           placeholder="Buscar conversación..."
                           value={chatsSearchQuery}
                           onChange={(e) => setChatsSearchQuery(e.target.value)}
-                          className="w-full pl-9 pr-4 py-2.5 bg-white/60 dark:bg-slate-900/40 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 font-medium transition-all shadow-sm"
+                          className="w-full pl-9 pr-4 py-2.5 bg-white/60 dark:bg-slate-900/40 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 font-medium transition-all"
                         />
                         <Search size={14} className="absolute left-7 top-1/2 -translate-y-1/2 text-slate-400" />
                       </div>
