@@ -289,21 +289,28 @@ export default function DashboardPage() {
         // Mark as read if the chat has unread messages
         if (selectedChat.unreadCount && selectedChat.unreadCount > 0) {
           const unreadMsgs = msgs.filter((m: any) => !m.key.fromMe);
+          let messageIds: string[] = [];
+          
           if (unreadMsgs.length > 0) {
-            const messageIds = unreadMsgs.slice(0, 10).map((m: any) => m.key.id);
-            api.post(`/instances/chats/${selectedInstanceForChats}/read`, {
-              remoteJid: originalJid || remoteJid,
-              messageIds
-            }).then(() => {
-              // Update local state to clear unread count immediately
-              setChats(prevChats => prevChats.map(c => 
-                (c.remoteJid === selectedChat.remoteJid) ? { ...c, unreadCount: 0 } : c
-              ));
-              setSelectedChat((prev: any) => prev ? { ...prev, unreadCount: 0 } : prev);
-            }).catch(err => {
-              console.error('Error marking messages as read:', err);
-            });
+            // Send all unread message IDs (not just 10) to make sure they all get marked as read
+            messageIds = unreadMsgs.map((m: any) => m.key.id);
+          } else if (selectedChat.lastMessage?.key?.id) {
+            // Fallback: use the last message ID to mark the chat read
+            messageIds = [selectedChat.lastMessage.key.id];
           }
+          
+          api.post(`/instances/chats/${selectedInstanceForChats}/read`, {
+            remoteJid: originalJid || remoteJid,
+            messageIds
+          }).then(() => {
+            // Update local state to clear unread count immediately
+            setChats(prevChats => prevChats.map(c => 
+              (c.remoteJid === selectedChat.remoteJid) ? { ...c, unreadCount: 0 } : c
+            ));
+            setSelectedChat((prev: any) => prev ? { ...prev, unreadCount: 0 } : prev);
+          }).catch(err => {
+            console.error('Error marking messages as read:', err);
+          });
         }
       }
     } catch (err) {
