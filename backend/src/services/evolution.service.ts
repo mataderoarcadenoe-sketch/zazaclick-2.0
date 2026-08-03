@@ -364,8 +364,10 @@ export class EvolutionService {
         realJid = realJid.replace(':0@s.whatsapp.net', '@s.whatsapp.net');
       }
 
-      // Obtener el contador de mensajes no leídos tolerando 'unreadMessages' y 'unreadCount'
-      const chatUnread = chat.unreadMessages !== undefined ? chat.unreadMessages : chat.unreadCount;
+      // Obtener el contador de mensajes no leídos tolerando 'unreadMessages' y 'unreadCount' de manera segura (evitando que null anule unreadCount)
+      const chatUnread = (chat.unreadMessages !== undefined && chat.unreadMessages !== null) 
+        ? chat.unreadMessages 
+        : chat.unreadCount;
       const unreadCountNum = Number(chatUnread) || 0;
 
       const existing = mergedMap.get(realJid);
@@ -384,7 +386,8 @@ export class EvolutionService {
         const currentTs = chat.lastMessage?.messageTimestamp || 0;
         const existingTs = existing.lastMessage?.messageTimestamp || 0;
         
-        const totalUnread = (Number(existing.unreadCount) || 0) + unreadCountNum;
+        // Tomar el valor máximo en lugar de sumar para evitar duplicar el contador si ambos registros de chat lo traen
+        const totalUnread = Math.max(Number(existing.unreadCount) || 0, unreadCountNum);
         
         if (currentTs > existingTs) {
           const merged = { 
