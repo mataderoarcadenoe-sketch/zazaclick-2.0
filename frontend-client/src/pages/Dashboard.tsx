@@ -2331,7 +2331,7 @@ echo $response;`;
                   <div className="flex-1 min-h-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md rounded-3xl overflow-hidden flex md:grid md:grid-cols-12 shadow-premium-lg text-left">
                     
                     {/* LEFT PANEL: Chats List */}
-                    <div className={`${selectedChat ? 'md:col-span-3' : 'md:col-span-4'} bg-slate-50/45 dark:bg-slate-950/20 flex-col min-h-0 w-full md:w-auto ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
+                    <div className={`${selectedChat ? 'md:col-span-3' : 'md:col-span-4'} bg-white dark:bg-slate-950 flex-col min-h-0 w-full md:w-auto ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
                       {/* Search Bar */}
                       <div className="p-4 relative">
                         <input
@@ -2339,7 +2339,7 @@ echo $response;`;
                           placeholder="Buscar conversación..."
                           value={chatsSearchQuery}
                           onChange={(e) => setChatsSearchQuery(e.target.value)}
-                          className="w-full pl-9 pr-4 py-2.5 bg-white/60 dark:bg-slate-900/40 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 font-medium transition-all"
+                          className="w-full pl-9 pr-4 py-2.5 bg-slate-100/60 dark:bg-slate-900/60 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
                         />
                         <Search size={14} className="absolute left-7 top-1/2 -translate-y-1/2 text-surface-400" />
                       </div>
