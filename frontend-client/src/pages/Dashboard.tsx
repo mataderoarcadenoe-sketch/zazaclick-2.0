@@ -2972,7 +2972,7 @@ echo $response;`;
                                       <button
                                         type="button"
                                         onClick={() => setIsDocTypeDropdownOpen(!isDocTypeDropdownOpen)}
-                                        className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950/60 border-0 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all cursor-pointer min-w-[65px] justify-between shadow-sm focus:outline-none"
+                                        className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950/60 border-0 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all cursor-pointer min-w-[65px] justify-between focus:outline-none"
                                       >
                                         <span>{crmDocType}</span>
                                         <ChevronDown size={10} className={`text-surface-400 transition-transform duration-200 ${isDocTypeDropdownOpen ? 'rotate-180' : ''}`} />
@@ -3068,7 +3068,7 @@ echo $response;`;
                                       <button
                                         type="button"
                                         onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
-                                        className="w-full flex items-center justify-between px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-955 border-0 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all cursor-pointer shadow-sm focus:outline-none"
+                                        className="w-full flex items-center justify-between px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-955 border-0 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all cursor-pointer focus:outline-none"
                                       >
                                         <span>
                                           {crmCategories.find(c => c.id.toString() === crmCategoryId)?.name || 'Sin Categoría'}
