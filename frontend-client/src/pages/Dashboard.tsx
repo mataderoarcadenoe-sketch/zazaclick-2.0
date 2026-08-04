@@ -1868,13 +1868,11 @@ echo $response;`;
                     : 'text-slate-200 dark:text-surface-400 hover:bg-white/10 hover:text-white font-semibold'
                 }`}
               >
-                {active ? (
-                  <div className="w-7 h-7 bg-white rounded-xl flex items-center justify-center flex-shrink-0 text-[#12a160]">
-                    <Icon size={14} className="stroke-[2.5]" />
-                  </div>
-                ) : (
-                  <Icon size={18} className="flex-shrink-0 text-slate-200" />
-                )}
+                <Icon 
+                  size={18} 
+                  className={`flex-shrink-0 ${active ? 'text-white' : 'text-slate-200'}`}
+                  fill={active ? 'currentColor' : 'none'}
+                />
                 {sidebarOpen ? (
                   <span className="ml-3 text-xs tracking-tight">{item.label}</span>
                 ) : (
