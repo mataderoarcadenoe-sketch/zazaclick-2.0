@@ -2039,10 +2039,10 @@ echo $response;`;
         </header>
 
         {/* Interactive Content Container */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-transparent relative">
+        <main className={`flex-1 p-4 sm:p-6 lg:p-6 bg-transparent relative ${activeTab === 'chats' ? 'overflow-hidden' : 'overflow-y-auto'}`}>
           
           {/* Active Section Renderer */}
-          <div className="max-w-7xl mx-auto space-y-6">
+          <div className={`max-w-7xl mx-auto ${activeTab === 'chats' ? 'h-full flex flex-col space-y-0' : 'space-y-6'}`}>
             
             {/* OVERVIEW SECTION */}
             {activeTab === 'overview' && (
@@ -2334,7 +2334,7 @@ echo $response;`;
 
             {/* CHATS SECTION */}
             {activeTab === 'chats' && (
-              <div className="space-y-6 animate-fadeIn h-[calc(100vh-100px)] flex flex-col">
+              <div className="animate-fadeIn h-full flex flex-col min-h-0">
                 {/* Validation warnings */}
                 {instances.length === 0 ? (
                   <div className="flex-1 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-3xl p-8 flex flex-col items-center justify-center text-center space-y-4">
