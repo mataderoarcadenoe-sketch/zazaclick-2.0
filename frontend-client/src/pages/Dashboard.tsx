@@ -86,7 +86,7 @@ const formatTimeLocal = (timestamp: number) => {
 
 // Colores para diferenciar participantes en grupos
 const GROUP_SENDER_COLORS = [
-  'text-emerald-500', 'text-blue-500', 'text-purple-500', 'text-amber-500',
+  'text-brand-primary', 'text-blue-500', 'text-purple-500', 'text-amber-500',
   'text-rose-500', 'text-cyan-500', 'text-indigo-500', 'text-pink-500',
   'text-teal-500', 'text-orange-500'
 ];
@@ -1787,10 +1787,10 @@ echo $response;`;
       {notification && (
         <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-2xl border shadow-premium-lg flex items-center gap-2.5 text-xs font-bold animate-fadeIn ${
           notification.type === 'success'
-            ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+            ? 'bg-pastel-100/50 border-pastel-100/40 text-brand-secondary dark:text-brand-primary'
             : 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400'
         }`}>
-          {notification.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <AlertCircle className="w-4 h-4 text-rose-500" />}
+          {notification.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-brand-primary" /> : <AlertCircle className="w-4 h-4 text-rose-500" />}
           <span>{notification.text}</span>
         </div>
       )}
@@ -1817,7 +1817,7 @@ echo $response;`;
                 <Smartphone size={18} />
               </div>
               <span className="font-semibold text-slate-800 dark:text-white tracking-wide">
-                Zaza.click <span className="text-emerald-500">2.0</span>
+                Zaza.click <span className="text-brand-primary">2.0</span>
               </span>
             </div>
           )}
@@ -1904,9 +1904,9 @@ echo $response;`;
 
           <div className="flex items-center gap-3.5">
             {/* Online Status */}
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl">
-              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-              <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">En Línea</span>
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-pastel-100 dark:bg-emerald-950/30 rounded-xl">
+              <span className="w-2 h-2 bg-brand-primary rounded-full animate-pulse"></span>
+              <span className="text-[10px] font-bold text-brand-secondary dark:text-brand-primary uppercase tracking-wider">En Línea</span>
             </div>
 
             {/* Dark Mode Toggle */}
@@ -1942,9 +1942,9 @@ echo $response;`;
               <div className="space-y-6 animate-fadeIn">
                 
                 {/* Upgrade/Welcome Card Banner */}
-                <div className="p-6 bg-brand-500/10 dark:bg-brand-500/5 rounded-3xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="p-6 bg-pastel-100/50 dark:bg-pastel-100/20 rounded-3xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div className="space-y-2 text-left relative z-10">
-                    <span className="px-2.5 py-1 bg-brand-500/10 border border-brand-500/20 rounded-md text-[9px] font-bold text-brand-500 dark:text-brand-500 uppercase tracking-widest">
+                    <span className="px-2.5 py-1 bg-pastel-100/50 border border-pastel-100/40 rounded-md text-[9px] font-bold text-brand-primary dark:text-brand-primary uppercase tracking-widest">
                       Licencia Activa
                     </span>
                     <h3 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-white">
@@ -1959,7 +1959,7 @@ echo $response;`;
                     <button
                       onClick={() => setShowCreateModal(true)}
                       disabled={instances.length >= maxInstances}
-                      className="px-4 py-2.5 bg-brand-500 hover:bg-[#047857] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl shadow-lg shadow-brand-500/15 flex items-center gap-1.5 transition-all cursor-pointer"
+                      className="px-4 py-2.5 bg-brand-500 hover:bg-brand-secondary disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl shadow-lg shadow-brand-500/15 flex items-center gap-1.5 transition-all cursor-pointer"
                     >
                       <Plus size={16} />
                       <span>Nueva Instancia</span>
@@ -1974,7 +1974,7 @@ echo $response;`;
                   </div>
 
                   {/* Backdrop lights */}
-                  <div className="absolute right-0 top-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-[80px] pointer-events-none" />
+                  <div className="absolute right-0 top-0 w-64 h-64 bg-pastel-100/20 rounded-full blur-[80px] pointer-events-none" />
                 </div>
 
                 {/* Metrics Cards Grid */}
@@ -1988,8 +1988,8 @@ echo $response;`;
                   </div>
 
                   <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl space-y-1.5 text-left">
-                    <span className="text-[10px] text-surface-400 font-bold uppercase tracking-widest text-emerald-500">Instancias Online</span>
-                    <h3 className="text-2xl font-bold text-emerald-500">
+                    <span className="text-[10px] text-surface-400 font-bold uppercase tracking-widest text-brand-primary">Instancias Online</span>
+                    <h3 className="text-2xl font-bold text-brand-primary">
                       {activeInstancesCount} / <span className="text-surface-400">{instances.length || 0}</span>
                     </h3>
                     <p className="text-[10px] text-surface-500">Números con WhatsApp en línea.</p>
@@ -2022,7 +2022,7 @@ echo $response;`;
 
                   {instances.length === 0 ? (
                     <div className="py-10 text-center text-xs text-surface-400">
-                      No hay líneas agregadas. Ve a la pestaña de <button onClick={() => setActiveTab('instances')} className="text-emerald-500 font-bold hover:underline">Líneas / QR</button> para comenzar.
+                      No hay líneas agregadas. Ve a la pestaña de <button onClick={() => setActiveTab('instances')} className="text-brand-primary font-bold hover:underline">Líneas / QR</button> para comenzar.
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
@@ -2042,7 +2042,7 @@ echo $response;`;
                               <td className="py-3.5 text-surface-600 dark:text-surface-400 font-medium">{inst.phone || 'Pendiente vinculación'}</td>
                               <td className="py-3.5">
                                 {inst.status === 'connected' ? (
-                                  <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-bold text-emerald-600 dark:text-emerald-400 rounded-md">CONNECTED</span>
+                                  <span className="px-2 py-0.5 bg-pastel-100/50 border border-pastel-100/40 text-[9px] font-bold text-brand-secondary dark:text-brand-primary rounded-md">CONNECTED</span>
                                 ) : (
                                   <span className="px-2 py-0.5 bg-slate-500/10 border border-slate-200/50 dark:border-slate-800/50 text-[9px] font-bold text-surface-500 rounded-md">DISCONNECTED</span>
                                 )}
@@ -2056,7 +2056,7 @@ echo $response;`;
                                       setActiveTab('instances');
                                     }
                                   }}
-                                  className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer"
+                                  className="text-[10px] text-brand-secondary dark:text-brand-primary font-bold hover:underline cursor-pointer"
                                 >
                                   {inst.status === 'disconnected' ? 'Vincular QR' : 'Administrar'}
                                 </button>
@@ -2083,7 +2083,7 @@ echo $response;`;
                   <button
                     onClick={() => setShowCreateModal(true)}
                     disabled={instances.length >= maxInstances}
-                    className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-500/15 flex items-center gap-1.5 transition-colors cursor-pointer"
+                    className="px-4 py-2.5 bg-brand-primary hover:bg-brand-secondary disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl shadow-lg shadow-sm-custom flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
                     <Plus size={16} />
                     <span>Agregar Instancia</span>
@@ -2101,7 +2101,7 @@ echo $response;`;
                     </div>
                     <button
                       onClick={() => setShowCreateModal(true)}
-                      className="px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold rounded-xl border border-emerald-500/20 transition-all cursor-pointer"
+                      className="px-4 py-2 bg-pastel-100/50 hover:bg-pastel-100/70 text-brand-secondary dark:text-brand-primary text-xs font-bold rounded-xl border border-pastel-100/40 transition-all cursor-pointer"
                     >
                       Crear Primera Instancia
                     </button>
@@ -2115,7 +2115,7 @@ echo $response;`;
                       >
                         {/* Background light indicator */}
                         <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-[60px] pointer-events-none ${
-                          inst.status === 'connected' ? 'bg-emerald-500/5' : 'bg-rose-500/5'
+                          inst.status === 'connected' ? 'bg-pastel-100/20' : 'bg-rose-500/5'
                         }`} />
 
                         {/* Card Header */}
@@ -2123,7 +2123,7 @@ echo $response;`;
                           <div className="flex items-center gap-2.5">
                             <span className="font-semibold text-sm text-slate-800 dark:text-white">{inst.instance_name}</span>
                             {inst.status === 'connected' ? (
-                              <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-bold text-emerald-600 dark:text-emerald-400 rounded-md">CONECTADO</span>
+                              <span className="px-2 py-0.5 bg-pastel-100/50 border border-pastel-100/40 text-[9px] font-bold text-brand-secondary dark:text-brand-primary rounded-md">CONECTADO</span>
                             ) : (
                               <span className="px-2 py-0.5 bg-slate-500/10 border border-slate-200/50 dark:border-slate-800/50 text-[9px] font-bold text-surface-500 rounded-md">DESCONECTADO</span>
                             )}
@@ -2136,7 +2136,7 @@ echo $response;`;
                                 setTestResult(null);
                                 setActiveTab('playground');
                               }}
-                              className="p-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800 text-emerald-500 rounded-xl border border-slate-200/50 dark:border-slate-800/50 transition-colors"
+                              className="p-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800 text-brand-primary rounded-xl border border-slate-200/50 dark:border-slate-800/50 transition-colors"
                               title="Probar Envío"
                             >
                               <Send size={13} />
@@ -2158,7 +2158,7 @@ echo $response;`;
                           {inst.status === 'disconnected' ? (
                             <button
                               onClick={() => handleGetQr(inst.instance_name)}
-                              className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-500/10 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                              className="w-full py-2.5 bg-brand-primary hover:bg-brand-secondary text-white text-xs font-bold rounded-xl shadow-lg shadow-sm-custom transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                             >
                               <Key size={14} />
                               <span>Vincular Código QR</span>
@@ -2233,7 +2233,7 @@ echo $response;`;
                         {selectedInstanceForChats ? (
                           <div className="flex items-center gap-1.5 truncate">
                             <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                              instances.find(i => i.instance_name === selectedInstanceForChats)?.status === 'connected' ? 'bg-emerald-500' : 'bg-slate-400'
+                              instances.find(i => i.instance_name === selectedInstanceForChats)?.status === 'connected' ? 'bg-brand-primary' : 'bg-slate-400'
                             }`} />
                             <span className="truncate">
                               {selectedInstanceForChats}
@@ -2268,7 +2268,7 @@ echo $response;`;
                                 <span className="truncate">{inst.instance_name}</span>
                                 <span className={`px-2 py-0.5 rounded-md text-[8.5px] font-bold ${
                                   inst.status === 'connected' 
-                                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
+                                    ? 'bg-pastel-100/50 text-brand-secondary dark:text-brand-primary' 
                                     : 'bg-slate-100 dark:bg-slate-950 text-surface-500'
                                 }`}>
                                   {inst.status === 'connected' ? 'En línea' : 'Desconectada'}
@@ -2324,7 +2324,7 @@ echo $response;`;
                           placeholder="Buscar conversación..."
                           value={chatsSearchQuery}
                           onChange={(e) => setChatsSearchQuery(e.target.value)}
-                          className="w-full pl-9 pr-4 py-2.5 bg-white/60 dark:bg-slate-900/40 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 font-medium transition-all"
+                          className="w-full pl-9 pr-4 py-2.5 bg-white/60 dark:bg-slate-900/40 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 font-medium transition-all"
                         />
                         <Search size={14} className="absolute left-7 top-1/2 -translate-y-1/2 text-surface-400" />
                       </div>
@@ -2375,7 +2375,7 @@ echo $response;`;
                                     key={chat.remoteJid}
                                     onClick={() => setSelectedChat(chat)}
                                     type="button"
-                                    className={`w-full py-3.5 px-3.5 flex items-center gap-3 text-left transition-all duration-300 cursor-pointer rounded-2xl relative ${isActive ? 'bg-emerald-500/10 dark:bg-emerald-950/40' : 'hover:bg-white/45 dark:hover:bg-slate-800/20'}`}
+                                    className={`w-full py-3.5 px-3.5 flex items-center gap-3 text-left transition-all duration-300 cursor-pointer rounded-2xl relative ${isActive ? 'bg-pastel-100/50 dark:bg-brand-secondary/20' : 'hover:bg-white/45 dark:hover:bg-slate-800/20'}`}
                                   >
                                     {/* Active indicator pill */}
                                     {isActive && (
@@ -2397,7 +2397,7 @@ echo $response;`;
                                         <span className={`text-xs truncate ${isActive || isUnread ? 'text-slate-900 dark:text-white font-bold' : 'text-surface-500 dark:text-surface-400 font-normal'}`}>
                                           {contactName}
                                         </span>
-                                        <span className={`text-[10px] font-medium ${isUnread ? 'text-emerald-500 font-bold' : 'text-surface-400'}`}>
+                                        <span className={`text-[10px] font-medium ${isUnread ? 'text-brand-primary font-bold' : 'text-surface-400'}`}>
                                           {formatTimeLocal(chat.lastMessage?.messageTimestamp)}
                                         </span>
                                       </div>
@@ -2406,7 +2406,7 @@ echo $response;`;
                                           <span className="flex-1 block truncate"><AppleEmojiText text={lastMsgText} size={13} /></span>
                                         </p>
                                         {isUnread && (
-                                          <div className="bg-emerald-500 text-white text-[10px] font-bold px-1.5 min-w-[1.25rem] h-5 rounded-full flex items-center justify-center flex-shrink-0 ml-2 shadow-sm animate-pulseGlow">
+                                          <div className="bg-brand-primary text-white text-[10px] font-bold px-1.5 min-w-[1.25rem] h-5 rounded-full flex items-center justify-center flex-shrink-0 ml-2 shadow-sm animate-pulseGlow">
                                             {unreadCount}
                                           </div>
                                         )}
@@ -2462,7 +2462,7 @@ echo $response;`;
                                           familyName: '',
                                           phoneNumber: `+${selectedChat.remoteJid.split('@')[0]}`
                                         })}
-                                        className="px-1.5 py-0.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-[8.5px] rounded-md transition-colors cursor-pointer flex items-center gap-0.5"
+                                        className="px-1.5 py-0.5 bg-pastel-100/50 hover:bg-pastel-100/70 text-brand-secondary dark:text-brand-primary font-bold text-[8.5px] rounded-md transition-colors cursor-pointer flex items-center gap-0.5"
                                         title="Guardar en Google Contactos"
                                       >
                                         <Plus size={9} />
@@ -2481,7 +2481,7 @@ echo $response;`;
                               <button
                                 type="button"
                                 onClick={() => setShowCrmSidebar(!showCrmSidebar)}
-                                className={`p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer ${showCrmSidebar ? 'text-brand-500' : 'text-surface-400 hover:text-surface-600 dark:hover:text-slate-300'}`}
+                                className={`p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer ${showCrmSidebar ? 'text-brand-primary' : 'text-surface-400 hover:text-surface-600 dark:hover:text-slate-300'}`}
                                 title={showCrmSidebar ? "Ocultar Panel CRM" : "Mostrar Panel CRM"}
                               >
                                 <Users size={18} />
@@ -2588,12 +2588,12 @@ echo $response;`;
                                           onClick={() => downloadMedia(msgId, msg.key, content)}
                                           disabled={isLoading}
                                           type="button"
-                                          className="text-[10px] px-3.5 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold rounded-xl transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer animate-pulse"
+                                          className="text-[10px] px-3.5 py-2 bg-pastel-100/50 hover:bg-pastel-100/70 text-brand-secondary dark:text-brand-primary font-bold rounded-xl transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer animate-pulse"
                                         >
                                           {isLoading ? (
                                             <span className="w-3.5 h-3.5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin block" />
                                           ) : (
-                                            <Play size={12} className="fill-emerald-500" />
+                                            <Play size={12} className="fill-brand-primary" />
                                           )}
                                           <span>{isLoading ? 'Descargando...' : 'Escuchar Nota de Voz'}</span>
                                         </button>
@@ -2610,7 +2610,7 @@ echo $response;`;
                                           onClick={isLoaded ? undefined : () => downloadMedia(msgId, msg.key, content)}
                                           className={`p-3 bg-slate-50 dark:bg-slate-900/60 rounded-2xl text-left flex items-center gap-3 w-[260px] relative overflow-hidden ${!isLoaded ? 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors' : ''}`}
                                         >
-                                          <div className="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-600 dark:text-emerald-400">
+                                          <div className="p-2.5 bg-pastel-100/50 rounded-xl text-brand-secondary dark:text-brand-primary">
                                             <FileText size={20} />
                                           </div>
                                           <div className="flex-1 min-w-0 space-y-0.5">
@@ -2624,14 +2624,14 @@ echo $response;`;
                                               href={loadedMedia[msgId]} 
                                               download={fileName}
                                               onClick={(e) => e.stopPropagation()}
-                                              className="p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-md transition-colors"
+                                              className="p-2 bg-brand-primary hover:bg-brand-secondary text-white rounded-xl shadow-md transition-colors"
                                             >
                                               <Download size={14} />
                                             </a>
                                           ) : (
                                             <div className="p-2 text-surface-400">
                                               {isLoading ? (
-                                                <span className="w-4 h-4 border-2 border-slate-300 border-t-emerald-500 rounded-full animate-spin block" />
+                                                <span className="w-4 h-4 border-2 border-slate-300 border-t-brand-primary rounded-full animate-spin block" />
                                               ) : (
                                                 <Download size={14} />
                                               )}
@@ -2665,7 +2665,7 @@ echo $response;`;
                                               {/* Play Overlay */}
                                               <div className="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-black/30 transition-colors">
                                                 <div className="p-3 bg-white/90 dark:bg-slate-900/90 rounded-full shadow-lg text-slate-800 dark:text-white group-hover:scale-105 transition-transform">
-                                                  <Play size={20} fill="currentColor" className="ml-0.5 text-emerald-500" />
+                                                  <Play size={20} fill="currentColor" className="ml-0.5 text-brand-primary" />
                                                 </div>
                                               </div>
                                             </div>
@@ -2716,7 +2716,7 @@ echo $response;`;
                                       )}
 
                                       {/* Bubble */}
-                                      <div className={`p-3 rounded-2xl text-slate-800 dark:text-slate-100 ${fromMe ? 'bg-gradient-to-br from-emerald-100/90 to-teal-50/90 dark:from-emerald-900/40 dark:to-teal-900/30 text-emerald-950 dark:text-emerald-50 rounded-tr-none' : 'bg-gradient-to-br from-indigo-50/90 to-slate-100/90 dark:from-slate-800/80 dark:to-slate-800/40 text-indigo-950 dark:text-slate-100 rounded-tl-none'}`}>
+                                      <div className={`p-3 rounded-2xl text-slate-800 dark:text-slate-100 ${fromMe ? 'bg-pastel-100 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 rounded-tr-none' : 'bg-gradient-to-br from-indigo-50/90 to-slate-100/90 dark:from-slate-800/80 dark:to-slate-800/40 text-indigo-950 dark:text-slate-100 rounded-tl-none'}`}>
                                         {renderMessageContent()}
                                         
                                         {/* Timestamp and Checks */}
@@ -2752,7 +2752,7 @@ echo $response;`;
                                   onClick={() => handleTriggerFileInput('image')}
                                   className="w-full px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center gap-2 cursor-pointer transition-colors"
                                 >
-                                  <Image size={15} className="text-emerald-500" />
+                                  <Image size={15} className="text-brand-primary" />
                                   <span>Imagen</span>
                                 </button>
                                 <button
@@ -2825,14 +2825,14 @@ echo $response;`;
                                   ref={emojiButtonRef}
                                   type="button"
                                   onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                                  className={`p-2 transition-colors cursor-pointer rounded-xl ${showEmojiPicker ? 'bg-emerald-500/10 text-emerald-500' : 'text-surface-400 hover:text-surface-600 dark:hover:text-slate-300'}`}
+                                  className={`p-2 transition-colors cursor-pointer rounded-xl ${showEmojiPicker ? 'bg-pastel-100/50 text-brand-primary' : 'text-surface-400 hover:text-surface-600 dark:hover:text-slate-300'}`}
                                 >
                                   <Smile size={20} />
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => setShowAttachMenu(!showAttachMenu)}
-                                  className={`p-2 transition-colors cursor-pointer rounded-xl ${showAttachMenu ? 'bg-emerald-500/10 text-emerald-500' : 'text-surface-400 hover:text-surface-600 dark:hover:text-slate-300'}`}
+                                  className={`p-2 transition-colors cursor-pointer rounded-xl ${showAttachMenu ? 'bg-pastel-100/50 text-brand-primary' : 'text-surface-400 hover:text-surface-600 dark:hover:text-slate-300'}`}
                                 >
                                   <Paperclip size={20} />
                                 </button>
@@ -2843,12 +2843,12 @@ echo $response;`;
                                 onChange={(e) => setNewMessageText(e.target.value)}
                                 placeholder={attachedFile ? "Escribe un comentario/pie para tu archivo..." : "Escribe un mensaje aquí..."}
                                 disabled={sendingMessage}
-                                className="flex-1 px-4 py-3 bg-white/95 dark:bg-slate-900/95 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 font-medium disabled:opacity-50 transition-all shadow-premium"
+                                className="flex-1 px-4 py-3 bg-white/95 dark:bg-slate-900/95 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 font-medium disabled:opacity-50 transition-all shadow-premium"
                               />
                               <button
                                 type="submit"
                                 disabled={(!newMessageText.trim() && !attachedFile) || sendingMessage}
-                                className="p-2.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white rounded-2xl transition-all shadow-md shadow-emerald-500/20 flex-shrink-0 disabled:opacity-50 disabled:scale-100 disabled:shadow-none cursor-pointer"
+                                className="p-2.5 bg-brand-primary hover:bg-brand-secondary active:scale-95 text-white rounded-2xl transition-all shadow-md shadow-md-custom flex-shrink-0 disabled:opacity-50 disabled:scale-100 disabled:shadow-none cursor-pointer"
                               >
                                 <Send size={14} className={sendingMessage ? 'animate-fly' : ''} />
                               </button>
@@ -2890,7 +2890,7 @@ echo $response;`;
                                 {/* Display client details */}
                                 <div className="bg-white dark:bg-slate-900/60 p-3 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 space-y-2.5 shadow-sm">
                                   <div className="flex items-center gap-2">
-                                    <div className="w-7 h-7 rounded-xl bg-emerald-500/10 flex items-center justify-center text-brand-500">
+                                    <div className="w-7 h-7 rounded-xl bg-pastel-100/50 flex items-center justify-center text-brand-primary">
                                       {crmClient.doc_type === 'RUC' ? <Users size={14} /> : <MessageCircle size={14} />}
                                     </div>
                                     <div className="min-w-0 flex-1">
@@ -2917,7 +2917,7 @@ echo $response;`;
 
                                   <div className="space-y-0.5">
                                     <span className="text-[8.5px] text-surface-400 dark:text-surface-500 font-bold uppercase tracking-wider block">Categoría de Contacto</span>
-                                    <span className="inline-flex px-2 py-0.5 bg-emerald-500/10 text-brand-500 text-[9px] font-bold rounded-full mt-0.5 border border-emerald-500/15">
+                                    <span className="inline-flex px-2 py-0.5 bg-pastel-100/50 text-brand-primary text-[9px] font-bold rounded-full mt-0.5 border border-pastel-100/30">
                                       {crmContact?.category_name || 'Sin Categoría'}
                                     </span>
                                   </div>
@@ -2979,7 +2979,7 @@ echo $response;`;
                                                 setCrmAddress('');
                                                 setIsDocTypeDropdownOpen(false);
                                               }}
-                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-emerald-500/10 hover:text-brand-500 transition-colors cursor-pointer ${crmDocType === 'DNI' ? 'text-brand-500 bg-emerald-500/5' : 'text-slate-700 dark:text-slate-200'}`}
+                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-pastel-100/50 hover:text-brand-primary transition-colors cursor-pointer ${crmDocType === 'DNI' ? 'text-brand-primary bg-pastel-100/20' : 'text-slate-700 dark:text-slate-200'}`}
                                             >
                                               DNI
                                             </button>
@@ -2992,7 +2992,7 @@ echo $response;`;
                                                 setCrmAddress('');
                                                 setIsDocTypeDropdownOpen(false);
                                               }}
-                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-emerald-500/10 hover:text-brand-500 transition-colors cursor-pointer ${crmDocType === 'RUC' ? 'text-brand-500 bg-emerald-500/5' : 'text-slate-700 dark:text-slate-200'}`}
+                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-pastel-100/50 hover:text-brand-primary transition-colors cursor-pointer ${crmDocType === 'RUC' ? 'text-brand-primary bg-pastel-100/20' : 'text-slate-700 dark:text-slate-200'}`}
                                             >
                                               RUC
                                             </button>
@@ -3021,11 +3021,11 @@ echo $response;`;
                                           type="button"
                                           onClick={handleValidateCrmDoc}
                                           disabled={crmValidationLoading}
-                                          className="absolute right-2 top-1/2 -translate-y-1/2 text-surface-400 hover:text-brand-500 disabled:opacity-50 transition-colors cursor-pointer"
+                                          className="absolute right-2 top-1/2 -translate-y-1/2 text-surface-400 hover:text-brand-primary disabled:opacity-50 transition-colors cursor-pointer"
                                           title="Consultar APIPeru"
                                         >
                                           {crmValidationLoading ? (
-                                            <RefreshCw size={11} className="animate-spin text-brand-500" />
+                                            <RefreshCw size={11} className="animate-spin text-brand-primary" />
                                           ) : (
                                             <Search size={11} />
                                           )}
@@ -3074,7 +3074,7 @@ echo $response;`;
                                                 setCrmCategoryId('');
                                                 setIsCategoryDropdownOpen(false);
                                               }}
-                                              className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-emerald-500/10 hover:text-brand-500 transition-colors cursor-pointer ${crmCategoryId === '' ? 'text-brand-500 bg-emerald-500/5' : 'text-slate-700 dark:text-slate-200'}`}
+                                              className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-pastel-100/50 hover:text-brand-primary transition-colors cursor-pointer ${crmCategoryId === '' ? 'text-brand-primary bg-pastel-100/20' : 'text-slate-700 dark:text-slate-200'}`}
                                             >
                                               Sin Categoría
                                             </button>
@@ -3086,7 +3086,7 @@ echo $response;`;
                                                   setCrmCategoryId(cat.id.toString());
                                                   setIsCategoryDropdownOpen(false);
                                                 }}
-                                                className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-emerald-500/10 hover:text-brand-500 transition-colors cursor-pointer ${crmCategoryId === cat.id.toString() ? 'text-brand-500 bg-emerald-500/5' : 'text-slate-700 dark:text-slate-200'}`}
+                                                className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-pastel-100/50 hover:text-brand-primary transition-colors cursor-pointer ${crmCategoryId === cat.id.toString() ? 'text-brand-primary bg-pastel-100/20' : 'text-slate-700 dark:text-slate-200'}`}
                                               >
                                                 {cat.name}
                                               </button>
@@ -3155,7 +3155,7 @@ echo $response;`;
                                     type="button"
                                     onClick={() => handleSaveCrmContact()}
                                     disabled={crmSaving}
-                                    className="flex-1 py-1.5 bg-brand-500 hover:bg-[#047857] text-white text-[11px] font-bold rounded-xl transition-all disabled:opacity-50 cursor-pointer text-center"
+                                    className="flex-1 py-1.5 bg-brand-500 hover:bg-brand-secondary text-white text-[11px] font-bold rounded-xl transition-all disabled:opacity-50 cursor-pointer text-center"
                                   >
                                     {crmSaving ? 'Guardando...' : 'Guardar Ficha'}
                                   </button>
@@ -3220,7 +3220,7 @@ echo $response;`;
                               fetchCrmClients(e.target.value);
                             }}
                             placeholder="Buscar por nombre, DNI, RUC..."
-                            className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium"
+                            className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/30 font-medium"
                           />
                         </div>
                         <div className="flex items-center gap-2">
@@ -3247,7 +3247,7 @@ echo $response;`;
                       {/* Clients Table */}
                       {crmClientsLoading && crmClients.length === 0 ? (
                         <div className="py-12 flex flex-col items-center justify-center gap-3 text-surface-400">
-                          <RefreshCw size={24} className="animate-spin text-emerald-500" />
+                          <RefreshCw size={24} className="animate-spin text-brand-primary" />
                           <span className="text-xs font-medium">Cargando clientes...</span>
                         </div>
                       ) : crmClients.length === 0 ? (
@@ -3285,7 +3285,7 @@ echo $response;`;
                                   >
                                     <td className="py-3.5">
                                       <div className="flex items-center gap-2.5">
-                                        <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-brand-500 font-bold text-xs flex-shrink-0">
+                                        <div className="w-8 h-8 rounded-xl bg-pastel-100/50 flex items-center justify-center text-brand-primary font-bold text-xs flex-shrink-0">
                                           {client.doc_type === 'RUC' ? <Users size={14} /> : client.name?.charAt(0)?.toUpperCase() || '?'}
                                         </div>
                                         <div className="min-w-0">
@@ -3338,13 +3338,13 @@ echo $response;`;
                                               {crmClientContacts.map((contact: any) => (
                                                 <div key={contact.id} className="flex items-center justify-between p-2.5 bg-white dark:bg-slate-900/60 rounded-xl border border-slate-200/40 dark:border-slate-800/60">
                                                   <div className="flex items-center gap-2.5">
-                                                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${contact.is_active ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`} />
+                                                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${contact.is_active ? 'bg-brand-primary' : 'bg-slate-300 dark:bg-slate-700'}`} />
                                                     <div>
                                                       <p className="text-xs font-bold text-slate-800 dark:text-white font-mono">+{contact.phone_number}</p>
                                                       <p className="text-[10px] text-surface-400">{contact.is_active ? 'Activo' : 'Inactivo'}</p>
                                                     </div>
                                                   </div>
-                                                  <span className={`inline-flex px-2 py-0.5 text-[9px] font-bold rounded-full border ${contact.category_name ? 'bg-emerald-500/10 text-brand-500 border-emerald-500/15' : 'bg-slate-100 dark:bg-slate-800 text-surface-400 border-slate-200/50 dark:border-slate-700/50'}`}>
+                                                  <span className={`inline-flex px-2 py-0.5 text-[9px] font-bold rounded-full border ${contact.category_name ? 'bg-pastel-100/50 text-brand-primary border-pastel-100/30' : 'bg-slate-100 dark:bg-slate-800 text-surface-400 border-slate-200/50 dark:border-slate-700/50'}`}>
                                                     {contact.category_name || 'Sin categoría'}
                                                   </span>
                                                 </div>
@@ -3370,7 +3370,7 @@ echo $response;`;
                   <div className="space-y-6">
                     {!googleConnected ? (
                       <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 text-center max-w-2xl mx-auto space-y-6 shadow-premium">
-                        <div className="w-16 h-16 rounded-3xl bg-emerald-500/10 flex items-center justify-center text-brand-500 mx-auto">
+                        <div className="w-16 h-16 rounded-3xl bg-pastel-100/50 flex items-center justify-center text-brand-primary mx-auto">
                           <Users size={32} />
                         </div>
                         <div className="space-y-2">
@@ -3382,7 +3382,7 @@ echo $response;`;
                         <button
                           type="button"
                           onClick={handleConnectGoogleContacts}
-                          className="inline-flex items-center gap-2 px-6 py-3.5 bg-brand-500 hover:bg-[#047857] active:scale-95 text-white font-bold text-xs rounded-2xl transition-all shadow-md shadow-brand-500/20 cursor-pointer"
+                          className="inline-flex items-center gap-2 px-6 py-3.5 bg-brand-500 hover:bg-brand-secondary active:scale-95 text-white font-bold text-xs rounded-2xl transition-all shadow-md shadow-brand-500/20 cursor-pointer"
                         >
                           <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                             <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.113-5.136 4.113-3.072 0-5.561-2.49-5.561-5.561s2.49-5.561 5.561-5.561c1.396 0 2.67.513 3.655 1.353l3.14-3.14C18.796 3.738 15.748 2.5 12.24 2.5 6.42 2.5 1.7 7.22 1.7 13s4.72 10.5 10.54 10.5c5.8 0 10.46-4.7 10.46-10.5 0-.712-.082-1.395-.224-2.073h-10.236z"/>
@@ -3395,7 +3395,7 @@ echo $response;`;
                         {/* Connection Info header card */}
                         <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-sm text-left">
                           <div className="flex items-center gap-3.5">
-                            <div className="w-12 h-12 rounded-2xl bg-brand-500/10 text-brand-500 flex items-center justify-center flex-shrink-0">
+                            <div className="w-12 h-12 rounded-2xl bg-pastel-100/50 text-brand-primary flex items-center justify-center flex-shrink-0">
                               <Users size={22} />
                             </div>
                             <div>
@@ -3453,7 +3453,7 @@ echo $response;`;
                                 familyName: '',
                                 phoneNumber: ''
                               })}
-                              className="px-4 py-3 bg-brand-500 hover:bg-[#047857] active:scale-95 text-white font-bold text-xs rounded-2xl transition-all shadow-md shadow-brand-500/20 cursor-pointer flex items-center gap-1.5"
+                              className="px-4 py-3 bg-brand-500 hover:bg-brand-secondary active:scale-95 text-white font-bold text-xs rounded-2xl transition-all shadow-md shadow-brand-500/20 cursor-pointer flex items-center gap-1.5"
                             >
                               <Plus size={14} />
                               <span>Nuevo Contacto</span>
@@ -3473,13 +3473,13 @@ echo $response;`;
                               value={searchContactQuery}
                               onChange={(e) => setSearchContactQuery(e.target.value)}
                               placeholder="Buscar contactos por nombre, apellido o número..."
-                              className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium"
+                              className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/30 font-medium"
                             />
                           </div>
 
                           {googleContactsLoading ? (
                             <div className="py-12 flex flex-col items-center justify-center gap-3 text-surface-400">
-                              <RefreshCw size={24} className="animate-spin text-emerald-500" />
+                              <RefreshCw size={24} className="animate-spin text-brand-primary" />
                               <span className="text-xs font-medium">Cargando contactos de Google...</span>
                             </div>
                           ) : (
@@ -3527,7 +3527,7 @@ echo $response;`;
                                                 {contact.photoUrl ? (
                                                   <img src={contact.photoUrl} alt={contact.displayName} className="w-8 h-8 rounded-full object-cover" />
                                                 ) : (
-                                                  <div className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+                                                  <div className="w-8 h-8 rounded-full bg-pastel-100/50 text-brand-secondary dark:text-brand-primary flex items-center justify-center font-bold text-xs">
                                                     {initials}
                                                   </div>
                                                 )}
@@ -3632,7 +3632,7 @@ echo $response;`;
                               setCreateGroupError(null);
                               setShowCreateGroupModal(true);
                             }}
-                            className="px-3.5 py-2.5 bg-brand-500 hover:bg-[#047857] active:scale-95 text-white font-bold text-xs rounded-xl transition-all shadow-md shadow-brand-500/20 cursor-pointer flex items-center gap-1"
+                            className="px-3.5 py-2.5 bg-brand-500 hover:bg-brand-secondary active:scale-95 text-white font-bold text-xs rounded-xl transition-all shadow-md shadow-brand-500/20 cursor-pointer flex items-center gap-1"
                           >
                             <Plus size={13} />
                             <span>Crear Grupo</span>
@@ -3650,13 +3650,13 @@ echo $response;`;
                           value={searchGroupQuery}
                           onChange={(e) => setSearchGroupQuery(e.target.value)}
                           placeholder="Buscar grupos por nombre o JID..."
-                          className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium"
+                          className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/30 font-medium"
                         />
                       </div>
 
                       {groupsLoading && groups.length === 0 ? (
                         <div className="py-16 flex flex-col items-center justify-center gap-3 text-surface-400">
-                          <RefreshCw size={24} className="animate-spin text-emerald-500" />
+                          <RefreshCw size={24} className="animate-spin text-brand-primary" />
                           <span className="text-xs font-medium">Recuperando grupos de WhatsApp...</span>
                         </div>
                       ) : (
@@ -3789,7 +3789,7 @@ echo $response;`;
                                 className="w-full py-2 bg-white dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900 border border-slate-200/50 dark:border-slate-900 rounded-xl text-[10px] text-surface-600 dark:text-slate-300 font-bold transition-all flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
                               >
                                 {inviteLinkLoading ? (
-                                  <RefreshCw size={10} className="animate-spin text-emerald-500" />
+                                  <RefreshCw size={10} className="animate-spin text-brand-primary" />
                                 ) : (
                                   <ExternalLink size={10} />
                                 )}
@@ -3808,7 +3808,7 @@ echo $response;`;
                                 onChange={(e) => setAddParticipantNumber(e.target.value.replace(/[^0-9]/g, ''))}
                                 placeholder="Ej: 51987654321 (con código)"
                                 required
-                                className="flex-1 px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 rounded-xl text-xs text-slate-800 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium"
+                                className="flex-1 px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 rounded-xl text-xs text-slate-800 dark:text-white focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/30 font-medium"
                               />
                               <button
                                 type="submit"
@@ -3837,7 +3837,7 @@ echo $response;`;
                                       <div className="flex items-center gap-1.5">
                                         <span className="text-xs font-bold text-slate-700 dark:text-slate-200 font-mono truncate">+{cleanId}</span>
                                         {isAdmin && (
-                                          <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[8.5px] font-bold">
+                                          <span className="px-1.5 py-0.5 rounded bg-pastel-100/50 text-brand-secondary dark:text-brand-primary text-[8.5px] font-bold">
                                             Admin
                                           </span>
                                         )}
@@ -3919,7 +3919,7 @@ echo $response;`;
                           {testInstance ? (
                             <div className="flex items-center gap-1.5 truncate">
                               <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                                instances.find(i => i.instance_name === testInstance)?.status === 'connected' ? 'bg-emerald-500' : 'bg-slate-400'
+                                instances.find(i => i.instance_name === testInstance)?.status === 'connected' ? 'bg-brand-primary' : 'bg-slate-400'
                               }`} />
                               <span className="truncate">
                                 {testInstance}
@@ -3954,7 +3954,7 @@ echo $response;`;
                                   <span className="truncate">{inst.instance_name}</span>
                                   <span className={`px-2 py-0.5 rounded-md text-[8.5px] font-bold ${
                                     inst.status === 'connected' 
-                                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
+                                      ? 'bg-pastel-100/50 text-brand-secondary dark:text-brand-primary' 
                                       : 'bg-slate-100 dark:bg-slate-950 text-surface-500'
                                   }`}>
                                     {inst.status === 'connected' ? 'Conectada' : 'Desconectada'}
@@ -3980,7 +3980,7 @@ echo $response;`;
                           placeholder="Ej: 987654321"
                           required
                           maxLength={9}
-                          className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-950/50 text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 font-medium"
+                          className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-950/50 text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 font-medium"
                         />
                       </div>
                     </div>
@@ -3992,14 +3992,14 @@ echo $response;`;
                         onChange={(e) => setTestText(e.target.value)}
                         rows={4}
                         required
-                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 font-medium resize-none shadow-inner"
+                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 font-medium resize-none shadow-inner"
                       />
                     </div>
 
                     <button
                       type="submit"
                       disabled={testLoading || !testInstance || instances.find(i => i.instance_name === testInstance)?.status !== 'connected'}
-                      className="w-full py-3.5 bg-brand-500 hover:bg-[#047857] active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs rounded-2xl shadow-lg shadow-brand-500/15 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                      className="w-full py-3.5 bg-brand-500 hover:bg-brand-secondary active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs rounded-2xl shadow-lg shadow-brand-500/15 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                     >
                       {testLoading ? (
                         <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -4020,7 +4020,7 @@ echo $response;`;
                       {testResult ? (
                         <div className={`p-4 rounded-2xl border text-xs font-bold animate-fadeIn ${
                           testResult.success 
-                            ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400' 
+                            ? 'bg-pastel-100/50 border-pastel-100/40 text-brand-secondary dark:text-brand-primary' 
                             : 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400'
                         }`}>
                           <div className="flex items-center gap-2">
@@ -4072,9 +4072,9 @@ echo $response;`;
                     
                     <div className="space-y-2">
                       {[
-                        { id: 'text', label: 'Enviar Mensaje Texto', method: 'POST', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
-                        { id: 'media', label: 'Enviar Mensaje Media', method: 'POST', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
-                        { id: 'create-group', label: 'Crear Grupo WhatsApp', method: 'POST', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
+                        { id: 'text', label: 'Enviar Mensaje Texto', method: 'POST', color: 'bg-pastel-100/50 text-brand-secondary dark:text-brand-primary' },
+                        { id: 'media', label: 'Enviar Mensaje Media', method: 'POST', color: 'bg-pastel-100/50 text-brand-secondary dark:text-brand-primary' },
+                        { id: 'create-group', label: 'Crear Grupo WhatsApp', method: 'POST', color: 'bg-pastel-100/50 text-brand-secondary dark:text-brand-primary' },
                         { id: 'participants-group', label: 'Administrar Miembros', method: 'PUT', color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400' },
                         { id: 'invite-group', label: 'Obtener Link Grupo', method: 'GET', color: 'bg-sky-500/10 text-sky-600 dark:text-sky-400' },
                       ].map(endpoint => {
@@ -4144,7 +4144,7 @@ echo $response;`;
                           ? 'bg-sky-500/10 text-sky-600 dark:text-sky-400' 
                           : docTab === 'participants-group' 
                             ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                            : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                            : 'bg-pastel-100/50 text-brand-secondary dark:text-brand-primary'
                       }`}>
                         {docTab === 'invite-group' ? 'GET' : docTab === 'participants-group' ? 'PUT' : 'POST'}
                       </span>
@@ -4165,7 +4165,7 @@ echo $response;`;
 
                       {/* Code Container */}
                       <div className="relative group">
-                        <pre className="bg-slate-950 text-emerald-400 dark:text-emerald-300 font-mono text-[10.5px] p-5 rounded-2xl overflow-x-auto leading-relaxed shadow-inner">
+                        <pre className="bg-slate-950 text-brand-primary dark:text-emerald-300 font-mono text-[10.5px] p-5 rounded-2xl overflow-x-auto leading-relaxed shadow-inner">
                           {getDocCode()}
                         </pre>
                         
@@ -4234,7 +4234,7 @@ echo $response;`;
                   <div className="md:col-span-7 bg-white dark:bg-slate-900 p-6 rounded-3xl flex flex-col justify-between gap-6">
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-500">
+                        <div className="p-2 bg-pastel-100/50 rounded-xl text-brand-primary">
                           <Key size={20} />
                         </div>
                         <div>
@@ -4246,7 +4246,7 @@ echo $response;`;
                       <div className="divide-y divide-slate-100 dark:divide-slate-800/40 text-xs">
                         <div className="flex justify-between py-2.5 font-medium">
                           <span className="text-surface-500">Estado de Cuenta</span>
-                          <span className="text-emerald-500 font-bold uppercase">Activo</span>
+                          <span className="text-brand-primary font-bold uppercase">Activo</span>
                         </div>
                         <div className="flex justify-between py-2.5 font-medium">
                           <span className="text-surface-500">Instancias Máximas</span>
@@ -4336,13 +4336,13 @@ echo $response;`;
 
             <div className="space-y-1">
               <h4 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider">Escanear WhatsApp QR</h4>
-              <p className="text-[10px] text-surface-400 font-bold">Instancia: <strong className="text-emerald-500">{activeQrInstance}</strong></p>
+              <p className="text-[10px] text-surface-400 font-bold">Instancia: <strong className="text-brand-primary">{activeQrInstance}</strong></p>
             </div>
 
             <div className="w-52 h-52 bg-white rounded-2xl mx-auto flex items-center justify-center border border-slate-200/20 shadow-inner overflow-hidden relative">
               {qrLoading ? (
                 <div className="flex flex-col items-center gap-2">
-                  <span className="w-6 h-6 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+                  <span className="w-6 h-6 border-2 border-emerald-500/30 border-t-brand-primary rounded-full animate-spin" />
                   <span className="text-[10px] text-surface-400 font-bold uppercase">Generando QR...</span>
                 </div>
               ) : qrBase64 ? (
@@ -4374,7 +4374,7 @@ echo $response;`;
         <div className="fixed inset-0 z-[60] bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
           <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 w-full max-w-sm p-6 sm:p-7 rounded-3xl space-y-5 shadow-premium-lg relative text-center">
             
-            <div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center ${confirmDialog.isDanger ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
+            <div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center ${confirmDialog.isDanger ? 'bg-rose-500/10 text-rose-500' : 'bg-pastel-100/50 text-brand-primary'}`}>
               <AlertCircle size={24} />
             </div>
 
@@ -4398,7 +4398,7 @@ echo $response;`;
                 className={`flex-1 py-2.5 text-white text-xs font-bold rounded-xl shadow-lg transition-colors cursor-pointer ${
                   confirmDialog.isDanger 
                     ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-500/15' 
-                    : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/15'
+                    : 'bg-brand-primary hover:bg-brand-secondary shadow-sm-custom'
                 }`}
               >
                 {confirmDialog.confirmText || 'Aceptar'}
@@ -4444,7 +4444,7 @@ echo $response;`;
                   onChange={(e) => setNewInstanceName(e.target.value.replace(/[^a-zA-Z0-9_-]/g, ''))}
                   placeholder="Ej: ventas_lima"
                   required
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/30 font-medium"
                 />
                 <span className="text-[9px] text-surface-400 font-bold uppercase tracking-wider block">Solo se permiten letras, números y guiones.</span>
               </div>
@@ -4465,7 +4465,7 @@ echo $response;`;
                 <button
                   type="submit"
                   disabled={createLoading || !newInstanceName.trim()}
-                  className="flex-1 py-3 bg-brand-500 hover:bg-[#047857] active:scale-[0.99] disabled:opacity-40 text-xs text-white font-bold rounded-2xl shadow-lg shadow-brand-500/10 transition-all cursor-pointer"
+                  className="flex-1 py-3 bg-brand-500 hover:bg-brand-secondary active:scale-[0.99] disabled:opacity-40 text-xs text-white font-bold rounded-2xl shadow-lg shadow-brand-500/10 transition-all cursor-pointer"
                 >
                   {createLoading ? 'Creando...' : 'Crear Instancia'}
                 </button>
@@ -4503,7 +4503,7 @@ echo $response;`;
                 onClick={() => handleSaveCrmContact('promote')}
                 className="w-full p-3.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950/50 dark:hover:bg-slate-950/80 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-left cursor-pointer transition-all flex flex-col gap-0.5 group"
               >
-                <span className="text-xs font-bold text-slate-800 dark:text-white group-hover:text-brand-500">Hacer este número Primario</span>
+                <span className="text-xs font-bold text-slate-800 dark:text-white group-hover:text-brand-primary">Hacer este número Primario</span>
                 <span className="text-[10px] text-surface-400">Este número será el principal. El anterior se guardará como Secundario. (Ambos quedan activos)</span>
               </button>
 
@@ -4512,7 +4512,7 @@ echo $response;`;
                 onClick={() => handleSaveCrmContact('keep')}
                 className="w-full p-3.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950/50 dark:hover:bg-slate-950/80 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-left cursor-pointer transition-all flex flex-col gap-0.5 group"
               >
-                <span className="text-xs font-bold text-slate-800 dark:text-white group-hover:text-brand-500">Registrar como Secundario</span>
+                <span className="text-xs font-bold text-slate-800 dark:text-white group-hover:text-brand-primary">Registrar como Secundario</span>
                 <span className="text-[10px] text-surface-400">Guarda este número como secundario sin modificar el número principal actual. (Ambos quedan activos)</span>
               </button>
 
@@ -4573,7 +4573,7 @@ echo $response;`;
                       />
                       <button
                         onClick={() => handleUpdateCrmCategory(cat.id)}
-                        className="px-2.5 py-1.5 bg-brand-500 hover:bg-[#047857] text-white text-[10px] font-bold rounded-lg cursor-pointer"
+                        className="px-2.5 py-1.5 bg-brand-500 hover:bg-brand-secondary text-white text-[10px] font-bold rounded-lg cursor-pointer"
                       >
                         OK
                       </button>
@@ -4630,7 +4630,7 @@ echo $response;`;
                 <button
                   type="button"
                   onClick={handleCreateCrmCategory}
-                  className="px-4 py-2 bg-brand-500 hover:bg-[#047857] text-white text-xs font-bold rounded-xl transition-all cursor-pointer font-medium"
+                  className="px-4 py-2 bg-brand-500 hover:bg-brand-secondary text-white text-xs font-bold rounded-xl transition-all cursor-pointer font-medium"
                 >
                   Agregar
                 </button>
@@ -4670,7 +4670,7 @@ echo $response;`;
                   onChange={(e) => setContactModal(prev => ({ ...prev, givenName: e.target.value }))}
                   placeholder="Ej: Juan"
                   required
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/30 font-medium"
                 />
               </div>
 
@@ -4681,7 +4681,7 @@ echo $response;`;
                   value={contactModal.familyName}
                   onChange={(e) => setContactModal(prev => ({ ...prev, familyName: e.target.value }))}
                   placeholder="Ej: Pérez"
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/30 font-medium"
                 />
               </div>
 
@@ -4693,7 +4693,7 @@ echo $response;`;
                   onChange={(e) => setContactModal(prev => ({ ...prev, phoneNumber: e.target.value }))}
                   placeholder="Ej: +51999888777"
                   required
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/30 font-medium"
                 />
               </div>
 
@@ -4708,7 +4708,7 @@ echo $response;`;
 
                 <button
                   type="submit"
-                  className="flex-1 py-3 bg-brand-500 hover:bg-[#047857] active:scale-[0.99] text-xs text-white font-bold rounded-2xl shadow-lg shadow-brand-500/10 transition-all cursor-pointer"
+                  className="flex-1 py-3 bg-brand-500 hover:bg-brand-secondary active:scale-[0.99] text-xs text-white font-bold rounded-2xl shadow-lg shadow-brand-500/10 transition-all cursor-pointer"
                 >
                   {contactModal.isEdit ? 'Actualizar' : 'Guardar'}
                 </button>
@@ -4756,7 +4756,7 @@ echo $response;`;
                   onChange={(e) => setCreateGroupSubject(e.target.value)}
                   placeholder="Ej: Ventas Urgentes 🚀"
                   required
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/30 font-medium"
                 />
               </div>
 
@@ -4766,7 +4766,7 @@ echo $response;`;
                   value={createGroupParticipants}
                   onChange={(e) => setCreateGroupParticipants(e.target.value)}
                   placeholder="Separados por comas: 51987654321, 51912345678"
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium resize-none"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/30 font-medium resize-none"
                   rows={3}
                 />
                 <span className="text-[9px] text-surface-400 font-bold uppercase tracking-wider block">Nota: Debes incluir obligatoriamente el código de país.</span>
@@ -4789,7 +4789,7 @@ echo $response;`;
                 <button
                   type="submit"
                   disabled={createGroupLoading || !createGroupSubject.trim()}
-                  className="flex-1 py-3 bg-brand-500 hover:bg-[#047857] active:scale-[0.99] disabled:opacity-40 text-xs text-white font-bold rounded-2xl shadow-lg shadow-brand-500/10 transition-all cursor-pointer"
+                  className="flex-1 py-3 bg-brand-500 hover:bg-brand-secondary active:scale-[0.99] disabled:opacity-40 text-xs text-white font-bold rounded-2xl shadow-lg shadow-brand-500/10 transition-all cursor-pointer"
                 >
                   {createGroupLoading ? 'Creando...' : 'Crear'}
                 </button>
@@ -4807,7 +4807,7 @@ echo $response;`;
           <div className="p-4 flex items-center justify-between text-white relative z-10 select-none">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-slate-800/80 flex items-center justify-center">
-                {lightboxMedia.type === 'image' ? <Image size={15} className="text-emerald-400" /> : <Video size={15} className="text-emerald-400" />}
+                {lightboxMedia.type === 'image' ? <Image size={15} className="text-brand-primary" /> : <Video size={15} className="text-brand-primary" />}
               </div>
               <span className="text-xs font-bold text-slate-300">
                 {lightboxMedia.type === 'image' ? 'Visualizador de Imagen' : 'Reproductor de Video'}

@@ -6,18 +6,22 @@
 @theme {
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   
-  /* Brand colors (Vibrant Professional - Zaza) */
-  --color-brand-50: #f0fdf4;
-  --color-brand-100: #dcfce7;
-  --color-brand-200: #bbf7d0;
-  --color-brand-300: #86efac;
-  --color-brand-400: #5ccb5f; /* User Light Green */
-  --color-brand-500: #009929; /* User Primary Green */
-  --color-brand-600: #008a25; 
-  --color-brand-700: #00731f;
-  --color-brand-800: #006414; /* User Dark Green */
-  --color-brand-900: #00450e;
-  --color-brand-950: #002407;
+  /* Brand colors */
+  --color-brand-primary: #5ccb5f; /* Main vibrant green */
+  --color-brand-secondary: #009929; /* Darker complement */
+  --color-brand-500: var(--color-brand-primary);
+  --color-brand-800: var(--color-brand-secondary);
+  /* Surface colors (Solid Grays) */
+  --color-surface-500: #969595; /* Medium Gray */
+  --color-surface-600: #666264; /* Dark Gray */
+  /* Pastel colors */
+  --color-pastel-100: #d1f2c4; /* Verde pálido */
+  --color-pastel-200: #f5e6ff; /* Lavanda suave */
+  --color-pastel-300: #ffd9e6; /* Rosa bebé */
+  --color-pastel-400: #ffe5b4; /* Durazno claro */
+  /* Soft shadows */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.08);
 
   /* Surface colors (Solid Grays) */
   --color-surface-50: #ffffff;
@@ -188,6 +192,31 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+/* Custom utility classes */
+
+/* Brand */
+.bg-brand-primary { background-color: var(--color-brand-primary); }
+.text-brand-primary { color: var(--color-brand-primary); }
+.border-brand-primary { border-color: var(--color-brand-primary); }
+.bg-brand-secondary { background-color: var(--color-brand-secondary); }
+.text-brand-secondary { color: var(--color-brand-secondary); }
+.border-brand-secondary { border-color: var(--color-brand-secondary); }
+
+/* Pastel */
+.bg-pastel-100 { background-color: var(--color-pastel-100); }
+.bg-pastel-200 { background-color: var(--color-pastel-200); }
+.bg-pastel-300 { background-color: var(--color-pastel-300); }
+.bg-pastel-400 { background-color: var(--color-pastel-400); }
+.text-pastel-100 { color: var(--color-pastel-100); }
+.text-pastel-200 { color: var(--color-pastel-200); }
+.text-pastel-300 { color: var(--color-pastel-300); }
+.text-pastel-400 { color: var(--color-pastel-400); }
+
+/* Soft shadows */
+.shadow-sm-custom { box-shadow: var(--shadow-sm); }
+.shadow-md-custom { box-shadow: var(--shadow-md); }
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
