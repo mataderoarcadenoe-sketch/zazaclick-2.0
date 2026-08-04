@@ -1864,12 +1864,12 @@ echo $response;`;
                   sidebarOpen ? 'px-3.5 py-2.5 justify-start' : 'p-3 justify-center'
                 } rounded-2xl transition-all duration-200 relative cursor-pointer ${
                   active 
-                    ? 'bg-[#12a160] text-white shadow-md shadow-[#12a160]/20 font-bold'
+                    ? 'bg-[#12a160] text-white font-bold'
                     : 'text-slate-200 dark:text-surface-400 hover:bg-white/10 hover:text-white font-semibold'
                 }`}
               >
                 {active ? (
-                  <div className="w-7 h-7 bg-white rounded-xl flex items-center justify-center flex-shrink-0 text-[#12a160] shadow-sm">
+                  <div className="w-7 h-7 bg-white rounded-xl flex items-center justify-center flex-shrink-0 text-[#12a160]">
                     <Icon size={14} className="stroke-[2.5]" />
                   </div>
                 ) : (
@@ -1883,11 +1883,8 @@ echo $response;`;
                   </span>
                 )}
               {sidebarOpen && item.id === 'chats' && (
-                  <span className={`ml-auto text-[10px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center shadow-sm ${
-                    active 
-                      ? 'bg-white text-[#12a160]' 
-                      : 'bg-emerald-500 text-white'
-                  }`}>
+                  <span className={`ml-auto text-[10px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center ${
+                    active ? 'bg-white text-[#12a160]' : 'bg-emerald-500 text-white'}`}>
                     {chats.reduce((sum, c) => sum + (Number(c.unreadCount) || 0), 0) > 0 
                       ? chats.reduce((sum, c) => sum + (Number(c.unreadCount) || 0), 0) 
                       : 12}
