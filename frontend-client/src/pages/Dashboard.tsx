@@ -1822,7 +1822,7 @@ echo $response;`;
 
       {/* Sidebar */}
       <aside 
-        className={`bg-surface-50 dark:bg-surface-950 flex flex-col transition-all duration-300 shadow-premium z-40 ${
+        className={`bg-[#1B4332] dark:bg-surface-950 flex flex-col transition-all duration-300 shadow-premium z-40 ${
           sidebarOpen ? 'w-64' : 'w-20'
         } ${sidebarOpen ? 'fixed lg:relative h-full' : 'hidden lg:flex'}`}
       >
@@ -1833,14 +1833,14 @@ echo $response;`;
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-primary to-brand-secondary flex items-center justify-center text-white shadow-md shadow-brand-primary/25">
                 <Smartphone size={18} />
               </div>
-              <span className="font-semibold text-slate-800 dark:text-white tracking-wide">
+              <span className="font-semibold text-white tracking-wide">
                 Zaza.click <span className="text-brand-primary">2.0</span>
               </span>
             </div>
           )}
           <button 
             onClick={toggleSidebar}
-            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-surface-500 dark:text-surface-400 cursor-pointer"
+            className="p-2 hover:bg-white/10 rounded-xl transition-colors text-white/80 hover:text-white cursor-pointer"
           >
             {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
@@ -1864,8 +1864,8 @@ echo $response;`;
                   sidebarOpen ? 'px-4 py-3 justify-start' : 'p-3 justify-center'
                 } rounded-2xl transition-all duration-200 relative cursor-pointer ${
                   active 
-                    ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20 font-bold'
-                    : 'text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-surface-800 dark:hover:text-white font-semibold'
+                    ? 'bg-[#40916C] text-white shadow-lg shadow-[#40916C]/25 font-bold'
+                    : 'text-white/80 dark:text-surface-400 hover:bg-white/10 hover:text-white font-semibold'
                 }`}
               >
                 <Icon size={18} className="flex-shrink-0" />
@@ -1882,12 +1882,12 @@ echo $response;`;
         </nav>
 
         {/* Footer profile actions */}
-        <div className="p-3 border-t border-slate-200/60 dark:border-slate-800/60 bg-surface-50 dark:bg-surface-900">
+        <div className="p-3 border-t border-white/10 dark:border-slate-800/60 bg-[#133024] dark:bg-surface-950">
           <button
             onClick={logout}
             className={`w-full group flex items-center ${
               sidebarOpen ? 'px-4 py-3 justify-start' : 'p-3 justify-center'
-            } rounded-2xl hover:bg-rose-50 dark:hover:bg-rose-950/20 text-surface-600 dark:text-surface-400 hover:text-rose-600 dark:hover:text-rose-400 transition-all duration-200 cursor-pointer`}
+            } rounded-2xl hover:bg-rose-500/20 text-white/80 hover:text-rose-300 transition-all duration-200 cursor-pointer`}
             title="Cerrar Sesión"
           >
             <LogOut size={18} className="flex-shrink-0" />
@@ -1929,7 +1929,7 @@ echo $response;`;
             {/* Dark Mode Toggle */}
             <button
               onClick={toggleDark}
-              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-surface-500 dark:text-surface-400 cursor-pointer"
+              className="p-2 hover:bg-white/10 rounded-xl transition-colors text-white/80 hover:text-white cursor-pointer"
               title="Cambiar tema"
             >
               {isDark ? <Sun size={18} className="text-slate-400 dark:text-slate-300" /> : <Moon size={18} className="text-slate-600 dark:text-slate-400" />}
