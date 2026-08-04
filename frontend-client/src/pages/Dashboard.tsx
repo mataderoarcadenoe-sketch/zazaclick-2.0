@@ -1827,7 +1827,7 @@ echo $response;`;
         } ${sidebarOpen ? 'fixed lg:relative h-full' : 'hidden lg:flex'}`}
       >
         {/* Brand header */}
-        <div className={`h-16 flex items-center ${sidebarOpen ? 'justify-between px-5' : 'justify-center'}`}>
+        <div className={`h-[72px] flex items-center ${sidebarOpen ? 'justify-between px-6' : 'justify-center'} border-b border-white/5`}>
           {sidebarOpen && (
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-primary to-brand-secondary flex items-center justify-center text-white shadow-md shadow-brand-primary/25">
@@ -1847,48 +1847,66 @@ echo $response;`;
         </div>
 
         {/* Navigation Tabs */}
-        <nav className="flex-1 p-3 space-y-1.5">
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto custom-scrollbar">
           {menuItems.map(item => {
             const Icon = item.icon;
             const active = activeTab === item.id;
+            const showDivider = item.id === 'playground';
+
             return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  setActiveTab(item.id);
-                  if (window.innerWidth < 1024) {
-                    setSidebarOpen(false); // Auto close sidebar on mobile
-                  }
-                }}
-                className={`w-full group flex items-center ${
-                  sidebarOpen ? 'px-3.5 py-2.5 justify-start' : 'p-3 justify-center'
-                } rounded-2xl transition-all duration-200 relative cursor-pointer ${
-                  active 
-                    ? 'bg-[#12a160] text-white font-bold'
-                    : 'text-slate-200 dark:text-surface-400 hover:bg-white/10 hover:text-white font-semibold'
-                }`}
-              >
-                <Icon 
-                  size={18} 
-                  className={`flex-shrink-0 ${active ? 'text-white' : 'text-slate-200'}`}
-                  fill={active ? 'currentColor' : 'none'}
-                />
-                {sidebarOpen ? (
-                  <span className="ml-3 text-xs tracking-tight">{item.label}</span>
-                ) : (
-                  <span className="absolute left-full ml-3 px-3 py-1.5 bg-slate-900 text-white text-xs font-semibold rounded-xl shadow-xl whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 pointer-events-none">
-                    {item.label}
-                  </span>
+              <React.Fragment key={item.id}>
+                {showDivider && sidebarOpen && (
+                  <div className="pt-4 pb-2 px-4">
+                    <div className="text-[10px] font-extrabold text-white/30 uppercase tracking-widest">Herramientas</div>
+                  </div>
                 )}
-              {sidebarOpen && item.id === 'chats' && (
-                  <span className={`ml-auto text-[10px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center ${
-                    active ? 'bg-white text-[#12a160]' : 'bg-emerald-500 text-white'}`}>
-                    {chats.reduce((sum, c) => sum + (Number(c.unreadCount) || 0), 0) > 0 
-                      ? chats.reduce((sum, c) => sum + (Number(c.unreadCount) || 0), 0) 
-                      : 12}
-                  </span>
+                {showDivider && !sidebarOpen && (
+                  <div className="py-2 flex justify-center">
+                    <div className="w-6 h-px bg-white/10"></div>
+                  </div>
                 )}
-              </button>
+                <button
+                  onClick={() => {
+                    setActiveTab(item.id);
+                    if (window.innerWidth < 1024) {
+                      setSidebarOpen(false);
+                    }
+                  }}
+                  className={`w-full group flex items-center ${
+                    sidebarOpen ? 'px-4 py-2.5 justify-start' : 'p-3 justify-center'
+                  } rounded-xl transition-all duration-300 relative cursor-pointer ${
+                    active 
+                      ? 'bg-white/10 text-white font-bold'
+                      : 'text-slate-300 dark:text-surface-400 hover:bg-white/5 hover:text-white font-medium'
+                  }`}
+                >
+                  {/* Modern Active Indicator Line */}
+                  {active && sidebarOpen && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 h-[60%] w-1 bg-[#12a160] rounded-r-md shadow-[0_0_12px_rgba(18,161,96,0.6)]" />
+                  )}
+                  
+                  <Icon 
+                    size={18} 
+                    className={`flex-shrink-0 transition-colors ${active ? 'text-white' : 'text-slate-400 group-hover:text-slate-300'}`}
+                    fill={active ? 'currentColor' : 'none'}
+                  />
+                  {sidebarOpen ? (
+                    <span className="ml-3.5 text-[13px] tracking-wide">{item.label}</span>
+                  ) : (
+                    <span className="absolute left-full ml-3 px-3 py-1.5 bg-slate-900 text-white text-xs font-semibold rounded-xl shadow-xl whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 pointer-events-none">
+                      {item.label}
+                    </span>
+                  )}
+                  {sidebarOpen && item.id === 'chats' && (
+                    <span className={`ml-auto text-[10px] font-extrabold px-1.5 h-5 min-w-[20px] rounded-full flex items-center justify-center ${
+                      active ? 'bg-[#12a160] text-white shadow-sm' : 'bg-white/10 text-white'}`}>
+                      {chats.reduce((sum, c) => sum + (Number(c.unreadCount) || 0), 0) > 0 
+                        ? chats.reduce((sum, c) => sum + (Number(c.unreadCount) || 0), 0) 
+                        : 12}
+                    </span>
+                  )}
+                </button>
+              </React.Fragment>
             );
           })}
         </nav>
