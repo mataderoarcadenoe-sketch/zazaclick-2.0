@@ -5,7 +5,7 @@ import api from '../services/api';
 import { io, Socket } from 'socket.io-client';
 import { 
   LogOut, RefreshCw, Plus, Key, Trash2, Smartphone, CheckCircle2, 
-  AlertCircle, Copy, Send, LayoutDashboard, Terminal, 
+  AlertCircle, Copy, Send, LayoutGrid, Terminal, 
   Moon, Sun, Menu, X, Check, Play, ExternalLink, Sparkles, BookOpen, Clock,
   MessageSquare, Search, MessageCircle, Smile, ArrowLeft,
   Paperclip, FileText, Image, Video, Download, ChevronDown, Users, Users2, Settings,
@@ -1658,7 +1658,7 @@ export default function DashboardPage() {
   };
 
   const menuItems = [
-    { id: 'overview', label: 'Resumen', icon: LayoutDashboard },
+    { id: 'overview', label: 'Resumen', icon: LayoutGrid },
     { id: 'instances', label: 'Líneas / QR', icon: Smartphone },
     { id: 'chats', label: 'Chats en Vivo', icon: MessageSquare },
     { id: 'contacts', label: 'Clientes / Agenda', icon: Users },
@@ -1890,25 +1890,21 @@ echo $response;`;
                     }
                   }}
                   className={`w-full group flex items-center ${
-                    sidebarOpen ? 'px-4 py-2.5 justify-start' : 'p-3 justify-center'
-                  } rounded-xl transition-all duration-300 relative cursor-pointer ${
+                    sidebarOpen ? 'px-4 py-3 justify-start' : 'p-3 justify-center'
+                  } rounded-2xl transition-all duration-300 relative cursor-pointer ${
                     active 
-                      ? 'bg-white/10 text-white font-bold'
+                      ? 'bg-[#12a160] text-white font-bold'
                       : 'text-slate-300 dark:text-surface-400 hover:bg-white/5 hover:text-white font-medium'
                   }`}
                 >
-                  {/* Modern Active Indicator Line */}
-                  {active && sidebarOpen && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 h-[60%] w-1 bg-[#12a160] rounded-r-md shadow-[0_0_12px_rgba(18,161,96,0.6)]" />
-                  )}
-                  
                   <Icon 
-                    size={18} 
+                    size={20} 
                     className={`flex-shrink-0 transition-colors ${active ? 'text-white' : 'text-slate-400 group-hover:text-slate-300'}`}
-                    fill={active ? 'currentColor' : 'none'}
+                    strokeWidth={active ? 2.5 : 2}
+                    fill={active && item.id === 'chats' ? 'currentColor' : 'none'}
                   />
                   {sidebarOpen ? (
-                    <span className="ml-3.5 text-[13px] tracking-wide">{item.label}</span>
+                    <span className="ml-3.5 text-[13.5px] tracking-wide">{item.label}</span>
                   ) : (
                     <span className="absolute left-full ml-3 px-3 py-1.5 bg-slate-900 text-white text-xs font-semibold rounded-xl shadow-xl whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 pointer-events-none">
                       {item.label}
@@ -1916,10 +1912,10 @@ echo $response;`;
                   )}
                   {sidebarOpen && item.id === 'chats' && (
                     <span className={`ml-auto text-[10px] font-extrabold px-1.5 h-5 min-w-[20px] rounded-full flex items-center justify-center ${
-                      active ? 'bg-[#12a160] text-white shadow-sm' : 'bg-white/10 text-white'}`}>
+                      active ? 'bg-white text-[#12a160]' : 'bg-white/10 text-white'}`}>
                       {chats.reduce((sum, c) => sum + (Number(c.unreadCount) || 0), 0) > 0 
                         ? chats.reduce((sum, c) => sum + (Number(c.unreadCount) || 0), 0) 
-                        : 12}
+                        : 8}
                     </span>
                   )}
                 </button>
