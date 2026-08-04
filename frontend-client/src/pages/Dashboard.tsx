@@ -1805,7 +1805,7 @@ echo $response;`;
 
       {/* Sidebar */}
       <aside 
-        className={`bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex flex-col transition-all duration-300 shadow-premium z-40 ${
+        className={`bg-surface-50 dark:bg-surface-950 flex flex-col transition-all duration-300 shadow-premium z-40 ${
           sidebarOpen ? 'w-64' : 'w-20'
         } ${sidebarOpen ? 'fixed lg:relative h-full' : 'hidden lg:flex'}`}
       >
@@ -1813,7 +1813,7 @@ echo $response;`;
         <div className={`h-16 flex items-center ${sidebarOpen ? 'justify-between px-5' : 'justify-center'}`}>
           {sidebarOpen && (
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-[#059669] flex items-center justify-center text-white shadow-md shadow-[#059669]/20">
+              <div className="w-8 h-8 rounded-xl bg-brand-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
                 <Smartphone size={18} />
               </div>
               <span className="font-semibold text-slate-800 dark:text-white tracking-wide">
@@ -1823,7 +1823,7 @@ echo $response;`;
           )}
           <button 
             onClick={toggleSidebar}
-            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-500 dark:text-slate-400 cursor-pointer"
+            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-surface-500 dark:text-surface-400 cursor-pointer"
           >
             {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
@@ -1847,8 +1847,8 @@ echo $response;`;
                   sidebarOpen ? 'px-4 py-3 justify-start' : 'p-3 justify-center'
                 } rounded-2xl transition-all duration-200 relative cursor-pointer ${
                   active 
-                    ? 'bg-[#059669] text-white shadow-lg shadow-[#059669]/20 font-bold'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-800 dark:hover:text-white font-medium'
+                    ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20 font-bold'
+                    : 'text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-surface-800 dark:hover:text-white font-semibold'
                 }`}
               >
                 <Icon size={18} className="flex-shrink-0" />
@@ -1865,12 +1865,12 @@ echo $response;`;
         </nav>
 
         {/* Footer profile actions */}
-        <div className="p-3 border-t border-slate-200/60 dark:border-slate-800/60 bg-white/50 dark:bg-slate-900/50">
+        <div className="p-3 border-t border-slate-200/60 dark:border-slate-800/60 bg-surface-50 dark:bg-surface-900">
           <button
             onClick={logout}
             className={`w-full group flex items-center ${
               sidebarOpen ? 'px-4 py-3 justify-start' : 'p-3 justify-center'
-            } rounded-2xl hover:bg-rose-50 dark:hover:bg-rose-950/20 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-all duration-200 cursor-pointer`}
+            } rounded-2xl hover:bg-rose-50 dark:hover:bg-rose-950/20 text-surface-600 dark:text-surface-400 hover:text-rose-600 dark:hover:text-rose-400 transition-all duration-200 cursor-pointer`}
             title="Cerrar Sesión"
           >
             <LogOut size={18} className="flex-shrink-0" />
@@ -1893,7 +1893,7 @@ echo $response;`;
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-500 dark:text-slate-400 cursor-pointer"
+              className="lg:hidden p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-surface-500 dark:text-surface-400 cursor-pointer"
             >
               <Menu size={20} />
             </button>
@@ -1912,7 +1912,7 @@ echo $response;`;
             {/* Dark Mode Toggle */}
             <button
               onClick={toggleDark}
-              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-500 dark:text-slate-400 cursor-pointer"
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-surface-500 dark:text-surface-400 cursor-pointer"
               title="Cambiar tema"
             >
               {isDark ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-indigo-600" />}
@@ -1920,12 +1920,12 @@ echo $response;`;
 
             {/* User Profile Info */}
             <div className="flex items-center gap-2.5 pl-1">
-              <div className="w-8 h-8 rounded-xl bg-[#059669] flex items-center justify-center text-white text-xs font-bold shadow-md shadow-[#059669]/20 uppercase">
+              <div className="w-8 h-8 rounded-xl bg-brand-500 flex items-center justify-center text-white text-xs font-bold shadow-md shadow-brand-500/20 uppercase">
                 {user?.email?.charAt(0)}
               </div>
               <div className="hidden md:flex flex-col text-left">
                 <span className="text-xs font-bold text-slate-800 dark:text-white">{user?.email}</span>
-                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Cliente SaaS</span>
+                <span className="text-[9px] text-surface-400 font-bold uppercase tracking-wider">Cliente SaaS</span>
               </div>
             </div>
           </div>
@@ -1942,15 +1942,15 @@ echo $response;`;
               <div className="space-y-6 animate-fadeIn">
                 
                 {/* Upgrade/Welcome Card Banner */}
-                <div className="p-6 bg-[#059669]/10 dark:bg-[#059669]/5 rounded-3xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="p-6 bg-brand-500/10 dark:bg-brand-500/5 rounded-3xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div className="space-y-2 text-left relative z-10">
-                    <span className="px-2.5 py-1 bg-[#059669]/10 border border-[#059669]/20 rounded-md text-[9px] font-bold text-[#059669] dark:text-[#059669] uppercase tracking-widest">
+                    <span className="px-2.5 py-1 bg-brand-500/10 border border-brand-500/20 rounded-md text-[9px] font-bold text-brand-500 dark:text-brand-500 uppercase tracking-widest">
                       Licencia Activa
                     </span>
                     <h3 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-white">
                       Plan {subscription?.plan_name || 'Básico'}
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 max-w-lg leading-relaxed">
+                    <p className="text-xs text-surface-500 dark:text-surface-400 max-w-lg leading-relaxed">
                       Vincula tu línea de WhatsApp escaneando el código QR. Puedes enviar notificaciones automatizadas utilizando las credenciales de tu instancia.
                     </p>
                   </div>
@@ -1959,7 +1959,7 @@ echo $response;`;
                     <button
                       onClick={() => setShowCreateModal(true)}
                       disabled={instances.length >= maxInstances}
-                      className="px-4 py-2.5 bg-[#059669] hover:bg-[#047857] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl shadow-lg shadow-[#059669]/15 flex items-center gap-1.5 transition-all cursor-pointer"
+                      className="px-4 py-2.5 bg-brand-500 hover:bg-[#047857] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl shadow-lg shadow-brand-500/15 flex items-center gap-1.5 transition-all cursor-pointer"
                     >
                       <Plus size={16} />
                       <span>Nueva Instancia</span>
@@ -1980,55 +1980,55 @@ echo $response;`;
                 {/* Metrics Cards Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl space-y-1.5 text-left">
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Líneas Vinculadas</span>
+                    <span className="text-[10px] text-surface-400 font-bold uppercase tracking-widest">Líneas Vinculadas</span>
                     <h3 className="text-2xl font-bold text-slate-800 dark:text-white">
-                      {instances.length} / <span className="text-slate-400">{maxInstances}</span>
+                      {instances.length} / <span className="text-surface-400">{maxInstances}</span>
                     </h3>
-                    <p className="text-[10px] text-slate-500">Capacidad disponible para crear instancias.</p>
+                    <p className="text-[10px] text-surface-500">Capacidad disponible para crear instancias.</p>
                   </div>
 
                   <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl space-y-1.5 text-left">
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest text-emerald-500">Instancias Online</span>
+                    <span className="text-[10px] text-surface-400 font-bold uppercase tracking-widest text-emerald-500">Instancias Online</span>
                     <h3 className="text-2xl font-bold text-emerald-500">
-                      {activeInstancesCount} / <span className="text-slate-400">{instances.length || 0}</span>
+                      {activeInstancesCount} / <span className="text-surface-400">{instances.length || 0}</span>
                     </h3>
-                    <p className="text-[10px] text-slate-500">Números con WhatsApp en línea.</p>
+                    <p className="text-[10px] text-surface-500">Números con WhatsApp en línea.</p>
                   </div>
 
                   <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl space-y-1.5 text-left">
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Próxima Renovación</span>
+                    <span className="text-[10px] text-surface-400 font-bold uppercase tracking-widest">Próxima Renovación</span>
                     <h3 className="text-2xl font-bold text-indigo-500 dark:text-indigo-400 flex items-center gap-1.5">
                       <Clock size={20} />
                       <span className="text-lg">
                         {subscription?.end_date ? new Date(subscription.end_date).toLocaleDateString() : 'N/A'}
                       </span>
                     </h3>
-                    <p className="text-[10px] text-slate-500">Vence tu suscripción mensual.</p>
+                    <p className="text-[10px] text-surface-500">Vence tu suscripción mensual.</p>
                   </div>
                 </div>
 
                 {/* Dashboard Instance Table Summary */}
                 <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500">Estado de Líneas</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-surface-500">Estado de Líneas</h4>
                     <button 
                       onClick={() => fetchInstances()} 
                       disabled={loading}
-                      className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer"
+                      className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-surface-400 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer"
                     >
                       <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
                     </button>
                   </div>
 
                   {instances.length === 0 ? (
-                    <div className="py-10 text-center text-xs text-slate-400">
+                    <div className="py-10 text-center text-xs text-surface-400">
                       No hay líneas agregadas. Ve a la pestaña de <button onClick={() => setActiveTab('instances')} className="text-emerald-500 font-bold hover:underline">Líneas / QR</button> para comenzar.
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse text-xs">
                         <thead>
-                          <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold">
+                          <tr className="border-b border-slate-100 dark:border-slate-800 text-surface-400 font-bold">
                             <th className="pb-3">Nombre Instancia</th>
                             <th className="pb-3">Número Celular</th>
                             <th className="pb-3">Estado Conexión</th>
@@ -2039,12 +2039,12 @@ echo $response;`;
                           {instances.map(inst => (
                             <tr key={inst.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/50">
                               <td className="py-3.5 font-bold text-slate-800 dark:text-slate-200">{inst.instance_name}</td>
-                              <td className="py-3.5 text-slate-600 dark:text-slate-400 font-medium">{inst.phone || 'Pendiente vinculación'}</td>
+                              <td className="py-3.5 text-surface-600 dark:text-surface-400 font-medium">{inst.phone || 'Pendiente vinculación'}</td>
                               <td className="py-3.5">
                                 {inst.status === 'connected' ? (
                                   <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-bold text-emerald-600 dark:text-emerald-400 rounded-md">CONNECTED</span>
                                 ) : (
-                                  <span className="px-2 py-0.5 bg-slate-500/10 border border-slate-200/50 dark:border-slate-800/50 text-[9px] font-bold text-slate-500 rounded-md">DISCONNECTED</span>
+                                  <span className="px-2 py-0.5 bg-slate-500/10 border border-slate-200/50 dark:border-slate-800/50 text-[9px] font-bold text-surface-500 rounded-md">DISCONNECTED</span>
                                 )}
                               </td>
                               <td className="py-3.5 text-right">
@@ -2078,7 +2078,7 @@ echo $response;`;
                 <div className="flex items-center justify-between">
                   <div className="text-left space-y-0.5">
                     <h3 className="text-base font-bold text-slate-800 dark:text-white">Líneas de WhatsApp</h3>
-                    <p className="text-xs text-slate-400">Escanea los códigos QR para iniciar sesión y habilitar los envíos.</p>
+                    <p className="text-xs text-surface-400">Escanea los códigos QR para iniciar sesión y habilitar los envíos.</p>
                   </div>
                   <button
                     onClick={() => setShowCreateModal(true)}
@@ -2095,7 +2095,7 @@ echo $response;`;
                     <Smartphone className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto" />
                     <div className="space-y-1">
                       <h4 className="text-sm font-bold text-slate-800 dark:text-white">No tienes instancias activas</h4>
-                      <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
+                      <p className="text-xs text-surface-400 max-w-sm mx-auto leading-relaxed">
                         Crea tu primera instancia de WhatsApp para obtener tus credenciales de envío y escanear el QR.
                       </p>
                     </div>
@@ -2125,7 +2125,7 @@ echo $response;`;
                             {inst.status === 'connected' ? (
                               <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-bold text-emerald-600 dark:text-emerald-400 rounded-md">CONECTADO</span>
                             ) : (
-                              <span className="px-2 py-0.5 bg-slate-500/10 border border-slate-200/50 dark:border-slate-800/50 text-[9px] font-bold text-slate-500 rounded-md">DESCONECTADO</span>
+                              <span className="px-2 py-0.5 bg-slate-500/10 border border-slate-200/50 dark:border-slate-800/50 text-[9px] font-bold text-surface-500 rounded-md">DESCONECTADO</span>
                             )}
                           </div>
 
@@ -2144,7 +2144,7 @@ echo $response;`;
 
                             <button
                               onClick={() => handleDeleteInstance(inst.instance_name)}
-                              className="p-2 bg-slate-50 hover:bg-rose-50 dark:bg-slate-950 dark:hover:bg-rose-950/20 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl border border-slate-200/50 dark:border-slate-800/50 transition-colors"
+                              className="p-2 bg-slate-50 hover:bg-rose-50 dark:bg-slate-950 dark:hover:bg-rose-950/20 text-surface-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl border border-slate-200/50 dark:border-slate-800/50 transition-colors"
                               title="Eliminar Instancia"
                             >
                               <Trash2 size={13} />
@@ -2154,7 +2154,7 @@ echo $response;`;
 
                         {/* Connection action button */}
                         <div className="relative z-10 flex flex-col gap-2">
-                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider text-left">Acción de WhatsApp</span>
+                          <span className="text-[10px] text-surface-400 font-bold uppercase tracking-wider text-left">Acción de WhatsApp</span>
                           {inst.status === 'disconnected' ? (
                             <button
                               onClick={() => handleGetQr(inst.instance_name)}
@@ -2177,12 +2177,12 @@ echo $response;`;
                         {/* Middle: API Credentials */}
                         <div className="bg-slate-50 dark:bg-slate-950/50 rounded-2xl p-5 space-y-2.5 text-xs text-left relative z-10">
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Instance Name</span>
+                            <span className="text-[10px] text-surface-400 font-bold uppercase tracking-wider">Instance Name</span>
                             <div className="flex items-center gap-2">
                               <code className="text-slate-800 dark:text-white font-mono font-bold text-[11px]">{inst.instance_name}</code>
                               <button 
                                 onClick={() => copyToClipboard(inst.instance_name)} 
-                                className="text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors"
+                                className="text-surface-400 hover:text-slate-800 dark:hover:text-white transition-colors"
                               >
                                 <Copy size={13} />
                               </button>
@@ -2190,12 +2190,12 @@ echo $response;`;
                           </div>
 
                           <div className="flex items-center justify-between pt-2 border-t border-slate-200/60 dark:border-slate-800/40">
-                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">API Token (Key)</span>
+                            <span className="text-[10px] text-surface-400 font-bold uppercase tracking-wider">API Token (Key)</span>
                             <div className="flex items-center gap-2">
                               <code className="text-slate-800 dark:text-white font-mono text-[11px]">{inst.api_key}</code>
                               <button 
                                 onClick={() => copyToClipboard(inst.api_key)} 
-                                className="text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors"
+                                className="text-surface-400 hover:text-slate-800 dark:hover:text-white transition-colors"
                               >
                                 <Copy size={13} />
                               </button>
@@ -2217,12 +2217,12 @@ echo $response;`;
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left border-b border-slate-200/50 dark:border-slate-800/50 pb-4">
                   <div className="space-y-0.5">
                     <h3 className="text-base font-bold text-slate-800 dark:text-white">Chats en Vivo</h3>
-                    <p className="text-xs text-slate-400">Administra tus conversaciones de WhatsApp en tiempo real.</p>
+                    <p className="text-xs text-surface-400">Administra tus conversaciones de WhatsApp en tiempo real.</p>
                   </div>
                   
                   {/* Select Instance */}
                   <div className="flex items-center gap-2">
-                    <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">Línea:</label>
+                    <label className="text-xs font-semibold text-surface-500 dark:text-surface-400 whitespace-nowrap">Línea:</label>
                     {/* Custom Select Dropdown */}
                     <div className="relative" ref={chatsDropdownRef}>
                       <button
@@ -2240,15 +2240,15 @@ echo $response;`;
                             </span>
                           </div>
                         ) : (
-                          <span className="text-slate-400">Seleccionar línea...</span>
+                          <span className="text-surface-400">Seleccionar línea...</span>
                         )}
-                        <ChevronDown size={14} className={`text-slate-400 transition-transform duration-200 ${showChatsInstanceMenu ? 'rotate-180' : ''}`} />
+                        <ChevronDown size={14} className={`text-surface-400 transition-transform duration-200 ${showChatsInstanceMenu ? 'rotate-180' : ''}`} />
                       </button>
 
                       {showChatsInstanceMenu && (
                         <div className="absolute top-[100%] right-0 mt-1.5 z-50 bg-white dark:bg-slate-900 rounded-2xl shadow-premium-lg p-1.5 flex flex-col gap-1 min-w-[200px] border border-slate-100 dark:border-slate-800/40 text-left animate-fadeIn">
                           {instances.length === 0 ? (
-                            <span className="p-3 text-[10px] text-slate-400 dark:text-slate-500 font-bold block text-center">No hay líneas creadas</span>
+                            <span className="p-3 text-[10px] text-surface-400 dark:text-surface-500 font-bold block text-center">No hay líneas creadas</span>
                           ) : (
                             instances.map(inst => (
                               <button
@@ -2262,14 +2262,14 @@ echo $response;`;
                                 className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-3 cursor-pointer text-left ${
                                   selectedInstanceForChats === inst.instance_name 
                                     ? 'bg-slate-50 dark:bg-slate-800/60 text-slate-800 dark:text-white' 
-                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 hover:text-slate-800 dark:hover:text-white'
+                                    : 'text-surface-600 dark:text-surface-400 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 hover:text-slate-800 dark:hover:text-white'
                                 }`}
                               >
                                 <span className="truncate">{inst.instance_name}</span>
                                 <span className={`px-2 py-0.5 rounded-md text-[8.5px] font-bold ${
                                   inst.status === 'connected' 
                                     ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
-                                    : 'bg-slate-100 dark:bg-slate-950 text-slate-500'
+                                    : 'bg-slate-100 dark:bg-slate-950 text-surface-500'
                                 }`}>
                                   {inst.status === 'connected' ? 'En línea' : 'Desconectada'}
                                 </span>
@@ -2283,7 +2283,7 @@ echo $response;`;
                       onClick={() => fetchChats(false)}
                       disabled={chatsLoading}
                       type="button"
-                      className="p-2 bg-white/60 dark:bg-slate-900/60 rounded-xl hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-colors disabled:opacity-50 text-slate-600 dark:text-slate-400 cursor-pointer border-0 shadow-sm"
+                      className="p-2 bg-white/60 dark:bg-slate-900/60 rounded-xl hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-colors disabled:opacity-50 text-surface-600 dark:text-surface-400 cursor-pointer border-0 shadow-sm"
                     >
                       <RefreshCw size={14} className={chatsLoading ? 'animate-spin' : ''} />
                     </button>
@@ -2293,22 +2293,22 @@ echo $response;`;
                 {/* Validation warnings */}
                 {instances.length === 0 ? (
                   <div className="flex-1 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-3xl p-8 flex flex-col items-center justify-center text-center space-y-4">
-                    <Smartphone size={48} className="text-slate-300 dark:text-slate-600" />
+                    <Smartphone size={48} className="text-slate-300 dark:text-surface-600" />
                     <div className="space-y-1">
                       <h4 className="text-sm font-bold text-slate-800 dark:text-white">No hay líneas vinculadas</h4>
-                      <p className="text-xs text-slate-400 max-w-sm">Crea y escanea una línea de WhatsApp en la pestaña "Líneas / QR" para poder comenzar a chatear.</p>
+                      <p className="text-xs text-surface-400 max-w-sm">Crea y escanea una línea de WhatsApp en la pestaña "Líneas / QR" para poder comenzar a chatear.</p>
                     </div>
                   </div>
                 ) : !selectedInstanceForChats ? (
                   <div className="flex-1 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-3xl p-8 flex flex-col items-center justify-center text-center space-y-2">
-                    <p className="text-xs text-slate-400">Por favor, selecciona una línea de WhatsApp en el menú superior.</p>
+                    <p className="text-xs text-surface-400">Por favor, selecciona una línea de WhatsApp en el menú superior.</p>
                   </div>
                 ) : instances.find(i => i.instance_name === selectedInstanceForChats)?.status !== 'connected' ? (
                   <div className="flex-1 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-3xl p-8 flex flex-col items-center justify-center text-center space-y-4">
                     <AlertCircle size={48} className="text-amber-500" />
                     <div className="space-y-1">
                       <h4 className="text-sm font-bold text-slate-800 dark:text-white">Línea Desconectada</h4>
-                      <p className="text-xs text-slate-400 max-w-sm">La línea "{selectedInstanceForChats}" no está vinculada. Por favor, ve a la pestaña "Líneas / QR", obtén el código QR y escanéalo con tu teléfono.</p>
+                      <p className="text-xs text-surface-400 max-w-sm">La línea "{selectedInstanceForChats}" no está vinculada. Por favor, ve a la pestaña "Líneas / QR", obtén el código QR y escanéalo con tu teléfono.</p>
                     </div>
                   </div>
                 ) : (
@@ -2326,17 +2326,17 @@ echo $response;`;
                           onChange={(e) => setChatsSearchQuery(e.target.value)}
                           className="w-full pl-9 pr-4 py-2.5 bg-white/60 dark:bg-slate-900/40 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 font-medium transition-all"
                         />
-                        <Search size={14} className="absolute left-7 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <Search size={14} className="absolute left-7 top-1/2 -translate-y-1/2 text-surface-400" />
                       </div>
 
                       {/* Chats List Body */}
                       <div className="flex-1 overflow-y-auto min-h-0 p-2 space-y-1 scrollbar-hide">
                         {chatsLoading && chats.length === 0 ? (
-                          <div className="p-4 text-center text-xs text-slate-400 animate-pulse">Cargando conversaciones...</div>
+                          <div className="p-4 text-center text-xs text-surface-400 animate-pulse">Cargando conversaciones...</div>
                         ) : chatsError ? (
                           <div className="p-4 text-center text-xs text-red-500">{chatsError}</div>
                         ) : chats.length === 0 ? (
-                          <div className="p-4 text-center text-xs text-slate-400">No se encontraron conversaciones activas.</div>
+                          <div className="p-4 text-center text-xs text-surface-400">No se encontraron conversaciones activas.</div>
                         ) : (
                           chats
                             .filter(chat => {
@@ -2379,7 +2379,7 @@ echo $response;`;
                                   >
                                     {/* Active indicator pill */}
                                     {isActive && (
-                                      <div className="absolute left-0.5 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#059669] rounded-r-full" />
+                                      <div className="absolute left-0.5 top-1/2 -translate-y-1/2 w-1 h-6 bg-brand-500 rounded-r-full" />
                                     )}
 
                                     {/* Profile Photo */}
@@ -2387,22 +2387,22 @@ echo $response;`;
                                       {chat.profilePicUrl ? (
                                         <img src={chat.profilePicUrl} alt="" className="w-full h-full object-cover" />
                                       ) : (
-                                        <MessageCircle size={18} className="text-slate-400" />
+                                        <MessageCircle size={18} className="text-surface-400" />
                                       )}
                                     </div>
 
                                     {/* Details */}
                                     <div className="flex-1 min-w-0 space-y-1">
                                       <div className="flex items-center justify-between">
-                                        <span className={`text-xs truncate ${isActive || isUnread ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-500 dark:text-slate-400 font-normal'}`}>
+                                        <span className={`text-xs truncate ${isActive || isUnread ? 'text-slate-900 dark:text-white font-bold' : 'text-surface-500 dark:text-surface-400 font-normal'}`}>
                                           {contactName}
                                         </span>
-                                        <span className={`text-[10px] font-medium ${isUnread ? 'text-emerald-500 font-bold' : 'text-slate-400'}`}>
+                                        <span className={`text-[10px] font-medium ${isUnread ? 'text-emerald-500 font-bold' : 'text-surface-400'}`}>
                                           {formatTimeLocal(chat.lastMessage?.messageTimestamp)}
                                         </span>
                                       </div>
                                       <div className="flex items-center justify-between mt-1">
-                                        <p className={`text-[11px] leading-relaxed pb-0.5 truncate flex-1 flex items-center gap-1 ${isUnread ? 'text-slate-800 dark:text-slate-200 font-semibold' : 'text-slate-400 dark:text-slate-500 font-normal'}`}>
+                                        <p className={`text-[11px] leading-relaxed pb-0.5 truncate flex-1 flex items-center gap-1 ${isUnread ? 'text-slate-800 dark:text-slate-200 font-semibold' : 'text-surface-400 dark:text-surface-500 font-normal'}`}>
                                           <span className="flex-1 block truncate"><AppleEmojiText text={lastMsgText} size={13} /></span>
                                         </p>
                                         {isUnread && (
@@ -2431,7 +2431,7 @@ echo $response;`;
                               <button
                                 type="button"
                                 onClick={() => setSelectedChat(null)}
-                                className="md:hidden p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-500 dark:text-slate-400 cursor-pointer"
+                                className="md:hidden p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-surface-500 dark:text-surface-400 cursor-pointer"
                               >
                                 <ArrowLeft size={18} />
                               </button>
@@ -2439,7 +2439,7 @@ echo $response;`;
                                 {selectedChat.profilePicUrl ? (
                                   <img src={selectedChat.profilePicUrl} alt="" className="w-full h-full object-cover" />
                                 ) : (
-                                  <MessageCircle size={18} className="text-slate-400" />
+                                  <MessageCircle size={18} className="text-surface-400" />
                                 ) }
                               </div>
                               <div className="text-left flex items-center">
@@ -2470,7 +2470,7 @@ echo $response;`;
                                       </button>
                                     )}
                                   </h4>
-                                  <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 block">
+                                  <span className="text-[10px] font-semibold text-surface-400 dark:text-surface-500 block">
                                     {selectedChat.remoteJid}
                                   </span>
                                 </div>
@@ -2481,7 +2481,7 @@ echo $response;`;
                               <button
                                 type="button"
                                 onClick={() => setShowCrmSidebar(!showCrmSidebar)}
-                                className={`p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer ${showCrmSidebar ? 'text-[#059669]' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                                className={`p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer ${showCrmSidebar ? 'text-brand-500' : 'text-surface-400 hover:text-surface-600 dark:hover:text-slate-300'}`}
                                 title={showCrmSidebar ? "Ocultar Panel CRM" : "Mostrar Panel CRM"}
                               >
                                 <Users size={18} />
@@ -2492,9 +2492,9 @@ echo $response;`;
                           {/* Chat Window Messages */}
                           <div className="flex-1 overflow-y-auto p-4 space-y-3.5 min-h-0 flex flex-col bg-gradient-to-b from-teal-50/15 via-indigo-50/25 to-emerald-50/15 dark:from-slate-950/35 dark:via-slate-900/20 dark:to-slate-950/30">
                             {messagesLoading && messages.length === 0 ? (
-                              <div className="my-auto text-center text-xs text-slate-400 animate-pulse">Cargando conversación...</div>
+                              <div className="my-auto text-center text-xs text-surface-400 animate-pulse">Cargando conversación...</div>
                             ) : messages.length === 0 ? (
-                              <div className="my-auto text-center text-xs text-slate-400">No hay mensajes en este chat.</div>
+                              <div className="my-auto text-center text-xs text-surface-400">No hay mensajes en este chat.</div>
                             ) : (
                               messages
                                 .slice()
@@ -2513,13 +2513,13 @@ echo $response;`;
                                       if (statuses.includes('READ')) {
                                         statusIcon = <span className="text-[9px] text-sky-500 font-bold ml-1">✓✓</span>;
                                       } else if (statuses.includes('DELIVERY_ACK')) {
-                                        statusIcon = <span className="text-[9px] text-slate-400 font-bold ml-1">✓✓</span>;
+                                        statusIcon = <span className="text-[9px] text-surface-400 font-bold ml-1">✓✓</span>;
                                       } else if (statuses.includes('SERVER_ACK')) {
-                                        statusIcon = <span className="text-[9px] text-slate-400 font-bold ml-1">✓</span>;
+                                        statusIcon = <span className="text-[9px] text-surface-400 font-bold ml-1">✓</span>;
                                       }
                                     } else {
                                       // Mensajes enviados sin MessageUpdate aún: mostrar ✓ por defecto
-                                      statusIcon = <span className="text-[9px] text-slate-400 font-bold ml-1">✓</span>;
+                                      statusIcon = <span className="text-[9px] text-surface-400 font-bold ml-1">✓</span>;
                                     }
                                   }
 
@@ -2562,11 +2562,11 @@ echo $response;`;
                                               <span className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full block" />
                                             </div>
                                           ) : (
-                                            <div className="p-3 bg-white/80 dark:bg-slate-950/80 rounded-full shadow-md group-hover:scale-105 transition-transform text-slate-600 dark:text-slate-400">
+                                            <div className="p-3 bg-white/80 dark:bg-slate-950/80 rounded-full shadow-md group-hover:scale-105 transition-transform text-surface-600 dark:text-surface-400">
                                               <Image size={20} />
                                             </div>
                                           )}
-                                          <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                          <span className="text-[9px] font-bold text-surface-400 dark:text-surface-500 uppercase tracking-wider">
                                             {isLoading ? 'Descargando...' : 'Ver Imagen'}
                                           </span>
                                         </div>
@@ -2615,7 +2615,7 @@ echo $response;`;
                                           </div>
                                           <div className="flex-1 min-w-0 space-y-0.5">
                                             <p className="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">{fileName}</p>
-                                            <p className="text-[9px] text-slate-400 font-medium">
+                                            <p className="text-[9px] text-surface-400 font-medium">
                                               {isLoading ? 'Descargando...' : isLoaded ? 'Descargado' : 'Haga clic para descargar'}
                                             </p>
                                           </div>
@@ -2629,7 +2629,7 @@ echo $response;`;
                                               <Download size={14} />
                                             </a>
                                           ) : (
-                                            <div className="p-2 text-slate-400">
+                                            <div className="p-2 text-surface-400">
                                               {isLoading ? (
                                                 <span className="w-4 h-4 border-2 border-slate-300 border-t-emerald-500 rounded-full animate-spin block" />
                                               ) : (
@@ -2686,11 +2686,11 @@ echo $response;`;
                                               <span className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full block" />
                                             </div>
                                           ) : (
-                                            <div className="p-3 bg-white/80 dark:bg-slate-950/80 rounded-full shadow-md group-hover:scale-105 transition-transform text-slate-600 dark:text-slate-400">
+                                            <div className="p-3 bg-white/80 dark:bg-slate-950/80 rounded-full shadow-md group-hover:scale-105 transition-transform text-surface-600 dark:text-surface-400">
                                               <Video size={20} />
                                             </div>
                                           )}
-                                          <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                          <span className="text-[9px] font-bold text-surface-400 dark:text-surface-500 uppercase tracking-wider">
                                             {isLoading ? 'Descargando...' : 'Ver Video'}
                                           </span>
                                         </div>
@@ -2720,7 +2720,7 @@ echo $response;`;
                                         {renderMessageContent()}
                                         
                                         {/* Timestamp and Checks */}
-                                        <div className="flex items-center justify-end mt-1 text-[9px] text-slate-400 dark:text-slate-500 font-medium">
+                                        <div className="flex items-center justify-end mt-1 text-[9px] text-surface-400 dark:text-surface-500 font-medium">
                                           <span>{timestamp}</span>
                                           {statusIcon}
                                         </div>
@@ -2786,18 +2786,18 @@ echo $response;`;
                                     )}
                                   </div>
                                 ) : (
-                                  <div className="w-16 h-16 rounded-xl bg-slate-200 dark:bg-slate-900 flex items-center justify-center text-slate-500">
+                                  <div className="w-16 h-16 rounded-xl bg-slate-200 dark:bg-slate-900 flex items-center justify-center text-surface-500">
                                     <FileText size={28} />
                                   </div>
                                 )}
                                 <div className="flex-1 min-w-0">
                                   <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{attachedFile.name}</p>
-                                  <p className="text-[10px] text-slate-400 font-medium">{(attachedFile.size / (1024 * 1024)).toFixed(2)} MB</p>
+                                  <p className="text-[10px] text-surface-400 font-medium">{(attachedFile.size / (1024 * 1024)).toFixed(2)} MB</p>
                                 </div>
                                 <button
                                   type="button"
                                   onClick={handleClearAttachment}
-                                  className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                                  className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-surface-400 hover:text-surface-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
                                 >
                                   <X size={16} />
                                 </button>
@@ -2825,14 +2825,14 @@ echo $response;`;
                                   ref={emojiButtonRef}
                                   type="button"
                                   onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                                  className={`p-2 transition-colors cursor-pointer rounded-xl ${showEmojiPicker ? 'bg-emerald-500/10 text-emerald-500' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                                  className={`p-2 transition-colors cursor-pointer rounded-xl ${showEmojiPicker ? 'bg-emerald-500/10 text-emerald-500' : 'text-surface-400 hover:text-surface-600 dark:hover:text-slate-300'}`}
                                 >
                                   <Smile size={20} />
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => setShowAttachMenu(!showAttachMenu)}
-                                  className={`p-2 transition-colors cursor-pointer rounded-xl ${showAttachMenu ? 'bg-emerald-500/10 text-emerald-500' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                                  className={`p-2 transition-colors cursor-pointer rounded-xl ${showAttachMenu ? 'bg-emerald-500/10 text-emerald-500' : 'text-surface-400 hover:text-surface-600 dark:hover:text-slate-300'}`}
                                 >
                                   <Paperclip size={20} />
                                 </button>
@@ -2859,7 +2859,7 @@ echo $response;`;
                       ) : (
                         <div className="my-auto text-center space-y-2">
                           <MessageSquare size={36} className="text-slate-300 dark:text-slate-700 mx-auto animate-bounce" />
-                          <p className="text-xs text-slate-400 dark:text-slate-500">Selecciona una conversación en la lista izquierda para comenzar a chatear.</p>
+                          <p className="text-xs text-surface-400 dark:text-surface-500">Selecciona una conversación en la lista izquierda para comenzar a chatear.</p>
                         </div>
                       )}
                     </div>
@@ -2873,7 +2873,7 @@ echo $response;`;
                           <button 
                             type="button" 
                             onClick={() => setShowCrmSidebar(false)}
-                            className="p-1 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 rounded-lg transition-colors text-slate-400 cursor-pointer"
+                            className="p-1 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 rounded-lg transition-colors text-surface-400 cursor-pointer"
                             title="Ocultar Panel"
                           >
                             <X size={13} />
@@ -2881,7 +2881,7 @@ echo $response;`;
                         </div>
 
                         {crmLoading ? (
-                          <div className="py-8 text-center text-[11px] text-slate-400 animate-pulse">Cargando datos CRM...</div>
+                          <div className="py-8 text-center text-[11px] text-surface-400 animate-pulse">Cargando datos CRM...</div>
                         ) : (
                           <div className="space-y-3.5">
                             {/* Contact info card (Display Mode) */}
@@ -2890,12 +2890,12 @@ echo $response;`;
                                 {/* Display client details */}
                                 <div className="bg-white dark:bg-slate-900/60 p-3 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 space-y-2.5 shadow-sm">
                                   <div className="flex items-center gap-2">
-                                    <div className="w-7 h-7 rounded-xl bg-emerald-500/10 flex items-center justify-center text-[#059669]">
+                                    <div className="w-7 h-7 rounded-xl bg-emerald-500/10 flex items-center justify-center text-brand-500">
                                       {crmClient.doc_type === 'RUC' ? <Users size={14} /> : <MessageCircle size={14} />}
                                     </div>
                                     <div className="min-w-0 flex-1">
                                       <h4 className="text-[11px] font-bold text-slate-800 dark:text-white leading-tight truncate">{crmClient.name}</h4>
-                                      <span className="text-[9px] text-slate-400 font-bold block truncate mt-0.5">
+                                      <span className="text-[9px] text-surface-400 font-bold block truncate mt-0.5">
                                         {crmClient.doc_type !== 'MANUAL' ? `${crmClient.doc_type}: ${crmClient.doc_number}` : 'Registro Manual'}
                                       </span>
                                     </div>
@@ -2903,21 +2903,21 @@ echo $response;`;
 
                                   {crmClient.address && (
                                     <div className="space-y-0.5">
-                                      <span className="text-[8.5px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block">Dirección Fiscal</span>
+                                      <span className="text-[8.5px] text-surface-400 dark:text-surface-500 font-bold uppercase tracking-wider block">Dirección Fiscal</span>
                                       <p className="text-[10px] text-slate-700 dark:text-slate-300 font-medium leading-normal">{crmClient.address}</p>
                                     </div>
                                   )}
 
                                   {crmClient.email && (
                                     <div className="space-y-0.5">
-                                      <span className="text-[8.5px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block">Email</span>
+                                      <span className="text-[8.5px] text-surface-400 dark:text-surface-500 font-bold uppercase tracking-wider block">Email</span>
                                       <p className="text-[10px] text-slate-700 dark:text-slate-300 font-medium truncate">{crmClient.email}</p>
                                     </div>
                                   )}
 
                                   <div className="space-y-0.5">
-                                    <span className="text-[8.5px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block">Categoría de Contacto</span>
-                                    <span className="inline-flex px-2 py-0.5 bg-emerald-500/10 text-[#059669] text-[9px] font-bold rounded-full mt-0.5 border border-emerald-500/15">
+                                    <span className="text-[8.5px] text-surface-400 dark:text-surface-500 font-bold uppercase tracking-wider block">Categoría de Contacto</span>
+                                    <span className="inline-flex px-2 py-0.5 bg-emerald-500/10 text-brand-500 text-[9px] font-bold rounded-full mt-0.5 border border-emerald-500/15">
                                       {crmContact?.category_name || 'Sin Categoría'}
                                     </span>
                                   </div>
@@ -2925,8 +2925,8 @@ echo $response;`;
 
                                 {crmClient.notes && (
                                   <div className="bg-slate-100/50 dark:bg-slate-900/40 p-2.5 rounded-2xl border border-slate-200/20 dark:border-slate-800/10 space-y-0.5">
-                                    <span className="text-[8.5px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block">Notas Comerciales</span>
-                                    <p className="text-[10px] text-slate-600 dark:text-slate-400 font-medium leading-relaxed whitespace-pre-line">{crmClient.notes}</p>
+                                    <span className="text-[8.5px] text-surface-400 dark:text-surface-500 font-bold uppercase tracking-wider block">Notas Comerciales</span>
+                                    <p className="text-[10px] text-surface-600 dark:text-surface-400 font-medium leading-relaxed whitespace-pre-line">{crmClient.notes}</p>
                                   </div>
                                 )}
 
@@ -2951,7 +2951,7 @@ echo $response;`;
                               /* Create / Edit Form Mode */
                               <div className="space-y-3">
                                 <div className="space-y-1 text-left">
-                                  <label className="text-[8.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Identificación DNI / RUC</label>
+                                  <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Identificación DNI / RUC</label>
                                   <div className="flex gap-1.5">
                                     <div className="relative">
                                       <button
@@ -2960,7 +2960,7 @@ echo $response;`;
                                         className="flex items-center gap-1 px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-all cursor-pointer min-w-[65px] justify-between shadow-premium-sm focus:outline-none"
                                       >
                                         <span>{crmDocType}</span>
-                                        <ChevronDown size={10} className={`text-slate-400 transition-transform duration-200 ${isDocTypeDropdownOpen ? 'rotate-180' : ''}`} />
+                                        <ChevronDown size={10} className={`text-surface-400 transition-transform duration-200 ${isDocTypeDropdownOpen ? 'rotate-180' : ''}`} />
                                       </button>
 
                                       {isDocTypeDropdownOpen && (
@@ -2979,7 +2979,7 @@ echo $response;`;
                                                 setCrmAddress('');
                                                 setIsDocTypeDropdownOpen(false);
                                               }}
-                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-emerald-500/10 hover:text-[#059669] transition-colors cursor-pointer ${crmDocType === 'DNI' ? 'text-[#059669] bg-emerald-500/5' : 'text-slate-700 dark:text-slate-200'}`}
+                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-emerald-500/10 hover:text-brand-500 transition-colors cursor-pointer ${crmDocType === 'DNI' ? 'text-brand-500 bg-emerald-500/5' : 'text-slate-700 dark:text-slate-200'}`}
                                             >
                                               DNI
                                             </button>
@@ -2992,7 +2992,7 @@ echo $response;`;
                                                 setCrmAddress('');
                                                 setIsDocTypeDropdownOpen(false);
                                               }}
-                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-emerald-500/10 hover:text-[#059669] transition-colors cursor-pointer ${crmDocType === 'RUC' ? 'text-[#059669] bg-emerald-500/5' : 'text-slate-700 dark:text-slate-200'}`}
+                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-emerald-500/10 hover:text-brand-500 transition-colors cursor-pointer ${crmDocType === 'RUC' ? 'text-brand-500 bg-emerald-500/5' : 'text-slate-700 dark:text-slate-200'}`}
                                             >
                                               RUC
                                             </button>
@@ -3021,11 +3021,11 @@ echo $response;`;
                                           type="button"
                                           onClick={handleValidateCrmDoc}
                                           disabled={crmValidationLoading}
-                                          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#059669] disabled:opacity-50 transition-colors cursor-pointer"
+                                          className="absolute right-2 top-1/2 -translate-y-1/2 text-surface-400 hover:text-brand-500 disabled:opacity-50 transition-colors cursor-pointer"
                                           title="Consultar APIPeru"
                                         >
                                           {crmValidationLoading ? (
-                                            <RefreshCw size={11} className="animate-spin text-[#059669]" />
+                                            <RefreshCw size={11} className="animate-spin text-brand-500" />
                                           ) : (
                                             <Search size={11} />
                                           )}
@@ -3036,7 +3036,7 @@ echo $response;`;
                                 </div>
 
                                 <div className="space-y-1 text-left">
-                                  <label className="text-[8.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Nombre / Razón Social</label>
+                                  <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Nombre / Razón Social</label>
                                   <input
                                     type="text"
                                     placeholder="Nombre completo o Empresa"
@@ -3047,7 +3047,7 @@ echo $response;`;
                                 </div>
 
                                 <div className="space-y-1 text-left">
-                                  <label className="text-[8.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Categoría de Contacto</label>
+                                  <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Categoría de Contacto</label>
                                   <div className="flex gap-1.5">
                                     <div className="flex-1 relative">
                                       <button
@@ -3058,7 +3058,7 @@ echo $response;`;
                                         <span>
                                           {crmCategories.find(c => c.id.toString() === crmCategoryId)?.name || 'Sin Categoría'}
                                         </span>
-                                        <ChevronDown size={11} className={`text-slate-400 transition-transform duration-200 ${isCategoryDropdownOpen ? 'rotate-180' : ''}`} />
+                                        <ChevronDown size={11} className={`text-surface-400 transition-transform duration-200 ${isCategoryDropdownOpen ? 'rotate-180' : ''}`} />
                                       </button>
 
                                       {isCategoryDropdownOpen && (
@@ -3074,7 +3074,7 @@ echo $response;`;
                                                 setCrmCategoryId('');
                                                 setIsCategoryDropdownOpen(false);
                                               }}
-                                              className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-emerald-500/10 hover:text-[#059669] transition-colors cursor-pointer ${crmCategoryId === '' ? 'text-[#059669] bg-emerald-500/5' : 'text-slate-700 dark:text-slate-200'}`}
+                                              className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-emerald-500/10 hover:text-brand-500 transition-colors cursor-pointer ${crmCategoryId === '' ? 'text-brand-500 bg-emerald-500/5' : 'text-slate-700 dark:text-slate-200'}`}
                                             >
                                               Sin Categoría
                                             </button>
@@ -3086,7 +3086,7 @@ echo $response;`;
                                                   setCrmCategoryId(cat.id.toString());
                                                   setIsCategoryDropdownOpen(false);
                                                 }}
-                                                className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-emerald-500/10 hover:text-[#059669] transition-colors cursor-pointer ${crmCategoryId === cat.id.toString() ? 'text-[#059669] bg-emerald-500/5' : 'text-slate-700 dark:text-slate-200'}`}
+                                                className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-emerald-500/10 hover:text-brand-500 transition-colors cursor-pointer ${crmCategoryId === cat.id.toString() ? 'text-brand-500 bg-emerald-500/5' : 'text-slate-700 dark:text-slate-200'}`}
                                               >
                                                 {cat.name}
                                               </button>
@@ -3098,7 +3098,7 @@ echo $response;`;
                                     <button
                                       type="button"
                                       onClick={() => setCrmCategoriesModalOpen(true)}
-                                      className="p-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-xl transition-colors cursor-pointer flex items-center justify-center"
+                                      className="p-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-surface-500 dark:text-surface-400 rounded-xl transition-colors cursor-pointer flex items-center justify-center"
                                       title="Gestionar Categorías"
                                     >
                                       <Settings size={13} />
@@ -3108,7 +3108,7 @@ echo $response;`;
 
                                 {crmDocType === 'RUC' && (
                                   <div className="space-y-1 text-left">
-                                    <label className="text-[8.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Dirección Fiscal</label>
+                                    <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Dirección Fiscal</label>
                                     <textarea
                                       placeholder="Dirección fiscal SUNAT"
                                       rows={2}
@@ -3120,7 +3120,7 @@ echo $response;`;
                                 )}
 
                                 <div className="space-y-1 text-left">
-                                  <label className="text-[8.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Email</label>
+                                  <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Email</label>
                                   <input
                                     type="email"
                                     placeholder="correo@ejemplo.com"
@@ -3131,7 +3131,7 @@ echo $response;`;
                                 </div>
 
                                 <div className="space-y-1 text-left">
-                                  <label className="text-[8.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Notas de Negocio</label>
+                                  <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Notas de Negocio</label>
                                   <textarea
                                     placeholder="Acuerdos, precios, descuentos especiales..."
                                     rows={3}
@@ -3146,7 +3146,7 @@ echo $response;`;
                                     <button
                                       type="button"
                                       onClick={() => setCrmIsEditing(false)}
-                                      className="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-450 text-[11px] font-bold rounded-xl transition-all cursor-pointer"
+                                      className="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-surface-600 dark:text-slate-450 text-[11px] font-bold rounded-xl transition-all cursor-pointer"
                                     >
                                       Cancelar
                                     </button>
@@ -3155,7 +3155,7 @@ echo $response;`;
                                     type="button"
                                     onClick={() => handleSaveCrmContact()}
                                     disabled={crmSaving}
-                                    className="flex-1 py-1.5 bg-[#059669] hover:bg-[#047857] text-white text-[11px] font-bold rounded-xl transition-all disabled:opacity-50 cursor-pointer text-center"
+                                    className="flex-1 py-1.5 bg-brand-500 hover:bg-[#047857] text-white text-[11px] font-bold rounded-xl transition-all disabled:opacity-50 cursor-pointer text-center"
                                   >
                                     {crmSaving ? 'Guardando...' : 'Guardar Ficha'}
                                   </button>
@@ -3179,7 +3179,7 @@ echo $response;`;
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="text-left space-y-0.5">
                     <h3 className="text-base font-bold text-slate-800 dark:text-white">Agenda de Clientes</h3>
-                    <p className="text-xs text-slate-400">Gestiona tu base de clientes, contactos y agenda de Google.</p>
+                    <p className="text-xs text-surface-400">Gestiona tu base de clientes, contactos y agenda de Google.</p>
                   </div>
                   {/* Sub-tab switcher */}
                   <div className="flex items-center gap-2">
@@ -3187,14 +3187,14 @@ echo $response;`;
                       <button
                         type="button"
                         onClick={() => setCrmContactsSubTab('crm')}
-                        className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${crmContactsSubTab === 'crm' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                        className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${crmContactsSubTab === 'crm' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm' : 'text-surface-400 hover:text-surface-600'}`}
                       >
                         Clientes CRM
                       </button>
                       <button
                         type="button"
                         onClick={() => setCrmContactsSubTab('google')}
-                        className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${crmContactsSubTab === 'google' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                        className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${crmContactsSubTab === 'google' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm' : 'text-surface-400 hover:text-surface-600'}`}
                       >
                         Agenda Google
                       </button>
@@ -3209,7 +3209,7 @@ echo $response;`;
                     <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 space-y-4 shadow-sm text-left">
                       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                         <div className="relative flex-1">
-                          <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                          <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-surface-400">
                             <Search size={15} />
                           </span>
                           <input
@@ -3228,7 +3228,7 @@ echo $response;`;
                             type="button"
                             onClick={() => fetchCrmClients(crmClientsSearch)}
                             disabled={crmClientsLoading}
-                            className="p-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                            className="p-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-surface-600 dark:text-slate-300 rounded-xl transition-all cursor-pointer disabled:opacity-50"
                             title="Recargar"
                           >
                             <RefreshCw size={14} className={crmClientsLoading ? 'animate-spin' : ''} />
@@ -3236,7 +3236,7 @@ echo $response;`;
                           <button
                             type="button"
                             onClick={() => setCrmCategoriesModalOpen(true)}
-                            className="p-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl transition-all cursor-pointer"
+                            className="p-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-surface-600 dark:text-slate-300 rounded-xl transition-all cursor-pointer"
                             title="Gestionar Categorías"
                           >
                             <Settings size={14} />
@@ -3246,21 +3246,21 @@ echo $response;`;
 
                       {/* Clients Table */}
                       {crmClientsLoading && crmClients.length === 0 ? (
-                        <div className="py-12 flex flex-col items-center justify-center gap-3 text-slate-400">
+                        <div className="py-12 flex flex-col items-center justify-center gap-3 text-surface-400">
                           <RefreshCw size={24} className="animate-spin text-emerald-500" />
                           <span className="text-xs font-medium">Cargando clientes...</span>
                         </div>
                       ) : crmClients.length === 0 ? (
-                        <div className="py-12 text-center text-slate-400 space-y-2">
+                        <div className="py-12 text-center text-surface-400 space-y-2">
                           <Users size={32} className="mx-auto text-slate-300 dark:text-slate-700 animate-pulse" />
                           <p className="text-xs font-semibold">No hay clientes registrados aún</p>
-                          <p className="text-[10px] text-slate-400 dark:text-slate-500">Los clientes se crean automáticamente al registrar un contacto desde un chat de WhatsApp.</p>
+                          <p className="text-[10px] text-surface-400 dark:text-surface-500">Los clientes se crean automáticamente al registrar un contacto desde un chat de WhatsApp.</p>
                         </div>
                       ) : (
                         <div className="overflow-x-auto">
                           <table className="w-full border-collapse">
                             <thead>
-                              <tr className="border-b border-slate-100 dark:border-slate-800/40 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                              <tr className="border-b border-slate-100 dark:border-slate-800/40 text-[10px] font-bold text-surface-400 uppercase tracking-widest">
                                 <th className="pb-3 text-left">Cliente</th>
                                 <th className="pb-3 text-left">Documento</th>
                                 <th className="pb-3 text-left hidden sm:table-cell">Email</th>
@@ -3285,28 +3285,28 @@ echo $response;`;
                                   >
                                     <td className="py-3.5">
                                       <div className="flex items-center gap-2.5">
-                                        <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-[#059669] font-bold text-xs flex-shrink-0">
+                                        <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-brand-500 font-bold text-xs flex-shrink-0">
                                           {client.doc_type === 'RUC' ? <Users size={14} /> : client.name?.charAt(0)?.toUpperCase() || '?'}
                                         </div>
                                         <div className="min-w-0">
                                           <p className="font-bold text-slate-800 dark:text-white truncate leading-tight">{client.name}</p>
-                                          {client.address && <p className="text-[10px] text-slate-400 truncate max-w-[200px]">{client.address}</p>}
+                                          {client.address && <p className="text-[10px] text-surface-400 truncate max-w-[200px]">{client.address}</p>}
                                         </div>
                                       </div>
                                     </td>
                                     <td className="py-3.5">
-                                      <span className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold ${client.doc_type === 'RUC' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' : client.doc_type === 'DNI' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' : 'bg-slate-200/60 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>
+                                      <span className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold ${client.doc_type === 'RUC' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' : client.doc_type === 'DNI' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' : 'bg-slate-200/60 text-surface-500 dark:bg-slate-800 dark:text-surface-400'}`}>
                                         {client.doc_type === 'MANUAL' ? 'Manual' : `${client.doc_type}: ${client.doc_number}`}
                                       </span>
                                     </td>
-                                    <td className="py-3.5 text-slate-500 dark:text-slate-400 font-medium hidden sm:table-cell truncate max-w-[150px]">
+                                    <td className="py-3.5 text-surface-500 dark:text-surface-400 font-medium hidden sm:table-cell truncate max-w-[150px]">
                                       {client.email || '—'}
                                     </td>
-                                    <td className="py-3.5 text-slate-400 font-medium hidden md:table-cell">
+                                    <td className="py-3.5 text-surface-400 font-medium hidden md:table-cell">
                                       {new Date(client.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: '2-digit' })}
                                     </td>
                                     <td className="py-3.5 text-right">
-                                      <ChevronDown size={14} className={`inline-block text-slate-400 transition-transform duration-200 ${crmExpandedClientId === client.id ? 'rotate-180' : ''}`} />
+                                      <ChevronDown size={14} className={`inline-block text-surface-400 transition-transform duration-200 ${crmExpandedClientId === client.id ? 'rotate-180' : ''}`} />
                                     </td>
                                   </tr>
 
@@ -3314,25 +3314,25 @@ echo $response;`;
                                   {crmExpandedClientId === client.id && (
                                     <tr>
                                       <td colSpan={5} className="p-0">
-                                        <div className="bg-slate-50/80 dark:bg-slate-950/30 p-4 space-y-3 border-l-2 border-[#059669]">
+                                        <div className="bg-slate-50/80 dark:bg-slate-950/30 p-4 space-y-3 border-l-2 border-brand-500">
                                           {/* Notes */}
                                           {client.notes && (
                                             <div className="p-2.5 bg-amber-50/60 dark:bg-amber-950/10 rounded-xl border border-amber-200/30 dark:border-amber-800/20">
                                               <span className="text-[9px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider block mb-0.5">Notas de Negocio</span>
-                                              <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium whitespace-pre-line">{client.notes}</p>
+                                              <p className="text-[11px] text-surface-600 dark:text-surface-400 font-medium whitespace-pre-line">{client.notes}</p>
                                             </div>
                                           )}
 
                                           {/* Contacts Header */}
                                           <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Contactos Vinculados</span>
+                                            <span className="text-[10px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider">Contactos Vinculados</span>
                                           </div>
 
                                           {/* Contacts List */}
                                           {crmClientContactsLoading ? (
-                                            <div className="py-4 text-center text-xs text-slate-400 animate-pulse">Cargando contactos...</div>
+                                            <div className="py-4 text-center text-xs text-surface-400 animate-pulse">Cargando contactos...</div>
                                           ) : crmClientContacts.length === 0 ? (
-                                            <div className="py-4 text-center text-xs text-slate-400">Sin contactos vinculados.</div>
+                                            <div className="py-4 text-center text-xs text-surface-400">Sin contactos vinculados.</div>
                                           ) : (
                                             <div className="space-y-1.5">
                                               {crmClientContacts.map((contact: any) => (
@@ -3341,10 +3341,10 @@ echo $response;`;
                                                     <div className={`w-2 h-2 rounded-full flex-shrink-0 ${contact.is_active ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`} />
                                                     <div>
                                                       <p className="text-xs font-bold text-slate-800 dark:text-white font-mono">+{contact.phone_number}</p>
-                                                      <p className="text-[10px] text-slate-400">{contact.is_active ? 'Activo' : 'Inactivo'}</p>
+                                                      <p className="text-[10px] text-surface-400">{contact.is_active ? 'Activo' : 'Inactivo'}</p>
                                                     </div>
                                                   </div>
-                                                  <span className={`inline-flex px-2 py-0.5 text-[9px] font-bold rounded-full border ${contact.category_name ? 'bg-emerald-500/10 text-[#059669] border-emerald-500/15' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200/50 dark:border-slate-700/50'}`}>
+                                                  <span className={`inline-flex px-2 py-0.5 text-[9px] font-bold rounded-full border ${contact.category_name ? 'bg-emerald-500/10 text-brand-500 border-emerald-500/15' : 'bg-slate-100 dark:bg-slate-800 text-surface-400 border-slate-200/50 dark:border-slate-700/50'}`}>
                                                     {contact.category_name || 'Sin categoría'}
                                                   </span>
                                                 </div>
@@ -3370,19 +3370,19 @@ echo $response;`;
                   <div className="space-y-6">
                     {!googleConnected ? (
                       <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 text-center max-w-2xl mx-auto space-y-6 shadow-premium">
-                        <div className="w-16 h-16 rounded-3xl bg-emerald-500/10 flex items-center justify-center text-[#059669] mx-auto">
+                        <div className="w-16 h-16 rounded-3xl bg-emerald-500/10 flex items-center justify-center text-brand-500 mx-auto">
                           <Users size={32} />
                         </div>
                         <div className="space-y-2">
                           <h4 className="text-lg font-bold text-slate-800 dark:text-white">Sincroniza tus contactos en la nube</h4>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+                          <p className="text-xs text-surface-500 dark:text-surface-400 max-w-md mx-auto leading-relaxed">
                             Conecta tu cuenta de Google para sincronizar contactos de forma instantánea. Al crear, editar o eliminar contactos desde este panel, se actualizarán inmediatamente en tu cuenta de Google y se reflejarán en tu celular y chats de WhatsApp.
                           </p>
                         </div>
                         <button
                           type="button"
                           onClick={handleConnectGoogleContacts}
-                          className="inline-flex items-center gap-2 px-6 py-3.5 bg-[#059669] hover:bg-[#047857] active:scale-95 text-white font-bold text-xs rounded-2xl transition-all shadow-md shadow-[#059669]/20 cursor-pointer"
+                          className="inline-flex items-center gap-2 px-6 py-3.5 bg-brand-500 hover:bg-[#047857] active:scale-95 text-white font-bold text-xs rounded-2xl transition-all shadow-md shadow-brand-500/20 cursor-pointer"
                         >
                           <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                             <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.113-5.136 4.113-3.072 0-5.561-2.49-5.561-5.561s2.49-5.561 5.561-5.561c1.396 0 2.67.513 3.655 1.353l3.14-3.14C18.796 3.738 15.748 2.5 12.24 2.5 6.42 2.5 1.7 7.22 1.7 13s4.72 10.5 10.54 10.5c5.8 0 10.46-4.7 10.46-10.5 0-.712-.082-1.395-.224-2.073h-10.236z"/>
@@ -3395,15 +3395,15 @@ echo $response;`;
                         {/* Connection Info header card */}
                         <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-sm text-left">
                           <div className="flex items-center gap-3.5">
-                            <div className="w-12 h-12 rounded-2xl bg-[#059669]/10 text-[#059669] flex items-center justify-center flex-shrink-0">
+                            <div className="w-12 h-12 rounded-2xl bg-brand-500/10 text-brand-500 flex items-center justify-center flex-shrink-0">
                               <Users size={22} />
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
                                 <h4 className="text-sm font-bold text-slate-800 dark:text-white">Google Contactos Activo</h4>
-                                <span className="w-2.5 h-2.5 rounded-full bg-[#059669]" />
+                                <span className="w-2.5 h-2.5 rounded-full bg-brand-500" />
                               </div>
-                              <p className="text-xs text-slate-400 font-medium">Cuenta vinculada: <strong className="text-slate-600 dark:text-slate-300">{googleEmail}</strong></p>
+                              <p className="text-xs text-surface-400 font-medium">Cuenta vinculada: <strong className="text-surface-600 dark:text-slate-300">{googleEmail}</strong></p>
                             </div>
                           </div>
 
@@ -3423,9 +3423,9 @@ echo $response;`;
                               
                               {showSyncDropdown && (
                                 <div className="absolute top-[100%] right-0 mt-2 z-50 bg-white dark:bg-slate-900 rounded-2xl shadow-premium-lg p-2 flex flex-col gap-1 min-w-[220px] border border-slate-100 dark:border-slate-800/40 text-left">
-                                  <span className="p-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider block border-b border-slate-100 dark:border-slate-800/60 pb-1.5 mb-1.5">Importar desde línea:</span>
+                                  <span className="p-2 text-[10px] font-bold text-surface-400 uppercase tracking-wider block border-b border-slate-100 dark:border-slate-800/60 pb-1.5 mb-1.5">Importar desde línea:</span>
                                   {instances.filter(i => i.status === 'connected').length === 0 ? (
-                                    <span className="p-3 text-[10px] text-slate-400 dark:text-slate-500 font-bold block text-center">No hay líneas conectadas</span>
+                                    <span className="p-3 text-[10px] text-surface-400 dark:text-surface-500 font-bold block text-center">No hay líneas conectadas</span>
                                   ) : (
                                     instances.filter(i => i.status === 'connected').map(inst => (
                                       <button
@@ -3453,7 +3453,7 @@ echo $response;`;
                                 familyName: '',
                                 phoneNumber: ''
                               })}
-                              className="px-4 py-3 bg-[#059669] hover:bg-[#047857] active:scale-95 text-white font-bold text-xs rounded-2xl transition-all shadow-md shadow-[#059669]/20 cursor-pointer flex items-center gap-1.5"
+                              className="px-4 py-3 bg-brand-500 hover:bg-[#047857] active:scale-95 text-white font-bold text-xs rounded-2xl transition-all shadow-md shadow-brand-500/20 cursor-pointer flex items-center gap-1.5"
                             >
                               <Plus size={14} />
                               <span>Nuevo Contacto</span>
@@ -3465,7 +3465,7 @@ echo $response;`;
                         <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 space-y-4 shadow-sm text-left">
                           {/* Search bar input */}
                           <div className="relative">
-                            <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-surface-400">
                               <Search size={15} />
                             </span>
                             <input
@@ -3478,7 +3478,7 @@ echo $response;`;
                           </div>
 
                           {googleContactsLoading ? (
-                            <div className="py-12 flex flex-col items-center justify-center gap-3 text-slate-400">
+                            <div className="py-12 flex flex-col items-center justify-center gap-3 text-surface-400">
                               <RefreshCw size={24} className="animate-spin text-emerald-500" />
                               <span className="text-xs font-medium">Cargando contactos de Google...</span>
                             </div>
@@ -3492,16 +3492,16 @@ echo $response;`;
                                   c.phoneNumber.toLowerCase().includes(q)
                                 );
                               }).length === 0 ? (
-                                <div className="py-12 text-center text-slate-400 space-y-2">
+                                <div className="py-12 text-center text-surface-400 space-y-2">
                                   <Users size={32} className="mx-auto text-slate-300 dark:text-slate-700 animate-pulse" />
                                   <p className="text-xs font-semibold">No se encontraron contactos en tu agenda</p>
-                                  <p className="text-[10px] text-slate-400 dark:text-slate-500">Usa el botón "Nuevo Contacto" o conecta / sincroniza tu celular.</p>
+                                  <p className="text-[10px] text-surface-400 dark:text-surface-500">Usa el botón "Nuevo Contacto" o conecta / sincroniza tu celular.</p>
                                 </div>
                               ) : (
                                 <div className="overflow-x-auto">
                                   <table className="w-full border-collapse">
                                     <thead>
-                                      <tr className="border-b border-slate-100 dark:border-slate-800/40 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                      <tr className="border-b border-slate-100 dark:border-slate-800/40 text-[10px] font-bold text-surface-400 uppercase tracking-widest">
                                         <th className="pb-3 text-left w-12">Foto</th>
                                         <th className="pb-3 text-left">Nombre</th>
                                         <th className="pb-3 text-left">Teléfono</th>
@@ -3535,7 +3535,7 @@ echo $response;`;
                                               <td className="py-3 font-semibold text-slate-700 dark:text-slate-200">
                                                 {contact.displayName}
                                               </td>
-                                              <td className="py-3 font-mono text-slate-500 dark:text-slate-400 font-bold">
+                                              <td className="py-3 font-mono text-surface-500 dark:text-surface-400 font-bold">
                                                 {contact.phoneNumber || 'Sin teléfono'}
                                               </td>
                                               <td className="py-3 text-right">
@@ -3551,7 +3551,7 @@ echo $response;`;
                                                       familyName: contact.familyName,
                                                       phoneNumber: contact.phoneNumber
                                                     })}
-                                                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer"
+                                                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-surface-500 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer"
                                                     title="Editar contacto"
                                                   >
                                                     <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
@@ -3561,7 +3561,7 @@ echo $response;`;
                                                   <button
                                                     type="button"
                                                     onClick={() => handleDeleteContact(contact.resourceName)}
-                                                    className="p-2 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xl text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                                                    className="p-2 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xl text-surface-400 hover:text-rose-600 transition-colors cursor-pointer"
                                                     title="Eliminar contacto"
                                                   >
                                                     <Trash2 size={13.5} />
@@ -3590,7 +3590,7 @@ echo $response;`;
               <div className="space-y-6 animate-fadeIn">
                 <div className="text-left space-y-0.5">
                   <h3 className="text-base font-bold text-slate-800 dark:text-white">Grupos de WhatsApp</h3>
-                  <p className="text-xs text-slate-400">Administra los grupos, miembros y accesos de tu línea conectada.</p>
+                  <p className="text-xs text-surface-400">Administra los grupos, miembros y accesos de tu línea conectada.</p>
                 </div>
 
                 {!selectedInstanceForChats ? (
@@ -3601,7 +3601,7 @@ echo $response;`;
                     </div>
                     <div className="space-y-1 text-center">
                       <h4 className="text-sm font-bold text-slate-800 dark:text-white">Selecciona una línea activa</h4>
-                      <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
+                      <p className="text-xs text-surface-400 max-w-sm mx-auto leading-relaxed">
                         Debes seleccionar una instancia de WhatsApp conectada para poder listar y administrar sus grupos.
                       </p>
                     </div>
@@ -3620,7 +3620,7 @@ echo $response;`;
                             type="button"
                             onClick={fetchGroups}
                             disabled={groupsLoading}
-                            className="p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                            className="p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-surface-600 dark:text-slate-300 font-bold rounded-xl transition-all cursor-pointer disabled:opacity-50"
                             title="Recargar grupos"
                           >
                             <RefreshCw size={14} className={groupsLoading ? 'animate-spin' : ''} />
@@ -3632,7 +3632,7 @@ echo $response;`;
                               setCreateGroupError(null);
                               setShowCreateGroupModal(true);
                             }}
-                            className="px-3.5 py-2.5 bg-[#059669] hover:bg-[#047857] active:scale-95 text-white font-bold text-xs rounded-xl transition-all shadow-md shadow-[#059669]/20 cursor-pointer flex items-center gap-1"
+                            className="px-3.5 py-2.5 bg-brand-500 hover:bg-[#047857] active:scale-95 text-white font-bold text-xs rounded-xl transition-all shadow-md shadow-brand-500/20 cursor-pointer flex items-center gap-1"
                           >
                             <Plus size={13} />
                             <span>Crear Grupo</span>
@@ -3642,7 +3642,7 @@ echo $response;`;
 
                       {/* Search Bar */}
                       <div className="relative">
-                        <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-surface-400">
                           <Search size={15} />
                         </span>
                         <input
@@ -3655,7 +3655,7 @@ echo $response;`;
                       </div>
 
                       {groupsLoading && groups.length === 0 ? (
-                        <div className="py-16 flex flex-col items-center justify-center gap-3 text-slate-400">
+                        <div className="py-16 flex flex-col items-center justify-center gap-3 text-surface-400">
                           <RefreshCw size={24} className="animate-spin text-emerald-500" />
                           <span className="text-xs font-medium">Recuperando grupos de WhatsApp...</span>
                         </div>
@@ -3668,10 +3668,10 @@ echo $response;`;
                             const jid = (g.id || '').toLowerCase();
                             return subject.includes(q) || jid.includes(q);
                           }).length === 0 ? (
-                            <div className="py-12 text-center text-slate-400 space-y-2">
+                            <div className="py-12 text-center text-surface-400 space-y-2">
                               <Users2 size={32} className="mx-auto text-slate-300 dark:text-slate-700 animate-pulse" />
                               <p className="text-xs font-semibold">No se encontraron grupos</p>
-                              <p className="text-[10px] text-slate-400 dark:text-slate-500">¿Estás seguro de que tu línea de WhatsApp tiene grupos activos?</p>
+                              <p className="text-[10px] text-surface-400 dark:text-surface-500">¿Estás seguro de que tu línea de WhatsApp tiene grupos activos?</p>
                             </div>
                           ) : (
                             groups
@@ -3705,7 +3705,7 @@ echo $response;`;
                                           {initials}
                                         </div>
                                       ) : (
-                                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center flex-shrink-0">
+                                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-surface-400 flex items-center justify-center flex-shrink-0">
                                           <Users2 size={16} />
                                         </div>
                                       )}
@@ -3714,14 +3714,14 @@ echo $response;`;
                                         <h5 className="text-xs font-bold text-slate-800 dark:text-white truncate">
                                           {group.subject || 'Grupo sin Nombre'}
                                         </h5>
-                                        <span className="text-[9px] font-mono text-slate-400 dark:text-slate-500 block truncate font-bold select-all">
+                                        <span className="text-[9px] font-mono text-surface-400 dark:text-surface-500 block truncate font-bold select-all">
                                           {group.id}
                                         </span>
                                       </div>
                                     </div>
 
                                     <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                                      <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-950 text-[9px] font-bold text-slate-500 dark:text-slate-400">
+                                      <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-950 text-[9px] font-bold text-surface-500 dark:text-surface-400">
                                         👥 {group.size || (group.participants ? group.participants.length : 0)} miembros
                                       </span>
                                     </div>
@@ -3741,13 +3741,13 @@ echo $response;`;
                           <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/40">
                             <div className="min-w-0">
                               <h4 className="text-sm font-bold text-slate-800 dark:text-white leading-tight truncate">{selectedGroup.subject}</h4>
-                              <span className="text-[9px] font-mono text-slate-400 dark:text-slate-500 block truncate max-w-[220px] font-bold select-all" title={selectedGroup.id}>
+                              <span className="text-[9px] font-mono text-surface-400 dark:text-surface-500 block truncate max-w-[220px] font-bold select-all" title={selectedGroup.id}>
                                 ID: {selectedGroup.id}
                               </span>
                             </div>
                             <button
                               onClick={() => setSelectedGroup(null)}
-                              className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer flex items-center justify-center"
+                              className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-surface-400 hover:text-surface-600 dark:hover:text-white cursor-pointer flex items-center justify-center"
                             >
                               <X size={15} />
                             </button>
@@ -3756,7 +3756,7 @@ echo $response;`;
                           {/* Group Invite Link Box */}
                           <div className="p-3.5 bg-slate-50 dark:bg-slate-950/40 rounded-2xl space-y-2">
                             <div className="flex items-center justify-between gap-2">
-                              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Enlace de Invitación</span>
+                              <span className="text-[10px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider">Enlace de Invitación</span>
                               {inviteLinkLabel && (
                                 <button
                                   type="button"
@@ -3771,11 +3771,11 @@ echo $response;`;
 
                             {inviteLinkLabel ? (
                               <div className="flex items-center gap-1 bg-white dark:bg-slate-950/50 p-2 rounded-xl border border-slate-100 dark:border-slate-900">
-                                <span className="text-[10px] font-mono text-slate-600 dark:text-slate-300 truncate flex-1">{inviteLinkLabel}</span>
+                                <span className="text-[10px] font-mono text-surface-600 dark:text-slate-300 truncate flex-1">{inviteLinkLabel}</span>
                                 <button
                                   type="button"
                                   onClick={() => copyToClipboard(inviteLinkLabel)}
-                                  className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-800 dark:hover:text-white rounded-lg cursor-pointer transition-colors flex items-center justify-center"
+                                  className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-surface-400 hover:text-slate-800 dark:hover:text-white rounded-lg cursor-pointer transition-colors flex items-center justify-center"
                                   title="Copiar enlace"
                                 >
                                   <Copy size={12} />
@@ -3786,7 +3786,7 @@ echo $response;`;
                                 type="button"
                                 onClick={() => handleFetchInviteLink(selectedGroup.id)}
                                 disabled={inviteLinkLoading}
-                                className="w-full py-2 bg-white dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900 border border-slate-200/50 dark:border-slate-900 rounded-xl text-[10px] text-slate-600 dark:text-slate-300 font-bold transition-all flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
+                                className="w-full py-2 bg-white dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900 border border-slate-200/50 dark:border-slate-900 rounded-xl text-[10px] text-surface-600 dark:text-slate-300 font-bold transition-all flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
                               >
                                 {inviteLinkLoading ? (
                                   <RefreshCw size={10} className="animate-spin text-emerald-500" />
@@ -3800,7 +3800,7 @@ echo $response;`;
 
                           {/* Add Participant input form */}
                           <form onSubmit={handleAddParticipantSubmit} className="space-y-2">
-                            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Agregar Miembro</span>
+                            <span className="text-[10px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Agregar Miembro</span>
                             <div className="flex items-center gap-2">
                               <input
                                 type="text"
@@ -3822,7 +3822,7 @@ echo $response;`;
 
                           {/* Participants List */}
                           <div className="space-y-3.5">
-                            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block border-b border-slate-100 dark:border-slate-800/40 pb-1.5">
+                            <span className="text-[10px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block border-b border-slate-100 dark:border-slate-800/40 pb-1.5">
                               Miembros ({selectedGroup.participants ? selectedGroup.participants.length : 0})
                             </span>
                             
@@ -3850,7 +3850,7 @@ echo $response;`;
                                         <button
                                           type="button"
                                           onClick={() => handleUpdateGroupParticipant('demote', cleanId)}
-                                          className="p-1 bg-white dark:bg-slate-900 text-slate-400 hover:text-slate-800 dark:hover:text-white rounded-lg border border-slate-100 dark:border-slate-850 cursor-pointer shadow-sm transition-colors text-[9px] font-semibold"
+                                          className="p-1 bg-white dark:bg-slate-900 text-surface-400 hover:text-slate-800 dark:hover:text-white rounded-lg border border-slate-100 dark:border-slate-850 cursor-pointer shadow-sm transition-colors text-[9px] font-semibold"
                                           title="Degradar a miembro"
                                         >
                                           Degradar
@@ -3859,7 +3859,7 @@ echo $response;`;
                                         <button
                                           type="button"
                                           onClick={() => handleUpdateGroupParticipant('promote', cleanId)}
-                                          className="p-1 bg-white dark:bg-slate-900 text-slate-400 hover:text-slate-800 dark:hover:text-white rounded-lg border border-slate-100 dark:border-slate-850 cursor-pointer shadow-sm transition-colors text-[9px] font-semibold"
+                                          className="p-1 bg-white dark:bg-slate-900 text-surface-400 hover:text-slate-800 dark:hover:text-white rounded-lg border border-slate-100 dark:border-slate-850 cursor-pointer shadow-sm transition-colors text-[9px] font-semibold"
                                           title="Ascender a admin"
                                         >
                                           Promover
@@ -3869,7 +3869,7 @@ echo $response;`;
                                       <button
                                         type="button"
                                         onClick={() => handleUpdateGroupParticipant('remove', cleanId)}
-                                        className="p-1 bg-white hover:bg-rose-50 dark:bg-slate-900 text-slate-400 hover:text-rose-600 rounded-lg border border-slate-100 dark:border-slate-850 cursor-pointer shadow-sm transition-colors flex items-center justify-center"
+                                        className="p-1 bg-white hover:bg-rose-50 dark:bg-slate-900 text-surface-400 hover:text-rose-600 rounded-lg border border-slate-100 dark:border-slate-850 cursor-pointer shadow-sm transition-colors flex items-center justify-center"
                                         title="Eliminar del grupo"
                                       >
                                         <Trash2 size={11} />
@@ -3882,10 +3882,10 @@ echo $response;`;
                           </div>
                         </div>
                       ) : (
-                        <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 text-center shadow-sm text-slate-400 space-y-2">
+                        <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 text-center shadow-sm text-surface-400 space-y-2">
                           <Users2 size={28} className="mx-auto text-slate-300 dark:text-slate-700 animate-pulse" />
                           <p className="text-xs font-semibold">Ningún grupo seleccionado</p>
-                          <p className="text-[10px] text-slate-400 dark:text-slate-500">Selecciona un grupo de la lista para administrar sus miembros y enlace.</p>
+                          <p className="text-[10px] text-surface-400 dark:text-surface-500">Selecciona un grupo de la lista para administrar sus miembros y enlace.</p>
                         </div>
                       )}
                     </div>
@@ -3900,7 +3900,7 @@ echo $response;`;
               <div className="space-y-6 animate-fadeIn">
                 <div className="text-left space-y-0.5">
                   <h3 className="text-base font-bold text-slate-800 dark:text-white">Probar Envío de Mensaje</h3>
-                  <p className="text-xs text-slate-400">Verifica el funcionamiento de tus instancias enviándote un mensaje de prueba.</p>
+                  <p className="text-xs text-surface-400">Verifica el funcionamiento de tus instancias enviándote un mensaje de prueba.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
@@ -3908,7 +3908,7 @@ echo $response;`;
                   {/* Test Form */}
                   <form onSubmit={handleSendTestMessage} className="md:col-span-7 bg-white dark:bg-slate-900 p-6 rounded-3xl space-y-4 text-left">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Seleccionar Instancia</label>
+                      <label className="text-[10px] font-bold text-surface-400 dark:text-surface-500 uppercase tracking-widest">Seleccionar Instancia</label>
                       {/* Custom Select Dropdown */}
                       <div className="relative w-full" ref={sandboxDropdownRef}>
                         <button
@@ -3926,15 +3926,15 @@ echo $response;`;
                               </span>
                             </div>
                           ) : (
-                            <span className="text-slate-400 font-medium">Elegir instancia...</span>
+                            <span className="text-surface-400 font-medium">Elegir instancia...</span>
                           )}
-                          <ChevronDown size={14} className={`text-slate-400 transition-transform duration-200 ${showSandboxInstanceMenu ? 'rotate-180' : ''}`} />
+                          <ChevronDown size={14} className={`text-surface-400 transition-transform duration-200 ${showSandboxInstanceMenu ? 'rotate-180' : ''}`} />
                         </button>
 
                         {showSandboxInstanceMenu && (
                           <div className="absolute top-[100%] left-0 w-full mt-1.5 z-50 bg-white dark:bg-slate-900 rounded-2xl shadow-premium-lg p-1.5 flex flex-col gap-1 text-left animate-fadeIn">
                             {instances.length === 0 ? (
-                              <span className="p-3 text-[10px] text-slate-400 dark:text-slate-500 font-bold block text-center">No hay instancias creadas</span>
+                              <span className="p-3 text-[10px] text-surface-400 dark:text-surface-500 font-bold block text-center">No hay instancias creadas</span>
                             ) : (
                               instances.map(inst => (
                                 <button
@@ -3948,14 +3948,14 @@ echo $response;`;
                                   className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-3 cursor-pointer text-left ${
                                     testInstance === inst.instance_name 
                                       ? 'bg-slate-50 dark:bg-slate-800/60 text-slate-800 dark:text-white' 
-                                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 hover:text-slate-800 dark:hover:text-white'
+                                      : 'text-surface-600 dark:text-surface-400 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 hover:text-slate-800 dark:hover:text-white'
                                   }`}
                                 >
                                   <span className="truncate">{inst.instance_name}</span>
                                   <span className={`px-2 py-0.5 rounded-md text-[8.5px] font-bold ${
                                     inst.status === 'connected' 
                                       ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
-                                      : 'bg-slate-100 dark:bg-slate-950 text-slate-500'
+                                      : 'bg-slate-100 dark:bg-slate-950 text-surface-500'
                                   }`}>
                                     {inst.status === 'connected' ? 'Conectada' : 'Desconectada'}
                                   </span>
@@ -3968,9 +3968,9 @@ echo $response;`;
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Número Destino (9 dígitos)</label>
+                      <label className="text-[10px] font-bold text-surface-400 dark:text-surface-500 uppercase tracking-widest">Número Destino (9 dígitos)</label>
                       <div className="flex relative items-center w-full shadow-inner rounded-2xl overflow-hidden">
-                        <div className="px-3.5 py-3 bg-slate-100/50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 flex items-center gap-1.5 select-none font-bold text-xs">
+                        <div className="px-3.5 py-3 bg-slate-100/50 dark:bg-slate-900/50 text-surface-500 dark:text-surface-400 flex items-center gap-1.5 select-none font-bold text-xs">
                           <span>🇵🇪 +51</span>
                         </div>
                         <input
@@ -3986,7 +3986,7 @@ echo $response;`;
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Mensaje de Texto</label>
+                      <label className="text-[10px] font-bold text-surface-400 dark:text-surface-500 uppercase tracking-widest">Mensaje de Texto</label>
                       <textarea
                         value={testText}
                         onChange={(e) => setTestText(e.target.value)}
@@ -3999,7 +3999,7 @@ echo $response;`;
                     <button
                       type="submit"
                       disabled={testLoading || !testInstance || instances.find(i => i.instance_name === testInstance)?.status !== 'connected'}
-                      className="w-full py-3.5 bg-[#059669] hover:bg-[#047857] active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs rounded-2xl shadow-lg shadow-[#059669]/15 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                      className="w-full py-3.5 bg-brand-500 hover:bg-[#047857] active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs rounded-2xl shadow-lg shadow-brand-500/15 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                     >
                       {testLoading ? (
                         <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -4015,7 +4015,7 @@ echo $response;`;
                   {/* Result Box */}
                   <div className="md:col-span-5 space-y-4">
                     <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl text-left space-y-3">
-                      <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500">Resultado del Envío</h4>
+                      <h4 className="text-xs font-bold uppercase tracking-widest text-surface-500">Resultado del Envío</h4>
                       
                       {testResult ? (
                         <div className={`p-4 rounded-2xl border text-xs font-bold animate-fadeIn ${
@@ -4027,12 +4027,12 @@ echo $response;`;
                             {testResult.success ? <Check size={16} /> : <X size={16} />}
                             <span>{testResult.success ? 'Envío Exitoso' : 'Error en Envío'}</span>
                           </div>
-                          <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+                          <p className="text-[11px] font-medium text-surface-500 dark:text-surface-400 mt-2 leading-relaxed">
                             {testResult.message}
                           </p>
                         </div>
                       ) : (
-                        <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                        <p className="text-xs text-surface-400 leading-relaxed font-medium">
                           Selecciona una instancia activa, introduce el número de WhatsApp receptor en formato internacional y pulsa enviar para ver el log de envío aquí.
                         </p>
                       )}
@@ -4043,7 +4043,7 @@ echo $response;`;
                         <Sparkles size={14} className="text-indigo-500" />
                         <span>Consejo Rápido</span>
                       </h5>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                      <p className="text-[11px] text-surface-500 dark:text-surface-400 leading-relaxed">
                         Asegúrate de agregar el código de país al número de teléfono. Ejemplo: <strong>51</strong> para Perú, <strong>54</strong> para Argentina, <strong>57</strong> para Colombia.
                       </p>
                     </div>
@@ -4059,14 +4059,14 @@ echo $response;`;
               <div className="space-y-6 animate-fadeIn text-left">
                 <div className="space-y-0.5">
                   <h3 className="text-base font-bold text-slate-800 dark:text-white">Documentación de Integración</h3>
-                  <p className="text-xs text-slate-400">Ejemplos para conectar el API de envío con tus sistemas internos y plataformas externas.</p>
+                  <p className="text-xs text-surface-400">Ejemplos para conectar el API de envío con tus sistemas internos y plataformas externas.</p>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                   
                   {/* Left Column: API endpoints sub-tabs */}
                   <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 space-y-3 shadow-sm">
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 pb-2 border-b border-slate-100 dark:border-slate-800/40">
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-surface-400 dark:text-surface-500 pb-2 border-b border-slate-100 dark:border-slate-800/40">
                       Endpoints Disponibles
                     </h4>
                     
@@ -4085,7 +4085,7 @@ echo $response;`;
                             onClick={() => setDocTab(endpoint.id as any)}
                             className={`w-full p-3 rounded-xl flex items-center justify-between gap-3 text-left transition-all border cursor-pointer ${
                               isActive
-                                ? 'bg-slate-50 dark:bg-slate-800/40 border-[#059669]/30'
+                                ? 'bg-slate-50 dark:bg-slate-800/40 border-brand-500/30'
                                 : 'bg-transparent border-transparent hover:bg-slate-50/50 dark:hover:bg-slate-850'
                             }`}
                           >
@@ -4110,7 +4110,7 @@ echo $response;`;
                           {docTab === 'participants-group' && 'Administrar Miembros en Grupo'}
                           {docTab === 'invite-group' && 'Obtener Enlace de Invitación'}
                         </h4>
-                        <span className="text-[10px] text-slate-400 block mt-0.5">
+                        <span className="text-[10px] text-surface-400 block mt-0.5">
                           {docTab === 'text' && 'Endpoint para envíos de texto plano masivos o individuales'}
                           {docTab === 'media' && 'Soporta el envío de archivos adjuntos usando URLs públicas'}
                           {docTab === 'create-group' && 'Crea un grupo de WhatsApp y agrega miembros automáticamente'}
@@ -4128,7 +4128,7 @@ echo $response;`;
                             className={`px-3 py-1.5 rounded-lg uppercase transition-all cursor-pointer ${
                               docLang === lang 
                                 ? 'bg-white dark:bg-slate-900 text-slate-800 dark:text-white shadow-sm' 
-                                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                                : 'text-surface-500 hover:text-slate-700 dark:hover:text-slate-300'
                             }`}
                           >
                             {lang === 'js' ? 'Fetch JS' : lang}
@@ -4148,7 +4148,7 @@ echo $response;`;
                       }`}>
                         {docTab === 'invite-group' ? 'GET' : docTab === 'participants-group' ? 'PUT' : 'POST'}
                       </span>
-                      <span className="text-xs font-mono text-slate-600 dark:text-slate-300 select-all truncate">
+                      <span className="text-xs font-mono text-surface-600 dark:text-slate-300 select-all truncate">
                         {currentBackendUrl}
                         {docTab === 'text' && '/api/instances/send'}
                         {docTab === 'media' && '/api/instances/send-media'}
@@ -4159,7 +4159,7 @@ echo $response;`;
                     </div>
 
                     <div className="space-y-3">
-                      <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                      <p className="text-xs text-surface-500 leading-relaxed font-medium">
                         Realiza una petición HTTP hacia la URI indicada. Asegúrate de pasar las credenciales de la instancia correctas:
                       </p>
 
@@ -4171,7 +4171,7 @@ echo $response;`;
                         
                         <button
                           onClick={() => copyToClipboard(getDocCode())}
-                          className="absolute top-3 right-3 p-2 bg-slate-900/60 hover:bg-slate-900 text-slate-400 hover:text-white rounded-lg hover-lift shadow transition-all cursor-pointer opacity-100 group-hover:opacity-100"
+                          className="absolute top-3 right-3 p-2 bg-slate-900/60 hover:bg-slate-900 text-surface-400 hover:text-white rounded-lg hover-lift shadow transition-all cursor-pointer opacity-100 group-hover:opacity-100"
                           title="Copiar código"
                         >
                           <Copy size={13} />
@@ -4182,7 +4182,7 @@ echo $response;`;
                     {/* API response specifications */}
                     <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800/40">
                       <h5 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider font-bold">Respuesta Esperada (JSON)</h5>
-                      <pre className="bg-slate-50 dark:bg-slate-950/40 p-4 rounded-xl font-mono text-[10px] text-slate-600 dark:text-slate-400 overflow-x-auto">
+                      <pre className="bg-slate-50 dark:bg-slate-950/40 p-4 rounded-xl font-mono text-[10px] text-surface-600 dark:text-surface-400 overflow-x-auto">
                         {docTab === 'text' && JSON.stringify({
                           success: true,
                           message: "Mensaje enviado exitosamente en vivo 🚀"
@@ -4225,7 +4225,7 @@ echo $response;`;
               <div className="space-y-6 animate-fadeIn text-left">
                 <div className="space-y-0.5">
                   <h3 className="text-base font-bold text-slate-800 dark:text-white">Estado de la Suscripción</h3>
-                  <p className="text-xs text-slate-400">Detalles de las características vigentes y límites de tu plan SaaS.</p>
+                  <p className="text-xs text-surface-400">Detalles de las características vigentes y límites de tu plan SaaS.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
@@ -4238,28 +4238,28 @@ echo $response;`;
                           <Key size={20} />
                         </div>
                         <div>
-                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Plan Contratado</span>
+                          <span className="text-[10px] text-surface-400 font-bold uppercase tracking-widest">Plan Contratado</span>
                           <h4 className="text-lg font-bold text-slate-800 dark:text-white">{subscription?.plan_name || 'Básico'}</h4>
                         </div>
                       </div>
 
                       <div className="divide-y divide-slate-100 dark:divide-slate-800/40 text-xs">
                         <div className="flex justify-between py-2.5 font-medium">
-                          <span className="text-slate-500">Estado de Cuenta</span>
+                          <span className="text-surface-500">Estado de Cuenta</span>
                           <span className="text-emerald-500 font-bold uppercase">Activo</span>
                         </div>
                         <div className="flex justify-between py-2.5 font-medium">
-                          <span className="text-slate-500">Instancias Máximas</span>
+                          <span className="text-surface-500">Instancias Máximas</span>
                           <span className="text-slate-800 dark:text-white font-bold">{subscription?.max_instances || 1} líneas</span>
                         </div>
                         <div className="flex justify-between py-2.5 font-medium">
-                          <span className="text-slate-500">Fecha de Alta</span>
+                          <span className="text-surface-500">Fecha de Alta</span>
                           <span className="text-slate-800 dark:text-white font-bold">
                             {subscription?.start_date ? new Date(subscription.start_date).toLocaleDateString() : 'N/A'}
                           </span>
                         </div>
                         <div className="flex justify-between py-2.5 font-medium">
-                          <span className="text-slate-500">Fecha de Expiración</span>
+                          <span className="text-surface-500">Fecha de Expiración</span>
                           <span className="text-slate-800 dark:text-white font-bold">
                             {subscription?.end_date ? new Date(subscription.end_date).toLocaleDateString() : 'N/A'}
                           </span>
@@ -4267,7 +4267,7 @@ echo $response;`;
                       </div>
                     </div>
 
-                    <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                    <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl text-[11px] text-surface-500 dark:text-surface-400 leading-relaxed font-medium">
                       Para solicitar la ampliación de tu límite de líneas de WhatsApp, modificaciones de plan o cancelación, contacta con tu administrador.
                     </div>
                   </div>
@@ -4276,11 +4276,11 @@ echo $response;`;
                   <div className="md:col-span-5 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent p-6 rounded-3xl flex flex-col justify-between gap-6 relative overflow-hidden">
                     <div className="space-y-3 relative z-10">
                       <h4 className="text-sm font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">¿Necesitas más capacidad?</h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                      <p className="text-xs text-surface-500 dark:text-surface-400 leading-relaxed font-medium">
                         Ofrecemos planes corporativos a medida que se adaptan a las necesidades y volúmenes de tu infraestructura de mensajería empresarial.
                       </p>
                       
-                      <div className="space-y-1.5 pt-2 text-[11px] text-slate-600 dark:text-slate-400 font-bold">
+                      <div className="space-y-1.5 pt-2 text-[11px] text-surface-600 dark:text-surface-400 font-bold">
                         <div className="flex items-center gap-1.5">
                           <Check size={14} className="text-indigo-500" />
                           <span>Instancias de WhatsApp ilimitadas</span>
@@ -4329,21 +4329,21 @@ echo $response;`;
                 setActiveQrInstance(null);
                 setQrBase64(null);
               }}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+              className="absolute top-4 right-4 text-surface-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
             >
               <X size={18} />
             </button>
 
             <div className="space-y-1">
               <h4 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider">Escanear WhatsApp QR</h4>
-              <p className="text-[10px] text-slate-400 font-bold">Instancia: <strong className="text-emerald-500">{activeQrInstance}</strong></p>
+              <p className="text-[10px] text-surface-400 font-bold">Instancia: <strong className="text-emerald-500">{activeQrInstance}</strong></p>
             </div>
 
             <div className="w-52 h-52 bg-white rounded-2xl mx-auto flex items-center justify-center border border-slate-200/20 shadow-inner overflow-hidden relative">
               {qrLoading ? (
                 <div className="flex flex-col items-center gap-2">
                   <span className="w-6 h-6 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
-                  <span className="text-[10px] text-slate-400 font-bold uppercase">Generando QR...</span>
+                  <span className="text-[10px] text-surface-400 font-bold uppercase">Generando QR...</span>
                 </div>
               ) : qrBase64 ? (
                 <img src={qrBase64} alt="WhatsApp QR Code" className="w-full h-full object-cover p-1" />
@@ -4352,7 +4352,7 @@ echo $response;`;
               )}
             </div>
 
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed max-w-xs mx-auto font-medium">
+            <p className="text-[10px] text-surface-500 dark:text-surface-400 leading-relaxed max-w-xs mx-auto font-medium">
               Abre WhatsApp en tu teléfono inteligente → Ve a Dispositivos Vinculados → Vincular un dispositivo. Escanea este código para iniciar sesión.
             </p>
 
@@ -4380,13 +4380,13 @@ echo $response;`;
 
             <div className="space-y-1.5">
               <h3 className="text-base font-bold text-slate-800 dark:text-white">{confirmDialog.title}</h3>
-              <p className="text-xs text-slate-400">{confirmDialog.message}</p>
+              <p className="text-xs text-surface-400">{confirmDialog.message}</p>
             </div>
 
             <div className="flex items-center gap-3 pt-2">
               <button
                 onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
-                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-surface-600 dark:text-slate-300 text-xs font-bold rounded-xl transition-colors cursor-pointer"
               >
                 {confirmDialog.cancelText || 'Cancelar'}
               </button>
@@ -4419,14 +4419,14 @@ echo $response;`;
                 setNewInstanceName('');
                 setCreateError(null);
               }}
-              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+              className="absolute top-5 right-5 text-surface-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
             >
               <X size={18} />
             </button>
 
             <div className="space-y-1.5">
               <h3 className="text-base font-bold text-slate-800 dark:text-white">Nueva Instancia de WhatsApp</h3>
-              <p className="text-xs text-slate-400">Las instancias representan las líneas celulares de WhatsApp que vincularás.</p>
+              <p className="text-xs text-surface-400">Las instancias representan las líneas celulares de WhatsApp que vincularás.</p>
             </div>
 
             {createError && (
@@ -4437,7 +4437,7 @@ echo $response;`;
 
             <form onSubmit={handleCreateInstance} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Nombre de la Instancia</label>
+                <label className="text-[10px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-widest">Nombre de la Instancia</label>
                 <input
                   type="text"
                   value={newInstanceName}
@@ -4446,7 +4446,7 @@ echo $response;`;
                   required
                   className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium"
                 />
-                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Solo se permiten letras, números y guiones.</span>
+                <span className="text-[9px] text-surface-400 font-bold uppercase tracking-wider block">Solo se permiten letras, números y guiones.</span>
               </div>
 
               <div className="flex gap-2.5 pt-2">
@@ -4465,7 +4465,7 @@ echo $response;`;
                 <button
                   type="submit"
                   disabled={createLoading || !newInstanceName.trim()}
-                  className="flex-1 py-3 bg-[#059669] hover:bg-[#047857] active:scale-[0.99] disabled:opacity-40 text-xs text-white font-bold rounded-2xl shadow-lg shadow-[#059669]/10 transition-all cursor-pointer"
+                  className="flex-1 py-3 bg-brand-500 hover:bg-[#047857] active:scale-[0.99] disabled:opacity-40 text-xs text-white font-bold rounded-2xl shadow-lg shadow-brand-500/10 transition-all cursor-pointer"
                 >
                   {createLoading ? 'Creando...' : 'Crear Instancia'}
                 </button>
@@ -4481,7 +4481,7 @@ echo $response;`;
           <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 w-full max-w-md p-6 sm:p-7 rounded-3xl space-y-4 shadow-premium-lg relative animate-fadeIn text-left">
             <button
               onClick={() => setCrmMergeModal(prev => ({ ...prev, isOpen: false }))}
-              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+              className="absolute top-5 right-5 text-surface-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
             >
               <X size={18} />
             </button>
@@ -4491,7 +4491,7 @@ echo $response;`;
                 <AlertCircle className="text-amber-500" size={18} />
                 <span>Cliente ya Registrado</span>
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              <p className="text-xs text-surface-500 dark:text-surface-400 leading-relaxed">
                 El documento <strong>{crmMergeModal.docNumber}</strong> ya está registrado a nombre de <strong>{crmMergeModal.clientName}</strong>. 
                 ¿Cómo deseas vincular este nuevo número de WhatsApp a la ficha del cliente?
               </p>
@@ -4503,8 +4503,8 @@ echo $response;`;
                 onClick={() => handleSaveCrmContact('promote')}
                 className="w-full p-3.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950/50 dark:hover:bg-slate-950/80 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-left cursor-pointer transition-all flex flex-col gap-0.5 group"
               >
-                <span className="text-xs font-bold text-slate-800 dark:text-white group-hover:text-[#059669]">Hacer este número Primario</span>
-                <span className="text-[10px] text-slate-400">Este número será el principal. El anterior se guardará como Secundario. (Ambos quedan activos)</span>
+                <span className="text-xs font-bold text-slate-800 dark:text-white group-hover:text-brand-500">Hacer este número Primario</span>
+                <span className="text-[10px] text-surface-400">Este número será el principal. El anterior se guardará como Secundario. (Ambos quedan activos)</span>
               </button>
 
               <button
@@ -4512,8 +4512,8 @@ echo $response;`;
                 onClick={() => handleSaveCrmContact('keep')}
                 className="w-full p-3.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950/50 dark:hover:bg-slate-950/80 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-left cursor-pointer transition-all flex flex-col gap-0.5 group"
               >
-                <span className="text-xs font-bold text-slate-800 dark:text-white group-hover:text-[#059669]">Registrar como Secundario</span>
-                <span className="text-[10px] text-slate-400">Guarda este número como secundario sin modificar el número principal actual. (Ambos quedan activos)</span>
+                <span className="text-xs font-bold text-slate-800 dark:text-white group-hover:text-brand-500">Registrar como Secundario</span>
+                <span className="text-[10px] text-surface-400">Guarda este número como secundario sin modificar el número principal actual. (Ambos quedan activos)</span>
               </button>
 
               <button
@@ -4522,7 +4522,7 @@ echo $response;`;
                 className="w-full p-3.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950/50 dark:hover:bg-slate-950/80 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-left cursor-pointer transition-all flex flex-col gap-0.5 group"
               >
                 <span className="text-xs font-bold text-[#e11d48] group-hover:text-red-500">Desactivar número anterior</span>
-                <span className="text-[10px] text-slate-400">Desactiva el número de WhatsApp anterior del cliente y establece este nuevo como Primario.</span>
+                <span className="text-[10px] text-surface-400">Desactiva el número de WhatsApp anterior del cliente y establece este nuevo como Primario.</span>
               </button>
             </div>
 
@@ -4530,7 +4530,7 @@ echo $response;`;
               <button
                 type="button"
                 onClick={() => setCrmMergeModal(prev => ({ ...prev, isOpen: false }))}
-                className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 text-xs font-bold rounded-2xl transition-all cursor-pointer text-center"
+                className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-surface-600 dark:text-surface-400 text-xs font-bold rounded-2xl transition-all cursor-pointer text-center"
               >
                 Cancelar
               </button>
@@ -4549,14 +4549,14 @@ echo $response;`;
                 setCrmEditingCategoryId(null);
                 setCrmEditingCategoryName('');
               }}
-              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+              className="absolute top-5 right-5 text-surface-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
             >
               <X size={18} />
             </button>
 
             <div className="space-y-1.5">
               <h3 className="text-base font-bold text-slate-800 dark:text-white">Gestionar Categorías</h3>
-              <p className="text-xs text-slate-400">Agrega, renombra o elimina categorías para tus contactos.</p>
+              <p className="text-xs text-surface-400">Agrega, renombra o elimina categorías para tus contactos.</p>
             </div>
 
             {/* List */}
@@ -4573,13 +4573,13 @@ echo $response;`;
                       />
                       <button
                         onClick={() => handleUpdateCrmCategory(cat.id)}
-                        className="px-2.5 py-1.5 bg-[#059669] hover:bg-[#047857] text-white text-[10px] font-bold rounded-lg cursor-pointer"
+                        className="px-2.5 py-1.5 bg-brand-500 hover:bg-[#047857] text-white text-[10px] font-bold rounded-lg cursor-pointer"
                       >
                         OK
                       </button>
                       <button
                         onClick={() => setCrmEditingCategoryId(null)}
-                        className="px-2.5 py-1.5 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold rounded-lg cursor-pointer"
+                        className="px-2.5 py-1.5 bg-slate-200 dark:bg-slate-800 text-surface-600 dark:text-surface-400 text-[10px] font-bold rounded-lg cursor-pointer"
                       >
                         X
                       </button>
@@ -4594,7 +4594,7 @@ echo $response;`;
                             setCrmEditingCategoryId(cat.id);
                             setCrmEditingCategoryName(cat.name);
                           }}
-                          className="p-1 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 rounded-md transition-colors cursor-pointer"
+                          className="p-1 hover:bg-slate-200 dark:hover:bg-slate-800 text-surface-500 rounded-md transition-colors cursor-pointer"
                           title="Renombrar"
                         >
                           <RefreshCw size={12} />
@@ -4618,7 +4618,7 @@ echo $response;`;
 
             {/* Add inline form */}
             <div className="pt-2 border-t border-slate-200/50 dark:border-slate-800/50 space-y-2">
-              <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Agregar Nueva Categoría</label>
+              <label className="text-[10px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Agregar Nueva Categoría</label>
               <div className="flex gap-1.5">
                 <input
                   type="text"
@@ -4630,7 +4630,7 @@ echo $response;`;
                 <button
                   type="button"
                   onClick={handleCreateCrmCategory}
-                  className="px-4 py-2 bg-[#059669] hover:bg-[#047857] text-white text-xs font-bold rounded-xl transition-all cursor-pointer font-medium"
+                  className="px-4 py-2 bg-brand-500 hover:bg-[#047857] text-white text-xs font-bold rounded-xl transition-all cursor-pointer font-medium"
                 >
                   Agregar
                 </button>
@@ -4647,7 +4647,7 @@ echo $response;`;
             
             <button
               onClick={() => setContactModal(prev => ({ ...prev, isOpen: false }))}
-              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+              className="absolute top-5 right-5 text-surface-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
             >
               <X size={18} />
             </button>
@@ -4656,14 +4656,14 @@ echo $response;`;
               <h3 className="text-base font-bold text-slate-800 dark:text-white">
                 {contactModal.isEdit ? 'Editar Contacto' : 'Nuevo Contacto en Google'}
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-surface-400">
                 {contactModal.isEdit ? 'Edita los datos del contacto en Google.' : 'Registra el contacto directamente en tu cuenta de Google.'}
               </p>
             </div>
 
             <form onSubmit={handleCreateOrUpdateContact} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Nombre</label>
+                <label className="text-[10px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-widest">Nombre</label>
                 <input
                   type="text"
                   value={contactModal.givenName}
@@ -4675,7 +4675,7 @@ echo $response;`;
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Apellido (Opcional)</label>
+                <label className="text-[10px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-widest">Apellido (Opcional)</label>
                 <input
                   type="text"
                   value={contactModal.familyName}
@@ -4686,7 +4686,7 @@ echo $response;`;
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Teléfono (con Código de País)</label>
+                <label className="text-[10px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-widest">Teléfono (con Código de País)</label>
                 <input
                   type="text"
                   value={contactModal.phoneNumber}
@@ -4708,7 +4708,7 @@ echo $response;`;
 
                 <button
                   type="submit"
-                  className="flex-1 py-3 bg-[#059669] hover:bg-[#047857] active:scale-[0.99] text-xs text-white font-bold rounded-2xl shadow-lg shadow-[#059669]/10 transition-all cursor-pointer"
+                  className="flex-1 py-3 bg-brand-500 hover:bg-[#047857] active:scale-[0.99] text-xs text-white font-bold rounded-2xl shadow-lg shadow-brand-500/10 transition-all cursor-pointer"
                 >
                   {contactModal.isEdit ? 'Actualizar' : 'Guardar'}
                 </button>
@@ -4731,14 +4731,14 @@ echo $response;`;
                 setCreateGroupParticipants('');
                 setCreateGroupError(null);
               }}
-              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+              className="absolute top-5 right-5 text-surface-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
             >
               <X size={18} />
             </button>
 
             <div className="space-y-1.5">
               <h3 className="text-base font-bold text-slate-800 dark:text-white">Crear Grupo de WhatsApp</h3>
-              <p className="text-xs text-slate-400">Crea un grupo de forma instantánea en tu línea celular de WhatsApp vinculada.</p>
+              <p className="text-xs text-surface-400">Crea un grupo de forma instantánea en tu línea celular de WhatsApp vinculada.</p>
             </div>
 
             {createGroupError && (
@@ -4749,7 +4749,7 @@ echo $response;`;
 
             <form onSubmit={handleCreateGroup} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Asunto del Grupo (Nombre)</label>
+                <label className="text-[10px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-widest">Asunto del Grupo (Nombre)</label>
                 <input
                   type="text"
                   value={createGroupSubject}
@@ -4761,7 +4761,7 @@ echo $response;`;
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Participantes Iniciales (Números con código de país)</label>
+                <label className="text-[10px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-widest">Participantes Iniciales (Números con código de país)</label>
                 <textarea
                   value={createGroupParticipants}
                   onChange={(e) => setCreateGroupParticipants(e.target.value)}
@@ -4769,7 +4769,7 @@ echo $response;`;
                   className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium resize-none"
                   rows={3}
                 />
-                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Nota: Debes incluir obligatoriamente el código de país.</span>
+                <span className="text-[9px] text-surface-400 font-bold uppercase tracking-wider block">Nota: Debes incluir obligatoriamente el código de país.</span>
               </div>
 
               <div className="flex gap-2.5 pt-2">
@@ -4789,7 +4789,7 @@ echo $response;`;
                 <button
                   type="submit"
                   disabled={createGroupLoading || !createGroupSubject.trim()}
-                  className="flex-1 py-3 bg-[#059669] hover:bg-[#047857] active:scale-[0.99] disabled:opacity-40 text-xs text-white font-bold rounded-2xl shadow-lg shadow-[#059669]/10 transition-all cursor-pointer"
+                  className="flex-1 py-3 bg-brand-500 hover:bg-[#047857] active:scale-[0.99] disabled:opacity-40 text-xs text-white font-bold rounded-2xl shadow-lg shadow-brand-500/10 transition-all cursor-pointer"
                 >
                   {createGroupLoading ? 'Creando...' : 'Crear'}
                 </button>
