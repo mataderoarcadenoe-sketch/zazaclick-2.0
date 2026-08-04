@@ -1948,9 +1948,9 @@ echo $response;`;
                       Licencia Activa
                     </span>
                     <h3 className="text-lg sm:text-xl font-bold text-white">
-                      Plan {subscription?.plan_name || 'Básico'}
+                      {subscription?.plan_name?.toLowerCase().startsWith('plan') ? subscription.plan_name : `Plan ${subscription?.plan_name || 'Básico'}`}
                     </h3>
-                    <p className="text-xs text-surface-500 dark:text-surface-400 max-w-lg leading-relaxed">
+                    <p className="text-xs text-white/90 max-w-lg leading-relaxed">
                       Vincula tu línea de WhatsApp escaneando el código QR. Puedes enviar notificaciones automatizadas utilizando las credenciales de tu instancia.
                     </p>
                   </div>
@@ -1959,7 +1959,7 @@ echo $response;`;
                     <button
                       onClick={() => setShowCreateModal(true)}
                       disabled={instances.length >= maxInstances}
-                      className="px-4 py-2.5 bg-brand-500 hover:bg-brand-secondary disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl shadow-lg shadow-brand-500/15 flex items-center gap-1.5 transition-all cursor-pointer"
+                      className="px-4 py-2.5 bg-white hover:bg-white/95 text-brand-secondary font-bold text-xs rounded-xl shadow-lg flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       <Plus size={16} />
                       <span>Nueva Instancia</span>
@@ -1974,36 +1974,51 @@ echo $response;`;
                   </div>
 
                   {/* Backdrop lights */}
-                  <div className="absolute right-0 top-0 w-64 h-64 bg-pastel-100/20 rounded-full blur-[80px] pointer-events-none" />
+                  <div className="absolute right-0 top-0 w-64 h-64 bg-white/10 rounded-full blur-[80px] pointer-events-none" />
                 </div>
 
                 {/* Metrics Cards Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="p-5 bg-gradient-to-br from-sky-500/10 via-white to-white dark:from-sky-950/20 dark:via-slate-900 dark:to-slate-900 border border-sky-500/10 dark:border-sky-500/5 rounded-2xl space-y-1.5 text-left hover-lift shadow-sm">
-                    <span className="text-[10px] text-surface-400 font-bold uppercase tracking-widest">Líneas Vinculadas</span>
-                    <h3 className="text-2xl font-black text-sky-700 dark:text-sky-300">
-                      {instances.length} <span className="text-xs text-sky-500 font-medium">de</span> {maxInstances}
-                    </h3>
-                    <p className="text-[10px] text-surface-500">Capacidad disponible para crear instancias.</p>
+                  {/* Card 1: Líneas Vinculadas */}
+                  <div className="p-5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl hover-lift shadow-sm flex items-center justify-between gap-4">
+                    <div className="space-y-1.5 text-left">
+                      <span className="text-[10px] text-surface-400 font-bold uppercase tracking-widest block">Líneas Vinculadas</span>
+                      <h3 className="text-2xl font-black text-slate-800 dark:text-white">
+                        {instances.length} <span className="text-xs text-surface-400 font-medium">de</span> {maxInstances}
+                      </h3>
+                      <p className="text-[10px] text-surface-500">Capacidad para crear instancias.</p>
+                    </div>
+                    <div className="p-3 bg-sky-500/10 dark:bg-sky-500/20 text-sky-600 dark:text-sky-400 rounded-2xl flex-shrink-0">
+                      <Smartphone size={22} />
+                    </div>
                   </div>
 
-                  <div className="p-5 bg-gradient-to-br from-sky-500/10 via-white to-white dark:from-sky-950/20 dark:via-slate-900 dark:to-slate-900 border border-sky-500/10 dark:border-sky-500/5 rounded-2xl space-y-1.5 text-left hover-lift shadow-sm">
-                    <span className="text-[10px] text-surface-400 font-bold uppercase tracking-widest text-brand-primary">Instancias Online</span>
-                    <h3 className="text-2xl font-bold text-brand-primary">
-                      {activeInstancesCount} / <span className="text-surface-400">{instances.length || 0}</span>
-                    </h3>
-                    <p className="text-[10px] text-surface-500">Números con WhatsApp en línea.</p>
+                  {/* Card 2: Instancias Online */}
+                  <div className="p-5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl hover-lift shadow-sm flex items-center justify-between gap-4">
+                    <div className="space-y-1.5 text-left">
+                      <span className="text-[10px] text-surface-400 font-bold uppercase tracking-widest block">Instancias Online</span>
+                      <h3 className="text-2xl font-black text-brand-primary">
+                        {activeInstancesCount} <span className="text-xs text-surface-450 font-medium">de</span> {instances.length || 0}
+                      </h3>
+                      <p className="text-[10px] text-surface-500">Números con WhatsApp en línea.</p>
+                    </div>
+                    <div className="p-3 bg-brand-primary/10 dark:bg-brand-primary/20 text-brand-primary rounded-2xl flex-shrink-0">
+                      <CheckCircle2 size={22} />
+                    </div>
                   </div>
 
-                  <div className="p-5 bg-gradient-to-br from-sky-500/10 via-white to-white dark:from-sky-950/20 dark:via-slate-900 dark:to-slate-900 border border-sky-500/10 dark:border-sky-500/5 rounded-2xl space-y-1.5 text-left hover-lift shadow-sm">
-                    <span className="text-[10px] text-surface-400 font-bold uppercase tracking-widest">Próxima Renovación</span>
-                    <h3 className="text-2xl font-bold text-purple-700 dark:text-purple-300 flex items-center gap-2">
-                      <Clock size={20} className="text-purple-500" />
-                      <span className="text-2xl font-black">
+                  {/* Card 3: Próxima Renovación */}
+                  <div className="p-5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl hover-lift shadow-sm flex items-center justify-between gap-4">
+                    <div className="space-y-1.5 text-left">
+                      <span className="text-[10px] text-surface-400 font-bold uppercase tracking-widest block">Próxima Renovación</span>
+                      <h3 className="text-2xl font-black text-slate-800 dark:text-white">
                         {subscription?.end_date ? new Date(subscription.end_date).toLocaleDateString() : 'N/A'}
-                      </span>
-                    </h3>
-                    <p className="text-[10px] text-surface-500">Vence tu suscripción mensual.</p>
+                      </h3>
+                      <p className="text-[10px] text-surface-500">Vence tu suscripción mensual.</p>
+                    </div>
+                    <div className="p-3 bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 rounded-2xl flex-shrink-0">
+                      <Clock size={22} />
+                    </div>
                   </div>
                 </div>
 
