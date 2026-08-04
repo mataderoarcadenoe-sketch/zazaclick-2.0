@@ -499,4 +499,35 @@ router.get('/clients', async (req: AuthenticatedRequest, res: Response) => {
   }
 });
 
+/**
+ * GET /api/crm/clients/:clientId/contacts - Listar todos los contactos vinculados a un cliente
+ */
+router.get('/clients/:clientId/contacts', async (req: AuthenticatedRequest, res: Response) => {
+  const { clientId } = req.params;
+
+  try {
+    const clientCheck = await pool.query(
+      'SELECT id, name FROM crm_clients WHERE id = $1 AND user_id = $2',
+      [clientId, req.userId]
+    );
+    if (clientCheck.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Cliente no encontrado.' });
+    }
+
+    const contacts = await pool.query(
+      `SELECT c.*, cat.name as category_name 
+       FROM crm_contacts c 
+       LEFT JOIN crm_contact_categories cat ON c.category_id = cat.id 
+       WHERE c.client_id = $1 AND c.user_id = $2 
+       ORDER BY c.is_active DESC, c.created_at ASC`,
+      [clientId, req.userId]
+    );
+
+    return res.json({ success: true, data: contacts.rows });
+  } catch (error: any) {
+    console.error('[CRM Client Contacts] Error:', error.message);
+    return res.status(500).json({ success: false, error: 'Error al listar contactos del cliente.' });
+  }
+});
+
 export default router;

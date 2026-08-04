@@ -267,6 +267,15 @@ export default function DashboardPage() {
   const [crmEditingCategoryId, setCrmEditingCategoryId] = useState<number | null>(null);
   const [crmEditingCategoryName, setCrmEditingCategoryName] = useState('');
 
+  // CRM Clients Tab States
+  const [crmClients, setCrmClients] = useState<any[]>([]);
+  const [crmClientsLoading, setCrmClientsLoading] = useState(false);
+  const [crmClientsSearch, setCrmClientsSearch] = useState('');
+  const [crmExpandedClientId, setCrmExpandedClientId] = useState<number | null>(null);
+  const [crmClientContacts, setCrmClientContacts] = useState<any[]>([]);
+  const [crmClientContactsLoading, setCrmClientContactsLoading] = useState(false);
+  const [crmContactsSubTab, setCrmContactsSubTab] = useState<'crm' | 'google'>('crm');
+
   // Refs para scroll inteligente y emoji picker click-outside
   const bottomRef = useRef<HTMLDivElement>(null);
   const prevMessagesCountRef = useRef<number>(0);
@@ -1248,6 +1257,44 @@ export default function DashboardPage() {
     }
   };
 
+  // Fetch CRM Clients for the Clients Tab
+  const fetchCrmClients = useCallback(async (searchQuery?: string) => {
+    setCrmClientsLoading(true);
+    try {
+      const params = searchQuery?.trim() ? `?search=${encodeURIComponent(searchQuery.trim())}` : '';
+      const res = await api.get(`/crm/clients${params}`);
+      if (res.data?.success) {
+        setCrmClients(res.data.data || []);
+      }
+    } catch (err: any) {
+      console.error('Error fetching CRM clients:', err.message);
+    } finally {
+      setCrmClientsLoading(false);
+    }
+  }, []);
+
+  // Fetch contacts for a specific client (expand row)
+  const fetchCrmClientContacts = useCallback(async (clientId: number) => {
+    setCrmClientContactsLoading(true);
+    try {
+      const res = await api.get(`/crm/clients/${clientId}/contacts`);
+      if (res.data?.success) {
+        setCrmClientContacts(res.data.data || []);
+      }
+    } catch (err: any) {
+      console.error('Error fetching client contacts:', err.message);
+    } finally {
+      setCrmClientContactsLoading(false);
+    }
+  }, []);
+
+  // Load CRM clients when contacts tab is active
+  useEffect(() => {
+    if (activeTab === 'contacts') {
+      fetchCrmClients();
+    }
+  }, [activeTab, fetchCrmClients]);
+
   // Check URL parameters for Google Contacts connection status
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -1577,7 +1624,7 @@ export default function DashboardPage() {
     { id: 'overview', label: 'Resumen', icon: LayoutDashboard },
     { id: 'instances', label: 'Líneas / QR', icon: Smartphone },
     { id: 'chats', label: 'Chats en Vivo', icon: MessageSquare },
-    { id: 'contacts', label: 'Agenda (Google)', icon: Users },
+    { id: 'contacts', label: 'Clientes / Agenda', icon: Users },
     { id: 'groups', label: 'Grupos (WhatsApp)', icon: Users2 },
     { id: 'playground', label: 'Probar Envío', icon: Play },
     { id: 'docs', label: 'Documentación API', icon: Terminal },
@@ -3039,226 +3086,414 @@ echo $response;`;
               </div>
             )}
 
-            {/* GOOGLE CONTACTS SECTION */}
+            {/* CONTACTS / CRM SECTION */}
             {activeTab === 'contacts' && (
-              <div className="space-y-6 animate-fadeIn">
-                <div className="text-left space-y-0.5">
-                  <h3 className="text-base font-bold text-slate-800 dark:text-white">Agenda de Contactos</h3>
-                  <p className="text-xs text-slate-400">Sincroniza tus contactos de Google con WhatsApp de forma bidireccional.</p>
+              <div className="space-y-5 animate-fadeIn">
+                {/* Header con sub-tabs */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="text-left space-y-0.5">
+                    <h3 className="text-base font-bold text-slate-800 dark:text-white">Agenda de Clientes</h3>
+                    <p className="text-xs text-slate-400">Gestiona tu base de clientes, contactos y agenda de Google.</p>
+                  </div>
+                  {/* Sub-tab switcher */}
+                  <div className="flex items-center gap-2">
+                    <div className="flex bg-slate-100 dark:bg-slate-800/60 rounded-xl p-0.5">
+                      <button
+                        type="button"
+                        onClick={() => setCrmContactsSubTab('crm')}
+                        className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${crmContactsSubTab === 'crm' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                      >
+                        Clientes CRM
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCrmContactsSubTab('google')}
+                        className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${crmContactsSubTab === 'google' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                      >
+                        Agenda Google
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
-                {!googleConnected ? (
-                  // Screen for disconnected state
-                  <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 text-center max-w-2xl mx-auto space-y-6 shadow-premium">
-                    <div className="w-16 h-16 rounded-3xl bg-emerald-500/10 flex items-center justify-center text-[#00a884] mx-auto">
-                      <Users size={32} />
-                    </div>
-                    <div className="space-y-2">
-                      <h4 className="text-lg font-bold text-slate-800 dark:text-white">Sincroniza tus contactos en la nube</h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
-                        Conecta tu cuenta de Google para sincronizar contactos de forma instantánea. Al crear, editar o eliminar contactos desde este panel, se actualizarán inmediatamente en tu cuenta de Google y se reflejarán en tu celular y chats de WhatsApp.
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleConnectGoogleContacts}
-                      className="inline-flex items-center gap-2 px-6 py-3.5 bg-[#00a884] hover:bg-[#008f70] active:scale-95 text-white font-bold text-xs rounded-2xl transition-all shadow-md shadow-[#00a884]/20 cursor-pointer"
-                    >
-                      <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                        <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.113-5.136 4.113-3.072 0-5.561-2.49-5.561-5.561s2.49-5.561 5.561-5.561c1.396 0 2.67.513 3.655 1.353l3.14-3.14C18.796 3.738 15.748 2.5 12.24 2.5 6.42 2.5 1.7 7.22 1.7 13s4.72 10.5 10.54 10.5c5.8 0 10.46-4.7 10.46-10.5 0-.712-.082-1.395-.224-2.073h-10.236z"/>
-                      </svg>
-                      <span>Conectar con Google Contactos</span>
-                    </button>
-                  </div>
-                ) : (
-                  // Screen for connected state
-                  <div className="space-y-6">
-                    {/* Connection Info header card */}
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-sm text-left">
-                      <div className="flex items-center gap-3.5">
-                        <div className="w-12 h-12 rounded-2xl bg-[#00a884]/10 text-[#00a884] flex items-center justify-center flex-shrink-0">
-                          <Users size={22} />
+                {/* ===== SUB-TAB: CRM CLIENTS ===== */}
+                {crmContactsSubTab === 'crm' && (
+                  <div className="space-y-4">
+                    {/* Search + Actions Bar */}
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 space-y-4 shadow-sm text-left">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                        <div className="relative flex-1">
+                          <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <Search size={15} />
+                          </span>
+                          <input
+                            type="text"
+                            value={crmClientsSearch}
+                            onChange={(e) => {
+                              setCrmClientsSearch(e.target.value);
+                              fetchCrmClients(e.target.value);
+                            }}
+                            placeholder="Buscar por nombre, DNI, RUC..."
+                            className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium"
+                          />
                         </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h4 className="text-sm font-bold text-slate-800 dark:text-white">Google Contactos Activo</h4>
-                            <span className="w-2.5 h-2.5 rounded-full bg-[#00a884]" />
-                          </div>
-                          <p className="text-xs text-slate-400 font-medium">Cuenta vinculada: <strong className="text-slate-600 dark:text-slate-300">{googleEmail}</strong></p>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => fetchCrmClients(crmClientsSearch)}
+                            disabled={crmClientsLoading}
+                            className="p-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                            title="Recargar"
+                          >
+                            <RefreshCw size={14} className={crmClientsLoading ? 'animate-spin' : ''} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setCrmCategoriesModalOpen(true)}
+                            className="p-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl transition-all cursor-pointer"
+                            title="Gestionar Categorías"
+                          >
+                            <Settings size={14} />
+                          </button>
                         </div>
                       </div>
 
-                      {/* Header Actions */}
-                      <div className="flex items-center gap-2.5 flex-wrap">
-                        {/* Import/Sync from WhatsApp Dropdown */}
-                        <div className="relative" ref={syncDropdownRef}>
-                          <button
-                            type="button"
-                            onClick={() => setShowSyncDropdown(!showSyncDropdown)}
-                            disabled={isSyncingWhatsAppContacts}
-                            className="px-4 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-2xl transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
-                          >
-                            <RefreshCw size={13} className={isSyncingWhatsAppContacts ? 'animate-spin' : ''} />
-                            <span>Sincronizar Celular</span>
-                          </button>
-                          
-                          {showSyncDropdown && (
-                            <div className="absolute top-[100%] right-0 mt-2 z-50 bg-white dark:bg-slate-900 rounded-2xl shadow-premium-lg p-2 flex flex-col gap-1 min-w-[220px] border border-slate-100 dark:border-slate-800/40 text-left">
-                              <span className="p-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider block border-b border-slate-100 dark:border-slate-800/60 pb-1.5 mb-1.5">Importar desde línea:</span>
-                              {instances.filter(i => i.status === 'connected').length === 0 ? (
-                                <span className="p-3 text-[10px] text-slate-400 dark:text-slate-500 font-bold block text-center">No hay líneas conectadas</span>
-                              ) : (
-                                instances.filter(i => i.status === 'connected').map(inst => (
-                                  <button
-                                    key={inst.id}
-                                    type="button"
-                                    onClick={() => handleSyncWhatsAppContacts(inst.instance_name)}
-                                    className="w-full px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl text-left cursor-pointer transition-colors"
+                      {/* Clients Table */}
+                      {crmClientsLoading && crmClients.length === 0 ? (
+                        <div className="py-12 flex flex-col items-center justify-center gap-3 text-slate-400">
+                          <RefreshCw size={24} className="animate-spin text-emerald-500" />
+                          <span className="text-xs font-medium">Cargando clientes...</span>
+                        </div>
+                      ) : crmClients.length === 0 ? (
+                        <div className="py-12 text-center text-slate-400 space-y-2">
+                          <Users size={32} className="mx-auto text-slate-300 dark:text-slate-700 animate-pulse" />
+                          <p className="text-xs font-semibold">No hay clientes registrados aún</p>
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500">Los clientes se crean automáticamente al registrar un contacto desde un chat de WhatsApp.</p>
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="w-full border-collapse">
+                            <thead>
+                              <tr className="border-b border-slate-100 dark:border-slate-800/40 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                <th className="pb-3 text-left">Cliente</th>
+                                <th className="pb-3 text-left">Documento</th>
+                                <th className="pb-3 text-left hidden sm:table-cell">Email</th>
+                                <th className="pb-3 text-left hidden md:table-cell">Registro</th>
+                                <th className="pb-3 text-right">Acciones</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 text-xs">
+                              {crmClients.map((client: any) => (
+                                <React.Fragment key={client.id}>
+                                  <tr 
+                                    className={`group hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-all cursor-pointer ${crmExpandedClientId === client.id ? 'bg-slate-50 dark:bg-slate-800/30' : ''}`}
+                                    onClick={() => {
+                                      if (crmExpandedClientId === client.id) {
+                                        setCrmExpandedClientId(null);
+                                        setCrmClientContacts([]);
+                                      } else {
+                                        setCrmExpandedClientId(client.id);
+                                        fetchCrmClientContacts(client.id);
+                                      }
+                                    }}
                                   >
-                                    🚀 {inst.instance_name}
-                                  </button>
-                                ))
+                                    <td className="py-3.5">
+                                      <div className="flex items-center gap-2.5">
+                                        <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-[#00a884] font-bold text-xs flex-shrink-0">
+                                          {client.doc_type === 'RUC' ? <Users size={14} /> : client.name?.charAt(0)?.toUpperCase() || '?'}
+                                        </div>
+                                        <div className="min-w-0">
+                                          <p className="font-bold text-slate-800 dark:text-white truncate leading-tight">{client.name}</p>
+                                          {client.address && <p className="text-[10px] text-slate-400 truncate max-w-[200px]">{client.address}</p>}
+                                        </div>
+                                      </div>
+                                    </td>
+                                    <td className="py-3.5">
+                                      <span className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold ${client.doc_type === 'RUC' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' : client.doc_type === 'DNI' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' : 'bg-slate-200/60 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>
+                                        {client.doc_type === 'MANUAL' ? 'Manual' : `${client.doc_type}: ${client.doc_number}`}
+                                      </span>
+                                    </td>
+                                    <td className="py-3.5 text-slate-500 dark:text-slate-400 font-medium hidden sm:table-cell truncate max-w-[150px]">
+                                      {client.email || '—'}
+                                    </td>
+                                    <td className="py-3.5 text-slate-400 font-medium hidden md:table-cell">
+                                      {new Date(client.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: '2-digit' })}
+                                    </td>
+                                    <td className="py-3.5 text-right">
+                                      <ChevronDown size={14} className={`inline-block text-slate-400 transition-transform duration-200 ${crmExpandedClientId === client.id ? 'rotate-180' : ''}`} />
+                                    </td>
+                                  </tr>
+
+                                  {/* Expanded Row: Client Contacts */}
+                                  {crmExpandedClientId === client.id && (
+                                    <tr>
+                                      <td colSpan={5} className="p-0">
+                                        <div className="bg-slate-50/80 dark:bg-slate-950/30 p-4 space-y-3 border-l-2 border-[#00a884]">
+                                          {/* Notes */}
+                                          {client.notes && (
+                                            <div className="p-2.5 bg-amber-50/60 dark:bg-amber-950/10 rounded-xl border border-amber-200/30 dark:border-amber-800/20">
+                                              <span className="text-[9px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider block mb-0.5">Notas de Negocio</span>
+                                              <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium whitespace-pre-line">{client.notes}</p>
+                                            </div>
+                                          )}
+
+                                          {/* Contacts Header */}
+                                          <div className="flex items-center justify-between">
+                                            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Contactos Vinculados</span>
+                                          </div>
+
+                                          {/* Contacts List */}
+                                          {crmClientContactsLoading ? (
+                                            <div className="py-4 text-center text-xs text-slate-400 animate-pulse">Cargando contactos...</div>
+                                          ) : crmClientContacts.length === 0 ? (
+                                            <div className="py-4 text-center text-xs text-slate-400">Sin contactos vinculados.</div>
+                                          ) : (
+                                            <div className="space-y-1.5">
+                                              {crmClientContacts.map((contact: any) => (
+                                                <div key={contact.id} className="flex items-center justify-between p-2.5 bg-white dark:bg-slate-900/60 rounded-xl border border-slate-200/40 dark:border-slate-800/60">
+                                                  <div className="flex items-center gap-2.5">
+                                                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${contact.is_active ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`} />
+                                                    <div>
+                                                      <p className="text-xs font-bold text-slate-800 dark:text-white font-mono">+{contact.phone_number}</p>
+                                                      <p className="text-[10px] text-slate-400">{contact.is_active ? 'Activo' : 'Inactivo'}</p>
+                                                    </div>
+                                                  </div>
+                                                  <span className={`inline-flex px-2 py-0.5 text-[9px] font-bold rounded-full border ${contact.category_name ? 'bg-emerald-500/10 text-[#00a884] border-emerald-500/15' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200/50 dark:border-slate-700/50'}`}>
+                                                    {contact.category_name || 'Sin categoría'}
+                                                  </span>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          )}
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  )}
+                                </React.Fragment>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ===== SUB-TAB: GOOGLE CONTACTS ===== */}
+                {crmContactsSubTab === 'google' && (
+                  <div className="space-y-6">
+                    {!googleConnected ? (
+                      <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 text-center max-w-2xl mx-auto space-y-6 shadow-premium">
+                        <div className="w-16 h-16 rounded-3xl bg-emerald-500/10 flex items-center justify-center text-[#00a884] mx-auto">
+                          <Users size={32} />
+                        </div>
+                        <div className="space-y-2">
+                          <h4 className="text-lg font-bold text-slate-800 dark:text-white">Sincroniza tus contactos en la nube</h4>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+                            Conecta tu cuenta de Google para sincronizar contactos de forma instantánea. Al crear, editar o eliminar contactos desde este panel, se actualizarán inmediatamente en tu cuenta de Google y se reflejarán en tu celular y chats de WhatsApp.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleConnectGoogleContacts}
+                          className="inline-flex items-center gap-2 px-6 py-3.5 bg-[#00a884] hover:bg-[#008f70] active:scale-95 text-white font-bold text-xs rounded-2xl transition-all shadow-md shadow-[#00a884]/20 cursor-pointer"
+                        >
+                          <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                            <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.113-5.136 4.113-3.072 0-5.561-2.49-5.561-5.561s2.49-5.561 5.561-5.561c1.396 0 2.67.513 3.655 1.353l3.14-3.14C18.796 3.738 15.748 2.5 12.24 2.5 6.42 2.5 1.7 7.22 1.7 13s4.72 10.5 10.54 10.5c5.8 0 10.46-4.7 10.46-10.5 0-.712-.082-1.395-.224-2.073h-10.236z"/>
+                          </svg>
+                          <span>Conectar con Google Contactos</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        {/* Connection Info header card */}
+                        <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-sm text-left">
+                          <div className="flex items-center gap-3.5">
+                            <div className="w-12 h-12 rounded-2xl bg-[#00a884]/10 text-[#00a884] flex items-center justify-center flex-shrink-0">
+                              <Users size={22} />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className="text-sm font-bold text-slate-800 dark:text-white">Google Contactos Activo</h4>
+                                <span className="w-2.5 h-2.5 rounded-full bg-[#00a884]" />
+                              </div>
+                              <p className="text-xs text-slate-400 font-medium">Cuenta vinculada: <strong className="text-slate-600 dark:text-slate-300">{googleEmail}</strong></p>
+                            </div>
+                          </div>
+
+                          {/* Header Actions */}
+                          <div className="flex items-center gap-2.5 flex-wrap">
+                            {/* Import/Sync from WhatsApp Dropdown */}
+                            <div className="relative" ref={syncDropdownRef}>
+                              <button
+                                type="button"
+                                onClick={() => setShowSyncDropdown(!showSyncDropdown)}
+                                disabled={isSyncingWhatsAppContacts}
+                                className="px-4 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-2xl transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
+                              >
+                                <RefreshCw size={13} className={isSyncingWhatsAppContacts ? 'animate-spin' : ''} />
+                                <span>Sincronizar Celular</span>
+                              </button>
+                              
+                              {showSyncDropdown && (
+                                <div className="absolute top-[100%] right-0 mt-2 z-50 bg-white dark:bg-slate-900 rounded-2xl shadow-premium-lg p-2 flex flex-col gap-1 min-w-[220px] border border-slate-100 dark:border-slate-800/40 text-left">
+                                  <span className="p-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider block border-b border-slate-100 dark:border-slate-800/60 pb-1.5 mb-1.5">Importar desde línea:</span>
+                                  {instances.filter(i => i.status === 'connected').length === 0 ? (
+                                    <span className="p-3 text-[10px] text-slate-400 dark:text-slate-500 font-bold block text-center">No hay líneas conectadas</span>
+                                  ) : (
+                                    instances.filter(i => i.status === 'connected').map(inst => (
+                                      <button
+                                        key={inst.id}
+                                        type="button"
+                                        onClick={() => handleSyncWhatsAppContacts(inst.instance_name)}
+                                        className="w-full px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl text-left cursor-pointer transition-colors"
+                                      >
+                                        🚀 {inst.instance_name}
+                                      </button>
+                                    ))
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => setContactModal({
+                                isOpen: true,
+                                isEdit: false,
+                                resourceName: null,
+                                etag: null,
+                                givenName: '',
+                                familyName: '',
+                                phoneNumber: ''
+                              })}
+                              className="px-4 py-3 bg-[#00a884] hover:bg-[#008f70] active:scale-95 text-white font-bold text-xs rounded-2xl transition-all shadow-md shadow-[#00a884]/20 cursor-pointer flex items-center gap-1.5"
+                            >
+                              <Plus size={14} />
+                              <span>Nuevo Contacto</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Contacts Agenda Table list */}
+                        <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 space-y-4 shadow-sm text-left">
+                          {/* Search bar input */}
+                          <div className="relative">
+                            <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                              <Search size={15} />
+                            </span>
+                            <input
+                              type="text"
+                              value={searchContactQuery}
+                              onChange={(e) => setSearchContactQuery(e.target.value)}
+                              placeholder="Buscar contactos por nombre, apellido o número..."
+                              className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium"
+                            />
+                          </div>
+
+                          {googleContactsLoading ? (
+                            <div className="py-12 flex flex-col items-center justify-center gap-3 text-slate-400">
+                              <RefreshCw size={24} className="animate-spin text-emerald-500" />
+                              <span className="text-xs font-medium">Cargando contactos de Google...</span>
+                            </div>
+                          ) : (
+                            <div className="overflow-hidden">
+                              {googleContacts.filter(c => {
+                                const q = searchContactQuery.toLowerCase().trim();
+                                if (!q) return true;
+                                return (
+                                  c.displayName.toLowerCase().includes(q) ||
+                                  c.phoneNumber.toLowerCase().includes(q)
+                                );
+                              }).length === 0 ? (
+                                <div className="py-12 text-center text-slate-400 space-y-2">
+                                  <Users size={32} className="mx-auto text-slate-300 dark:text-slate-700 animate-pulse" />
+                                  <p className="text-xs font-semibold">No se encontraron contactos en tu agenda</p>
+                                  <p className="text-[10px] text-slate-400 dark:text-slate-500">Usa el botón "Nuevo Contacto" o conecta / sincroniza tu celular.</p>
+                                </div>
+                              ) : (
+                                <div className="overflow-x-auto">
+                                  <table className="w-full border-collapse">
+                                    <thead>
+                                      <tr className="border-b border-slate-100 dark:border-slate-800/40 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                        <th className="pb-3 text-left w-12">Foto</th>
+                                        <th className="pb-3 text-left">Nombre</th>
+                                        <th className="pb-3 text-left">Teléfono</th>
+                                        <th className="pb-3 text-right">Acciones</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 text-xs">
+                                      {googleContacts
+                                        .filter(c => {
+                                          const q = searchContactQuery.toLowerCase().trim();
+                                          if (!q) return true;
+                                          return (
+                                            c.displayName.toLowerCase().includes(q) ||
+                                            c.phoneNumber.toLowerCase().includes(q)
+                                          );
+                                        })
+                                        .map(contact => {
+                                          const initials = contact.givenName ? contact.givenName.charAt(0).toUpperCase() : (contact.displayName ? contact.displayName.charAt(0).toUpperCase() : 'U');
+                                          
+                                          return (
+                                            <tr key={contact.resourceName} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-all">
+                                              <td className="py-3">
+                                                {contact.photoUrl ? (
+                                                  <img src={contact.photoUrl} alt={contact.displayName} className="w-8 h-8 rounded-full object-cover" />
+                                                ) : (
+                                                  <div className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+                                                    {initials}
+                                                  </div>
+                                                )}
+                                              </td>
+                                              <td className="py-3 font-semibold text-slate-700 dark:text-slate-200">
+                                                {contact.displayName}
+                                              </td>
+                                              <td className="py-3 font-mono text-slate-500 dark:text-slate-400 font-bold">
+                                                {contact.phoneNumber || 'Sin teléfono'}
+                                              </td>
+                                              <td className="py-3 text-right">
+                                                <div className="flex items-center justify-end gap-1.5">
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => setContactModal({
+                                                      isOpen: true,
+                                                      isEdit: true,
+                                                      resourceName: contact.resourceName,
+                                                      etag: contact.etag,
+                                                      givenName: contact.givenName,
+                                                      familyName: contact.familyName,
+                                                      phoneNumber: contact.phoneNumber
+                                                    })}
+                                                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer"
+                                                    title="Editar contacto"
+                                                  >
+                                                    <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                                                      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                                                    </svg>
+                                                  </button>
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => handleDeleteContact(contact.resourceName)}
+                                                    className="p-2 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xl text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                                                    title="Eliminar contacto"
+                                                  >
+                                                    <Trash2 size={13.5} />
+                                                  </button>
+                                                </div>
+                                              </td>
+                                            </tr>
+                                          );
+                                        })}
+                                    </tbody>
+                                  </table>
+                                </div>
                               )}
                             </div>
                           )}
                         </div>
-
-                        <button
-                          type="button"
-                          onClick={() => setContactModal({
-                            isOpen: true,
-                            isEdit: false,
-                            resourceName: null,
-                            etag: null,
-                            givenName: '',
-                            familyName: '',
-                            phoneNumber: ''
-                          })}
-                          className="px-4 py-3 bg-[#00a884] hover:bg-[#008f70] active:scale-95 text-white font-bold text-xs rounded-2xl transition-all shadow-md shadow-[#00a884]/20 cursor-pointer flex items-center gap-1.5"
-                        >
-                          <Plus size={14} />
-                          <span>Nuevo Contacto</span>
-                        </button>
                       </div>
-                    </div>
-
-                    {/* Contacts Agenda Table list */}
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 space-y-4 shadow-sm text-left">
-                      {/* Search bar input */}
-                      <div className="relative">
-                        <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                          <Search size={15} />
-                        </span>
-                        <input
-                          type="text"
-                          value={searchContactQuery}
-                          onChange={(e) => setSearchContactQuery(e.target.value)}
-                          placeholder="Buscar contactos por nombre, apellido o número..."
-                          className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 font-medium"
-                        />
-                      </div>
-
-                      {googleContactsLoading ? (
-                        <div className="py-12 flex flex-col items-center justify-center gap-3 text-slate-400">
-                          <RefreshCw size={24} className="animate-spin text-emerald-500" />
-                          <span className="text-xs font-medium">Cargando contactos de Google...</span>
-                        </div>
-                      ) : (
-                        <div className="overflow-hidden">
-                          {googleContacts.filter(c => {
-                            const q = searchContactQuery.toLowerCase().trim();
-                            if (!q) return true;
-                            return (
-                              c.displayName.toLowerCase().includes(q) ||
-                              c.phoneNumber.toLowerCase().includes(q)
-                            );
-                          }).length === 0 ? (
-                            <div className="py-12 text-center text-slate-400 space-y-2">
-                              <Users size={32} className="mx-auto text-slate-300 dark:text-slate-700 animate-pulse" />
-                              <p className="text-xs font-semibold">No se encontraron contactos en tu agenda</p>
-                              <p className="text-[10px] text-slate-400 dark:text-slate-500">Usa el botón "Nuevo Contacto" o conecta / sincroniza tu celular.</p>
-                            </div>
-                          ) : (
-                            <div className="overflow-x-auto">
-                              <table className="w-full border-collapse">
-                                <thead>
-                                  <tr className="border-b border-slate-100 dark:border-slate-800/40 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                    <th className="pb-3 text-left w-12">Foto</th>
-                                    <th className="pb-3 text-left">Nombre</th>
-                                    <th className="pb-3 text-left">Teléfono</th>
-                                    <th className="pb-3 text-right">Acciones</th>
-                                  </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 text-xs">
-                                  {googleContacts
-                                    .filter(c => {
-                                      const q = searchContactQuery.toLowerCase().trim();
-                                      if (!q) return true;
-                                      return (
-                                        c.displayName.toLowerCase().includes(q) ||
-                                        c.phoneNumber.toLowerCase().includes(q)
-                                      );
-                                    })
-                                    .map(contact => {
-                                      const initials = contact.givenName ? contact.givenName.charAt(0).toUpperCase() : (contact.displayName ? contact.displayName.charAt(0).toUpperCase() : 'U');
-                                      
-                                      return (
-                                        <tr key={contact.resourceName} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-all">
-                                          <td className="py-3">
-                                            {contact.photoUrl ? (
-                                              <img src={contact.photoUrl} alt={contact.displayName} className="w-8 h-8 rounded-full object-cover" />
-                                            ) : (
-                                              <div className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
-                                                {initials}
-                                              </div>
-                                            )}
-                                          </td>
-                                          <td className="py-3 font-semibold text-slate-700 dark:text-slate-200">
-                                            {contact.displayName}
-                                          </td>
-                                          <td className="py-3 font-mono text-slate-500 dark:text-slate-400 font-bold">
-                                            {contact.phoneNumber || 'Sin teléfono'}
-                                          </td>
-                                          <td className="py-3 text-right">
-                                            <div className="flex items-center justify-end gap-1.5">
-                                              <button
-                                                type="button"
-                                                onClick={() => setContactModal({
-                                                  isOpen: true,
-                                                  isEdit: true,
-                                                  resourceName: contact.resourceName,
-                                                  etag: contact.etag,
-                                                  givenName: contact.givenName,
-                                                  familyName: contact.familyName,
-                                                  phoneNumber: contact.phoneNumber
-                                                })}
-                                                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer"
-                                                title="Editar contacto"
-                                              >
-                                                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                                                  <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
-                                                </svg>
-                                              </button>
-                                              <button
-                                                type="button"
-                                                onClick={() => handleDeleteContact(contact.resourceName)}
-                                                className="p-2 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xl text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
-                                                title="Eliminar contacto"
-                                              >
-                                                <Trash2 size={13.5} />
-                                              </button>
-                                            </div>
-                                          </td>
-                                        </tr>
-                                      );
-                                    })}
-                                </tbody>
-                              </table>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                    )}
                   </div>
                 )}
               </div>
