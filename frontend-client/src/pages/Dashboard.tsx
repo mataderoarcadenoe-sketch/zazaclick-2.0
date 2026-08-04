@@ -1813,7 +1813,7 @@ echo $response;`;
         <div className={`h-16 flex items-center ${sidebarOpen ? 'justify-between px-5' : 'justify-center'}`}>
           {sidebarOpen && (
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-[#00d29f] flex items-center justify-center text-white shadow-md shadow-[#00d29f]/20">
+              <div className="w-8 h-8 rounded-xl bg-[#059669] flex items-center justify-center text-white shadow-md shadow-[#059669]/20">
                 <Smartphone size={18} />
               </div>
               <span className="font-semibold text-slate-800 dark:text-white tracking-wide">
@@ -1847,7 +1847,7 @@ echo $response;`;
                   sidebarOpen ? 'px-4 py-3 justify-start' : 'p-3 justify-center'
                 } rounded-2xl transition-all duration-200 relative cursor-pointer ${
                   active 
-                    ? 'bg-[#00d29f] text-white shadow-lg shadow-[#00d29f]/20 font-bold'
+                    ? 'bg-[#059669] text-white shadow-lg shadow-[#059669]/20 font-bold'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-800 dark:hover:text-white font-medium'
                 }`}
               >
@@ -1920,7 +1920,7 @@ echo $response;`;
 
             {/* User Profile Info */}
             <div className="flex items-center gap-2.5 pl-1">
-              <div className="w-8 h-8 rounded-xl bg-[#00d29f] flex items-center justify-center text-white text-xs font-bold shadow-md shadow-[#00d29f]/20 uppercase">
+              <div className="w-8 h-8 rounded-xl bg-[#059669] flex items-center justify-center text-white text-xs font-bold shadow-md shadow-[#059669]/20 uppercase">
                 {user?.email?.charAt(0)}
               </div>
               <div className="hidden md:flex flex-col text-left">
@@ -1942,9 +1942,9 @@ echo $response;`;
               <div className="space-y-6 animate-fadeIn">
                 
                 {/* Upgrade/Welcome Card Banner */}
-                <div className="p-6 bg-[#00d29f]/10 dark:bg-[#00d29f]/5 rounded-3xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="p-6 bg-[#059669]/10 dark:bg-[#059669]/5 rounded-3xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div className="space-y-2 text-left relative z-10">
-                    <span className="px-2.5 py-1 bg-[#00d29f]/10 border border-[#00d29f]/20 rounded-md text-[9px] font-bold text-[#00d29f] dark:text-[#00d29f] uppercase tracking-widest">
+                    <span className="px-2.5 py-1 bg-[#059669]/10 border border-[#059669]/20 rounded-md text-[9px] font-bold text-[#059669] dark:text-[#059669] uppercase tracking-widest">
                       Licencia Activa
                     </span>
                     <h3 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-white">
@@ -1959,7 +1959,7 @@ echo $response;`;
                     <button
                       onClick={() => setShowCreateModal(true)}
                       disabled={instances.length >= maxInstances}
-                      className="px-4 py-2.5 bg-[#00d29f] hover:bg-[#00b88b] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl shadow-lg shadow-[#00d29f]/15 flex items-center gap-1.5 transition-all cursor-pointer"
+                      className="px-4 py-2.5 bg-[#059669] hover:bg-[#047857] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl shadow-lg shadow-[#059669]/15 flex items-center gap-1.5 transition-all cursor-pointer"
                     >
                       <Plus size={16} />
                       <span>Nueva Instancia</span>
@@ -2379,7 +2379,7 @@ echo $response;`;
                                   >
                                     {/* Active indicator pill */}
                                     {isActive && (
-                                      <div className="absolute left-0.5 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#00d29f] rounded-r-full" />
+                                      <div className="absolute left-0.5 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#059669] rounded-r-full" />
                                     )}
 
                                     {/* Profile Photo */}
@@ -2481,7 +2481,7 @@ echo $response;`;
                               <button
                                 type="button"
                                 onClick={() => setShowCrmSidebar(!showCrmSidebar)}
-                                className={`p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer ${showCrmSidebar ? 'text-[#00d29f]' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                                className={`p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer ${showCrmSidebar ? 'text-[#059669]' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
                                 title={showCrmSidebar ? "Ocultar Panel CRM" : "Mostrar Panel CRM"}
                               >
                                 <Users size={18} />
@@ -2890,7 +2890,7 @@ echo $response;`;
                                 {/* Display client details */}
                                 <div className="bg-white dark:bg-slate-900/60 p-3 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 space-y-2.5 shadow-sm">
                                   <div className="flex items-center gap-2">
-                                    <div className="w-7 h-7 rounded-xl bg-emerald-500/10 flex items-center justify-center text-[#00d29f]">
+                                    <div className="w-7 h-7 rounded-xl bg-emerald-500/10 flex items-center justify-center text-[#059669]">
                                       {crmClient.doc_type === 'RUC' ? <Users size={14} /> : <MessageCircle size={14} />}
                                     </div>
                                     <div className="min-w-0 flex-1">
@@ -2917,7 +2917,7 @@ echo $response;`;
 
                                   <div className="space-y-0.5">
                                     <span className="text-[8.5px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block">Categoría de Contacto</span>
-                                    <span className="inline-flex px-2 py-0.5 bg-emerald-500/10 text-[#00d29f] text-[9px] font-bold rounded-full mt-0.5 border border-emerald-500/15">
+                                    <span className="inline-flex px-2 py-0.5 bg-emerald-500/10 text-[#059669] text-[9px] font-bold rounded-full mt-0.5 border border-emerald-500/15">
                                       {crmContact?.category_name || 'Sin Categoría'}
                                     </span>
                                   </div>
@@ -2979,7 +2979,7 @@ echo $response;`;
                                                 setCrmAddress('');
                                                 setIsDocTypeDropdownOpen(false);
                                               }}
-                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-emerald-500/10 hover:text-[#00d29f] transition-colors cursor-pointer ${crmDocType === 'DNI' ? 'text-[#00d29f] bg-emerald-500/5' : 'text-slate-700 dark:text-slate-200'}`}
+                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-emerald-500/10 hover:text-[#059669] transition-colors cursor-pointer ${crmDocType === 'DNI' ? 'text-[#059669] bg-emerald-500/5' : 'text-slate-700 dark:text-slate-200'}`}
                                             >
                                               DNI
                                             </button>
@@ -2992,7 +2992,7 @@ echo $response;`;
                                                 setCrmAddress('');
                                                 setIsDocTypeDropdownOpen(false);
                                               }}
-                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-emerald-500/10 hover:text-[#00d29f] transition-colors cursor-pointer ${crmDocType === 'RUC' ? 'text-[#00d29f] bg-emerald-500/5' : 'text-slate-700 dark:text-slate-200'}`}
+                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-emerald-500/10 hover:text-[#059669] transition-colors cursor-pointer ${crmDocType === 'RUC' ? 'text-[#059669] bg-emerald-500/5' : 'text-slate-700 dark:text-slate-200'}`}
                                             >
                                               RUC
                                             </button>
@@ -3021,11 +3021,11 @@ echo $response;`;
                                           type="button"
                                           onClick={handleValidateCrmDoc}
                                           disabled={crmValidationLoading}
-                                          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#00d29f] disabled:opacity-50 transition-colors cursor-pointer"
+                                          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#059669] disabled:opacity-50 transition-colors cursor-pointer"
                                           title="Consultar APIPeru"
                                         >
                                           {crmValidationLoading ? (
-                                            <RefreshCw size={11} className="animate-spin text-[#00d29f]" />
+                                            <RefreshCw size={11} className="animate-spin text-[#059669]" />
                                           ) : (
                                             <Search size={11} />
                                           )}
@@ -3074,7 +3074,7 @@ echo $response;`;
                                                 setCrmCategoryId('');
                                                 setIsCategoryDropdownOpen(false);
                                               }}
-                                              className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-emerald-500/10 hover:text-[#00d29f] transition-colors cursor-pointer ${crmCategoryId === '' ? 'text-[#00d29f] bg-emerald-500/5' : 'text-slate-700 dark:text-slate-200'}`}
+                                              className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-emerald-500/10 hover:text-[#059669] transition-colors cursor-pointer ${crmCategoryId === '' ? 'text-[#059669] bg-emerald-500/5' : 'text-slate-700 dark:text-slate-200'}`}
                                             >
                                               Sin Categoría
                                             </button>
@@ -3086,7 +3086,7 @@ echo $response;`;
                                                   setCrmCategoryId(cat.id.toString());
                                                   setIsCategoryDropdownOpen(false);
                                                 }}
-                                                className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-emerald-500/10 hover:text-[#00d29f] transition-colors cursor-pointer ${crmCategoryId === cat.id.toString() ? 'text-[#00d29f] bg-emerald-500/5' : 'text-slate-700 dark:text-slate-200'}`}
+                                                className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-emerald-500/10 hover:text-[#059669] transition-colors cursor-pointer ${crmCategoryId === cat.id.toString() ? 'text-[#059669] bg-emerald-500/5' : 'text-slate-700 dark:text-slate-200'}`}
                                               >
                                                 {cat.name}
                                               </button>
@@ -3155,7 +3155,7 @@ echo $response;`;
                                     type="button"
                                     onClick={() => handleSaveCrmContact()}
                                     disabled={crmSaving}
-                                    className="flex-1 py-1.5 bg-[#00d29f] hover:bg-[#00b88b] text-white text-[11px] font-bold rounded-xl transition-all disabled:opacity-50 cursor-pointer text-center"
+                                    className="flex-1 py-1.5 bg-[#059669] hover:bg-[#047857] text-white text-[11px] font-bold rounded-xl transition-all disabled:opacity-50 cursor-pointer text-center"
                                   >
                                     {crmSaving ? 'Guardando...' : 'Guardar Ficha'}
                                   </button>
@@ -3285,7 +3285,7 @@ echo $response;`;
                                   >
                                     <td className="py-3.5">
                                       <div className="flex items-center gap-2.5">
-                                        <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-[#00d29f] font-bold text-xs flex-shrink-0">
+                                        <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-[#059669] font-bold text-xs flex-shrink-0">
                                           {client.doc_type === 'RUC' ? <Users size={14} /> : client.name?.charAt(0)?.toUpperCase() || '?'}
                                         </div>
                                         <div className="min-w-0">
@@ -3314,7 +3314,7 @@ echo $response;`;
                                   {crmExpandedClientId === client.id && (
                                     <tr>
                                       <td colSpan={5} className="p-0">
-                                        <div className="bg-slate-50/80 dark:bg-slate-950/30 p-4 space-y-3 border-l-2 border-[#00d29f]">
+                                        <div className="bg-slate-50/80 dark:bg-slate-950/30 p-4 space-y-3 border-l-2 border-[#059669]">
                                           {/* Notes */}
                                           {client.notes && (
                                             <div className="p-2.5 bg-amber-50/60 dark:bg-amber-950/10 rounded-xl border border-amber-200/30 dark:border-amber-800/20">
@@ -3344,7 +3344,7 @@ echo $response;`;
                                                       <p className="text-[10px] text-slate-400">{contact.is_active ? 'Activo' : 'Inactivo'}</p>
                                                     </div>
                                                   </div>
-                                                  <span className={`inline-flex px-2 py-0.5 text-[9px] font-bold rounded-full border ${contact.category_name ? 'bg-emerald-500/10 text-[#00d29f] border-emerald-500/15' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200/50 dark:border-slate-700/50'}`}>
+                                                  <span className={`inline-flex px-2 py-0.5 text-[9px] font-bold rounded-full border ${contact.category_name ? 'bg-emerald-500/10 text-[#059669] border-emerald-500/15' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200/50 dark:border-slate-700/50'}`}>
                                                     {contact.category_name || 'Sin categoría'}
                                                   </span>
                                                 </div>
@@ -3370,7 +3370,7 @@ echo $response;`;
                   <div className="space-y-6">
                     {!googleConnected ? (
                       <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 text-center max-w-2xl mx-auto space-y-6 shadow-premium">
-                        <div className="w-16 h-16 rounded-3xl bg-emerald-500/10 flex items-center justify-center text-[#00d29f] mx-auto">
+                        <div className="w-16 h-16 rounded-3xl bg-emerald-500/10 flex items-center justify-center text-[#059669] mx-auto">
                           <Users size={32} />
                         </div>
                         <div className="space-y-2">
@@ -3382,7 +3382,7 @@ echo $response;`;
                         <button
                           type="button"
                           onClick={handleConnectGoogleContacts}
-                          className="inline-flex items-center gap-2 px-6 py-3.5 bg-[#00d29f] hover:bg-[#00b88b] active:scale-95 text-white font-bold text-xs rounded-2xl transition-all shadow-md shadow-[#00d29f]/20 cursor-pointer"
+                          className="inline-flex items-center gap-2 px-6 py-3.5 bg-[#059669] hover:bg-[#047857] active:scale-95 text-white font-bold text-xs rounded-2xl transition-all shadow-md shadow-[#059669]/20 cursor-pointer"
                         >
                           <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                             <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.113-5.136 4.113-3.072 0-5.561-2.49-5.561-5.561s2.49-5.561 5.561-5.561c1.396 0 2.67.513 3.655 1.353l3.14-3.14C18.796 3.738 15.748 2.5 12.24 2.5 6.42 2.5 1.7 7.22 1.7 13s4.72 10.5 10.54 10.5c5.8 0 10.46-4.7 10.46-10.5 0-.712-.082-1.395-.224-2.073h-10.236z"/>
@@ -3395,13 +3395,13 @@ echo $response;`;
                         {/* Connection Info header card */}
                         <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-sm text-left">
                           <div className="flex items-center gap-3.5">
-                            <div className="w-12 h-12 rounded-2xl bg-[#00d29f]/10 text-[#00d29f] flex items-center justify-center flex-shrink-0">
+                            <div className="w-12 h-12 rounded-2xl bg-[#059669]/10 text-[#059669] flex items-center justify-center flex-shrink-0">
                               <Users size={22} />
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
                                 <h4 className="text-sm font-bold text-slate-800 dark:text-white">Google Contactos Activo</h4>
-                                <span className="w-2.5 h-2.5 rounded-full bg-[#00d29f]" />
+                                <span className="w-2.5 h-2.5 rounded-full bg-[#059669]" />
                               </div>
                               <p className="text-xs text-slate-400 font-medium">Cuenta vinculada: <strong className="text-slate-600 dark:text-slate-300">{googleEmail}</strong></p>
                             </div>
@@ -3453,7 +3453,7 @@ echo $response;`;
                                 familyName: '',
                                 phoneNumber: ''
                               })}
-                              className="px-4 py-3 bg-[#00d29f] hover:bg-[#00b88b] active:scale-95 text-white font-bold text-xs rounded-2xl transition-all shadow-md shadow-[#00d29f]/20 cursor-pointer flex items-center gap-1.5"
+                              className="px-4 py-3 bg-[#059669] hover:bg-[#047857] active:scale-95 text-white font-bold text-xs rounded-2xl transition-all shadow-md shadow-[#059669]/20 cursor-pointer flex items-center gap-1.5"
                             >
                               <Plus size={14} />
                               <span>Nuevo Contacto</span>
@@ -3632,7 +3632,7 @@ echo $response;`;
                               setCreateGroupError(null);
                               setShowCreateGroupModal(true);
                             }}
-                            className="px-3.5 py-2.5 bg-[#00d29f] hover:bg-[#00b88b] active:scale-95 text-white font-bold text-xs rounded-xl transition-all shadow-md shadow-[#00d29f]/20 cursor-pointer flex items-center gap-1"
+                            className="px-3.5 py-2.5 bg-[#059669] hover:bg-[#047857] active:scale-95 text-white font-bold text-xs rounded-xl transition-all shadow-md shadow-[#059669]/20 cursor-pointer flex items-center gap-1"
                           >
                             <Plus size={13} />
                             <span>Crear Grupo</span>
@@ -3999,7 +3999,7 @@ echo $response;`;
                     <button
                       type="submit"
                       disabled={testLoading || !testInstance || instances.find(i => i.instance_name === testInstance)?.status !== 'connected'}
-                      className="w-full py-3.5 bg-[#00d29f] hover:bg-[#00b88b] active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs rounded-2xl shadow-lg shadow-[#00d29f]/15 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                      className="w-full py-3.5 bg-[#059669] hover:bg-[#047857] active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs rounded-2xl shadow-lg shadow-[#059669]/15 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                     >
                       {testLoading ? (
                         <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -4085,7 +4085,7 @@ echo $response;`;
                             onClick={() => setDocTab(endpoint.id as any)}
                             className={`w-full p-3 rounded-xl flex items-center justify-between gap-3 text-left transition-all border cursor-pointer ${
                               isActive
-                                ? 'bg-slate-50 dark:bg-slate-800/40 border-[#00d29f]/30'
+                                ? 'bg-slate-50 dark:bg-slate-800/40 border-[#059669]/30'
                                 : 'bg-transparent border-transparent hover:bg-slate-50/50 dark:hover:bg-slate-850'
                             }`}
                           >
@@ -4465,7 +4465,7 @@ echo $response;`;
                 <button
                   type="submit"
                   disabled={createLoading || !newInstanceName.trim()}
-                  className="flex-1 py-3 bg-[#00d29f] hover:bg-[#00b88b] active:scale-[0.99] disabled:opacity-40 text-xs text-white font-bold rounded-2xl shadow-lg shadow-[#00d29f]/10 transition-all cursor-pointer"
+                  className="flex-1 py-3 bg-[#059669] hover:bg-[#047857] active:scale-[0.99] disabled:opacity-40 text-xs text-white font-bold rounded-2xl shadow-lg shadow-[#059669]/10 transition-all cursor-pointer"
                 >
                   {createLoading ? 'Creando...' : 'Crear Instancia'}
                 </button>
@@ -4503,7 +4503,7 @@ echo $response;`;
                 onClick={() => handleSaveCrmContact('promote')}
                 className="w-full p-3.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950/50 dark:hover:bg-slate-950/80 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-left cursor-pointer transition-all flex flex-col gap-0.5 group"
               >
-                <span className="text-xs font-bold text-slate-800 dark:text-white group-hover:text-[#00d29f]">Hacer este número Primario</span>
+                <span className="text-xs font-bold text-slate-800 dark:text-white group-hover:text-[#059669]">Hacer este número Primario</span>
                 <span className="text-[10px] text-slate-400">Este número será el principal. El anterior se guardará como Secundario. (Ambos quedan activos)</span>
               </button>
 
@@ -4512,7 +4512,7 @@ echo $response;`;
                 onClick={() => handleSaveCrmContact('keep')}
                 className="w-full p-3.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950/50 dark:hover:bg-slate-950/80 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-left cursor-pointer transition-all flex flex-col gap-0.5 group"
               >
-                <span className="text-xs font-bold text-slate-800 dark:text-white group-hover:text-[#00d29f]">Registrar como Secundario</span>
+                <span className="text-xs font-bold text-slate-800 dark:text-white group-hover:text-[#059669]">Registrar como Secundario</span>
                 <span className="text-[10px] text-slate-400">Guarda este número como secundario sin modificar el número principal actual. (Ambos quedan activos)</span>
               </button>
 
@@ -4573,7 +4573,7 @@ echo $response;`;
                       />
                       <button
                         onClick={() => handleUpdateCrmCategory(cat.id)}
-                        className="px-2.5 py-1.5 bg-[#00d29f] hover:bg-[#00b88b] text-white text-[10px] font-bold rounded-lg cursor-pointer"
+                        className="px-2.5 py-1.5 bg-[#059669] hover:bg-[#047857] text-white text-[10px] font-bold rounded-lg cursor-pointer"
                       >
                         OK
                       </button>
@@ -4630,7 +4630,7 @@ echo $response;`;
                 <button
                   type="button"
                   onClick={handleCreateCrmCategory}
-                  className="px-4 py-2 bg-[#00d29f] hover:bg-[#00b88b] text-white text-xs font-bold rounded-xl transition-all cursor-pointer font-medium"
+                  className="px-4 py-2 bg-[#059669] hover:bg-[#047857] text-white text-xs font-bold rounded-xl transition-all cursor-pointer font-medium"
                 >
                   Agregar
                 </button>
@@ -4708,7 +4708,7 @@ echo $response;`;
 
                 <button
                   type="submit"
-                  className="flex-1 py-3 bg-[#00d29f] hover:bg-[#00b88b] active:scale-[0.99] text-xs text-white font-bold rounded-2xl shadow-lg shadow-[#00d29f]/10 transition-all cursor-pointer"
+                  className="flex-1 py-3 bg-[#059669] hover:bg-[#047857] active:scale-[0.99] text-xs text-white font-bold rounded-2xl shadow-lg shadow-[#059669]/10 transition-all cursor-pointer"
                 >
                   {contactModal.isEdit ? 'Actualizar' : 'Guardar'}
                 </button>
@@ -4789,7 +4789,7 @@ echo $response;`;
                 <button
                   type="submit"
                   disabled={createGroupLoading || !createGroupSubject.trim()}
-                  className="flex-1 py-3 bg-[#00d29f] hover:bg-[#00b88b] active:scale-[0.99] disabled:opacity-40 text-xs text-white font-bold rounded-2xl shadow-lg shadow-[#00d29f]/10 transition-all cursor-pointer"
+                  className="flex-1 py-3 bg-[#059669] hover:bg-[#047857] active:scale-[0.99] disabled:opacity-40 text-xs text-white font-bold rounded-2xl shadow-lg shadow-[#059669]/10 transition-all cursor-pointer"
                 >
                   {createGroupLoading ? 'Creando...' : 'Crear'}
                 </button>
