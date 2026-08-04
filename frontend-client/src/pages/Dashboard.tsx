@@ -2505,7 +2505,7 @@ echo $response;`;
                           </div>
 
                           {/* Chat Window Messages */}
-                          <div className="flex-1 overflow-y-auto p-4 space-y-3.5 min-h-0 flex flex-col bg-[#eef7eb] dark:bg-[#0b141a]">
+                          <div className="flex-1 overflow-y-auto p-4 space-y-3.5 min-h-0 flex flex-col bg-[#e2f2da] dark:bg-[#0b141a]">
                             {messagesLoading && messages.length === 0 ? (
                               <div className="my-auto text-center text-xs text-surface-400 animate-pulse">Cargando conversación...</div>
                             ) : messages.length === 0 ? (
