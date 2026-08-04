@@ -1839,7 +1839,7 @@ echo $response;`;
       {/* Sidebar Overlay (Visible when open) */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-slate-900/50 dark:bg-black/60 z-40 backdrop-blur-sm"
+          className="fixed inset-0 bg-slate-900/50 dark:bg-black/60 z-40 backdrop-blur-sm lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
