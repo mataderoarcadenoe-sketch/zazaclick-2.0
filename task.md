@@ -1,6 +1,7 @@
-- `[x]` Modificar backend para habilitar events webhook en `evolution.service.ts`
-- `[x]` Implementar timeouts de presencia en frontend client (`Dashboard.tsx`)
-- `[x]` Ajustar diseño y colores de presencias (azul escribiendo, ámbar grabando, verde en línea)
-- `[x]` Eliminar shadow-sm del avatar de la cabecera activa
-- `[x]` Probar compilación de frontend y backend
-- `[x]` Realizar git commit y git push
+- `[x]` Agregar columna `tags` de tipo `JSONB` en la tabla `crm_contacts`
+- `[x]` Crear endpoints `GET /contacts/tags-map` y `POST /contacts/tags` en el backend crm.routes.ts
+- `[x]` Implementar dropdown interactivo multi-select en el botón "Etiquetar" del frontend
+- `[x]` Mostrar micro-badges de colores en las tarjetas de chat del sidebar y en la cabecera activa
+- `[x]` Agregar barra horizontal de filtros rápidos por etiquetas debajo del buscador en el sidebar
+- `[x]` Probar compilación del backend y frontend client
+- `[x]` Realizar git commit y git push a GitHub

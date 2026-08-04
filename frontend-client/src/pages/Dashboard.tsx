@@ -806,8 +806,12 @@ export default function DashboardPage() {
         }
 
         const oldChat = prevChats[chatIdx];
+        const isCurrentChat = selectedChatRef.current?.remoteJid === cleanJid;
+        const newUnreadCount = isCurrentChat ? 0 : (Number(oldChat.unreadCount) || 0) + (fromMe ? 0 : 1);
+
         const updatedChat = {
           ...oldChat,
+          unreadCount: newUnreadCount,
           lastMessage: {
             ...newMsg,
             messageTimestamp: newMsg.messageTimestamp
