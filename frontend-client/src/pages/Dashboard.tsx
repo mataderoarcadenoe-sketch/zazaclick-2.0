@@ -316,6 +316,8 @@ export default function DashboardPage() {
   const prevSelectedJidRef = useRef<string | null>(null);
   // Ref para almacenar el WebSocket de Socket.io
   const socketRef = useRef<Socket | null>(null);
+  // Ref para almacenar los timeouts de limpieza automática de estados de presencia
+  const presenceTimeoutsRef = useRef<Record<string, any>>({});
 
   // Confirm Dialog State
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -766,7 +768,6 @@ export default function DashboardPage() {
       if (!msgJid) return;
 
       let cleanJid = msgJid.replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net');
-
       const fromMe = newMsg.key?.fromMe;
 
       // 1. Si es el chat abierto actualmente, añadirlo a la lista de mensajes en tiempo real
@@ -793,13 +794,11 @@ export default function DashboardPage() {
       setChats(prevChats => {
         const chatIdx = prevChats.findIndex(c => c.remoteJid === cleanJid);
         if (chatIdx === -1) {
-          // Si es un chat nuevo que no estaba en el sidebar, hacemos un reload rápido
           fetchChats(true);
           return prevChats;
         }
 
         const oldChat = prevChats[chatIdx];
-
         const updatedChat = {
           ...oldChat,
           lastMessage: {
@@ -808,8 +807,8 @@ export default function DashboardPage() {
           }
         };
 
-        const remainingChats = prevChats.filter(c => c.remoteJid !== cleanJid);
-        return [updatedChat, ...remainingChats];
+        const newChats = [updatedChat, ...prevChats.filter((_, i) => i !== chatIdx)];
+        return newChats;
       });
     });
 
@@ -827,23 +826,54 @@ export default function DashboardPage() {
     });
 
     socket.on('presence_update', ({ remoteJid, status }: { remoteJid: string, status: string }) => {
+      // Limpiar timeout previo si existe para este contacto
+      if (presenceTimeoutsRef.current[remoteJid]) {
+        clearTimeout(presenceTimeoutsRef.current[remoteJid]);
+        delete presenceTimeoutsRef.current[remoteJid];
+      }
+
       setPresences(prev => ({
         ...prev,
         [remoteJid]: status
       }));
+
+      // Si el estado es 'composing' o 'recording', programar una limpieza automática después de 10 segundos
+      if (status === 'composing' || status === 'recording') {
+        presenceTimeoutsRef.current[remoteJid] = setTimeout(() => {
+          setPresences(prev => {
+            const updated = { ...prev };
+            if (updated[remoteJid] === 'composing' || updated[remoteJid] === 'recording') {
+              delete updated[remoteJid];
+            }
+            return updated;
+          });
+          delete presenceTimeoutsRef.current[remoteJid];
+        }, 10000);
+      } else if (status === 'paused' || status === 'unavailable') {
+        // Limpiar inmediatamente si el usuario se desconecta o deja de interactuar
+        setPresences(prev => {
+          const updated = { ...prev };
+          delete updated[remoteJid];
+          return updated;
+        });
+      }
     });
 
     socket.on('disconnect', () => {
       console.log('❌ [Socket.io] Conexión perdida.');
     });
 
+    // Cleanup
     return () => {
       socket.disconnect();
       socketRef.current = null;
+      // Limpiar todos los timeouts de presencia activos al desmontar
+      Object.values(presenceTimeoutsRef.current).forEach(clearTimeout);
+      presenceTimeoutsRef.current = {};
     };
-  }, [activeTab, selectedInstanceForChats]);
+  }, [selectedInstanceForChats, activeTab, fetchChats]);
 
-  // Polling de respaldo súper lento (cada 25 segundos) solo para asegurar sincronización en caídas de red
+  // Polling para mantener los chats actualizados
   useEffect(() => {
     if (activeTab !== 'chats' || !selectedInstanceForChats) return;
 
@@ -874,8 +904,7 @@ export default function DashboardPage() {
       setCrmContact(null);
     }
   }, [selectedChat, fetchMessages, selectedInstanceForChats]);
-
-  // Cerrar emoji picker al hacer clic fuera
+  
   useEffect(() => {
     if (!showEmojiPicker) return;
     const handleClickOutside = (e: MouseEvent) => {
@@ -2656,7 +2685,7 @@ echo $response;`;
                                 </button>
                                 
                                 {/* Profile Pic */}
-                                <div className="w-12 h-12 rounded-full bg-[#12a160] text-white flex items-center justify-center font-bold text-lg overflow-hidden shrink-0 shadow-sm">
+                                <div className="w-12 h-12 rounded-full bg-[#12a160] text-white flex items-center justify-center font-bold text-lg overflow-hidden shrink-0">
                                   {selectedChat.profilePicUrl ? (
                                     <img src={selectedChat.profilePicUrl} alt="" className="w-full h-full object-cover" />
                                   ) : (
@@ -2684,13 +2713,13 @@ echo $response;`;
                                       let presenceText = "";
                                       
                                       if (presenceState === 'composing') {
-                                        presenceDotClass = "bg-brand-primary animate-pulse shadow-[0_0_6px_#12a160]";
+                                        presenceDotClass = "bg-blue-500 animate-pulse shadow-[0_0_6px_rgba(59,130,246,0.6)]";
                                         presenceText = "Escribiendo...";
                                       } else if (presenceState === 'recording') {
-                                        presenceDotClass = "bg-amber-500 animate-pulse shadow-[0_0_6px_#f59e0b]";
+                                        presenceDotClass = "bg-amber-500 animate-pulse shadow-[0_0_6px_rgba(245,158,11,0.6)]";
                                         presenceText = "Grabando audio...";
                                       } else if (presenceState === 'available') {
-                                        presenceDotClass = "bg-[#12a160] shadow-[0_0_4px_#12a160]";
+                                        presenceDotClass = "bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.6)]";
                                         presenceText = "En línea";
                                       }
 
@@ -2700,7 +2729,13 @@ echo $response;`;
                                             <>
                                               <div className="flex items-center gap-1.5">
                                                 <div className={`w-2 h-2 rounded-full transition-all duration-300 ${presenceDotClass}`}></div>
-                                                <span className={presenceState === 'composing' || presenceState === 'recording' ? 'text-brand-primary font-extrabold' : ''}>
+                                                <span className={
+                                                  presenceState === 'composing' 
+                                                    ? 'text-blue-600 dark:text-blue-400 font-extrabold' 
+                                                    : presenceState === 'recording' 
+                                                    ? 'text-amber-600 dark:text-amber-400 font-extrabold' 
+                                                    : 'text-emerald-600 dark:text-emerald-400 font-bold'
+                                                }>
                                                   {presenceText}
                                                 </span>
                                               </div>

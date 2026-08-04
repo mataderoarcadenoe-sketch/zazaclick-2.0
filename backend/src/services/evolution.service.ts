@@ -97,13 +97,15 @@ export class EvolutionService {
         webhook: {
           enabled: true,
           url: webhookUrl,
-          byEvents: false,
+          byEvents: true,
+          webhookByEvents: true,
           events: [
             'MESSAGES_UPSERT',
             'CHATS_UPDATE',
             'MESSAGES_UPDATE',
             'CONTACTS_UPSERT',
-            'CONTACTS_UPDATE'
+            'CONTACTS_UPDATE',
+            'PRESENCE_UPDATE'
           ]
         },
         settings: {
@@ -782,7 +784,8 @@ export class EvolutionService {
         webhook: {
           enabled: true,
           url: webhookUrl,
-          webhookByEvents: false,
+          webhookByEvents: true,
+          byEvents: true,
           events: [
             'MESSAGES_UPSERT',
             'CHATS_UPDATE',
