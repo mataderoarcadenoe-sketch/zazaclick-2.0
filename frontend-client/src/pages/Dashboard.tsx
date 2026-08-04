@@ -2988,7 +2988,7 @@ echo $response;`;
                                 </div>
 
                                 {/* Action Buttons Row */}
-                                <div className="flex items-center justify-between bg-white dark:bg-slate-900/60 rounded-2xl p-3 border border-slate-200/50 dark:border-slate-800/80 shadow-sm">
+                                <div className="flex items-center justify-between bg-white dark:bg-slate-900/60 rounded-2xl p-3 border border-slate-200/50 dark:border-slate-800/80">
                                   <button className="flex flex-col items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-brand-primary dark:hover:text-brand-primary transition-colors cursor-pointer w-1/4">
                                     <Phone size={16} />
                                     <span className="text-[9px] font-medium">Llamar</span>
@@ -3008,7 +3008,7 @@ echo $response;`;
                                 </div>
 
                                 {/* Información del contacto */}
-                                <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/80 shadow-sm space-y-4">
+                                <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/80 space-y-4">
                                   <div className="flex items-center justify-between">
                                     <h5 className="text-[11px] font-bold text-slate-800 dark:text-white">Información del contacto</h5>
                                     <button 
@@ -3074,7 +3074,7 @@ echo $response;`;
                                 </div>
 
                                 {/* Notas del contacto */}
-                                <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/80 shadow-sm space-y-3">
+                                <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/80 space-y-3">
                                   <h5 className="text-[11px] font-bold text-slate-800 dark:text-white">Notas del contacto</h5>
                                   <p className="text-[10px] text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line bg-slate-50 dark:bg-slate-900/40 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/20">
                                     {crmClient.notes || 'Sin notas registradas.'}
@@ -3099,7 +3099,7 @@ echo $response;`;
                                 </div>
                                 
                                 {/* Etiquetas */}
-                                <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/80 shadow-sm space-y-3">
+                                <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/80 space-y-3">
                                   <div className="flex items-center justify-between">
                                     <h5 className="text-[11px] font-bold text-slate-800 dark:text-white">Etiquetas</h5>
                                     <button className="text-[10px] font-bold text-brand-primary hover:underline cursor-pointer">+ Agregar</button>
@@ -3123,7 +3123,7 @@ echo $response;`;
                                 </div>
 
                                 {/* Historial de conversaciones */}
-                                <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/80 shadow-sm space-y-3">
+                                <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/80 space-y-3">
                                   <div className="flex items-center justify-between">
                                     <h5 className="text-[11px] font-bold text-slate-800 dark:text-white">Historial de conversaciones</h5>
                                     <button className="text-[10px] font-bold text-brand-primary hover:underline cursor-pointer">Ver todo</button>
