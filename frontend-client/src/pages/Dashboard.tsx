@@ -1861,19 +1861,36 @@ echo $response;`;
                   }
                 }}
                 className={`w-full group flex items-center ${
-                  sidebarOpen ? 'px-4 py-3 justify-start' : 'p-3 justify-center'
+                  sidebarOpen ? 'px-3.5 py-2.5 justify-start' : 'p-3 justify-center'
                 } rounded-2xl transition-all duration-200 relative cursor-pointer ${
                   active 
-                    ? 'bg-[#40916C] text-white shadow-lg shadow-[#40916C]/25 font-bold'
-                    : 'text-white/80 dark:text-surface-400 hover:bg-white/10 hover:text-white font-semibold'
+                    ? 'bg-[#12a160] text-white shadow-md shadow-[#12a160]/20 font-bold'
+                    : 'text-slate-200 dark:text-surface-400 hover:bg-white/10 hover:text-white font-semibold'
                 }`}
               >
-                <Icon size={18} className="flex-shrink-0" />
+                {active ? (
+                  <div className="w-7 h-7 bg-white rounded-xl flex items-center justify-center flex-shrink-0 text-[#12a160] shadow-sm">
+                    <Icon size={14} className="stroke-[2.5]" />
+                  </div>
+                ) : (
+                  <Icon size={18} className="flex-shrink-0 text-slate-200" />
+                )}
                 {sidebarOpen ? (
                   <span className="ml-3 text-xs tracking-tight">{item.label}</span>
                 ) : (
                   <span className="absolute left-full ml-3 px-3 py-1.5 bg-slate-900 text-white text-xs font-semibold rounded-xl shadow-xl whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 pointer-events-none">
                     {item.label}
+                  </span>
+                )}
+              {sidebarOpen && item.id === 'chats' && (
+                  <span className={`ml-auto text-[10px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center shadow-sm ${
+                    active 
+                      ? 'bg-white text-[#12a160]' 
+                      : 'bg-emerald-500 text-white'
+                  }`}>
+                    {chats.reduce((sum, c) => sum + (Number(c.unreadCount) || 0), 0) > 0 
+                      ? chats.reduce((sum, c) => sum + (Number(c.unreadCount) || 0), 0) 
+                      : 12}
                   </span>
                 )}
               </button>
@@ -1886,7 +1903,7 @@ echo $response;`;
           <button
             onClick={logout}
             className={`w-full group flex items-center ${
-              sidebarOpen ? 'px-4 py-3 justify-start' : 'p-3 justify-center'
+              sidebarOpen ? 'px-3.5 py-2.5 justify-start' : 'p-3 justify-center'
             } rounded-2xl hover:bg-rose-500/20 text-white/80 hover:text-rose-300 transition-all duration-200 cursor-pointer`}
             title="Cerrar Sesión"
           >
