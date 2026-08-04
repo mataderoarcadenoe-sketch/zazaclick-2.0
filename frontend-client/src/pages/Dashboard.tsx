@@ -1813,7 +1813,7 @@ echo $response;`;
         <div className={`h-16 flex items-center ${sidebarOpen ? 'justify-between px-5' : 'justify-center'}`}>
           {sidebarOpen && (
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-brand-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-primary to-brand-secondary flex items-center justify-center text-white shadow-md shadow-brand-primary/25">
                 <Smartphone size={18} />
               </div>
               <span className="font-semibold text-slate-800 dark:text-white tracking-wide">
@@ -1942,12 +1942,12 @@ echo $response;`;
               <div className="space-y-6 animate-fadeIn">
                 
                 {/* Upgrade/Welcome Card Banner */}
-                <div className="p-6 bg-pastel-100/50 dark:bg-pastel-100/20 rounded-3xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="p-6 bg-gradient-to-r from-brand-primary to-brand-secondary rounded-3xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xl shadow-brand-primary/10 text-white">
                   <div className="space-y-2 text-left relative z-10">
-                    <span className="px-2.5 py-1 bg-pastel-100/50 border border-pastel-100/40 rounded-md text-[9px] font-bold text-brand-primary dark:text-brand-primary uppercase tracking-widest">
+                    <span className="px-2.5 py-1 bg-white/20 border border-white/30 rounded-md text-[9px] font-bold text-white uppercase tracking-widest">
                       Licencia Activa
                     </span>
-                    <h3 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-white">
+                    <h3 className="text-lg sm:text-xl font-bold text-white">
                       Plan {subscription?.plan_name || 'Básico'}
                     </h3>
                     <p className="text-xs text-surface-500 dark:text-surface-400 max-w-lg leading-relaxed">
@@ -1966,7 +1966,7 @@ echo $response;`;
                     </button>
                     <button
                       onClick={() => setActiveTab('docs')}
-                      className="px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl hover-lift shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
+                      className="px-4 py-2.5 bg-white/20 border border-white/30 hover:bg-white/30 text-white font-bold text-xs rounded-xl hover-lift shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
                     >
                       <BookOpen size={16} />
                       <span>Ver Docs</span>
@@ -1979,15 +1979,15 @@ echo $response;`;
 
                 {/* Metrics Cards Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl space-y-1.5 text-left">
+                  <div className="p-5 bg-gradient-to-br from-sky-500/10 via-white to-white dark:from-sky-950/20 dark:via-slate-900 dark:to-slate-900 border border-sky-500/10 dark:border-sky-500/5 rounded-2xl space-y-1.5 text-left hover-lift shadow-sm">
                     <span className="text-[10px] text-surface-400 font-bold uppercase tracking-widest">Líneas Vinculadas</span>
-                    <h3 className="text-2xl font-bold text-slate-800 dark:text-white">
-                      {instances.length} / <span className="text-surface-400">{maxInstances}</span>
+                    <h3 className="text-2xl font-black text-sky-700 dark:text-sky-300">
+                      {instances.length} <span className="text-xs text-sky-500 font-medium">de</span> {maxInstances}
                     </h3>
                     <p className="text-[10px] text-surface-500">Capacidad disponible para crear instancias.</p>
                   </div>
 
-                  <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl space-y-1.5 text-left">
+                  <div className="p-5 bg-gradient-to-br from-sky-500/10 via-white to-white dark:from-sky-950/20 dark:via-slate-900 dark:to-slate-900 border border-sky-500/10 dark:border-sky-500/5 rounded-2xl space-y-1.5 text-left hover-lift shadow-sm">
                     <span className="text-[10px] text-surface-400 font-bold uppercase tracking-widest text-brand-primary">Instancias Online</span>
                     <h3 className="text-2xl font-bold text-brand-primary">
                       {activeInstancesCount} / <span className="text-surface-400">{instances.length || 0}</span>
@@ -1995,11 +1995,11 @@ echo $response;`;
                     <p className="text-[10px] text-surface-500">Números con WhatsApp en línea.</p>
                   </div>
 
-                  <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl space-y-1.5 text-left">
+                  <div className="p-5 bg-gradient-to-br from-sky-500/10 via-white to-white dark:from-sky-950/20 dark:via-slate-900 dark:to-slate-900 border border-sky-500/10 dark:border-sky-500/5 rounded-2xl space-y-1.5 text-left hover-lift shadow-sm">
                     <span className="text-[10px] text-surface-400 font-bold uppercase tracking-widest">Próxima Renovación</span>
-                    <h3 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
-                      <Clock size={20} />
-                      <span className="text-lg">
+                    <h3 className="text-2xl font-bold text-purple-700 dark:text-purple-300 flex items-center gap-2">
+                      <Clock size={20} className="text-purple-500" />
+                      <span className="text-2xl font-black">
                         {subscription?.end_date ? new Date(subscription.end_date).toLocaleDateString() : 'N/A'}
                       </span>
                     </h3>
