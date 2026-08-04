@@ -2266,7 +2266,7 @@ echo $response;`;
                   <div className="flex-1 min-h-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md rounded-3xl overflow-hidden flex md:grid md:grid-cols-12 shadow-premium-lg text-left">
                     
                     {/* LEFT PANEL: Chats List */}
-                    <div className={`md:col-span-${selectedChat ? '3' : '4'} bg-slate-50/45 dark:bg-slate-950/20 flex-col min-h-0 w-full md:w-auto ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
+                    <div className={`${selectedChat ? 'md:col-span-3' : 'md:col-span-4'} bg-slate-50/45 dark:bg-slate-950/20 flex-col min-h-0 w-full md:w-auto ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
                       {/* Search Bar */}
                       <div className="p-4 relative">
                         <input
@@ -2370,7 +2370,7 @@ echo $response;`;
                     </div>
 
                     {/* RIGHT PANEL: Message Area */}
-                    <div className={`md:col-span-${selectedChat ? (showCrmSidebar && !selectedChat.remoteJid.endsWith('@g.us') ? '6' : '9') : '8'} flex-col min-h-0 bg-gradient-to-b from-slate-50/50 via-slate-100/20 to-indigo-50/15 dark:from-slate-950/65 dark:via-slate-900/40 dark:to-slate-950/55 w-full md:w-auto ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
+                    <div className={`${selectedChat ? (showCrmSidebar && !selectedChat.remoteJid.endsWith('@g.us') ? 'md:col-span-6' : 'md:col-span-9') : 'md:col-span-8'} flex-col min-h-0 bg-gradient-to-b from-slate-50/50 via-slate-100/20 to-indigo-50/15 dark:from-slate-950/65 dark:via-slate-900/40 dark:to-slate-950/55 w-full md:w-auto ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
                       {selectedChat ? (
                         <div className="flex-1 flex flex-col min-h-0">
                           
