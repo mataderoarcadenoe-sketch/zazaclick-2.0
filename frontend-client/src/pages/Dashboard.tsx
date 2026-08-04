@@ -2511,15 +2511,15 @@ echo $response;`;
                                     if (msg.MessageUpdate) {
                                       const statuses = msg.MessageUpdate.map((u: any) => u.status);
                                       if (statuses.includes('READ')) {
-                                        statusIcon = <span className="text-[9px] text-sky-500 font-bold ml-1">✓✓</span>;
+                                        statusIcon = <span className="text-[9px] text-sky-200 dark:text-sky-300 font-bold ml-1">✓✓</span>;
                                       } else if (statuses.includes('DELIVERY_ACK')) {
-                                        statusIcon = <span className="text-[9px] text-surface-400 font-bold ml-1">✓✓</span>;
+                                        statusIcon = <span className="text-[9px] text-white/60 font-bold ml-1">✓✓</span>;
                                       } else if (statuses.includes('SERVER_ACK')) {
-                                        statusIcon = <span className="text-[9px] text-surface-400 font-bold ml-1">✓</span>;
+                                        statusIcon = <span className="text-[9px] text-white/60 font-bold ml-1">✓</span>;
                                       }
                                     } else {
                                       // Mensajes enviados sin MessageUpdate aún: mostrar ✓ por defecto
-                                      statusIcon = <span className="text-[9px] text-surface-400 font-bold ml-1">✓</span>;
+                                      statusIcon = <span className="text-[9px] text-white/60 font-bold ml-1">✓</span>;
                                     }
                                   }
 
@@ -2720,7 +2720,7 @@ echo $response;`;
                                         {renderMessageContent()}
                                         
                                         {/* Timestamp and Checks */}
-                                        <div className="flex items-center justify-end mt-1 text-[9px] text-surface-400 dark:text-surface-500 font-medium">
+                                        <div className={`flex items-center justify-end mt-1 text-[9px] font-medium ${fromMe ? 'text-white/70 dark:text-white/60' : 'text-surface-400 dark:text-surface-500'}`}>
                                           <span>{timestamp}</span>
                                           {statusIcon}
                                         </div>
