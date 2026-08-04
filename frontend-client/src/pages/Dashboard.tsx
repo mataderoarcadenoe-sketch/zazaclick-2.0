@@ -283,6 +283,8 @@ export default function DashboardPage() {
   const prevMessagesCountRef = useRef<number>(0);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
+  const attachMenuRef = useRef<HTMLDivElement>(null);
+  const attachButtonRef = useRef<HTMLButtonElement>(null);
   // Ref para guardar la referencia estable del chat seleccionado para los callbacks del intervalo
   const selectedChatRef = useRef<any>(null);
   const selectedInstanceRef = useRef<string>('');
@@ -858,6 +860,21 @@ export default function DashboardPage() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showEmojiPicker]);
+
+  // Cerrar menú de adjuntos al hacer clic fuera
+  useEffect(() => {
+    if (!showAttachMenu) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        attachMenuRef.current && !attachMenuRef.current.contains(e.target as Node) &&
+        attachButtonRef.current && !attachButtonRef.current.contains(e.target as Node)
+      ) {
+        setShowAttachMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showAttachMenu]);
 
   // Cerrar select de chats al hacer clic fuera
   useEffect(() => {
@@ -2759,9 +2776,8 @@ echo $response;`;
                               className="hidden" 
                             />
 
-                            {/* Menú de Adjuntos Flotante */}
                             {showAttachMenu && (
-                              <div className="absolute bottom-[100%] mb-2 left-12 z-50 animate-fadeIn bg-white dark:bg-slate-900 shadow-premium-lg rounded-2xl p-2 flex flex-col gap-1 w-40 text-left">
+                              <div ref={attachMenuRef} className="absolute bottom-[100%] mb-2 left-12 z-50 animate-fadeIn bg-white dark:bg-slate-900 shadow-premium-lg rounded-2xl p-2 flex flex-col gap-1 w-40 text-left">
                                 <button
                                   type="button"
                                   onClick={() => handleTriggerFileInput('image')}
@@ -2845,6 +2861,7 @@ echo $response;`;
                                   <Smile size={20} />
                                 </button>
                                 <button
+                                  ref={attachButtonRef}
                                   type="button"
                                   onClick={() => setShowAttachMenu(!showAttachMenu)}
                                   className={`p-2 transition-colors cursor-pointer rounded-xl ${showAttachMenu ? 'bg-pastel-100/50 text-brand-primary' : 'text-surface-400 hover:text-surface-600 dark:hover:text-slate-300'}`}
