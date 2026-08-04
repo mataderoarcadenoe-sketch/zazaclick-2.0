@@ -858,10 +858,10 @@ router.post('/groups/:instanceName/create', authMiddleware, async (req: Authenti
       return res.status(403).json({ success: false, error: 'Acceso no autorizado.' });
     }
 
-    // Limpiar teléfonos de los participantes (formato simple esperado por Evolution)
+    // Limpiar teléfonos de los participantes (formato JID esperado por Evolution)
     const cleanedParticipants = (participants || []).map((num: string) => {
-      const clean = num.replace(/\D/g, '');
-      return clean;
+      const cleanNum = num.split('@')[0].replace(/\D/g, '');
+      return `${cleanNum}@s.whatsapp.net`;
     });
 
     const createResult = await EvolutionService.createGroup(instanceName, subject, cleanedParticipants);
@@ -894,7 +894,11 @@ router.put('/groups/:instanceName/participants', authMiddleware, async (req: Aut
       return res.status(403).json({ success: false, error: 'Acceso no autorizado.' });
     }
 
-    const cleanParticipants = participants.map((num: string) => num.replace(/\D/g, ''));
+    // Limpiar teléfonos de los participantes (formato JID esperado por Evolution)
+    const cleanParticipants = participants.map((num: string) => {
+      const cleanNum = num.split('@')[0].replace(/\D/g, '');
+      return `${cleanNum}@s.whatsapp.net`;
+    });
 
     const updateResult = await EvolutionService.updateGroupParticipants(instanceName, groupJid, action, cleanParticipants);
     if (!updateResult.success) {

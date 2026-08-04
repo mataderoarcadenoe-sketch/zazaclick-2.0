@@ -913,7 +913,7 @@ export class EvolutionService {
     participants: string[]
   ): Promise<{ success: boolean; data?: any; error?: string; status?: number }> {
     try {
-      const response = await api.put(`/group/updateParticipant/${instanceName}?groupJid=${groupJid}`, {
+      const response = await api.post(`/group/updateParticipant/${instanceName}?groupJid=${groupJid}`, {
         action,
         participants
       });
