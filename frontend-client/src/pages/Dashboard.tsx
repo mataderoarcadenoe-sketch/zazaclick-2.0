@@ -8,7 +8,8 @@ import {
   AlertCircle, Copy, Send, LayoutDashboard, Terminal, 
   Moon, Sun, Menu, X, Check, Play, ExternalLink, Sparkles, BookOpen, Clock,
   MessageSquare, Search, MessageCircle, Smile, ArrowLeft,
-  Paperclip, FileText, Image, Video, Download, ChevronDown, Users, Users2, Settings
+  Paperclip, FileText, Image, Video, Download, ChevronDown, Users, Users2, Settings,
+  Edit2, Phone, User, Tag, MoreVertical, Mail, MapPin, Building, Calendar
 } from 'lucide-react';
 import EmojiPicker, { Theme, EmojiStyle, Emoji } from 'emoji-picker-react';
 import { parse } from '@twemoji/parser';
@@ -2966,66 +2967,199 @@ echo $response;`;
                           <div className="space-y-3.5">
                             {/* Contact info card (Display Mode) */}
                             {!crmIsEditing && crmClient ? (
-                              <div className="space-y-3.5">
-                                {/* Display client details */}
-                                <div className="bg-white dark:bg-slate-900/60 p-3 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 space-y-2.5 shadow-sm">
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-7 h-7 rounded-xl bg-pastel-100/50 flex items-center justify-center text-brand-primary">
-                                      {crmClient.doc_type === 'RUC' ? <Users size={14} /> : <MessageCircle size={14} />}
+                              <div className="space-y-3.5 pb-6">
+                                {/* Green Header Card */}
+                                <div className="bg-brand-primary rounded-2xl p-4 text-white relative overflow-hidden shadow-sm">
+                                  {/* Background decoration */}
+                                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                                  <div className="relative z-10 flex items-start gap-3">
+                                    <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center text-xl font-bold flex-shrink-0 border border-white/30 backdrop-blur-sm">
+                                      {crmClient.name.split(' ').slice(0, 2).map((n: string) => n[0]).join('').toUpperCase() || 'C'}
                                     </div>
-                                    <div className="min-w-0 flex-1">
-                                      <h4 className="text-[11px] font-bold text-slate-800 dark:text-white leading-tight truncate">{crmClient.name}</h4>
-                                      <span className="text-[9px] text-surface-400 font-bold block truncate mt-0.5">
-                                        {crmClient.doc_type !== 'MANUAL' ? `${crmClient.doc_type}: ${crmClient.doc_number}` : 'Registro Manual'}
+                                    <div className="flex-1 min-w-0 pr-6">
+                                      <h4 className="text-[13px] font-extrabold leading-tight tracking-wide uppercase break-words">
+                                        {crmClient.name}
+                                      </h4>
+                                      <span className="inline-block mt-1.5 px-2.5 py-0.5 bg-white/20 text-white text-[9px] font-bold rounded-full border border-white/20 shadow-sm">
+                                        {crmContact?.category_name || 'Cliente'}
                                       </span>
                                     </div>
                                   </div>
+                                  {/* Edit Button */}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setCrmDocType(crmClient.doc_type === 'MANUAL' ? 'DNI' : crmClient.doc_type);
+                                      setCrmDocNumber(crmClient.doc_type === 'MANUAL' ? '' : crmClient.doc_number);
+                                      setCrmName(crmClient.name);
+                                      setCrmAddress(crmClient.address || '');
+                                      setCrmEmail(crmClient.email || '');
+                                      setCrmNotes(crmClient.notes || '');
+                                      setCrmCategoryId(crmContact?.category_id?.toString() || '');
+                                      setCrmIsEditing(true);
+                                    }}
+                                    className="absolute top-4 right-4 w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-colors cursor-pointer"
+                                  >
+                                    <Edit2 size={12} className="text-white" />
+                                  </button>
+                                </div>
 
-                                  {crmClient.address && (
-                                    <div className="space-y-0.5">
-                                      <span className="text-[8.5px] text-surface-400 dark:text-surface-500 font-bold uppercase tracking-wider block">Dirección Fiscal</span>
-                                      <p className="text-[10px] text-slate-700 dark:text-slate-300 font-medium leading-normal">{crmClient.address}</p>
+                                {/* Action Buttons Row */}
+                                <div className="flex items-center justify-between bg-white dark:bg-slate-900/60 rounded-2xl p-3 border border-slate-200/50 dark:border-slate-800/80 shadow-sm">
+                                  <button className="flex flex-col items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-brand-primary dark:hover:text-brand-primary transition-colors cursor-pointer w-1/4">
+                                    <Phone size={16} />
+                                    <span className="text-[9px] font-medium">Llamar</span>
+                                  </button>
+                                  <button className="flex flex-col items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-brand-primary dark:hover:text-brand-primary transition-colors cursor-pointer w-1/4">
+                                    <User size={16} />
+                                    <span className="text-[9px] font-medium">Perfil</span>
+                                  </button>
+                                  <button className="flex flex-col items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-brand-primary dark:hover:text-brand-primary transition-colors cursor-pointer w-1/4">
+                                    <Tag size={16} />
+                                    <span className="text-[9px] font-medium">Etiquetar</span>
+                                  </button>
+                                  <button className="flex flex-col items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-brand-primary dark:hover:text-brand-primary transition-colors cursor-pointer w-1/4">
+                                    <MoreVertical size={16} />
+                                    <span className="text-[9px] font-medium">Más</span>
+                                  </button>
+                                </div>
+
+                                {/* Información del contacto */}
+                                <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/80 shadow-sm space-y-4">
+                                  <div className="flex items-center justify-between">
+                                    <h5 className="text-[11px] font-bold text-slate-800 dark:text-white">Información del contacto</h5>
+                                    <button 
+                                      onClick={() => {
+                                        setCrmDocType(crmClient.doc_type === 'MANUAL' ? 'DNI' : crmClient.doc_type);
+                                        setCrmDocNumber(crmClient.doc_type === 'MANUAL' ? '' : crmClient.doc_number);
+                                        setCrmName(crmClient.name);
+                                        setCrmAddress(crmClient.address || '');
+                                        setCrmEmail(crmClient.email || '');
+                                        setCrmNotes(crmClient.notes || '');
+                                        setCrmCategoryId(crmContact?.category_id?.toString() || '');
+                                        setCrmIsEditing(true);
+                                      }}
+                                      className="text-[10px] font-bold text-brand-primary hover:underline cursor-pointer"
+                                    >
+                                      Editar
+                                    </button>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-y-4 gap-x-2">
+                                    <div className="flex gap-2">
+                                      <div className="text-brand-primary bg-brand-primary/10 p-1.5 rounded-lg h-min"><Phone size={12} /></div>
+                                      <div className="min-w-0">
+                                        <span className="text-[9px] text-surface-400 font-medium block leading-none mb-1">Teléfono</span>
+                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold truncate block">+{selectedChat.remoteJid.split('@')[0]}</span>
+                                      </div>
                                     </div>
-                                  )}
-
-                                  {crmClient.email && (
-                                    <div className="space-y-0.5">
-                                      <span className="text-[8.5px] text-surface-400 dark:text-surface-500 font-bold uppercase tracking-wider block">Email</span>
-                                      <p className="text-[10px] text-slate-700 dark:text-slate-300 font-medium truncate">{crmClient.email}</p>
+                                    <div className="flex gap-2">
+                                      <div className="text-brand-primary bg-brand-primary/10 p-1.5 rounded-lg h-min"><Mail size={12} /></div>
+                                      <div className="min-w-0">
+                                        <span className="text-[9px] text-surface-400 font-medium block leading-none mb-1">Correo</span>
+                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold truncate block">{crmClient.email || 'No registrado'}</span>
+                                      </div>
                                     </div>
-                                  )}
-
-                                  <div className="space-y-0.5">
-                                    <span className="text-[8.5px] text-surface-400 dark:text-surface-500 font-bold uppercase tracking-wider block">Categoría de Contacto</span>
-                                    <span className="inline-flex px-2 py-0.5 bg-pastel-100/50 text-brand-primary text-[9px] font-bold rounded-full mt-0.5 border border-pastel-100/30">
-                                      {crmContact?.category_name || 'Sin Categoría'}
-                                    </span>
+                                    <div className="flex gap-2">
+                                      <div className="text-brand-primary bg-brand-primary/10 p-1.5 rounded-lg h-min"><MapPin size={12} /></div>
+                                      <div className="min-w-0">
+                                        <span className="text-[9px] text-surface-400 font-medium block leading-none mb-1">País</span>
+                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold truncate block">Perú</span>
+                                      </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <div className="text-brand-primary bg-brand-primary/10 p-1.5 rounded-lg h-min"><Building size={12} /></div>
+                                      <div className="min-w-0">
+                                        <span className="text-[9px] text-surface-400 font-medium block leading-none mb-1">Ciudad</span>
+                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold truncate block">{crmClient.address || 'No registrado'}</span>
+                                      </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <div className="text-brand-primary bg-brand-primary/10 p-1.5 rounded-lg h-min"><span className="font-bold text-[10px]">A</span></div>
+                                      <div className="min-w-0">
+                                        <span className="text-[9px] text-surface-400 font-medium block leading-none mb-1">Idioma</span>
+                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold truncate block">Español</span>
+                                      </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <div className="text-brand-primary bg-brand-primary/10 p-1.5 rounded-lg h-min"><Calendar size={12} /></div>
+                                      <div className="min-w-0">
+                                        <span className="text-[9px] text-surface-400 font-medium block leading-none mb-1">Primer contacto</span>
+                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold truncate block">{crmClient.created_at ? new Date(crmClient.created_at).toLocaleDateString('es-ES') : '17/06/2026'}</span>
+                                      </div>
+                                    </div>
                                   </div>
                                 </div>
 
-                                {crmClient.notes && (
-                                  <div className="bg-slate-100/50 dark:bg-slate-900/40 p-2.5 rounded-2xl border border-slate-200/20 dark:border-slate-800/10 space-y-0.5">
-                                    <span className="text-[8.5px] text-surface-400 dark:text-surface-500 font-bold uppercase tracking-wider block">Notas Comerciales</span>
-                                    <p className="text-[10px] text-surface-600 dark:text-surface-400 font-medium leading-relaxed whitespace-pre-line">{crmClient.notes}</p>
+                                {/* Notas del contacto */}
+                                <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/80 shadow-sm space-y-3">
+                                  <h5 className="text-[11px] font-bold text-slate-800 dark:text-white">Notas del contacto</h5>
+                                  <p className="text-[10px] text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line bg-slate-50 dark:bg-slate-900/40 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/20">
+                                    {crmClient.notes || 'Sin notas registradas.'}
+                                  </p>
+                                  <div className="text-right">
+                                    <button 
+                                      onClick={() => {
+                                        setCrmDocType(crmClient.doc_type === 'MANUAL' ? 'DNI' : crmClient.doc_type);
+                                        setCrmDocNumber(crmClient.doc_type === 'MANUAL' ? '' : crmClient.doc_number);
+                                        setCrmName(crmClient.name);
+                                        setCrmAddress(crmClient.address || '');
+                                        setCrmEmail(crmClient.email || '');
+                                        setCrmNotes(crmClient.notes || '');
+                                        setCrmCategoryId(crmContact?.category_id?.toString() || '');
+                                        setCrmIsEditing(true);
+                                      }}
+                                      className="text-[10px] font-bold text-brand-primary hover:underline cursor-pointer"
+                                    >
+                                      Editar nota
+                                    </button>
                                   </div>
-                                )}
+                                </div>
+                                
+                                {/* Etiquetas */}
+                                <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/80 shadow-sm space-y-3">
+                                  <div className="flex items-center justify-between">
+                                    <h5 className="text-[11px] font-bold text-slate-800 dark:text-white">Etiquetas</h5>
+                                    <button className="text-[10px] font-bold text-brand-primary hover:underline cursor-pointer">+ Agregar</button>
+                                  </div>
+                                  <div className="flex flex-wrap gap-1.5 items-center">
+                                    <span className="px-2.5 py-1 bg-brand-primary/10 text-brand-primary text-[9px] font-bold rounded-full border border-brand-primary/20 flex items-center gap-1.5">
+                                      <Tag size={10} />
+                                      {crmContact?.category_name || 'Cliente'}
+                                    </span>
+                                    {/* Mock additional tags based on image */}
+                                    <span className="px-2.5 py-1 bg-blue-100/50 text-blue-600 text-[9px] font-bold rounded-full border border-blue-100">
+                                      Interesado
+                                    </span>
+                                    <span className="px-2.5 py-1 bg-blue-100/50 text-blue-600 text-[9px] font-bold rounded-full border border-blue-100">
+                                      Plan Trimestral
+                                    </span>
+                                    <button className="w-6 h-6 rounded-full border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                      <Plus size={10} />
+                                    </button>
+                                  </div>
+                                </div>
 
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setCrmDocType(crmClient.doc_type === 'MANUAL' ? 'DNI' : crmClient.doc_type);
-                                    setCrmDocNumber(crmClient.doc_type === 'MANUAL' ? '' : crmClient.doc_number);
-                                    setCrmName(crmClient.name);
-                                    setCrmAddress(crmClient.address || '');
-                                    setCrmEmail(crmClient.email || '');
-                                    setCrmNotes(crmClient.notes || '');
-                                    setCrmCategoryId(crmContact?.category_id?.toString() || '');
-                                    setCrmIsEditing(true);
-                                  }}
-                                  className="w-full py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white text-[11px] font-bold rounded-xl transition-all cursor-pointer text-center"
-                                >
-                                  Editar Datos
-                                </button>
+                                {/* Historial de conversaciones */}
+                                <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/80 shadow-sm space-y-3">
+                                  <div className="flex items-center justify-between">
+                                    <h5 className="text-[11px] font-bold text-slate-800 dark:text-white">Historial de conversaciones</h5>
+                                    <button className="text-[10px] font-bold text-brand-primary hover:underline cursor-pointer">Ver todo</button>
+                                  </div>
+                                  <div className="grid grid-cols-3 gap-2">
+                                    <div className="bg-slate-50 dark:bg-slate-800/40 rounded-xl p-2.5 text-center border border-slate-100 dark:border-slate-800/50 flex flex-col justify-center">
+                                      <span className="text-brand-primary font-bold text-base leading-none">18</span>
+                                      <span className="text-[8px] text-surface-400 font-medium mt-1">Conversaciones</span>
+                                    </div>
+                                    <div className="bg-slate-50 dark:bg-slate-800/40 rounded-xl p-2.5 text-center border border-slate-100 dark:border-slate-800/50 flex flex-col justify-center">
+                                      <span className="text-brand-primary font-bold text-base leading-none">2d 4h</span>
+                                      <span className="text-[8px] text-surface-400 font-medium mt-1">Tiempo promedio</span>
+                                    </div>
+                                    <div className="bg-slate-50 dark:bg-slate-800/40 rounded-xl p-2.5 text-center border border-slate-100 dark:border-slate-800/50 flex flex-col justify-center">
+                                      <span className="text-brand-primary font-bold text-base leading-none">98%</span>
+                                      <span className="text-[8px] text-surface-400 font-medium mt-1">Respondidas</span>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                             ) : (
                               /* Create / Edit Form Mode */
