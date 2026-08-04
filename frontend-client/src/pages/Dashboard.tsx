@@ -107,6 +107,17 @@ interface Instance {
   created_at: string;
 }
 
+const PIPELINE_STAGES = [
+  'Nuevo',
+  'Contactado',
+  'Interesado',
+  'Cotización enviada',
+  'Negociación',
+  'Pago pendiente',
+  'Cliente',
+  'Postventa'
+];
+
 export default function DashboardPage() {
   const { user, subscription, logout } = useAuth();
   const [instances, setInstances] = useState<Instance[]>([]);
@@ -123,7 +134,7 @@ export default function DashboardPage() {
   });
 
   // Active Tab/Section State
-  const [activeTab, setActiveTab] = useState<'overview' | 'instances' | 'chats' | 'contacts' | 'groups' | 'playground' | 'docs' | 'subscription'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'instances' | 'chats' | 'pipeline' | 'contacts' | 'groups' | 'playground' | 'docs' | 'subscription'>('overview');
 
   // Modal / Form state for new instance
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -280,6 +291,14 @@ export default function DashboardPage() {
   const [crmClientContacts, setCrmClientContacts] = useState<any[]>([]);
   const [crmClientContactsLoading, setCrmClientContactsLoading] = useState(false);
   const [crmContactsSubTab, setCrmContactsSubTab] = useState<'crm' | 'google'>('crm');
+  
+  // Pipeline States & Refs
+  const [showPipelineDropdown, setShowPipelineDropdown] = useState(false);
+  const [pipelineData, setPipelineData] = useState<any[]>([]);
+  const [pipelineLoading, setPipelineLoading] = useState(false);
+  const [openMoveDropdownJid, setOpenMoveDropdownJid] = useState<string | null>(null);
+  const pipelineDropdownRef = useRef<HTMLDivElement>(null);
+  const pipelineButtonRef = useRef<HTMLButtonElement>(null);
 
   // Refs para scroll inteligente y emoji picker click-outside
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -886,6 +905,21 @@ export default function DashboardPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showAttachMenu]);
 
+  // Cerrar menú de pipeline al hacer clic fuera
+  useEffect(() => {
+    if (!showPipelineDropdown) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        pipelineDropdownRef.current && !pipelineDropdownRef.current.contains(e.target as Node) &&
+        pipelineButtonRef.current && !pipelineButtonRef.current.contains(e.target as Node)
+      ) {
+        setShowPipelineDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showPipelineDropdown]);
+
   // Cerrar select de chats al hacer clic fuera
   useEffect(() => {
     if (!showChatsInstanceMenu) return;
@@ -1129,6 +1163,45 @@ export default function DashboardPage() {
     }
   }, [crmCategories]);
 
+  // Fetch pipeline contacts
+  const fetchPipelineData = useCallback(async () => {
+    setPipelineLoading(true);
+    try {
+      const res = await api.get('/crm/pipeline');
+      if (res.data?.success) {
+        setPipelineData(res.data.data || []);
+      }
+    } catch (err: any) {
+      console.error('Error fetching pipeline data:', err.message);
+    } finally {
+      setPipelineLoading(false);
+    }
+  }, []);
+
+  // Move pipeline stage
+  const movePipelineStage = useCallback(async (remoteJid: string, stage: string, pushName?: string) => {
+    try {
+      const response = await api.post('/crm/pipeline/move', {
+        remoteJid,
+        stage,
+        pushName
+      });
+      if (response.data?.success) {
+        showNotification('Etapa comercial actualizada exitosamente.', 'success');
+        if (selectedChat && selectedChat.remoteJid === remoteJid) {
+          fetchCrmContactForChat(remoteJid);
+        }
+        fetchCrmContactMap();
+        fetchPipelineData();
+      } else {
+        showNotification(response.data?.error || 'Error al mover etapa.', 'error');
+      }
+    } catch (err: any) {
+      console.error('Error moving pipeline stage:', err.message);
+      showNotification('Error al conectar con el servidor.', 'error');
+    }
+  }, [selectedChat, fetchCrmContactForChat, fetchCrmContactMap, fetchPipelineData]);
+
   // Cargar datos CRM al cambiar de chat activo
   useEffect(() => {
     if (selectedChat && !selectedChat.remoteJid.endsWith('@g.us')) {
@@ -1338,6 +1411,13 @@ export default function DashboardPage() {
       fetchCrmClients();
     }
   }, [activeTab, fetchCrmClients]);
+
+  // Load pipeline data when pipeline tab is active
+  useEffect(() => {
+    if (activeTab === 'pipeline') {
+      fetchPipelineData();
+    }
+  }, [activeTab, fetchPipelineData]);
 
   // Check URL parameters for Google Contacts connection status
   useEffect(() => {
@@ -1669,6 +1749,7 @@ export default function DashboardPage() {
     { id: 'overview', label: 'Resumen', icon: LayoutGrid },
     { id: 'instances', label: 'Líneas / QR', icon: Smartphone },
     { id: 'chats', label: 'Chats en Vivo', icon: MessageSquare },
+    { id: 'pipeline', label: 'Pipeline Comercial', icon: GitBranch },
     { id: 'contacts', label: 'Clientes / Agenda', icon: Users },
     { id: 'groups', label: 'Grupos (WhatsApp)', icon: Users2 },
     { id: 'playground', label: 'Probar Envío', icon: Play },
@@ -1817,6 +1898,46 @@ echo $response;`;
   -H "Content-Type: application/json" \\
   -d '${payload}'`;
     }
+  };
+
+  const getPipelineColumns = () => {
+    const columns: Record<string, any[]> = {};
+    
+    PIPELINE_STAGES.forEach(stg => {
+      columns[stg] = [];
+    });
+
+    pipelineData.forEach(contact => {
+      const stage = contact.pipeline_stage || 'Nuevo';
+      if (columns[stage]) {
+        columns[stage].push({
+          type: 'crm',
+          remoteJid: `${contact.phone_number}@s.whatsapp.net`,
+          name: contact.client_name,
+          phone: contact.phone_number,
+          category: contact.category_name,
+          notes: contact.notes,
+          contactId: contact.contact_id
+        });
+      }
+    });
+
+    const crmPhones = new Set(pipelineData.map(p => p.phone_number.replace(/\D/g, '')));
+    chats.forEach(chat => {
+      if (chat.remoteJid.endsWith('@g.us')) return;
+      const phone = chat.remoteJid.split('@')[0].replace(/\D/g, '');
+      if (!crmPhones.has(phone)) {
+        columns['Nuevo'].push({
+          type: 'chat',
+          remoteJid: chat.remoteJid,
+          name: chat.pushName || `Contacto ${phone}`,
+          phone: phone,
+          lastMsg: chat.lastMessage?.message?.conversation || chat.lastMessage?.message?.extendedTextMessage?.text || ''
+        });
+      }
+    });
+
+    return columns;
   };
 
   const activeInstancesCount = instances.filter(i => i.status === 'connected').length;
@@ -2631,11 +2752,57 @@ echo $response;`;
                                 <span>Etiquetar</span>
                                 <ChevronDown size={12} className="text-slate-400 ml-1" />
                               </button>
-                              <button className="flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all cursor-pointer whitespace-nowrap shadow-sm">
-                                <GitBranch size={13} className="text-slate-400 dark:text-slate-400" />
-                                <span>Pipeline</span>
-                                <ChevronDown size={12} className="text-slate-400 ml-1" />
-                              </button>
+                              <div className="relative">
+                                <button 
+                                  ref={pipelineButtonRef}
+                                  onClick={() => setShowPipelineDropdown(!showPipelineDropdown)}
+                                  className={`flex items-center gap-2 px-3.5 py-1.5 border rounded-xl text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap shadow-sm ${
+                                    showPipelineDropdown 
+                                      ? 'bg-brand-primary text-white border-brand-primary' 
+                                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'
+                                  }`}
+                                >
+                                  <GitBranch size={13} className={showPipelineDropdown ? "text-white" : "text-slate-400 dark:text-slate-400"} />
+                                  <span>{crmContact?.pipeline_stage || 'Pipeline'}</span>
+                                  <ChevronDown size={12} className={showPipelineDropdown ? "text-white ml-1" : "text-slate-400 ml-1"} />
+                                </button>
+                                
+                                {showPipelineDropdown && (
+                                  <div 
+                                    ref={pipelineDropdownRef}
+                                    className="absolute left-0 mt-1.5 w-48 bg-[#0b2d33] dark:bg-slate-950 rounded-2xl shadow-premium-lg border-0 py-2 z-50 animate-fadeIn"
+                                  >
+                                    <div className="px-3 py-1 text-[9px] font-bold text-slate-400 uppercase tracking-wider border-b border-white/5 mb-1">
+                                      Etapa Comercial
+                                    </div>
+                                    <div className="max-h-56 overflow-y-auto">
+                                      {PIPELINE_STAGES.map((stg) => (
+                                        <button
+                                          key={stg}
+                                          onClick={() => {
+                                            movePipelineStage(
+                                              selectedChat.remoteJid,
+                                              stg,
+                                              selectedChat.pushName || selectedChat.remoteJid.split('@')[0]
+                                            );
+                                            setShowPipelineDropdown(false);
+                                          }}
+                                          className={`w-full px-3 py-1.5 text-left text-xs font-semibold flex items-center justify-between hover:bg-white/10 transition-colors cursor-pointer ${
+                                            (crmContact?.pipeline_stage || 'Nuevo') === stg 
+                                              ? 'text-brand-primary bg-white/5' 
+                                              : 'text-white'
+                                          }`}
+                                        >
+                                          <span>{stg}</span>
+                                          {(crmContact?.pipeline_stage || 'Nuevo') === stg && (
+                                            <div className="w-1.5 h-1.5 rounded-full bg-brand-primary" />
+                                          )}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
                               <button className="flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all cursor-pointer whitespace-nowrap shadow-sm">
                                 <Grip size={13} className="text-slate-400 dark:text-slate-400" />
                                 <span>Más acciones</span>
@@ -3444,6 +3611,167 @@ echo $response;`;
                     )}
 
                   </div>
+                )}
+              </div>
+            )}
+
+            {/* PIPELINE COMERCIAL (KANBAN BOARD) */}
+            {activeTab === 'pipeline' && (
+              <div className="space-y-5 animate-fadeIn h-full flex flex-col min-h-0 text-left">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 flex-shrink-0">
+                  <div className="text-left space-y-0.5">
+                    <h3 className="text-base font-bold text-slate-800 dark:text-white">Pipeline Comercial</h3>
+                    <p className="text-xs text-surface-400">Visualiza y gestiona las etapas de tus prospectos y clientes.</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => fetchPipelineData()}
+                      disabled={pipelineLoading}
+                      className="p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-surface-600 dark:text-slate-350 rounded-xl transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5 text-xs font-bold"
+                    >
+                      <RefreshCw size={13} className={pipelineLoading ? 'animate-spin' : ''} />
+                      <span>Actualizar Tablero</span>
+                    </button>
+                  </div>
+                </div>
+
+                {pipelineLoading && pipelineData.length === 0 ? (
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center space-y-2.5">
+                      <RefreshCw size={24} className="animate-spin text-brand-primary mx-auto" />
+                      <p className="text-xs text-surface-400 font-bold">Cargando tablero comercial...</p>
+                    </div>
+                  </div>
+                ) : (
+                  (() => {
+                    const columns = getPipelineColumns();
+                    return (
+                      <div className="flex-1 overflow-x-auto pb-4 flex gap-4.5 items-start min-h-0 hide-scrollbar select-none">
+                        {PIPELINE_STAGES.map((columnName) => {
+                          const items = columns[columnName] || [];
+                          return (
+                            <div 
+                              key={columnName} 
+                              className="w-72 shrink-0 bg-slate-50/50 dark:bg-slate-900/20 border border-slate-200/50 dark:border-slate-800/80 rounded-2xl flex flex-col max-h-[72vh]"
+                            >
+                              {/* Column Header */}
+                              <div className="p-3.5 flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800/80 bg-white/40 dark:bg-slate-900/40 rounded-t-2xl">
+                                <h4 className="text-[11px] font-extrabold text-slate-800 dark:text-white uppercase tracking-wider truncate mr-2">
+                                  {columnName}
+                                </h4>
+                                <span className="bg-slate-200/80 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                  {items.length}
+                                </span>
+                              </div>
+
+                              {/* Column Body / Cards List */}
+                              <div className="flex-1 overflow-y-auto p-3 space-y-2.5 min-h-[200px]">
+                                {items.length === 0 ? (
+                                  <div className="h-28 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex items-center justify-center text-[10px] text-slate-400 font-medium">
+                                    Sin contactos
+                                  </div>
+                                ) : (
+                                  items.map((item) => {
+                                    const initials = item.name.substring(0, 2).toUpperCase();
+                                    const isCrm = item.type === 'crm';
+                                    return (
+                                      <div 
+                                        key={item.remoteJid}
+                                        className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-xl p-3 flex flex-col gap-2 hover:border-slate-300 dark:hover:border-slate-700 transition-all text-left relative group cursor-pointer"
+                                        onClick={() => {
+                                          const matchingChat = chats.find(c => c.remoteJid === item.remoteJid);
+                                          if (matchingChat) {
+                                            setSelectedChat(matchingChat);
+                                          } else {
+                                            setSelectedChat({
+                                              remoteJid: item.remoteJid,
+                                              pushName: item.name,
+                                              unreadCount: 0
+                                            });
+                                          }
+                                          setActiveTab('chats');
+                                        }}
+                                      >
+                                        <div className="flex items-start justify-between gap-2.5">
+                                          <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 rounded-full bg-[#12a160] text-white flex items-center justify-center font-bold text-xs shrink-0">
+                                              {initials}
+                                            </div>
+                                            <div className="truncate text-left">
+                                              <h5 className="text-[11px] font-extrabold text-slate-800 dark:text-white truncate uppercase tracking-tight font-sans">
+                                                {item.name}
+                                              </h5>
+                                              <span className="text-[9px] text-surface-400 font-medium block mt-0.5">
+                                                +{item.phone}
+                                              </span>
+                                            </div>
+                                          </div>
+                                          
+                                          {/* Dropdown de cambio rápido de etapa */}
+                                          <div 
+                                            className="relative flex-shrink-0"
+                                            onClick={(e) => e.stopPropagation()}
+                                          >
+                                            <button 
+                                              onClick={() => setOpenMoveDropdownJid(openMoveDropdownJid === item.remoteJid ? null : item.remoteJid)}
+                                              className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all cursor-pointer"
+                                              title="Mover de etapa"
+                                            >
+                                              <ChevronDown size={14} />
+                                            </button>
+
+                                            {openMoveDropdownJid === item.remoteJid && (
+                                              <div className="absolute right-0 mt-1 w-44 bg-[#0b2d33] dark:bg-slate-955 rounded-xl shadow-premium-lg border-0 py-1.5 z-40 animate-fadeIn">
+                                                <div className="px-2.5 py-0.5 text-[8px] font-bold text-slate-400 uppercase tracking-wider border-b border-white/5 mb-1">
+                                                  Cambiar a etapa:
+                                                </div>
+                                                {PIPELINE_STAGES.map((stg) => (
+                                                  <button
+                                                    key={stg}
+                                                    onClick={() => {
+                                                      movePipelineStage(item.remoteJid, stg, item.name);
+                                                      setOpenMoveDropdownJid(null);
+                                                    }}
+                                                    className={`w-full px-2.5 py-1.5 text-left text-[10px] font-semibold flex items-center justify-between hover:bg-white/10 transition-colors cursor-pointer ${
+                                                      columnName === stg ? 'text-brand-primary bg-white/5' : 'text-white'
+                                                    }`}
+                                                  >
+                                                    <span>{stg}</span>
+                                                    {columnName === stg && (
+                                                      <div className="w-1 h-1 rounded-full bg-brand-primary" />
+                                                    )}
+                                                  </button>
+                                                ))}
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+
+                                        {isCrm && item.category && (
+                                          <div className="flex mt-1">
+                                            <span className="px-1.5 py-0.5 bg-pastel-100/50 dark:bg-brand-primary/10 text-brand-secondary dark:text-brand-primary text-[8.5px] font-bold rounded-md">
+                                              {item.category}
+                                            </span>
+                                          </div>
+                                        )}
+                                        
+                                        {!isCrm && item.lastMsg && (
+                                          <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-1 leading-normal italic font-sans">
+                                            {item.lastMsg}
+                                          </p>
+                                        )}
+                                      </div>
+                                    );
+                                  })
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()
                 )}
               </div>
             )}

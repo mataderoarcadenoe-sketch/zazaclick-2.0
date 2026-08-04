@@ -557,4 +557,81 @@ router.get('/clients/:clientId/contacts', async (req: AuthenticatedRequest, res:
   }
 });
 
+/**
+ * GET /api/crm/pipeline - Obtener todos los contactos con su etapa en el pipeline comercial
+ */
+router.get('/pipeline', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.userId;
+    // Listar todos los contactos de este usuario con su información de cliente y categoría
+    const contacts = await pool.query(
+      `SELECT c.id as contact_id, c.phone_number, c.pipeline_stage, c.is_active,
+              cl.id as client_id, cl.name as client_name, cl.doc_type, cl.doc_number, cl.email, cl.notes,
+              cat.name as category_name
+       FROM crm_contacts c
+       JOIN crm_clients cl ON c.client_id = cl.id
+       LEFT JOIN crm_contact_categories cat ON c.category_id = cat.id
+       WHERE c.user_id = $1`,
+      [userId]
+    );
+
+    return res.json({ success: true, data: contacts.rows });
+  } catch (error: any) {
+    console.error('[CRM Pipeline] Error en GET /pipeline:', error.message);
+    return res.status(500).json({ success: false, error: 'Error al obtener pipeline comercial.' });
+  }
+});
+
+/**
+ * POST /api/crm/pipeline/move - Cambiar o asignar la etapa del pipeline para un contacto/conversación
+ */
+router.post('/pipeline/move', async (req: AuthenticatedRequest, res: Response) => {
+  const { remoteJid, stage, pushName } = req.body;
+  if (!remoteJid || !stage) {
+    return res.status(400).json({ success: false, error: 'remoteJid y stage son obligatorios.' });
+  }
+
+  const userId = req.userId;
+  const phoneNumber = remoteJid.replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net').split('@')[0];
+
+  try {
+    // 1. Buscar si el contacto ya existe
+    const contactCheck = await pool.query(
+      'SELECT id, client_id FROM crm_contacts WHERE user_id = $1 AND phone_number = $2',
+      [userId, phoneNumber]
+    );
+
+    if (contactCheck.rows.length > 0) {
+      // Ya existe, actualizamos su pipeline_stage
+      await pool.query(
+        'UPDATE crm_contacts SET pipeline_stage = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2 AND phone_number = $3',
+        [stage, userId, phoneNumber]
+      );
+      return res.json({ success: true, message: 'Etapa del pipeline actualizada exitosamente.' });
+    } else {
+      // No existe, creamos el cliente y contacto automáticamente
+      const clientName = pushName || `Contacto ${phoneNumber}`;
+      
+      const clientResult = await pool.query(
+        `INSERT INTO crm_clients (user_id, doc_type, doc_number, name, notes)
+         VALUES ($1, 'MANUAL', $2, $3, 'Creado automáticamente desde el Pipeline Comercial')
+         RETURNING id`,
+        [userId, phoneNumber, clientName]
+      );
+      const clientId = clientResult.rows[0].id;
+
+      await pool.query(
+        `INSERT INTO crm_contacts (client_id, user_id, phone_number, pipeline_stage)
+         VALUES ($1, $2, $3, $4)`,
+        [clientId, userId, phoneNumber, stage]
+      );
+
+      return res.json({ success: true, message: 'Contacto registrado y asignado al pipeline exitosamente.' });
+    }
+  } catch (error: any) {
+    console.error('[CRM Pipeline Move] Error:', error.message);
+    return res.status(500).json({ success: false, error: 'Error al mover el contacto en el pipeline.' });
+  }
+});
+
 export default router;
