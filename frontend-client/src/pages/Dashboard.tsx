@@ -2866,36 +2866,36 @@ echo $response;`;
 
                     {/* CRM Sidebar Pane */}
                     {selectedChat && showCrmSidebar && !selectedChat.remoteJid.endsWith('@g.us') && (
-                      <div className="md:col-span-3 border-l border-slate-200/50 dark:border-slate-800/50 flex flex-col min-h-0 bg-slate-50/45 dark:bg-slate-950/20 p-4 overflow-y-auto space-y-4 text-left">
+                      <div className="md:col-span-3 border-l border-slate-200/50 dark:border-slate-800/50 flex flex-col min-h-0 bg-slate-50/45 dark:bg-slate-955 p-4 overflow-y-auto space-y-4 text-left">
                         {/* Header */}
-                        <div className="flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800/50 pb-3">
-                          <h3 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Detalles del Cliente</h3>
+                        <div className="flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800/50 pb-2.5">
+                          <h3 className="text-[11px] font-bold text-slate-800 dark:text-white uppercase tracking-wider">Detalles del Cliente</h3>
                           <button 
                             type="button" 
                             onClick={() => setShowCrmSidebar(false)}
                             className="p-1 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 rounded-lg transition-colors text-slate-400 cursor-pointer"
                             title="Ocultar Panel"
                           >
-                            <X size={14} />
+                            <X size={13} />
                           </button>
                         </div>
 
                         {crmLoading ? (
-                          <div className="py-8 text-center text-xs text-slate-400 animate-pulse">Cargando datos CRM...</div>
+                          <div className="py-8 text-center text-[11px] text-slate-400 animate-pulse">Cargando datos CRM...</div>
                         ) : (
-                          <div className="space-y-4">
+                          <div className="space-y-3.5">
                             {/* Contact info card (Display Mode) */}
                             {!crmIsEditing && crmClient ? (
-                              <div className="space-y-4">
+                              <div className="space-y-3.5">
                                 {/* Display client details */}
-                                <div className="bg-white dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 space-y-3 shadow-sm">
-                                  <div className="flex items-center gap-2.5">
-                                    <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-[#00d29f]">
-                                      {crmClient.doc_type === 'RUC' ? <Users size={16} /> : <MessageCircle size={16} />}
+                                <div className="bg-white dark:bg-slate-900/60 p-3 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 space-y-2.5 shadow-sm">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-7 h-7 rounded-xl bg-emerald-500/10 flex items-center justify-center text-[#00d29f]">
+                                      {crmClient.doc_type === 'RUC' ? <Users size={14} /> : <MessageCircle size={14} />}
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                      <h4 className="text-xs font-bold text-slate-800 dark:text-white leading-tight truncate">{crmClient.name}</h4>
-                                      <span className="text-[10px] text-slate-400 font-semibold block truncate">
+                                      <h4 className="text-[11px] font-bold text-slate-800 dark:text-white leading-tight truncate">{crmClient.name}</h4>
+                                      <span className="text-[9px] text-slate-400 font-bold block truncate mt-0.5">
                                         {crmClient.doc_type !== 'MANUAL' ? `${crmClient.doc_type}: ${crmClient.doc_number}` : 'Registro Manual'}
                                       </span>
                                     </div>
@@ -2903,20 +2903,20 @@ echo $response;`;
 
                                   {crmClient.address && (
                                     <div className="space-y-0.5">
-                                      <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block">Dirección Fiscal</span>
-                                      <p className="text-[11px] text-slate-700 dark:text-slate-300 font-medium leading-normal">{crmClient.address}</p>
+                                      <span className="text-[8.5px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block">Dirección Fiscal</span>
+                                      <p className="text-[10px] text-slate-700 dark:text-slate-300 font-medium leading-normal">{crmClient.address}</p>
                                     </div>
                                   )}
 
                                   {crmClient.email && (
                                     <div className="space-y-0.5">
-                                      <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block">Email</span>
-                                      <p className="text-[11px] text-slate-700 dark:text-slate-300 font-medium truncate">{crmClient.email}</p>
+                                      <span className="text-[8.5px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block">Email</span>
+                                      <p className="text-[10px] text-slate-700 dark:text-slate-300 font-medium truncate">{crmClient.email}</p>
                                     </div>
                                   )}
 
                                   <div className="space-y-0.5">
-                                    <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block">Categoría de Contacto</span>
+                                    <span className="text-[8.5px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block">Categoría de Contacto</span>
                                     <span className="inline-flex px-2 py-0.5 bg-emerald-500/10 text-[#00d29f] text-[9px] font-bold rounded-full mt-0.5 border border-emerald-500/15">
                                       {crmContact?.category_name || 'Sin Categoría'}
                                     </span>
@@ -2924,9 +2924,9 @@ echo $response;`;
                                 </div>
 
                                 {crmClient.notes && (
-                                  <div className="bg-slate-100/50 dark:bg-slate-900/40 p-3 rounded-2xl border border-slate-200/20 dark:border-slate-800/10 space-y-1">
-                                    <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block">Notas Comerciales</span>
-                                    <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium leading-relaxed whitespace-pre-line">{crmClient.notes}</p>
+                                  <div className="bg-slate-100/50 dark:bg-slate-900/40 p-2.5 rounded-2xl border border-slate-200/20 dark:border-slate-800/10 space-y-0.5">
+                                    <span className="text-[8.5px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block">Notas Comerciales</span>
+                                    <p className="text-[10px] text-slate-600 dark:text-slate-400 font-medium leading-relaxed whitespace-pre-line">{crmClient.notes}</p>
                                   </div>
                                 )}
 
@@ -2942,25 +2942,25 @@ echo $response;`;
                                     setCrmCategoryId(crmContact?.category_id?.toString() || '');
                                     setCrmIsEditing(true);
                                   }}
-                                  className="w-full py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white text-xs font-bold rounded-xl transition-all cursor-pointer text-center"
+                                  className="w-full py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white text-[11px] font-bold rounded-xl transition-all cursor-pointer text-center"
                                 >
                                   Editar Datos
                                 </button>
                               </div>
                             ) : (
                               /* Create / Edit Form Mode */
-                              <div className="space-y-3.5">
-                                <div className="space-y-1.5 text-left">
-                                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Identificación DNI / RUC</label>
+                              <div className="space-y-3">
+                                <div className="space-y-1 text-left">
+                                  <label className="text-[8.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Identificación DNI / RUC</label>
                                   <div className="flex gap-1.5">
                                     <div className="relative">
                                       <button
                                         type="button"
                                         onClick={() => setIsDocTypeDropdownOpen(!isDocTypeDropdownOpen)}
-                                        className="flex items-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-all cursor-pointer min-w-[75px] justify-between shadow-premium-sm focus:outline-none"
+                                        className="flex items-center gap-1 px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-all cursor-pointer min-w-[65px] justify-between shadow-premium-sm focus:outline-none"
                                       >
                                         <span>{crmDocType}</span>
-                                        <ChevronDown size={12} className={`text-slate-400 transition-transform duration-200 ${isDocTypeDropdownOpen ? 'rotate-180' : ''}`} />
+                                        <ChevronDown size={10} className={`text-slate-400 transition-transform duration-200 ${isDocTypeDropdownOpen ? 'rotate-180' : ''}`} />
                                       </button>
 
                                       {isDocTypeDropdownOpen && (
@@ -2969,7 +2969,7 @@ echo $response;`;
                                             className="fixed inset-0 z-30" 
                                             onClick={() => setIsDocTypeDropdownOpen(false)} 
                                           />
-                                          <div className="absolute left-0 mt-1.5 w-28 bg-white dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800/80 shadow-premium-lg py-1 z-40 animate-fadeIn">
+                                          <div className="absolute left-0 mt-1 w-24 bg-white dark:bg-slate-955 rounded-xl border border-slate-100 dark:border-slate-800 shadow-premium-lg py-1 z-40 animate-fadeIn">
                                             <button
                                               type="button"
                                               onClick={() => {
@@ -2979,7 +2979,7 @@ echo $response;`;
                                                 setCrmAddress('');
                                                 setIsDocTypeDropdownOpen(false);
                                               }}
-                                              className={`w-full text-left px-3 py-2 text-xs font-semibold hover:bg-emerald-500/10 hover:text-[#00d29f] transition-colors cursor-pointer ${crmDocType === 'DNI' ? 'text-[#00d29f] bg-emerald-500/5 font-bold' : 'text-slate-700 dark:text-slate-200'}`}
+                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-emerald-500/10 hover:text-[#00d29f] transition-colors cursor-pointer ${crmDocType === 'DNI' ? 'text-[#00d29f] bg-emerald-500/5' : 'text-slate-700 dark:text-slate-200'}`}
                                             >
                                               DNI
                                             </button>
@@ -2992,7 +2992,7 @@ echo $response;`;
                                                 setCrmAddress('');
                                                 setIsDocTypeDropdownOpen(false);
                                               }}
-                                              className={`w-full text-left px-3 py-2 text-xs font-semibold hover:bg-emerald-500/10 hover:text-[#00d29f] transition-colors cursor-pointer ${crmDocType === 'RUC' ? 'text-[#00d29f] bg-emerald-500/5 font-bold' : 'text-slate-700 dark:text-slate-200'}`}
+                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-emerald-500/10 hover:text-[#00d29f] transition-colors cursor-pointer ${crmDocType === 'RUC' ? 'text-[#00d29f] bg-emerald-500/5' : 'text-slate-700 dark:text-slate-200'}`}
                                             >
                                               RUC
                                             </button>
@@ -3014,7 +3014,7 @@ echo $response;`;
                                             setTimeout(() => handleValidateCrmDoc(val), 0);
                                           }
                                         }}
-                                        className="w-full pl-3 pr-8 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none"
+                                        className="w-full pl-2.5 pr-8 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none font-medium"
                                       />
                                       {crmDocNumber.trim() && (
                                         <button
@@ -3025,9 +3025,9 @@ echo $response;`;
                                           title="Consultar APIPeru"
                                         >
                                           {crmValidationLoading ? (
-                                            <RefreshCw size={12} className="animate-spin text-[#00d29f]" />
+                                            <RefreshCw size={11} className="animate-spin text-[#00d29f]" />
                                           ) : (
-                                            <Search size={12} />
+                                            <Search size={11} />
                                           )}
                                         </button>
                                       )}
@@ -3036,29 +3036,29 @@ echo $response;`;
                                 </div>
 
                                 <div className="space-y-1 text-left">
-                                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Nombre / Razón Social</label>
+                                  <label className="text-[8.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Nombre / Razón Social</label>
                                   <input
                                     type="text"
                                     placeholder="Nombre completo o Empresa"
                                     value={crmName}
                                     onChange={(e) => setCrmName(e.target.value)}
-                                    className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none"
+                                    className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none font-medium"
                                   />
                                 </div>
 
                                 <div className="space-y-1 text-left">
-                                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Categoría de Contacto</label>
+                                  <label className="text-[8.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Categoría de Contacto</label>
                                   <div className="flex gap-1.5">
                                     <div className="flex-1 relative">
                                       <button
                                         type="button"
                                         onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
-                                        className="w-full flex items-center justify-between px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-all cursor-pointer shadow-premium-sm focus:outline-none"
+                                        className="w-full flex items-center justify-between px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-all cursor-pointer shadow-premium-sm focus:outline-none"
                                       >
                                         <span>
                                           {crmCategories.find(c => c.id.toString() === crmCategoryId)?.name || 'Sin Categoría'}
                                         </span>
-                                        <ChevronDown size={13} className={`text-slate-400 transition-transform duration-200 ${isCategoryDropdownOpen ? 'rotate-180' : ''}`} />
+                                        <ChevronDown size={11} className={`text-slate-400 transition-transform duration-200 ${isCategoryDropdownOpen ? 'rotate-180' : ''}`} />
                                       </button>
 
                                       {isCategoryDropdownOpen && (
@@ -3067,14 +3067,14 @@ echo $response;`;
                                             className="fixed inset-0 z-30" 
                                             onClick={() => setIsCategoryDropdownOpen(false)} 
                                           />
-                                          <div className="absolute left-0 right-0 mt-1.5 bg-white dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800/80 shadow-premium-lg py-1.5 z-40 max-h-48 overflow-y-auto animate-fadeIn">
+                                          <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-slate-955 rounded-xl border border-slate-100 dark:border-slate-800 shadow-premium-lg py-1 z-40 max-h-40 overflow-y-auto animate-fadeIn">
                                             <button
                                               type="button"
                                               onClick={() => {
                                                 setCrmCategoryId('');
                                                 setIsCategoryDropdownOpen(false);
                                               }}
-                                              className={`w-full text-left px-3.5 py-2 text-xs font-semibold hover:bg-emerald-500/10 hover:text-[#00d29f] transition-colors cursor-pointer ${crmCategoryId === '' ? 'text-[#00d29f] bg-emerald-500/5 font-bold' : 'text-slate-700 dark:text-slate-200'}`}
+                                              className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-emerald-500/10 hover:text-[#00d29f] transition-colors cursor-pointer ${crmCategoryId === '' ? 'text-[#00d29f] bg-emerald-500/5' : 'text-slate-700 dark:text-slate-200'}`}
                                             >
                                               Sin Categoría
                                             </button>
@@ -3086,7 +3086,7 @@ echo $response;`;
                                                   setCrmCategoryId(cat.id.toString());
                                                   setIsCategoryDropdownOpen(false);
                                                 }}
-                                                className={`w-full text-left px-3.5 py-2 text-xs font-semibold hover:bg-emerald-500/10 hover:text-[#00d29f] transition-colors cursor-pointer ${crmCategoryId === cat.id.toString() ? 'text-[#00d29f] bg-emerald-500/5 font-bold' : 'text-slate-700 dark:text-slate-200'}`}
+                                                className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-emerald-500/10 hover:text-[#00d29f] transition-colors cursor-pointer ${crmCategoryId === cat.id.toString() ? 'text-[#00d29f] bg-emerald-500/5' : 'text-slate-700 dark:text-slate-200'}`}
                                               >
                                                 {cat.name}
                                               </button>
@@ -3098,46 +3098,46 @@ echo $response;`;
                                     <button
                                       type="button"
                                       onClick={() => setCrmCategoriesModalOpen(true)}
-                                      className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-xl transition-colors cursor-pointer"
+                                      className="p-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-xl transition-colors cursor-pointer flex items-center justify-center"
                                       title="Gestionar Categorías"
                                     >
-                                      <Settings size={14} />
+                                      <Settings size={13} />
                                     </button>
                                   </div>
                                 </div>
 
                                 {crmDocType === 'RUC' && (
                                   <div className="space-y-1 text-left">
-                                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Dirección Fiscal</label>
+                                    <label className="text-[8.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Dirección Fiscal</label>
                                     <textarea
                                       placeholder="Dirección fiscal SUNAT"
                                       rows={2}
                                       value={crmAddress}
                                       onChange={(e) => setCrmAddress(e.target.value)}
-                                      className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none resize-none font-medium"
+                                      className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none resize-none font-medium"
                                     />
                                   </div>
                                 )}
 
                                 <div className="space-y-1 text-left">
-                                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Email</label>
+                                  <label className="text-[8.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Email</label>
                                   <input
                                     type="email"
                                     placeholder="correo@ejemplo.com"
                                     value={crmEmail}
                                     onChange={(e) => setCrmEmail(e.target.value)}
-                                    className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none font-medium"
+                                    className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none font-medium"
                                   />
                                 </div>
 
                                 <div className="space-y-1 text-left">
-                                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Notas de Negocio</label>
+                                  <label className="text-[8.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Notas de Negocio</label>
                                   <textarea
                                     placeholder="Acuerdos, precios, descuentos especiales..."
                                     rows={3}
                                     value={crmNotes}
                                     onChange={(e) => setCrmNotes(e.target.value)}
-                                    className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none resize-none font-medium"
+                                    className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none resize-none font-medium"
                                   />
                                 </div>
 
@@ -3146,7 +3146,7 @@ echo $response;`;
                                     <button
                                       type="button"
                                       onClick={() => setCrmIsEditing(false)}
-                                      className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                                      className="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-450 text-[11px] font-bold rounded-xl transition-all cursor-pointer"
                                     >
                                       Cancelar
                                     </button>
@@ -3155,7 +3155,7 @@ echo $response;`;
                                     type="button"
                                     onClick={() => handleSaveCrmContact()}
                                     disabled={crmSaving}
-                                    className="flex-1 py-2 bg-[#00d29f] hover:bg-[#00b88b] text-white text-xs font-bold rounded-xl transition-all disabled:opacity-50 cursor-pointer text-center"
+                                    className="flex-1 py-1.5 bg-[#00d29f] hover:bg-[#00b88b] text-white text-[11px] font-bold rounded-xl transition-all disabled:opacity-50 cursor-pointer text-center"
                                   >
                                     {crmSaving ? 'Guardando...' : 'Guardar Ficha'}
                                   </button>
