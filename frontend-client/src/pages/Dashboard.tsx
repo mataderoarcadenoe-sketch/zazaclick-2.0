@@ -146,6 +146,7 @@ export default function DashboardPage() {
 
   // API Docs Language selection
   const [docLang, setDocLang] = useState<'curl' | 'js' | 'python' | 'php'>('curl');
+  const [docTab, setDocTab] = useState<'text' | 'media' | 'create-group' | 'participants-group' | 'invite-group'>('text');
 
   // Chat States
   const [selectedInstanceForChats, setSelectedInstanceForChats] = useState<string>('');
@@ -1313,17 +1314,65 @@ export default function DashboardPage() {
   // API Documentation text generator
   const getDocCode = () => {
     const selectedInst = instances[0] || { instance_name: 'mi_instancia', api_key: 'tu_api_key' };
-    const payload = JSON.stringify({
-      instanceName: selectedInst.instance_name,
-      apiKey: selectedInst.api_key,
-      number: "51987654321",
-      text: "Hola, este es un mensaje automático."
-    }, null, 2);
+    
+    let path = '';
+    let method = 'POST';
+    let payloadObj: any = {};
+    let queryParamsStr = '';
+
+    if (docTab === 'text') {
+      path = '/api/instances/send';
+      method = 'POST';
+      payloadObj = {
+        instanceName: selectedInst.instance_name,
+        apiKey: selectedInst.api_key,
+        number: '51987654321',
+        text: 'Hola, este es un mensaje automático.'
+      };
+    } else if (docTab === 'media') {
+      path = '/api/instances/send-media';
+      method = 'POST';
+      payloadObj = {
+        instanceName: selectedInst.instance_name,
+        apiKey: selectedInst.api_key,
+        number: '51987654321',
+        mediaUrl: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5',
+        mediaType: 'image',
+        caption: 'Mira esta imagen enviada desde el API 🎨'
+      };
+    } else if (docTab === 'create-group') {
+      path = `/api/instances/groups/${selectedInst.instance_name}/create`;
+      method = 'POST';
+      payloadObj = {
+        subject: 'Mi Grupo de Ventas 🚀',
+        participants: ['51987654321', '51912345678']
+      };
+    } else if (docTab === 'participants-group') {
+      path = `/api/instances/groups/${selectedInst.instance_name}/participants`;
+      method = 'PUT';
+      payloadObj = {
+        groupJid: '1203630248384@g.us',
+        action: 'add',
+        participants: ['51987654321@s.whatsapp.net']
+      };
+    } else if (docTab === 'invite-group') {
+      path = `/api/instances/groups/${selectedInst.instance_name}/invite-code`;
+      method = 'GET';
+      queryParamsStr = '?groupJid=1203630248384@g.us';
+    }
+
+    const payload = JSON.stringify(payloadObj, null, 2);
 
     switch (docLang) {
       case 'js':
-        return `fetch('${currentBackendUrl}/api/instances/send', {
-  method: 'POST',
+        if (method === 'GET') {
+          return `fetch('${currentBackendUrl}${path}${queryParamsStr}')
+.then(res => res.json())
+.then(data => console.log(data))
+.catch(err => console.error(err));`;
+        }
+        return `fetch('${currentBackendUrl}${path}', {
+  method: '${method}',
   headers: {
     'Content-Type': 'application/json'
   },
@@ -1334,26 +1383,52 @@ export default function DashboardPage() {
 .catch(err => console.error(err));`;
 
       case 'python':
+        if (method === 'GET') {
+          return `import requests
+
+url = "${currentBackendUrl}${path}"
+params = {
+    "groupJid": "1203630248384@g.us"
+}
+
+response = requests.get(url, params=params)
+print(response.json())`;
+        }
         return `import requests
 
-url = "${currentBackendUrl}/api/instances/send"
+url = "${currentBackendUrl}${path}"
 payload = ${payload}
 headers = {
     "Content-Type": "application/json"
 }
 
-response = requests.post(url, json=payload, headers=headers)
+response = requests.${method.toLowerCase()}(url, json=payload, headers=headers)
 print(response.json())`;
 
       case 'php':
+        if (method === 'GET') {
+          return `<?php
+
+$curl = curl_init();
+
+curl_setopt_array($curl, [
+  CURLOPT_URL => "${currentBackendUrl}${path}${queryParamsStr}",
+  CURLOPT_RETURNTRANSFER => true,
+  CURLOPT_CUSTOMREQUEST => "GET",
+]);
+
+$response = curl_exec($curl);
+curl_close($curl);
+echo $response;`;
+        }
         return `<?php
 
 $curl = curl_init();
 
 curl_setopt_array($curl, [
-  CURLOPT_URL => "${currentBackendUrl}/api/instances/send",
+  CURLOPT_URL => "${currentBackendUrl}${path}",
   CURLOPT_RETURNTRANSFER => true,
-  CURLOPT_CUSTOMREQUEST => "POST",
+  CURLOPT_CUSTOMREQUEST => "${method}",
   CURLOPT_POSTFIELDS => '${payload.replace(/'/g, "\\'")}',
   CURLOPT_HTTPHEADER => [
     "Content-Type: application/json"
@@ -1366,7 +1441,10 @@ echo $response;`;
 
       case 'curl':
       default:
-        return `curl -X POST "${currentBackendUrl}/api/instances/send" \\
+        if (method === 'GET') {
+          return `curl -X GET "${currentBackendUrl}${path}${queryParamsStr}"`;
+        }
+        return `curl -X ${method} "${currentBackendUrl}${path}" \\
   -H "Content-Type: application/json" \\
   -d '${payload}'`;
     }
@@ -3147,6 +3225,7 @@ echo $response;`;
             )}
 
             {/* API DOCUMENTATION SECTION */}
+            {/* DOCUMENTATION SECTION */}
             {activeTab === 'docs' && (
               <div className="space-y-6 animate-fadeIn text-left">
                 <div className="space-y-0.5">
@@ -3154,59 +3233,160 @@ echo $response;`;
                   <p className="text-xs text-slate-400">Ejemplos para conectar el API de envío con tus sistemas internos y plataformas externas.</p>
                 </div>
 
-                <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 space-y-5">
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800/60 pb-3">
-                    <span className="text-xs font-bold uppercase tracking-widest text-slate-500">Enviar Mensaje de Texto</span>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                  
+                  {/* Left Column: API endpoints sub-tabs */}
+                  <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 space-y-3 shadow-sm">
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 pb-2 border-b border-slate-100 dark:border-slate-800/40">
+                      Endpoints Disponibles
+                    </h4>
                     
-                    {/* Language Selector */}
-                    <div className="flex bg-slate-100 dark:bg-slate-950 p-0.5 rounded-xl text-[10px] font-bold">
-                      {(['curl', 'js', 'python', 'php'] as const).map(lang => (
-                        <button
-                          key={lang}
-                          onClick={() => setDocLang(lang)}
-                          className={`px-3 py-1.5 rounded-lg uppercase transition-all cursor-pointer ${
-                            docLang === lang 
-                              ? 'bg-white dark:bg-slate-900 text-slate-800 dark:text-white shadow-sm' 
-                              : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-                          }`}
-                        >
-                          {lang === 'js' ? 'Fetch JS' : lang}
-                        </button>
-                      ))}
+                    <div className="space-y-2">
+                      {[
+                        { id: 'text', label: 'Enviar Mensaje Texto', method: 'POST', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
+                        { id: 'media', label: 'Enviar Mensaje Media', method: 'POST', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
+                        { id: 'create-group', label: 'Crear Grupo WhatsApp', method: 'POST', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
+                        { id: 'participants-group', label: 'Administrar Miembros', method: 'PUT', color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400' },
+                        { id: 'invite-group', label: 'Obtener Link Grupo', method: 'GET', color: 'bg-sky-500/10 text-sky-600 dark:text-sky-400' },
+                      ].map(endpoint => {
+                        const isActive = docTab === endpoint.id;
+                        return (
+                          <button
+                            key={endpoint.id}
+                            onClick={() => setDocTab(endpoint.id as any)}
+                            className={`w-full p-3 rounded-xl flex items-center justify-between gap-3 text-left transition-all border cursor-pointer ${
+                              isActive
+                                ? 'bg-slate-50 dark:bg-slate-800/40 border-[#00a884]/30'
+                                : 'bg-transparent border-transparent hover:bg-slate-50/50 dark:hover:bg-slate-850'
+                            }`}
+                          >
+                            <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{endpoint.label}</span>
+                            <span className={`px-2 py-0.5 rounded text-[8.5px] font-bold ${endpoint.color}`}>
+                              {endpoint.method}
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                      Realiza un HTTP request de tipo <code>POST</code> hacia la URI del servicio. Recuerda incluir las credenciales correctas en el cuerpo JSON:
-                    </p>
-
-                    {/* Code Container */}
-                    <div className="relative group">
-                      <pre className="bg-slate-950 text-emerald-400 dark:text-emerald-300 font-mono text-[10.5px] p-5 rounded-2xl overflow-x-auto leading-relaxed shadow-inner">
-                        {getDocCode()}
-                      </pre>
+                  {/* Right Column: Endpoint Code Details */}
+                  <div className="lg:col-span-8 bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 space-y-5 shadow-sm">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800/60 pb-3">
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-800 dark:text-white">
+                          {docTab === 'text' && 'Enviar Mensaje de Texto'}
+                          {docTab === 'media' && 'Enviar Mensaje con Media (Imagen/Video/Doc)'}
+                          {docTab === 'create-group' && 'Crear Grupo de WhatsApp'}
+                          {docTab === 'participants-group' && 'Administrar Miembros en Grupo'}
+                          {docTab === 'invite-group' && 'Obtener Enlace de Invitación'}
+                        </h4>
+                        <span className="text-[10px] text-slate-400 block mt-0.5">
+                          {docTab === 'text' && 'Endpoint para envíos de texto plano masivos o individuales'}
+                          {docTab === 'media' && 'Soporta el envío de archivos adjuntos usando URLs públicas'}
+                          {docTab === 'create-group' && 'Crea un grupo de WhatsApp y agrega miembros automáticamente'}
+                          {docTab === 'participants-group' && 'Añade, elimina, promueve o degrada administradores en un grupo'}
+                          {docTab === 'invite-group' && 'Genera el enlace público de invitación oficial del grupo'}
+                        </span>
+                      </div>
                       
-                      <button
-                        onClick={() => copyToClipboard(getDocCode())}
-                        className="absolute top-3 right-3 p-2 bg-slate-900/60 hover:bg-slate-900 text-slate-400 hover:text-white rounded-lg hover-lift shadow transition-all cursor-pointer opacity-100 group-hover:opacity-100"
-                        title="Copiar código"
-                      >
-                        <Copy size={13} />
-                      </button>
+                      {/* Language Selector */}
+                      <div className="flex bg-slate-100 dark:bg-slate-950 p-0.5 rounded-xl text-[10px] font-bold">
+                        {(['curl', 'js', 'python', 'php'] as const).map(lang => (
+                          <button
+                            key={lang}
+                            onClick={() => setDocLang(lang)}
+                            className={`px-3 py-1.5 rounded-lg uppercase transition-all cursor-pointer ${
+                              docLang === lang 
+                                ? 'bg-white dark:bg-slate-900 text-slate-800 dark:text-white shadow-sm' 
+                                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                            }`}
+                          >
+                            {lang === 'js' ? 'Fetch JS' : lang}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Method & Path Display Box */}
+                    <div className="p-3 bg-slate-50 dark:bg-slate-950/40 rounded-2xl flex items-center gap-3">
+                      <span className={`px-2.5 py-1 rounded-xl text-[10px] font-bold ${
+                        docTab === 'invite-group' 
+                          ? 'bg-sky-500/10 text-sky-600 dark:text-sky-400' 
+                          : docTab === 'participants-group' 
+                            ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                            : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                      }`}>
+                        {docTab === 'invite-group' ? 'GET' : docTab === 'participants-group' ? 'PUT' : 'POST'}
+                      </span>
+                      <span className="text-xs font-mono text-slate-600 dark:text-slate-300 select-all truncate">
+                        {currentBackendUrl}
+                        {docTab === 'text' && '/api/instances/send'}
+                        {docTab === 'media' && '/api/instances/send-media'}
+                        {docTab === 'create-group' && '/api/instances/groups/{instanceName}/create'}
+                        {docTab === 'participants-group' && '/api/instances/groups/{instanceName}/participants'}
+                        {docTab === 'invite-group' && '/api/instances/groups/{instanceName}/invite-code?groupJid={groupJid}'}
+                      </span>
+                    </div>
+
+                    <div className="space-y-3">
+                      <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                        Realiza una petición HTTP hacia la URI indicada. Asegúrate de pasar las credenciales de la instancia correctas:
+                      </p>
+
+                      {/* Code Container */}
+                      <div className="relative group">
+                        <pre className="bg-slate-950 text-emerald-400 dark:text-emerald-300 font-mono text-[10.5px] p-5 rounded-2xl overflow-x-auto leading-relaxed shadow-inner">
+                          {getDocCode()}
+                        </pre>
+                        
+                        <button
+                          onClick={() => copyToClipboard(getDocCode())}
+                          className="absolute top-3 right-3 p-2 bg-slate-900/60 hover:bg-slate-900 text-slate-400 hover:text-white rounded-lg hover-lift shadow transition-all cursor-pointer opacity-100 group-hover:opacity-100"
+                          title="Copiar código"
+                        >
+                          <Copy size={13} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* API response specifications */}
+                    <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800/40">
+                      <h5 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider font-bold">Respuesta Esperada (JSON)</h5>
+                      <pre className="bg-slate-50 dark:bg-slate-950/40 p-4 rounded-xl font-mono text-[10px] text-slate-600 dark:text-slate-400 overflow-x-auto">
+                        {docTab === 'text' && JSON.stringify({
+                          success: true,
+                          message: "Mensaje enviado exitosamente en vivo 🚀"
+                        }, null, 2)}
+                        {docTab === 'media' && JSON.stringify({
+                          success: true,
+                          message: "Mensaje enviado exitosamente en vivo 🚀"
+                        }, null, 2)}
+                        {docTab === 'create-group' && JSON.stringify({
+                          success: true,
+                          message: "Grupo creado exitosamente",
+                          data: {
+                            id: "1203630248384@g.us",
+                            participants: [
+                              "51987654321@s.whatsapp.net",
+                              "51912345678@s.whatsapp.net"
+                            ]
+                          }
+                        }, null, 2)}
+                        {docTab === 'participants-group' && JSON.stringify({
+                          success: true,
+                          message: "Participante actualizado correctamente"
+                        }, null, 2)}
+                        {docTab === 'invite-group' && JSON.stringify({
+                          success: true,
+                          data: {
+                            code: "Fk8Y2bLp0QzX..."
+                          }
+                        }, null, 2)}
+                      </pre>
                     </div>
                   </div>
 
-                  {/* API response specifications */}
-                  <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800/40">
-                    <h5 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Respuesta Esperada (JSON)</h5>
-                    <pre className="bg-slate-50 dark:bg-slate-950/40 p-4 rounded-xl font-mono text-[10px] text-slate-600 dark:text-slate-400 overflow-x-auto">
-{`{
-  "success": true,
-  "message": "Mensaje enviado exitosamente en vivo 🚀"
-}`}
-                    </pre>
-                  </div>
                 </div>
               </div>
             )}
