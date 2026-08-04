@@ -2743,12 +2743,12 @@ echo $response;`;
                             
                             {/* Bottom Row - Actions Toolbar */}
                             <div className="px-4 py-2.5 flex items-center gap-2.5 overflow-x-auto hide-scrollbar bg-slate-50/50 dark:bg-slate-900/50">
-                              <button className="flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all cursor-pointer whitespace-nowrap shadow-sm">
+                              <button className="flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all cursor-pointer whitespace-nowrap">
                                 <User size={13} className="text-slate-400 dark:text-slate-400" />
                                 <span>Asignar</span>
                                 <ChevronDown size={12} className="text-slate-400 ml-1" />
                               </button>
-                              <button className="flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all cursor-pointer whitespace-nowrap shadow-sm">
+                              <button className="flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all cursor-pointer whitespace-nowrap">
                                 <Tag size={13} className="text-slate-400 dark:text-slate-400" />
                                 <span>Etiquetar</span>
                                 <ChevronDown size={12} className="text-slate-400 ml-1" />
@@ -2757,7 +2757,7 @@ echo $response;`;
                                 <button 
                                   ref={pipelineButtonRef}
                                   onClick={() => setShowPipelineDropdown(!showPipelineDropdown)}
-                                  className={`flex items-center gap-2 px-3.5 py-1.5 border rounded-xl text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap shadow-sm ${
+                                  className={`flex items-center gap-2 px-3.5 py-1.5 border rounded-xl text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap ${
                                     showPipelineDropdown 
                                       ? 'bg-brand-primary text-white border-brand-primary' 
                                       : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'
@@ -2804,7 +2804,7 @@ echo $response;`;
                                   </div>
                                 )}
                               </div>
-                              <button className="flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all cursor-pointer whitespace-nowrap shadow-sm">
+                              <button className="flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all cursor-pointer whitespace-nowrap">
                                 <Grip size={13} className="text-slate-400 dark:text-slate-400" />
                                 <span>Más acciones</span>
                                 <ChevronDown size={12} className="text-slate-400 ml-1" />
