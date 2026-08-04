@@ -2261,7 +2261,7 @@ echo $response;`;
                       </button>
 
                       {showChatsInstanceMenu && (
-                        <div className="absolute top-[100%] right-0 mt-1.5 z-50 bg-white dark:bg-slate-900 rounded-2xl shadow-premium-lg p-1.5 flex flex-col gap-1 min-w-[200px] border border-slate-100 dark:border-slate-800/40 text-left animate-fadeIn">
+                        <div className="absolute top-[100%] right-0 mt-1.5 z-50 bg-[#D8F3DC] dark:bg-slate-900 rounded-2xl shadow-premium-lg p-1.5 flex flex-col gap-1 min-w-[200px] border-0 text-left animate-fadeIn">
                           {instances.length === 0 ? (
                             <span className="p-3 text-[10px] text-surface-400 dark:text-surface-500 font-bold block text-center">No hay líneas creadas</span>
                           ) : (
@@ -2984,7 +2984,7 @@ echo $response;`;
                                             className="fixed inset-0 z-30" 
                                             onClick={() => setIsDocTypeDropdownOpen(false)} 
                                           />
-                                          <div className="absolute left-0 mt-1 w-24 bg-white dark:bg-slate-955 rounded-xl border border-slate-100 dark:border-slate-800 shadow-premium-lg py-1 z-40 animate-fadeIn">
+                                          <div className="absolute left-0 mt-1 w-24 bg-[#D8F3DC] dark:bg-slate-955 rounded-xl border-0 shadow-premium-lg py-1 z-40 animate-fadeIn">
                                             <button
                                               type="button"
                                               onClick={() => {
@@ -2994,7 +2994,7 @@ echo $response;`;
                                                 setCrmAddress('');
                                                 setIsDocTypeDropdownOpen(false);
                                               }}
-                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-pastel-100/50 hover:text-brand-primary transition-colors cursor-pointer ${crmDocType === 'DNI' ? 'text-brand-primary bg-pastel-100/20' : 'text-slate-700 dark:text-slate-200'}`}
+                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-white/40 hover:text-brand-secondary transition-colors cursor-pointer ${crmDocType === 'DNI' ? 'text-brand-secondary bg-white/60' : 'text-slate-700 dark:text-slate-200'}`}
                                             >
                                               DNI
                                             </button>
@@ -3007,7 +3007,7 @@ echo $response;`;
                                                 setCrmAddress('');
                                                 setIsDocTypeDropdownOpen(false);
                                               }}
-                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-pastel-100/50 hover:text-brand-primary transition-colors cursor-pointer ${crmDocType === 'RUC' ? 'text-brand-primary bg-pastel-100/20' : 'text-slate-700 dark:text-slate-200'}`}
+                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-white/40 hover:text-brand-secondary transition-colors cursor-pointer ${crmDocType === 'RUC' ? 'text-brand-secondary bg-white/60' : 'text-slate-700 dark:text-slate-200'}`}
                                             >
                                               RUC
                                             </button>
@@ -3082,14 +3082,14 @@ echo $response;`;
                                             className="fixed inset-0 z-30" 
                                             onClick={() => setIsCategoryDropdownOpen(false)} 
                                           />
-                                          <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-slate-955 rounded-xl border border-slate-100 dark:border-slate-800 shadow-premium-lg py-1 z-40 max-h-40 overflow-y-auto animate-fadeIn">
+                                          <div className="absolute left-0 right-0 mt-1 bg-[#D8F3DC] dark:bg-slate-955 rounded-xl border-0 shadow-premium-lg py-1 z-40 max-h-40 overflow-y-auto animate-fadeIn">
                                             <button
                                               type="button"
                                               onClick={() => {
                                                 setCrmCategoryId('');
                                                 setIsCategoryDropdownOpen(false);
                                               }}
-                                              className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-pastel-100/50 hover:text-brand-primary transition-colors cursor-pointer ${crmCategoryId === '' ? 'text-brand-primary bg-pastel-100/20' : 'text-slate-700 dark:text-slate-200'}`}
+                                              className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-white/40 hover:text-brand-secondary transition-colors cursor-pointer ${crmCategoryId === '' ? 'text-brand-secondary bg-white/60' : 'text-slate-700 dark:text-slate-200'}`}
                                             >
                                               Sin Categoría
                                             </button>
@@ -3101,7 +3101,7 @@ echo $response;`;
                                                   setCrmCategoryId(cat.id.toString());
                                                   setIsCategoryDropdownOpen(false);
                                                 }}
-                                                className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-pastel-100/50 hover:text-brand-primary transition-colors cursor-pointer ${crmCategoryId === cat.id.toString() ? 'text-brand-primary bg-pastel-100/20' : 'text-slate-700 dark:text-slate-200'}`}
+                                                className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-white/40 hover:text-brand-secondary transition-colors cursor-pointer ${crmCategoryId === cat.id.toString() ? 'text-brand-secondary bg-white/60' : 'text-slate-700 dark:text-slate-200'}`}
                                               >
                                                 {cat.name}
                                               </button>
