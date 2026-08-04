@@ -237,7 +237,6 @@ export default function DashboardPage() {
   const [crmCategories, setCrmCategories] = useState<any[]>([]);
   const [crmLoading, setCrmLoading] = useState(false);
   const [crmSaving, setCrmSaving] = useState(false);
-  const [showCrmSidebar, setShowCrmSidebar] = useState(true);
   const [crmIsEditing, setCrmIsEditing] = useState(false);
   
   // CRM Form States
@@ -2497,7 +2496,7 @@ echo $response;`;
                     </div>
 
                     {/* RIGHT PANEL: Message Area */}
-                    <div className={`${selectedChat ? (showCrmSidebar && !selectedChat.remoteJid.endsWith('@g.us') ? 'md:col-span-6' : 'md:col-span-9') : 'md:col-span-8'} flex-col min-h-0 bg-gradient-to-b from-slate-50/50 via-slate-100/20 to-indigo-50/15 dark:from-slate-950/65 dark:via-slate-900/40 dark:to-slate-950/55 w-full md:w-auto ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
+                    <div className={`${selectedChat ? (!selectedChat.remoteJid.endsWith('@g.us') ? 'md:col-span-6' : 'md:col-span-9') : 'md:col-span-8'} flex-col min-h-0 bg-gradient-to-b from-slate-50/50 via-slate-100/20 to-indigo-50/15 dark:from-slate-950/65 dark:via-slate-900/40 dark:to-slate-950/55 w-full md:w-auto ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
                       {selectedChat ? (
                         <div className="flex-1 flex flex-col min-h-0">
                           
@@ -2553,17 +2552,6 @@ echo $response;`;
                                 </div>
                               </div>
                             </div>
-                            {/* CRM Toggle Button */}
-                            {!selectedChat.remoteJid.endsWith('@g.us') && (
-                              <button
-                                type="button"
-                                onClick={() => setShowCrmSidebar(!showCrmSidebar)}
-                                className={`p-2 rounded-xl transition-all cursor-pointer ${showCrmSidebar ? 'bg-[#8ba0b0] text-white shadow-md shadow-[#8ba0b0]/25' : 'text-surface-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                                title={showCrmSidebar ? "Ocultar Panel CRM" : "Mostrar Panel CRM"}
-                              >
-                                <Users size={18} />
-                              </button>
-                            )}
                           </div>
 
                           {/* Chat Window Messages */}
@@ -2942,20 +2930,8 @@ echo $response;`;
                     </div>
 
                     {/* CRM Sidebar Pane */}
-                    {selectedChat && showCrmSidebar && !selectedChat.remoteJid.endsWith('@g.us') && (
+                    {selectedChat && !selectedChat.remoteJid.endsWith('@g.us') && (
                       <div className="md:col-span-3 border-l border-slate-200/50 dark:border-slate-800/50 flex flex-col min-h-0 bg-slate-50/45 dark:bg-slate-955 p-4 overflow-y-auto space-y-4 text-left">
-                        {/* Header */}
-                        <div className="flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800/50 pb-2.5">
-                          <h3 className="text-[11px] font-bold text-slate-800 dark:text-white uppercase tracking-wider">Detalles del Cliente</h3>
-                          <button 
-                            type="button" 
-                            onClick={() => setShowCrmSidebar(false)}
-                            className="p-1 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 rounded-lg transition-colors text-surface-400 cursor-pointer"
-                            title="Ocultar Panel"
-                          >
-                            <X size={13} />
-                          </button>
-                        </div>
 
                         {crmLoading ? (
                           <div className="py-8 text-center text-[11px] text-surface-400 animate-pulse">Cargando datos CRM...</div>
