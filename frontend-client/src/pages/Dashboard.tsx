@@ -86,8 +86,8 @@ const formatTimeLocal = (timestamp: number) => {
 
 // Colores para diferenciar participantes en grupos
 const GROUP_SENDER_COLORS = [
-  'text-brand-primary', 'text-blue-500', 'text-purple-500', 'text-amber-500',
-  'text-rose-500', 'text-cyan-500', 'text-indigo-500', 'text-pink-500',
+  'text-brand-primary', 'text-brand-primary', 'text-brand-primary', 'text-amber-500',
+  'text-rose-500', 'text-cyan-500', 'text-brand-primary', 'text-pink-500',
   'text-teal-500', 'text-orange-500'
 ];
 const getSenderColor = (name: string) => {
@@ -1797,7 +1797,7 @@ echo $response;`;
 
       {/* Offline Banner */}
       {isServerOffline && (
-        <div className="fixed top-0 left-0 w-full z-[100] bg-amber-500/90 backdrop-blur-sm text-white text-xs font-bold py-1.5 px-4 text-center shadow-md animate-fadeIn flex items-center justify-center gap-2">
+        <div className="fixed top-0 left-0 w-full z-[100] bg-brand-secondary backdrop-blur-sm text-white text-xs font-bold py-1.5 px-4 text-center shadow-md animate-fadeIn flex items-center justify-center gap-2">
           <RefreshCw size={14} className="animate-spin" />
           <span>Actualizando servidor (Railway)... Manteniendo la conexión en espera...</span>
         </div>
@@ -1915,7 +1915,7 @@ echo $response;`;
               className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-surface-500 dark:text-surface-400 cursor-pointer"
               title="Cambiar tema"
             >
-              {isDark ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-indigo-600" />}
+              {isDark ? <Sun size={18} className="text-slate-400 dark:text-slate-300" /> : <Moon size={18} className="text-slate-600 dark:text-slate-400" />}
             </button>
 
             {/* User Profile Info */}
@@ -1997,7 +1997,7 @@ echo $response;`;
 
                   <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl space-y-1.5 text-left">
                     <span className="text-[10px] text-surface-400 font-bold uppercase tracking-widest">Próxima Renovación</span>
-                    <h3 className="text-2xl font-bold text-indigo-500 dark:text-indigo-400 flex items-center gap-1.5">
+                    <h3 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
                       <Clock size={20} />
                       <span className="text-lg">
                         {subscription?.end_date ? new Date(subscription.end_date).toLocaleDateString() : 'N/A'}
@@ -2490,7 +2490,7 @@ echo $response;`;
                           </div>
 
                           {/* Chat Window Messages */}
-                          <div className="flex-1 overflow-y-auto p-4 space-y-3.5 min-h-0 flex flex-col bg-gradient-to-b from-teal-50/15 via-indigo-50/25 to-emerald-50/15 dark:from-slate-950/35 dark:via-slate-900/20 dark:to-slate-950/30">
+                          <div className="flex-1 overflow-y-auto p-4 space-y-3.5 min-h-0 flex flex-col bg-slate-50/50 dark:bg-slate-900/50">
                             {messagesLoading && messages.length === 0 ? (
                               <div className="my-auto text-center text-xs text-surface-400 animate-pulse">Cargando conversación...</div>
                             ) : messages.length === 0 ? (
@@ -2716,7 +2716,7 @@ echo $response;`;
                                       )}
 
                                       {/* Bubble */}
-                                      <div className={`p-3 rounded-2xl text-slate-800 dark:text-slate-100 ${fromMe ? 'bg-pastel-100 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 rounded-tr-none' : 'bg-gradient-to-br from-indigo-50/90 to-slate-100/90 dark:from-slate-800/80 dark:to-slate-800/40 text-indigo-950 dark:text-slate-100 rounded-tl-none'}`}>
+                                      <div className={`p-3 rounded-2xl text-slate-800 dark:text-slate-100 ${fromMe ? 'bg-brand-primary dark:bg-brand-primary text-white dark:text-white rounded-tr-none shadow-sm-custom' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-tl-none border border-slate-100 dark:border-slate-700/50 shadow-sm-custom'}`}>
                                         {renderMessageContent()}
                                         
                                         {/* Timestamp and Checks */}
@@ -2760,7 +2760,7 @@ echo $response;`;
                                   onClick={() => handleTriggerFileInput('video')}
                                   className="w-full px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center gap-2 cursor-pointer transition-colors"
                                 >
-                                  <Video size={15} className="text-blue-500" />
+                                  <Video size={15} className="text-brand-primary" />
                                   <span>Video</span>
                                 </button>
                                 <button
@@ -2768,7 +2768,7 @@ echo $response;`;
                                   onClick={() => handleTriggerFileInput('document')}
                                   className="w-full px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center gap-2 cursor-pointer transition-colors"
                                 >
-                                  <FileText size={15} className="text-indigo-500" />
+                                  <FileText size={15} className="text-brand-primary" />
                                   <span>Documento</span>
                                 </button>
                               </div>
@@ -3295,7 +3295,7 @@ echo $response;`;
                                       </div>
                                     </td>
                                     <td className="py-3.5">
-                                      <span className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold ${client.doc_type === 'RUC' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' : client.doc_type === 'DNI' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' : 'bg-slate-200/60 text-surface-500 dark:bg-slate-800 dark:text-surface-400'}`}>
+                                      <span className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold ${client.doc_type === 'RUC' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' : client.doc_type === 'DNI' ? 'bg-amber-500/10 text-amber-600 dark:text-slate-400 dark:text-slate-300' : 'bg-slate-200/60 text-surface-500 dark:bg-slate-800 dark:text-surface-400'}`}>
                                         {client.doc_type === 'MANUAL' ? 'Manual' : `${client.doc_type}: ${client.doc_number}`}
                                       </span>
                                     </td>
@@ -3318,7 +3318,7 @@ echo $response;`;
                                           {/* Notes */}
                                           {client.notes && (
                                             <div className="p-2.5 bg-amber-50/60 dark:bg-amber-950/10 rounded-xl border border-amber-200/30 dark:border-amber-800/20">
-                                              <span className="text-[9px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider block mb-0.5">Notas de Negocio</span>
+                                              <span className="text-[9px] text-amber-600 dark:text-slate-400 dark:text-slate-300 font-bold uppercase tracking-wider block mb-0.5">Notas de Negocio</span>
                                               <p className="text-[11px] text-surface-600 dark:text-surface-400 font-medium whitespace-pre-line">{client.notes}</p>
                                             </div>
                                           )}
@@ -3596,7 +3596,7 @@ echo $response;`;
                 {!selectedInstanceForChats ? (
                   // Select instance warning screen
                   <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 text-center max-w-2xl mx-auto space-y-4 shadow-sm text-left">
-                    <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center mx-auto">
+                    <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 text-brand-primary flex items-center justify-center mx-auto">
                       <Smartphone size={26} />
                     </div>
                     <div className="space-y-1 text-center">
@@ -3701,7 +3701,7 @@ echo $response;`;
                                   >
                                     <div className="flex items-center gap-3 min-w-0">
                                       {group.size > 0 && group.subject ? (
-                                        <div className="w-10 h-10 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-sm flex-shrink-0">
+                                        <div className="w-10 h-10 rounded-full bg-indigo-500/10 text-slate-600 dark:text-slate-400 dark:text-indigo-400 flex items-center justify-center font-bold text-sm flex-shrink-0">
                                           {initials}
                                         </div>
                                       ) : (
@@ -4039,8 +4039,8 @@ echo $response;`;
                     </div>
 
                     <div className="p-5 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 rounded-2xl text-left space-y-2">
-                      <h5 className="text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
-                        <Sparkles size={14} className="text-indigo-500" />
+                      <h5 className="text-xs font-bold text-slate-600 dark:text-slate-400 dark:text-indigo-400 flex items-center gap-1.5">
+                        <Sparkles size={14} className="text-brand-primary" />
                         <span>Consejo Rápido</span>
                       </h5>
                       <p className="text-[11px] text-surface-500 dark:text-surface-400 leading-relaxed">
@@ -4075,7 +4075,7 @@ echo $response;`;
                         { id: 'text', label: 'Enviar Mensaje Texto', method: 'POST', color: 'bg-pastel-100/50 text-brand-secondary dark:text-brand-primary' },
                         { id: 'media', label: 'Enviar Mensaje Media', method: 'POST', color: 'bg-pastel-100/50 text-brand-secondary dark:text-brand-primary' },
                         { id: 'create-group', label: 'Crear Grupo WhatsApp', method: 'POST', color: 'bg-pastel-100/50 text-brand-secondary dark:text-brand-primary' },
-                        { id: 'participants-group', label: 'Administrar Miembros', method: 'PUT', color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400' },
+                        { id: 'participants-group', label: 'Administrar Miembros', method: 'PUT', color: 'bg-amber-500/10 text-amber-600 dark:text-slate-400 dark:text-slate-300' },
                         { id: 'invite-group', label: 'Obtener Link Grupo', method: 'GET', color: 'bg-sky-500/10 text-sky-600 dark:text-sky-400' },
                       ].map(endpoint => {
                         const isActive = docTab === endpoint.id;
@@ -4143,7 +4143,7 @@ echo $response;`;
                         docTab === 'invite-group' 
                           ? 'bg-sky-500/10 text-sky-600 dark:text-sky-400' 
                           : docTab === 'participants-group' 
-                            ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                            ? 'bg-amber-500/10 text-amber-600 dark:text-slate-400 dark:text-slate-300'
                             : 'bg-pastel-100/50 text-brand-secondary dark:text-brand-primary'
                       }`}>
                         {docTab === 'invite-group' ? 'GET' : docTab === 'participants-group' ? 'PUT' : 'POST'}
@@ -4275,22 +4275,22 @@ echo $response;`;
                   {/* Reseller Banner Info */}
                   <div className="md:col-span-5 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent p-6 rounded-3xl flex flex-col justify-between gap-6 relative overflow-hidden">
                     <div className="space-y-3 relative z-10">
-                      <h4 className="text-sm font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">¿Necesitas más capacidad?</h4>
+                      <h4 className="text-sm font-bold text-slate-600 dark:text-slate-400 dark:text-indigo-400 uppercase tracking-wider">¿Necesitas más capacidad?</h4>
                       <p className="text-xs text-surface-500 dark:text-surface-400 leading-relaxed font-medium">
                         Ofrecemos planes corporativos a medida que se adaptan a las necesidades y volúmenes de tu infraestructura de mensajería empresarial.
                       </p>
                       
                       <div className="space-y-1.5 pt-2 text-[11px] text-surface-600 dark:text-surface-400 font-bold">
                         <div className="flex items-center gap-1.5">
-                          <Check size={14} className="text-indigo-500" />
+                          <Check size={14} className="text-brand-primary" />
                           <span>Instancias de WhatsApp ilimitadas</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <Check size={14} className="text-indigo-500" />
+                          <Check size={14} className="text-brand-primary" />
                           <span>Infraestructura dedicada Redis</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <Check size={14} className="text-indigo-500" />
+                          <Check size={14} className="text-brand-primary" />
                           <span>Soporte prioritario 24/7</span>
                         </div>
                       </div>

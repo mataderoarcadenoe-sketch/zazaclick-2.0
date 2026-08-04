@@ -170,20 +170,17 @@
   /* Mesh gradients */
   .mesh-gradient {
     background:
-      radial-gradient(at 40% 20%, rgba(37, 211, 102, 0.08) 0px, transparent 50%),
-      radial-gradient(at 80% 0%, rgba(6, 182, 212, 0.06) 0px, transparent 50%),
-      radial-gradient(at 0% 50%, rgba(139, 92, 246, 0.05) 0px, transparent 50%),
-      radial-gradient(at 80% 80%, rgba(37, 211, 102, 0.04) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, rgba(6, 182, 212, 0.06) 0px, transparent 50%),
+      radial-gradient(at 40% 20%, rgba(92, 203, 95, 0.05) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, rgba(92, 203, 95, 0.03) 0px, transparent 50%),
+      radial-gradient(at 0% 50%, rgba(0, 153, 41, 0.02) 0px, transparent 50%),
       #f8fafc;
     transition: background 0.5s ease;
   }
 
   body.dark .mesh-gradient {
     background:
-      radial-gradient(at 40% 20%, rgba(37, 211, 102, 0.06) 0px, transparent 50%),
-      radial-gradient(at 80% 0%, rgba(6, 182, 212, 0.05) 0px, transparent 50%),
-      radial-gradient(at 0% 50%, rgba(139, 92, 246, 0.03) 0px, transparent 50%),
+      radial-gradient(at 40% 20%, rgba(92, 203, 95, 0.03) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, rgba(0, 153, 41, 0.02) 0px, transparent 50%),
       #020617;
   }
 
@@ -229,8 +226,8 @@
 }
 
 @keyframes pulseGlow {
-  0%, 100% { box-shadow: 0 0 5px rgba(37, 211, 102, 0.2); }
-  50% { box-shadow: 0 0 20px rgba(37, 211, 102, 0.5), 0 0 40px rgba(37, 211, 102, 0.15); }
+  0%, 100% { box-shadow: 0 0 5px rgba(92, 203, 95, 0.2); }
+  50% { box-shadow: 0 0 20px rgba(92, 203, 95, 0.5), 0 0 40px rgba(92, 203, 95, 0.15); }
 }
 
 @keyframes spinSlow {
