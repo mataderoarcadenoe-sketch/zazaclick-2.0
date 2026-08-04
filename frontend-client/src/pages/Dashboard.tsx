@@ -9,7 +9,8 @@ import {
   Moon, Sun, Menu, X, Check, Play, ExternalLink, Sparkles, BookOpen, Clock,
   MessageSquare, Search, MessageCircle, Smile, ArrowLeft,
   Paperclip, FileText, Image, Video, Download, ChevronDown, Users, Users2, Settings,
-  Edit2, Phone, User, Tag, MoreVertical, Mail, MapPin, Building, Calendar
+  Edit2, Phone, User, Tag, MoreVertical, Mail, MapPin, Building, Calendar,
+  Star, GitBranch, Grip
 } from 'lucide-react';
 import EmojiPicker, { Theme, EmojiStyle, Emoji } from 'emoji-picker-react';
 import { parse } from '@twemoji/parser';
@@ -2512,56 +2513,102 @@ echo $response;`;
                         <div className="flex-1 flex flex-col min-h-0">
                           
                           {/* Chat Window Header */}
-                          <div className="p-4 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              {/* Botón volver en mobile */}
-                              <button
-                                type="button"
-                                onClick={() => setSelectedChat(null)}
-                                className="md:hidden p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-surface-500 dark:text-surface-400 cursor-pointer"
-                              >
-                                <ArrowLeft size={18} />
-                              </button>
-                              <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center overflow-hidden">
-                                {selectedChat.profilePicUrl ? (
-                                  <img src={selectedChat.profilePicUrl} alt="" className="w-full h-full object-cover" />
-                                ) : (
-                                  <MessageCircle size={18} className="text-surface-400" />
-                                ) }
-                              </div>
-                              <div className="text-left flex items-center">
-                                <div>
-                                  <h4 className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
-                                    {crmContactMap[selectedChat.remoteJid.split('@')[0]] || selectedChat.pushName || selectedChat.remoteJid.split('@')[0]}
-                                    {googleConnected && !selectedChat.remoteJid.endsWith('@g.us') && !googleContacts.some(c => {
-                                      const cleanSaved = c.phoneNumber.replace(/\D/g, '');
-                                      const cleanChat = selectedChat.remoteJid.split('@')[0].replace(/\D/g, '');
-                                      return cleanSaved === cleanChat || (cleanSaved && cleanChat && (cleanSaved.endsWith(cleanChat) || cleanChat.endsWith(cleanSaved)));
-                                    }) && (
-                                      <button
-                                        type="button"
-                                        onClick={() => setContactModal({
-                                          isOpen: true,
-                                          isEdit: false,
-                                          resourceName: null,
-                                          etag: null,
-                                          givenName: selectedChat.pushName || selectedChat.remoteJid.split('@')[0],
-                                          familyName: '',
-                                          phoneNumber: `+${selectedChat.remoteJid.split('@')[0]}`
-                                        })}
-                                        className="px-1.5 py-0.5 bg-pastel-100/50 hover:bg-pastel-100/70 text-brand-secondary dark:text-brand-primary font-bold text-[8.5px] rounded-md transition-colors cursor-pointer flex items-center gap-0.5"
-                                        title="Guardar en Google Contactos"
-                                      >
-                                        <Plus size={9} />
-                                        <span>Guardar</span>
-                                      </button>
+                          <div className="bg-white dark:bg-slate-900 border-b border-slate-200/60 dark:border-slate-800 flex flex-col z-20 shadow-sm relative">
+                            {/* Top Row */}
+                            <div className="p-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/50">
+                              <div className="flex items-center gap-3.5">
+                                {/* Botón volver en mobile */}
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedChat(null)}
+                                  className="md:hidden p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-surface-500 dark:text-surface-400 cursor-pointer"
+                                >
+                                  <ArrowLeft size={18} />
+                                </button>
+                                
+                                {/* Profile Pic */}
+                                <div className="w-12 h-12 rounded-full bg-[#12a160] text-white flex items-center justify-center font-bold text-lg overflow-hidden shrink-0 shadow-sm">
+                                  {selectedChat.profilePicUrl ? (
+                                    <img src={selectedChat.profilePicUrl} alt="" className="w-full h-full object-cover" />
+                                  ) : (
+                                    <span className="uppercase tracking-wide">{String(crmContactMap[selectedChat.remoteJid.split('@')[0]] || selectedChat.pushName || selectedChat.remoteJid).substring(0, 2)}</span>
+                                  )}
+                                </div>
+                                
+                                {/* Contact Info */}
+                                <div className="flex flex-col justify-center">
+                                  <div className="flex items-center gap-2.5">
+                                    <h4 className="text-[13px] font-extrabold text-slate-800 dark:text-white uppercase tracking-tight">
+                                      {crmContactMap[selectedChat.remoteJid.split('@')[0]] || selectedChat.pushName || selectedChat.remoteJid.split('@')[0]}
+                                    </h4>
+                                    {!selectedChat.remoteJid.endsWith('@g.us') && (
+                                      <span className="px-2 py-0.5 bg-[#e8f5ed] dark:bg-[#12a160]/20 text-[#12a160] text-[9px] font-bold rounded-full">
+                                        Cliente VIP
+                                      </span>
                                     )}
-                                  </h4>
-                                  <span className="text-[10px] font-semibold text-surface-400 dark:text-surface-500 block">
-                                    {selectedChat.remoteJid}
-                                  </span>
+                                  </div>
+                                  
+                                  {!selectedChat.remoteJid.endsWith('@g.us') ? (
+                                    <div className="flex items-center gap-3 mt-1.5 text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+                                      <div className="flex items-center gap-1.5">
+                                        <div className="w-2 h-2 rounded-full bg-[#12a160] shadow-[0_0_4px_#12a160]"></div>
+                                        <span>En línea</span>
+                                      </div>
+                                      <span className="text-slate-300 dark:text-slate-600 font-normal">|</span>
+                                      <div className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
+                                        <MapPin size={11} className="text-slate-400" />
+                                        <span>Lima, Perú</span>
+                                      </div>
+                                      <span className="text-slate-300 dark:text-slate-600 font-normal">|</span>
+                                      <div className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
+                                        <Phone size={11} className="text-slate-400" />
+                                        <span>+{selectedChat.remoteJid.split('@')[0]}</span>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold mt-1">
+                                      Grupo de WhatsApp
+                                    </div>
+                                  )}
                                 </div>
                               </div>
+                              
+                              {/* Right Icons (Top Row) */}
+                              <div className="flex items-center gap-2 hidden sm:flex">
+                                <button className="w-8 h-8 flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all cursor-pointer">
+                                  <Star size={14} />
+                                </button>
+                                <button className="w-8 h-8 flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all cursor-pointer">
+                                  <Tag size={14} />
+                                </button>
+                                <button className="w-8 h-8 flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all cursor-pointer">
+                                  <MoreVertical size={14} />
+                                </button>
+                              </div>
+                            </div>
+                            
+                            {/* Bottom Row - Actions Toolbar */}
+                            <div className="px-4 py-2.5 flex items-center gap-2.5 overflow-x-auto hide-scrollbar bg-slate-50/50 dark:bg-slate-900/50">
+                              <button className="flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all cursor-pointer whitespace-nowrap shadow-sm">
+                                <User size={13} className="text-slate-400 dark:text-slate-400" />
+                                <span>Asignar</span>
+                                <ChevronDown size={12} className="text-slate-400 ml-1" />
+                              </button>
+                              <button className="flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all cursor-pointer whitespace-nowrap shadow-sm">
+                                <Tag size={13} className="text-slate-400 dark:text-slate-400" />
+                                <span>Etiquetar</span>
+                                <ChevronDown size={12} className="text-slate-400 ml-1" />
+                              </button>
+                              <button className="flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all cursor-pointer whitespace-nowrap shadow-sm">
+                                <GitBranch size={13} className="text-slate-400 dark:text-slate-400" />
+                                <span>Pipeline</span>
+                                <ChevronDown size={12} className="text-slate-400 ml-1" />
+                              </button>
+                              <button className="flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all cursor-pointer whitespace-nowrap shadow-sm">
+                                <Grip size={13} className="text-slate-400 dark:text-slate-400" />
+                                <span>Más acciones</span>
+                                <ChevronDown size={12} className="text-slate-400 ml-1" />
+                              </button>
                             </div>
                           </div>
 
