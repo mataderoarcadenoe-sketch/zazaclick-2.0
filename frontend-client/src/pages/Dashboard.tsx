@@ -247,6 +247,8 @@ export default function DashboardPage() {
   const [crmNotes, setCrmNotes] = useState('');
   const [crmCategoryId, setCrmCategoryId] = useState<string>('');
   const [crmValidationLoading, setCrmValidationLoading] = useState(false);
+  const [isDocTypeDropdownOpen, setIsDocTypeDropdownOpen] = useState(false);
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   
   // CRM Modal States
   const [crmMergeModal, setCrmMergeModal] = useState<{
@@ -2951,19 +2953,53 @@ echo $response;`;
                                 <div className="space-y-1.5 text-left">
                                   <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Identificación DNI / RUC</label>
                                   <div className="flex gap-1.5">
-                                    <select
-                                      value={crmDocType}
-                                      onChange={(e) => {
-                                        setCrmDocType(e.target.value as 'DNI' | 'RUC');
-                                        setCrmDocNumber('');
-                                        setCrmName('');
-                                        setCrmAddress('');
-                                      }}
-                                      className="px-2 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-white focus:outline-none"
-                                    >
-                                      <option value="DNI">DNI</option>
-                                      <option value="RUC">RUC</option>
-                                    </select>
+                                    <div className="relative">
+                                      <button
+                                        type="button"
+                                        onClick={() => setIsDocTypeDropdownOpen(!isDocTypeDropdownOpen)}
+                                        className="flex items-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-all cursor-pointer min-w-[75px] justify-between shadow-premium-sm focus:outline-none"
+                                      >
+                                        <span>{crmDocType}</span>
+                                        <ChevronDown size={12} className={`text-slate-400 transition-transform duration-200 ${isDocTypeDropdownOpen ? 'rotate-180' : ''}`} />
+                                      </button>
+
+                                      {isDocTypeDropdownOpen && (
+                                        <>
+                                          <div 
+                                            className="fixed inset-0 z-30" 
+                                            onClick={() => setIsDocTypeDropdownOpen(false)} 
+                                          />
+                                          <div className="absolute left-0 mt-1.5 w-28 bg-white dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800/80 shadow-premium-lg py-1 z-40 animate-fadeIn">
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                setCrmDocType('DNI');
+                                                setCrmDocNumber('');
+                                                setCrmName('');
+                                                setCrmAddress('');
+                                                setIsDocTypeDropdownOpen(false);
+                                              }}
+                                              className={`w-full text-left px-3 py-2 text-xs font-semibold hover:bg-emerald-500/10 hover:text-[#00d29f] transition-colors cursor-pointer ${crmDocType === 'DNI' ? 'text-[#00d29f] bg-emerald-500/5 font-bold' : 'text-slate-700 dark:text-slate-200'}`}
+                                            >
+                                              DNI
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                setCrmDocType('RUC');
+                                                setCrmDocNumber('');
+                                                setCrmName('');
+                                                setCrmAddress('');
+                                                setIsDocTypeDropdownOpen(false);
+                                              }}
+                                              className={`w-full text-left px-3 py-2 text-xs font-semibold hover:bg-emerald-500/10 hover:text-[#00d29f] transition-colors cursor-pointer ${crmDocType === 'RUC' ? 'text-[#00d29f] bg-emerald-500/5 font-bold' : 'text-slate-700 dark:text-slate-200'}`}
+                                            >
+                                              RUC
+                                            </button>
+                                          </div>
+                                        </>
+                                      )}
+                                    </div>
                                     <div className="relative flex-1">
                                       <input
                                         type="text"
@@ -3013,16 +3049,52 @@ echo $response;`;
                                 <div className="space-y-1 text-left">
                                   <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Categoría de Contacto</label>
                                   <div className="flex gap-1.5">
-                                    <select
-                                      value={crmCategoryId}
-                                      onChange={(e) => setCrmCategoryId(e.target.value)}
-                                      className="flex-1 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-white focus:outline-none"
-                                    >
-                                      <option value="">Sin Categoría</option>
-                                      {crmCategories.map((cat: any) => (
-                                        <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                      ))}
-                                    </select>
+                                    <div className="flex-1 relative">
+                                      <button
+                                        type="button"
+                                        onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+                                        className="w-full flex items-center justify-between px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-all cursor-pointer shadow-premium-sm focus:outline-none"
+                                      >
+                                        <span>
+                                          {crmCategories.find(c => c.id.toString() === crmCategoryId)?.name || 'Sin Categoría'}
+                                        </span>
+                                        <ChevronDown size={13} className={`text-slate-400 transition-transform duration-200 ${isCategoryDropdownOpen ? 'rotate-180' : ''}`} />
+                                      </button>
+
+                                      {isCategoryDropdownOpen && (
+                                        <>
+                                          <div 
+                                            className="fixed inset-0 z-30" 
+                                            onClick={() => setIsCategoryDropdownOpen(false)} 
+                                          />
+                                          <div className="absolute left-0 right-0 mt-1.5 bg-white dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800/80 shadow-premium-lg py-1.5 z-40 max-h-48 overflow-y-auto animate-fadeIn">
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                setCrmCategoryId('');
+                                                setIsCategoryDropdownOpen(false);
+                                              }}
+                                              className={`w-full text-left px-3.5 py-2 text-xs font-semibold hover:bg-emerald-500/10 hover:text-[#00d29f] transition-colors cursor-pointer ${crmCategoryId === '' ? 'text-[#00d29f] bg-emerald-500/5 font-bold' : 'text-slate-700 dark:text-slate-200'}`}
+                                            >
+                                              Sin Categoría
+                                            </button>
+                                            {crmCategories.map((cat: any) => (
+                                              <button
+                                                key={cat.id}
+                                                type="button"
+                                                onClick={() => {
+                                                  setCrmCategoryId(cat.id.toString());
+                                                  setIsCategoryDropdownOpen(false);
+                                                }}
+                                                className={`w-full text-left px-3.5 py-2 text-xs font-semibold hover:bg-emerald-500/10 hover:text-[#00d29f] transition-colors cursor-pointer ${crmCategoryId === cat.id.toString() ? 'text-[#00d29f] bg-emerald-500/5 font-bold' : 'text-slate-700 dark:text-slate-200'}`}
+                                              >
+                                                {cat.name}
+                                              </button>
+                                            ))}
+                                          </div>
+                                        </>
+                                      )}
+                                    </div>
                                     <button
                                       type="button"
                                       onClick={() => setCrmCategoriesModalOpen(true)}
