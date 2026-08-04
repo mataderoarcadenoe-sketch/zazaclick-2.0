@@ -2731,7 +2731,7 @@ echo $response;`;
                                       )}
 
                                       {/* Bubble */}
-                                      <div className={`p-3 rounded-2xl ${fromMe ? 'bg-[#D8F3DC] dark:bg-[#005c4b] text-slate-800 dark:text-slate-100 rounded-tr-none shadow-sm-custom' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-tl-none border border-slate-100 dark:border-slate-700/50 shadow-sm-custom'}`}>
+                                      <div className={`p-3 rounded-2xl ${fromMe ? 'bg-[#D8F3DC] dark:bg-[#005c4b] text-slate-800 dark:text-slate-100 rounded-tr-none' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-tl-none border border-slate-100 dark:border-slate-700/50'}`}>
                                         {renderMessageContent()}
                                         
                                         {/* Timestamp and Checks */}
