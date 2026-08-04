@@ -118,7 +118,7 @@ export default function DashboardPage() {
   // Collapsible Sidebar State
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     const saved = localStorage.getItem('client_sidebar');
-    return saved !== null ? saved === 'true' : true;
+    return saved !== null ? saved === 'true' : false;
   });
 
   // Active Tab/Section State
@@ -1836,11 +1836,22 @@ echo $response;`;
         </div>
       )}
 
+      {/* Sidebar Overlay (Visible when open) */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/50 dark:bg-black/60 z-40 backdrop-blur-sm"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Spacer for fixed sidebar on desktop */}
+      <div className="hidden lg:block w-20 flex-shrink-0 transition-all duration-300" />
+
       {/* Sidebar */}
       <aside 
-        className={`bg-[#0b2d33] dark:bg-surface-950 flex flex-col transition-all duration-300 shadow-premium z-40 ${
-          sidebarOpen ? 'w-64' : 'w-20'
-        } ${sidebarOpen ? 'fixed lg:relative h-full' : 'hidden lg:flex'}`}
+        className={`bg-[#0b2d33] dark:bg-surface-950 flex flex-col transition-all duration-300 shadow-premium z-50 fixed top-0 left-0 h-full ${
+          sidebarOpen ? 'w-64 translate-x-0' : 'w-20 -translate-x-full lg:translate-x-0'
+        }`}
       >
         {/* Brand header */}
         <div className={`h-[72px] flex items-center ${sidebarOpen ? 'justify-between px-6' : 'justify-center'} border-b border-white/5`}>
