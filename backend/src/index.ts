@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.routes';
 import instanceRoutes from './routes/instance.routes';
 import adminRoutes from './routes/admin.routes';
 import webhookRoutes from './routes/webhook.routes';
+import crmRoutes from './routes/crm.routes';
 import { EvolutionService } from './services/evolution.service';
 
 dotenv.config();
@@ -30,6 +31,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/instances', instanceRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/webhooks', webhookRoutes);
+app.use('/api/crm', crmRoutes);
 
 // Root Health Check Route
 app.get('/', (req, res) => {

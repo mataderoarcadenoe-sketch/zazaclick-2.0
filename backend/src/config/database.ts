@@ -113,6 +113,49 @@ export async function initDatabase() {
       );
     `);
 
+    // 6. Tabla de Clientes CRM
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS crm_clients (
+        id SERIAL PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        doc_type VARCHAR(10) NOT NULL,
+        doc_number VARCHAR(20) NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        address TEXT,
+        email VARCHAR(255),
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT unique_user_doc UNIQUE (user_id, doc_type, doc_number)
+      );
+    `);
+
+    // 7. Tabla de Categorías de Contacto CRM
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS crm_contact_categories (
+        id SERIAL PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        name VARCHAR(100) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT unique_user_category UNIQUE (user_id, name)
+      );
+    `);
+
+    // 8. Tabla de Contactos CRM
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS crm_contacts (
+        id SERIAL PRIMARY KEY,
+        client_id INTEGER NOT NULL REFERENCES crm_clients(id) ON DELETE CASCADE,
+        user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        phone_number VARCHAR(50) NOT NULL,
+        category_id INTEGER REFERENCES crm_contact_categories(id) ON DELETE SET NULL,
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT unique_user_phone UNIQUE (user_id, phone_number)
+      );
+    `);
+
     // 6. Asegurar rol Administrador para tu correo principal
     await pool.query(`
       UPDATE users 

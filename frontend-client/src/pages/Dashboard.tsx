@@ -8,7 +8,7 @@ import {
   AlertCircle, Copy, Send, LayoutDashboard, Terminal, 
   Moon, Sun, Menu, X, Check, Play, ExternalLink, Sparkles, BookOpen, Clock,
   MessageSquare, Search, MessageCircle, Smile, ArrowLeft,
-  Paperclip, FileText, Image, Video, Download, ChevronDown, Users, Users2
+  Paperclip, FileText, Image, Video, Download, ChevronDown, Users, Users2, Settings
 } from 'lucide-react';
 import EmojiPicker, { Theme, EmojiStyle, Emoji } from 'emoji-picker-react';
 import { parse } from '@twemoji/parser';
@@ -228,6 +228,44 @@ export default function DashboardPage() {
   const [addParticipantLoading, setAddParticipantLoading] = useState(false);
   const [inviteLinkLabel, setInviteLinkLabel] = useState<string | null>(null);
   const [inviteLinkLoading, setInviteLinkLoading] = useState(false);
+
+  // CRM Integration States
+  const [crmClient, setCrmClient] = useState<any | null>(null);
+  const [crmContact, setCrmContact] = useState<any | null>(null);
+  const [crmCategories, setCrmCategories] = useState<any[]>([]);
+  const [crmLoading, setCrmLoading] = useState(false);
+  const [crmSaving, setCrmSaving] = useState(false);
+  const [showCrmSidebar, setShowCrmSidebar] = useState(true);
+  const [crmIsEditing, setCrmIsEditing] = useState(false);
+  
+  // CRM Form States
+  const [crmDocType, setCrmDocType] = useState<'DNI' | 'RUC'>('DNI');
+  const [crmDocNumber, setCrmDocNumber] = useState('');
+  const [crmName, setCrmName] = useState('');
+  const [crmAddress, setCrmAddress] = useState('');
+  const [crmEmail, setCrmEmail] = useState('');
+  const [crmNotes, setCrmNotes] = useState('');
+  const [crmCategoryId, setCrmCategoryId] = useState<string>('');
+  const [crmValidationLoading, setCrmValidationLoading] = useState(false);
+  
+  // CRM Modal States
+  const [crmMergeModal, setCrmMergeModal] = useState<{
+    isOpen: boolean;
+    clientName: string;
+    docNumber: string;
+    oldPhone: string;
+    pendingData?: any;
+  }>({
+    isOpen: false,
+    clientName: '',
+    docNumber: '',
+    oldPhone: ''
+  });
+  
+  const [crmCategoriesModalOpen, setCrmCategoriesModalOpen] = useState(false);
+  const [crmNewCategoryName, setCrmNewCategoryName] = useState('');
+  const [crmEditingCategoryId, setCrmEditingCategoryId] = useState<number | null>(null);
+  const [crmEditingCategoryName, setCrmEditingCategoryName] = useState('');
 
   // Refs para scroll inteligente y emoji picker click-outside
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -790,6 +828,8 @@ export default function DashboardPage() {
     } else {
       prevSelectedJidRef.current = null;
       setMessages([]);
+      setCrmClient(null);
+      setCrmContact(null);
     }
   }, [selectedChat, fetchMessages, selectedInstanceForChats]);
 
@@ -976,6 +1016,238 @@ export default function DashboardPage() {
     }
   };
 
+  // --- CRM INTEGRATION FUNCTIONS ---
+
+  // Fetch CRM Categories
+  const fetchCrmCategories = useCallback(async () => {
+    try {
+      const res = await api.get('/crm/categories');
+      if (res.data?.success) {
+        setCrmCategories(res.data.data);
+        if (res.data.data.length > 0 && !crmCategoryId) {
+          setCrmCategoryId(res.data.data[0].id.toString());
+        }
+      }
+    } catch (err: any) {
+      console.error('Error fetching CRM categories:', err.message);
+    }
+  }, [crmCategoryId]);
+
+  // Fetch CRM details for the active chat JID
+  const fetchCrmContactForChat = useCallback(async (chatJid: string) => {
+    if (!chatJid || chatJid.endsWith('@g.us')) {
+      setCrmClient(null);
+      setCrmContact(null);
+      return;
+    }
+    setCrmLoading(true);
+    try {
+      const cleanJid = chatJid.split('@')[0];
+      const res = await api.get(`/crm/contacts/${cleanJid}`);
+      if (res.data?.success) {
+        setCrmClient(res.data.client);
+        setCrmContact(res.data.contact);
+        setCrmIsEditing(false); // Reset to display mode
+        
+        // Populate inputs if client exists
+        if (res.data.client) {
+          setCrmDocType(res.data.client.doc_type === 'MANUAL' ? 'DNI' : res.data.client.doc_type);
+          setCrmDocNumber(res.data.client.doc_type === 'MANUAL' ? '' : res.data.client.doc_number);
+          setCrmName(res.data.client.name);
+          setCrmAddress(res.data.client.address || '');
+          setCrmEmail(res.data.client.email || '');
+          setCrmNotes(res.data.client.notes || '');
+        } else {
+          // Clear inputs for new chat
+          setCrmDocType('DNI');
+          setCrmDocNumber('');
+          setCrmName('');
+          setCrmAddress('');
+          setCrmEmail('');
+          setCrmNotes('');
+        }
+        if (res.data.contact) {
+          setCrmCategoryId(res.data.contact.category_id?.toString() || '');
+        } else if (crmCategories.length > 0) {
+          setCrmCategoryId(crmCategories[0].id.toString());
+        }
+      }
+    } catch (err: any) {
+      console.error('Error fetching CRM contact:', err.message);
+    } finally {
+      setCrmLoading(false);
+    }
+  }, [crmCategories]);
+
+  // Cargar datos CRM al cambiar de chat activo
+  useEffect(() => {
+    if (selectedChat && !selectedChat.remoteJid.endsWith('@g.us')) {
+      fetchCrmContactForChat(selectedChat.remoteJid);
+    }
+  }, [selectedChat, fetchCrmContactForChat]);
+
+  // Consult DNI/RUC from APIPeru
+  const handleValidateCrmDoc = async () => {
+    if (!crmDocNumber || (crmDocNumber.length !== 8 && crmDocNumber.length !== 11)) {
+      showNotification('Ingresa un DNI válido (8 dígitos) o RUC (11 dígitos).', 'error');
+      return;
+    }
+    setCrmValidationLoading(true);
+    try {
+      const res = await api.post('/crm/validate-doc', { docNumber: crmDocNumber });
+      if (res.data?.success) {
+        setCrmName(res.data.name);
+        setCrmDocType(res.data.docType);
+        setCrmAddress(res.data.address || '');
+        showNotification('Documento consultado exitosamente con APIPerú.', 'success');
+      }
+    } catch (err: any) {
+      console.error('Error validating document:', err.response?.data || err.message);
+      showNotification(err.response?.data?.error || 'Documento no encontrado o error en APIPerú.', 'error');
+    } finally {
+      setCrmValidationLoading(false);
+    }
+  };
+
+  // Link Client and WhatsApp Chat (with optional mergeAction)
+  const handleSaveCrmContact = async (mergeAction?: string) => {
+    if (!selectedChat) return;
+    const cleanJid = selectedChat.remoteJid.split('@')[0];
+
+    // If manual name with no document number entered
+    if (!crmDocNumber.trim()) {
+      if (!crmName.trim()) {
+        showNotification('Ingresa un nombre para el cliente.', 'error');
+        return;
+      }
+      setCrmSaving(true);
+      try {
+        const res = await api.post('/crm/link-manual', {
+          phone_number: cleanJid,
+          name: crmName.trim(),
+          email: crmEmail.trim(),
+          notes: crmNotes.trim(),
+          categoryId: crmCategoryId ? parseInt(crmCategoryId, 10) : null
+        });
+        if (res.data?.success) {
+          setCrmClient(res.data.client);
+          setCrmContact(res.data.contact);
+          setCrmIsEditing(false);
+          showNotification('Contacto guardado exitosamente.', 'success');
+        }
+      } catch (err: any) {
+        showNotification(err.response?.data?.error || 'Error al guardar el contacto.', 'error');
+      } finally {
+        setCrmSaving(false);
+      }
+      return;
+    }
+
+    // Si no se especifica mergeAction, validamos primero si el DNI/RUC ya existe en la base de datos
+    if (!mergeAction) {
+      try {
+        const checkRes = await api.get(`/crm/clients?search=${crmDocNumber.trim()}`);
+        if (checkRes.data?.success && checkRes.data.data.length > 0) {
+          const existingClient = checkRes.data.data[0];
+          // Solo abrimos el modal si es un cliente diferente
+          if (!crmClient || crmClient.id !== existingClient.id) {
+            setCrmMergeModal({
+              isOpen: true,
+              clientName: existingClient.name,
+              docNumber: crmDocNumber.trim(),
+              oldPhone: '',
+              pendingData: {
+                phone_number: cleanJid,
+                doc_type: crmDocType,
+                doc_number: crmDocNumber.trim(),
+                name: crmName.trim(),
+                address: crmAddress.trim(),
+                email: crmEmail.trim(),
+                notes: crmNotes.trim(),
+                categoryId: crmCategoryId
+              }
+            });
+            return;
+          }
+        }
+      } catch (err) {
+        console.error('Error al validar DNI/RUC:', err);
+      }
+    }
+
+    // Link by DNI/RUC
+    setCrmSaving(true);
+    try {
+      const res = await api.post('/crm/link-doc', {
+        phone_number: cleanJid,
+        doc_type: crmDocType,
+        doc_number: crmDocNumber.trim(),
+        name: crmName.trim() || (crmDocType === 'DNI' ? 'DNI ' + crmDocNumber : 'RUC ' + crmDocNumber),
+        address: crmAddress.trim(),
+        email: crmEmail.trim(),
+        notes: crmNotes.trim(),
+        categoryId: crmCategoryId ? parseInt(crmCategoryId, 10) : null,
+        mergeAction
+      });
+
+      if (res.data?.success) {
+        setCrmClient(res.data.client);
+        setCrmContact(res.data.contact);
+        setCrmIsEditing(false);
+        setCrmMergeModal(prev => ({ ...prev, isOpen: false }));
+        showNotification('Cliente y contacto vinculados correctamente.', 'success');
+      }
+    } catch (err: any) {
+      console.error('Error linking DNI/RUC:', err.response?.data || err.message);
+      showNotification(err.response?.data?.error || 'Error al vincular cliente.', 'error');
+    } finally {
+      setCrmSaving(false);
+    }
+  };
+
+  // Categories CRUD
+  const handleCreateCrmCategory = async () => {
+    if (!crmNewCategoryName || !crmNewCategoryName.trim()) return;
+    try {
+      const res = await api.post('/crm/categories', { name: crmNewCategoryName.trim() });
+      if (res.data?.success) {
+        showNotification('Categoría creada exitosamente.', 'success');
+        setCrmNewCategoryName('');
+        fetchCrmCategories();
+      }
+    } catch (err: any) {
+      showNotification(err.response?.data?.error || 'Error al crear la categoría.', 'error');
+    }
+  };
+
+  const handleUpdateCrmCategory = async (id: number) => {
+    if (!crmEditingCategoryName || !crmEditingCategoryName.trim()) return;
+    try {
+      const res = await api.put(`/crm/categories/${id}`, { name: crmEditingCategoryName.trim() });
+      if (res.data?.success) {
+        showNotification('Categoría renombrada exitosamente.', 'success');
+        setCrmEditingCategoryId(null);
+        setCrmEditingCategoryName('');
+        fetchCrmCategories();
+      }
+    } catch (err: any) {
+      showNotification(err.response?.data?.error || 'Error al actualizar la categoría.', 'error');
+    }
+  };
+
+  const handleDeleteCrmCategory = async (id: number) => {
+    if (!window.confirm('¿Estás seguro de que deseas eliminar esta categoría? Los contactos vinculados quedarán sin categoría.')) return;
+    try {
+      const res = await api.delete(`/crm/categories/${id}`);
+      if (res.data?.success) {
+        showNotification('Categoría eliminada con éxito.', 'success');
+        fetchCrmCategories();
+      }
+    } catch (err: any) {
+      showNotification(err.response?.data?.error || 'Error al eliminar la categoría.', 'error');
+    }
+  };
+
   // Check URL parameters for Google Contacts connection status
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -996,6 +1268,11 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchGoogleContactsStatus();
   }, [fetchGoogleContactsStatus]);
+
+  // Cargar categorías CRM al arrancar
+  useEffect(() => {
+    fetchCrmCategories();
+  }, [fetchCrmCategories]);
 
   // Cargar grupos cuando se activa la pestaña y hay instancia seleccionada
   useEffect(() => {
@@ -1989,7 +2266,7 @@ echo $response;`;
                   <div className="flex-1 min-h-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md rounded-3xl overflow-hidden flex md:grid md:grid-cols-12 shadow-premium-lg text-left">
                     
                     {/* LEFT PANEL: Chats List */}
-                    <div className={`md:col-span-4 bg-slate-50/45 dark:bg-slate-950/20 flex-col min-h-0 w-full md:w-auto ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
+                    <div className={`md:col-span-${selectedChat ? '3' : '4'} bg-slate-50/45 dark:bg-slate-950/20 flex-col min-h-0 w-full md:w-auto ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
                       {/* Search Bar */}
                       <div className="p-4 relative">
                         <input
@@ -2093,7 +2370,7 @@ echo $response;`;
                     </div>
 
                     {/* RIGHT PANEL: Message Area */}
-                    <div className={`md:col-span-8 flex-col min-h-0 bg-gradient-to-b from-slate-50/50 via-slate-100/20 to-indigo-50/15 dark:from-slate-950/65 dark:via-slate-900/40 dark:to-slate-950/55 w-full md:w-auto ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
+                    <div className={`md:col-span-${selectedChat ? (showCrmSidebar && !selectedChat.remoteJid.endsWith('@g.us') ? '6' : '9') : '8'} flex-col min-h-0 bg-gradient-to-b from-slate-50/50 via-slate-100/20 to-indigo-50/15 dark:from-slate-950/65 dark:via-slate-900/40 dark:to-slate-950/55 w-full md:w-auto ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
                       {selectedChat ? (
                         <div className="flex-1 flex flex-col min-h-0">
                           
@@ -2113,7 +2390,7 @@ echo $response;`;
                                   <img src={selectedChat.profilePicUrl} alt="" className="w-full h-full object-cover" />
                                 ) : (
                                   <MessageCircle size={18} className="text-slate-400" />
-                                )}
+                                ) }
                               </div>
                               <div className="text-left flex items-center">
                                 <div>
@@ -2149,6 +2426,17 @@ echo $response;`;
                                 </div>
                               </div>
                             </div>
+                            {/* CRM Toggle Button */}
+                            {!selectedChat.remoteJid.endsWith('@g.us') && (
+                              <button
+                                type="button"
+                                onClick={() => setShowCrmSidebar(!showCrmSidebar)}
+                                className={`p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer ${showCrmSidebar ? 'text-[#00a884]' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                                title={showCrmSidebar ? "Ocultar Panel CRM" : "Mostrar Panel CRM"}
+                              >
+                                <Users size={18} />
+                              </button>
+                            )}
                           </div>
 
                           {/* Chat Window Messages */}
@@ -2525,6 +2813,226 @@ echo $response;`;
                         </div>
                       )}
                     </div>
+
+                    {/* CRM Sidebar Pane */}
+                    {selectedChat && showCrmSidebar && !selectedChat.remoteJid.endsWith('@g.us') && (
+                      <div className="md:col-span-3 border-l border-slate-200/50 dark:border-slate-800/50 flex flex-col min-h-0 bg-slate-50/45 dark:bg-slate-950/20 p-4 overflow-y-auto space-y-4 text-left">
+                        {/* Header */}
+                        <div className="flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800/50 pb-3">
+                          <h3 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Detalles del Cliente</h3>
+                          <button 
+                            type="button" 
+                            onClick={() => setShowCrmSidebar(false)}
+                            className="p-1 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 rounded-lg transition-colors text-slate-400 cursor-pointer"
+                            title="Ocultar Panel"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+
+                        {crmLoading ? (
+                          <div className="py-8 text-center text-xs text-slate-400 animate-pulse">Cargando datos CRM...</div>
+                        ) : (
+                          <div className="space-y-4">
+                            {/* Contact info card (Display Mode) */}
+                            {!crmIsEditing && crmClient ? (
+                              <div className="space-y-4">
+                                {/* Display client details */}
+                                <div className="bg-white dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 space-y-3 shadow-sm">
+                                  <div className="flex items-center gap-2.5">
+                                    <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-[#00a884]">
+                                      {crmClient.doc_type === 'RUC' ? <Users size={16} /> : <MessageCircle size={16} />}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <h4 className="text-xs font-bold text-slate-800 dark:text-white leading-tight truncate">{crmClient.name}</h4>
+                                      <span className="text-[10px] text-slate-400 font-semibold block truncate">
+                                        {crmClient.doc_type !== 'MANUAL' ? `${crmClient.doc_type}: ${crmClient.doc_number}` : 'Registro Manual'}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  {crmClient.address && (
+                                    <div className="space-y-0.5">
+                                      <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block">Dirección Fiscal</span>
+                                      <p className="text-[11px] text-slate-700 dark:text-slate-300 font-medium leading-normal">{crmClient.address}</p>
+                                    </div>
+                                  )}
+
+                                  {crmClient.email && (
+                                    <div className="space-y-0.5">
+                                      <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block">Email</span>
+                                      <p className="text-[11px] text-slate-700 dark:text-slate-300 font-medium truncate">{crmClient.email}</p>
+                                    </div>
+                                  )}
+
+                                  <div className="space-y-0.5">
+                                    <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block">Categoría de Contacto</span>
+                                    <span className="inline-flex px-2 py-0.5 bg-emerald-500/10 text-[#00a884] text-[9px] font-bold rounded-full mt-0.5 border border-emerald-500/15">
+                                      {crmContact?.category_name || 'Sin Categoría'}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {crmClient.notes && (
+                                  <div className="bg-slate-100/50 dark:bg-slate-900/40 p-3 rounded-2xl border border-slate-200/20 dark:border-slate-800/10 space-y-1">
+                                    <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block">Notas Comerciales</span>
+                                    <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium leading-relaxed whitespace-pre-line">{crmClient.notes}</p>
+                                  </div>
+                                )}
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setCrmDocType(crmClient.doc_type === 'MANUAL' ? 'DNI' : crmClient.doc_type);
+                                    setCrmDocNumber(crmClient.doc_type === 'MANUAL' ? '' : crmClient.doc_number);
+                                    setCrmName(crmClient.name);
+                                    setCrmAddress(crmClient.address || '');
+                                    setCrmEmail(crmClient.email || '');
+                                    setCrmNotes(crmClient.notes || '');
+                                    setCrmCategoryId(crmContact?.category_id?.toString() || '');
+                                    setCrmIsEditing(true);
+                                  }}
+                                  className="w-full py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white text-xs font-bold rounded-xl transition-all cursor-pointer text-center"
+                                >
+                                  Editar Datos
+                                </button>
+                              </div>
+                            ) : (
+                              /* Create / Edit Form Mode */
+                              <div className="space-y-3.5">
+                                <div className="space-y-1.5 text-left">
+                                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Identificación DNI / RUC</label>
+                                  <div className="flex gap-1.5">
+                                    <select
+                                      value={crmDocType}
+                                      onChange={(e) => setCrmDocType(e.target.value as 'DNI' | 'RUC')}
+                                      className="px-2 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-white focus:outline-none"
+                                    >
+                                      <option value="DNI">DNI</option>
+                                      <option value="RUC">RUC</option>
+                                    </select>
+                                    <div className="relative flex-1">
+                                      <input
+                                        type="text"
+                                        placeholder={crmDocType === 'DNI' ? '8 dígitos' : '11 dígitos'}
+                                        value={crmDocNumber}
+                                        onChange={(e) => setCrmDocNumber(e.target.value.replace(/\D/g, ''))}
+                                        className="w-full pl-3 pr-8 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none"
+                                      />
+                                      {crmDocNumber.trim() && (
+                                        <button
+                                          type="button"
+                                          onClick={handleValidateCrmDoc}
+                                          disabled={crmValidationLoading}
+                                          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#00a884] disabled:opacity-50 transition-colors cursor-pointer"
+                                          title="Consultar APIPeru"
+                                        >
+                                          {crmValidationLoading ? (
+                                            <RefreshCw size={12} className="animate-spin text-[#00a884]" />
+                                          ) : (
+                                            <Search size={12} />
+                                          )}
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="space-y-1 text-left">
+                                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Nombre / Razón Social</label>
+                                  <input
+                                    type="text"
+                                    placeholder="Nombre completo o Empresa"
+                                    value={crmName}
+                                    onChange={(e) => setCrmName(e.target.value)}
+                                    className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none"
+                                  />
+                                </div>
+
+                                <div className="space-y-1 text-left">
+                                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Categoría de Contacto</label>
+                                  <div className="flex gap-1.5">
+                                    <select
+                                      value={crmCategoryId}
+                                      onChange={(e) => setCrmCategoryId(e.target.value)}
+                                      className="flex-1 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-white focus:outline-none"
+                                    >
+                                      <option value="">Sin Categoría</option>
+                                      {crmCategories.map((cat: any) => (
+                                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                      ))}
+                                    </select>
+                                    <button
+                                      type="button"
+                                      onClick={() => setCrmCategoriesModalOpen(true)}
+                                      className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-xl transition-colors cursor-pointer"
+                                      title="Gestionar Categorías"
+                                    >
+                                      <Settings size={14} />
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {crmDocType === 'RUC' && (
+                                  <div className="space-y-1 text-left">
+                                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Dirección Fiscal</label>
+                                    <textarea
+                                      placeholder="Dirección fiscal SUNAT"
+                                      rows={2}
+                                      value={crmAddress}
+                                      onChange={(e) => setCrmAddress(e.target.value)}
+                                      className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none resize-none font-medium"
+                                    />
+                                  </div>
+                                )}
+
+                                <div className="space-y-1 text-left">
+                                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Email</label>
+                                  <input
+                                    type="email"
+                                    placeholder="correo@ejemplo.com"
+                                    value={crmEmail}
+                                    onChange={(e) => setCrmEmail(e.target.value)}
+                                    className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none font-medium"
+                                  />
+                                </div>
+
+                                <div className="space-y-1 text-left">
+                                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Notas de Negocio</label>
+                                  <textarea
+                                    placeholder="Acuerdos, precios, descuentos especiales..."
+                                    rows={3}
+                                    value={crmNotes}
+                                    onChange={(e) => setCrmNotes(e.target.value)}
+                                    className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none resize-none font-medium"
+                                  />
+                                </div>
+
+                                <div className="flex gap-2 pt-1.5">
+                                  {crmClient && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setCrmIsEditing(false)}
+                                      className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                                    >
+                                      Cancelar
+                                    </button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSaveCrmContact()}
+                                    disabled={crmSaving}
+                                    className="flex-1 py-2 bg-[#00a884] hover:bg-[#008f70] text-white text-xs font-bold rounded-xl transition-all disabled:opacity-50 cursor-pointer text-center"
+                                  >
+                                    {crmSaving ? 'Guardando...' : 'Guardar Ficha'}
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                   </div>
                 )}
@@ -3646,6 +4154,171 @@ echo $response;`;
           </div>
         </div>
       )}
+      {/* Modal para Fusión de Contacto CRM */}
+      {crmMergeModal.isOpen && (
+        <div className="fixed inset-0 z-[60] bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 w-full max-w-md p-6 sm:p-7 rounded-3xl space-y-4 shadow-premium-lg relative animate-fadeIn text-left">
+            <button
+              onClick={() => setCrmMergeModal(prev => ({ ...prev, isOpen: false }))}
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="space-y-1.5">
+              <h3 className="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                <AlertCircle className="text-amber-500" size={18} />
+                <span>Cliente ya Registrado</span>
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                El documento <strong>{crmMergeModal.docNumber}</strong> ya está registrado a nombre de <strong>{crmMergeModal.clientName}</strong>. 
+                ¿Cómo deseas vincular este nuevo número de WhatsApp a la ficha del cliente?
+              </p>
+            </div>
+
+            <div className="space-y-3 pt-2">
+              <button
+                type="button"
+                onClick={() => handleSaveCrmContact('promote')}
+                className="w-full p-3.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950/50 dark:hover:bg-slate-950/80 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-left cursor-pointer transition-all flex flex-col gap-0.5 group"
+              >
+                <span className="text-xs font-bold text-slate-800 dark:text-white group-hover:text-[#00a884]">Hacer este número Primario</span>
+                <span className="text-[10px] text-slate-400">Este número será el principal. El anterior se guardará como Secundario. (Ambos quedan activos)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSaveCrmContact('keep')}
+                className="w-full p-3.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950/50 dark:hover:bg-slate-950/80 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-left cursor-pointer transition-all flex flex-col gap-0.5 group"
+              >
+                <span className="text-xs font-bold text-slate-800 dark:text-white group-hover:text-[#00a884]">Registrar como Secundario</span>
+                <span className="text-[10px] text-slate-400">Guarda este número como secundario sin modificar el número principal actual. (Ambos quedan activos)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSaveCrmContact('deactivate')}
+                className="w-full p-3.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950/50 dark:hover:bg-slate-950/80 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-left cursor-pointer transition-all flex flex-col gap-0.5 group"
+              >
+                <span className="text-xs font-bold text-[#e11d48] group-hover:text-red-500">Desactivar número anterior</span>
+                <span className="text-[10px] text-slate-400">Desactiva el número de WhatsApp anterior del cliente y establece este nuevo como Primario.</span>
+              </button>
+            </div>
+
+            <div className="flex pt-2">
+              <button
+                type="button"
+                onClick={() => setCrmMergeModal(prev => ({ ...prev, isOpen: false }))}
+                className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 text-xs font-bold rounded-2xl transition-all cursor-pointer text-center"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para Gestión de Categorías CRM */}
+      {crmCategoriesModalOpen && (
+        <div className="fixed inset-0 z-[60] bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 w-full max-w-md p-6 sm:p-7 rounded-3xl space-y-4 shadow-premium-lg relative animate-fadeIn text-left">
+            <button
+              onClick={() => {
+                setCrmCategoriesModalOpen(false);
+                setCrmEditingCategoryId(null);
+                setCrmEditingCategoryName('');
+              }}
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="space-y-1.5">
+              <h3 className="text-base font-bold text-slate-800 dark:text-white">Gestionar Categorías</h3>
+              <p className="text-xs text-slate-400">Agrega, renombra o elimina categorías para tus contactos.</p>
+            </div>
+
+            {/* List */}
+            <div className="max-h-56 overflow-y-auto space-y-2 pr-1">
+              {crmCategories.map((cat: any) => (
+                <div key={cat.id} className="flex items-center justify-between p-2.5 bg-slate-50 dark:bg-slate-950/30 rounded-xl border border-slate-200/50 dark:border-slate-800/50">
+                  {crmEditingCategoryId === cat.id ? (
+                    <div className="flex-1 flex gap-1.5 pr-2">
+                      <input
+                        type="text"
+                        value={crmEditingCategoryName}
+                        onChange={(e) => setCrmEditingCategoryName(e.target.value)}
+                        className="flex-1 px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs text-slate-800 dark:text-white focus:outline-none"
+                      />
+                      <button
+                        onClick={() => handleUpdateCrmCategory(cat.id)}
+                        className="px-2.5 py-1.5 bg-[#00a884] hover:bg-[#008f70] text-white text-[10px] font-bold rounded-lg cursor-pointer"
+                      >
+                        OK
+                      </button>
+                      <button
+                        onClick={() => setCrmEditingCategoryId(null)}
+                        className="px-2.5 py-1.5 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold rounded-lg cursor-pointer"
+                      >
+                        X
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-300">{cat.name}</span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCrmEditingCategoryId(cat.id);
+                            setCrmEditingCategoryName(cat.name);
+                          }}
+                          className="p-1 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 rounded-md transition-colors cursor-pointer"
+                          title="Renombrar"
+                        >
+                          <RefreshCw size={12} />
+                        </button>
+                        {cat.name !== 'Contacto Primario' && cat.name !== 'Contacto Secundario' && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCrmCategory(cat.id)}
+                            className="p-1 hover:bg-red-500/10 text-rose-500 rounded-md transition-colors cursor-pointer"
+                            title="Eliminar"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Add inline form */}
+            <div className="pt-2 border-t border-slate-200/50 dark:border-slate-800/50 space-y-2">
+              <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Agregar Nueva Categoría</label>
+              <div className="flex gap-1.5">
+                <input
+                  type="text"
+                  placeholder="Ej: Delivery, Facturación..."
+                  value={crmNewCategoryName}
+                  onChange={(e) => setCrmNewCategoryName(e.target.value)}
+                  className="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleCreateCrmCategory}
+                  className="px-4 py-2 bg-[#00a884] hover:bg-[#008f70] text-white text-xs font-bold rounded-xl transition-all cursor-pointer font-medium"
+                >
+                  Agregar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal para Crear / Editar Contacto */}
       {contactModal.isOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-4">
