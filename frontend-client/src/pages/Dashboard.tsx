@@ -232,6 +232,7 @@ export default function DashboardPage() {
   // CRM Integration States
   const [crmClient, setCrmClient] = useState<any | null>(null);
   const [crmContact, setCrmContact] = useState<any | null>(null);
+  const [crmContactMap, setCrmContactMap] = useState<Record<string, string>>({});
   const [crmCategories, setCrmCategories] = useState<any[]>([]);
   const [crmLoading, setCrmLoading] = useState(false);
   const [crmSaving, setCrmSaving] = useState(false);
@@ -1046,6 +1047,18 @@ export default function DashboardPage() {
 
   // --- CRM INTEGRATION FUNCTIONS ---
 
+  // Fetch CRM Contact Map for chats UI
+  const fetchCrmContactMap = useCallback(async () => {
+    try {
+      const res = await api.get('/crm/contacts/map');
+      if (res.data?.success) {
+        setCrmContactMap(res.data.data || {});
+      }
+    } catch (err: any) {
+      console.error('Error fetching CRM contact map:', err.message);
+    }
+  }, []);
+
   // Fetch CRM Categories
   const fetchCrmCategories = useCallback(async () => {
     try {
@@ -1162,6 +1175,7 @@ export default function DashboardPage() {
           setCrmClient(res.data.client);
           setCrmContact(res.data.contact);
           setCrmIsEditing(false);
+          fetchCrmContactMap();
           showNotification('Contacto guardado exitosamente.', 'success');
         }
       } catch (err: any) {
@@ -1224,6 +1238,7 @@ export default function DashboardPage() {
         setCrmContact(res.data.contact);
         setCrmIsEditing(false);
         setCrmMergeModal(prev => ({ ...prev, isOpen: false }));
+        fetchCrmContactMap();
         showNotification('Cliente y contacto vinculados correctamente.', 'success');
       }
     } catch (err: any) {
@@ -1339,7 +1354,8 @@ export default function DashboardPage() {
   // Cargar categorías CRM al arrancar
   useEffect(() => {
     fetchCrmCategories();
-  }, [fetchCrmCategories]);
+    fetchCrmContactMap();
+  }, [fetchCrmCategories, fetchCrmContactMap]);
 
   // Cargar grupos cuando se activa la pestaña y hay instancia seleccionada
   useEffect(() => {
@@ -2410,7 +2426,8 @@ echo $response;`;
                               const isActive = selectedChat?.remoteJid === chat.remoteJid;
                               const unreadCount = Number(chat.unreadCount) || 0;
                               const isUnread = unreadCount > 0;
-                              const contactName = chat.pushName || chat.remoteJid.split('@')[0];
+                              const cleanRemoteJid = chat.remoteJid.split('@')[0];
+                              const contactName = crmContactMap[cleanRemoteJid] || chat.pushName || cleanRemoteJid;
                               
                               // Extract last message text
                               const content = chat.lastMessage?.message;
@@ -2508,7 +2525,7 @@ echo $response;`;
                               <div className="text-left flex items-center">
                                 <div>
                                   <h4 className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
-                                    {selectedChat.pushName || selectedChat.remoteJid.split('@')[0]}
+                                    {crmContactMap[selectedChat.remoteJid.split('@')[0]] || selectedChat.pushName || selectedChat.remoteJid.split('@')[0]}
                                     {googleConnected && !selectedChat.remoteJid.endsWith('@g.us') && !googleContacts.some(c => {
                                       const cleanSaved = c.phoneNumber.replace(/\D/g, '');
                                       const cleanChat = selectedChat.remoteJid.split('@')[0].replace(/\D/g, '');

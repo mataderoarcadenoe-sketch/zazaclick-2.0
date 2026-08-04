@@ -216,6 +216,33 @@ router.post('/validate-doc', async (req: AuthenticatedRequest, res: Response) =>
 });
 
 /**
+ * GET /api/crm/contacts/map - Obtener un mapa de { phoneNumber: clientName } para la UI de chats
+ */
+router.get('/contacts/map', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const mapRes = await pool.query(
+      `SELECT c.phone_number, cl.name
+       FROM crm_contacts c
+       INNER JOIN crm_clients cl ON c.client_id = cl.id
+       WHERE c.user_id = $1`,
+      [req.userId]
+    );
+
+    const contactMap: Record<string, string> = {};
+    for (const row of mapRes.rows) {
+      if (row.phone_number) {
+        contactMap[row.phone_number] = row.name;
+      }
+    }
+
+    return res.json({ success: true, data: contactMap });
+  } catch (error: any) {
+    console.error('[CRM Contacts Map] Error:', error.message);
+    return res.status(500).json({ success: false, error: 'Error al obtener mapa de contactos CRM' });
+  }
+});
+
+/**
  * GET /api/crm/contacts/:phoneNumber - Buscar cliente y datos de contacto de una línea
  */
 router.get('/contacts/:phoneNumber', async (req: AuthenticatedRequest, res: Response) => {
