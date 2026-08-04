@@ -2953,7 +2953,12 @@ echo $response;`;
                                   <div className="flex gap-1.5">
                                     <select
                                       value={crmDocType}
-                                      onChange={(e) => setCrmDocType(e.target.value as 'DNI' | 'RUC')}
+                                      onChange={(e) => {
+                                        setCrmDocType(e.target.value as 'DNI' | 'RUC');
+                                        setCrmDocNumber('');
+                                        setCrmName('');
+                                        setCrmAddress('');
+                                      }}
                                       className="px-2 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-white focus:outline-none"
                                     >
                                       <option value="DNI">DNI</option>
@@ -2970,7 +2975,7 @@ echo $response;`;
                                           setCrmDocNumber(val);
                                           const expectedLen = crmDocType === 'DNI' ? 8 : 11;
                                           if (val.length === expectedLen) {
-                                            setTimeout(() => handleValidateCrmDoc(), 0);
+                                            setTimeout(() => handleValidateCrmDoc(val), 0);
                                           }
                                         }}
                                         className="w-full pl-3 pr-8 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none"
