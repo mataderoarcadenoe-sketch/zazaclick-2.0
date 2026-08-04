@@ -2398,7 +2398,7 @@ echo $response;`;
                                     )}
 
                                     {/* Profile Photo */}
-                                    <div className="w-10 h-10 rounded-full bg-slate-100/80 dark:bg-slate-800/80 flex items-center justify-center flex-shrink-0 relative overflow-hidden">
+                                    <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center flex-shrink-0 relative overflow-hidden">
                                       {chat.profilePicUrl ? (
                                         <img src={chat.profilePicUrl} alt="" className="w-full h-full object-cover" />
                                       ) : (
