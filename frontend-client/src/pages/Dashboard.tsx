@@ -2972,7 +2972,7 @@ echo $response;`;
                                       <button
                                         type="button"
                                         onClick={() => setIsDocTypeDropdownOpen(!isDocTypeDropdownOpen)}
-                                        className="flex items-center gap-1 px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-all cursor-pointer min-w-[65px] justify-between shadow-premium-sm focus:outline-none"
+                                        className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950/60 border-0 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all cursor-pointer min-w-[65px] justify-between shadow-sm focus:outline-none"
                                       >
                                         <span>{crmDocType}</span>
                                         <ChevronDown size={10} className={`text-surface-400 transition-transform duration-200 ${isDocTypeDropdownOpen ? 'rotate-180' : ''}`} />
@@ -3029,7 +3029,7 @@ echo $response;`;
                                             setTimeout(() => handleValidateCrmDoc(val), 0);
                                           }
                                         }}
-                                        className="w-full pl-2.5 pr-8 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none font-medium"
+                                        className="w-full pl-2.5 pr-8 py-1.5 bg-slate-100/70 dark:bg-slate-950/60 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
                                       />
                                       {crmDocNumber.trim() && (
                                         <button
@@ -3057,7 +3057,7 @@ echo $response;`;
                                     placeholder="Nombre completo o Empresa"
                                     value={crmName}
                                     onChange={(e) => setCrmName(e.target.value)}
-                                    className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none font-medium"
+                                    className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950/60 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
                                   />
                                 </div>
 
@@ -3068,7 +3068,7 @@ echo $response;`;
                                       <button
                                         type="button"
                                         onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
-                                        className="w-full flex items-center justify-between px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-all cursor-pointer shadow-premium-sm focus:outline-none"
+                                        className="w-full flex items-center justify-between px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-955 border-0 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all cursor-pointer shadow-sm focus:outline-none"
                                       >
                                         <span>
                                           {crmCategories.find(c => c.id.toString() === crmCategoryId)?.name || 'Sin Categoría'}
@@ -3129,7 +3129,7 @@ echo $response;`;
                                       rows={2}
                                       value={crmAddress}
                                       onChange={(e) => setCrmAddress(e.target.value)}
-                                      className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none resize-none font-medium"
+                                      className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950/60 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 resize-none font-medium transition-all"
                                     />
                                   </div>
                                 )}
@@ -3141,7 +3141,7 @@ echo $response;`;
                                     placeholder="correo@ejemplo.com"
                                     value={crmEmail}
                                     onChange={(e) => setCrmEmail(e.target.value)}
-                                    className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none font-medium"
+                                    className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-955 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
                                   />
                                 </div>
 
@@ -3152,7 +3152,7 @@ echo $response;`;
                                     rows={3}
                                     value={crmNotes}
                                     onChange={(e) => setCrmNotes(e.target.value)}
-                                    className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none resize-none font-medium"
+                                    className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-955 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 resize-none font-medium transition-all"
                                   />
                                 </div>
 
