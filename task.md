@@ -1,5 +1,6 @@
-- `[x]` Agregar servicio y endpoints de Licencia en el backend (`EvolutionService` y `admin.routes.ts`)
-- `[x]` Integrar tarjeta de Licencia y monitoreo de expiración en `AdminDashboard.tsx`
-- `[x]` Probar compilación del backend
-- `[x]` Probar compilación de admin
-- `[x]` Guardar y hacer push a GitHub
+- `[x]` Modificar backend para habilitar events webhook en `evolution.service.ts`
+- `[x]` Implementar timeouts de presencia en frontend client (`Dashboard.tsx`)
+- `[x]` Ajustar diseño y colores de presencias (azul escribiendo, ámbar grabando, verde en línea)
+- `[x]` Eliminar shadow-sm del avatar de la cabecera activa
+- `[x]` Probar compilación de frontend y backend
+- `[x]` Realizar git commit y git push
