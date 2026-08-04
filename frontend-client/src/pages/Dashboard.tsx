@@ -2526,15 +2526,15 @@ echo $response;`;
                                     if (msg.MessageUpdate) {
                                       const statuses = msg.MessageUpdate.map((u: any) => u.status);
                                       if (statuses.includes('READ')) {
-                                        statusIcon = <span className="text-[9px] text-sky-200 dark:text-sky-300 font-bold ml-1">✓✓</span>;
+                                        statusIcon = <span className="text-[9px] text-sky-600 dark:text-sky-300 font-bold ml-1">✓✓</span>;
                                       } else if (statuses.includes('DELIVERY_ACK')) {
-                                        statusIcon = <span className="text-[9px] text-white/60 font-bold ml-1">✓✓</span>;
+                                        statusIcon = <span className="text-[9px] text-slate-500/80 dark:text-white/60 font-bold ml-1">✓✓</span>;
                                       } else if (statuses.includes('SERVER_ACK')) {
-                                        statusIcon = <span className="text-[9px] text-white/60 font-bold ml-1">✓</span>;
+                                        statusIcon = <span className="text-[9px] text-slate-500/80 dark:text-white/60 font-bold ml-1">✓</span>;
                                       }
                                     } else {
                                       // Mensajes enviados sin MessageUpdate aún: mostrar ✓ por defecto
-                                      statusIcon = <span className="text-[9px] text-white/60 font-bold ml-1">✓</span>;
+                                      statusIcon = <span className="text-[9px] text-slate-500/80 dark:text-white/60 font-bold ml-1">✓</span>;
                                     }
                                   }
 
@@ -2731,11 +2731,11 @@ echo $response;`;
                                       )}
 
                                       {/* Bubble */}
-                                      <div className={`p-3 rounded-2xl text-slate-800 dark:text-slate-100 ${fromMe ? 'bg-brand-primary dark:bg-brand-primary text-white dark:text-white rounded-tr-none shadow-sm-custom' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-tl-none border border-slate-100 dark:border-slate-700/50 shadow-sm-custom'}`}>
+                                      <div className={`p-3 rounded-2xl ${fromMe ? 'bg-[#d1f2c4] dark:bg-[#005c4b] text-slate-800 dark:text-slate-100 rounded-tr-none shadow-sm-custom' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-tl-none border border-slate-100 dark:border-slate-700/50 shadow-sm-custom'}`}>
                                         {renderMessageContent()}
                                         
                                         {/* Timestamp and Checks */}
-                                        <div className={`flex items-center justify-end mt-1 text-[9px] font-medium ${fromMe ? 'text-white/70 dark:text-white/60' : 'text-surface-400 dark:text-surface-500'}`}>
+                                        <div className={`flex items-center justify-end mt-1 text-[9px] font-medium ${fromMe ? 'text-slate-500 dark:text-white/60' : 'text-surface-400 dark:text-surface-500'}`}>
                                           <span>{timestamp}</span>
                                           {statusIcon}
                                         </div>
