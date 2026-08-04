@@ -2496,7 +2496,7 @@ echo $response;`;
                               <button
                                 type="button"
                                 onClick={() => setShowCrmSidebar(!showCrmSidebar)}
-                                className={`p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer ${showCrmSidebar ? 'text-brand-primary' : 'text-surface-400 hover:text-surface-600 dark:hover:text-slate-300'}`}
+                                className={`p-2 rounded-xl transition-all cursor-pointer ${showCrmSidebar ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400' : 'text-surface-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-300'}`}
                                 title={showCrmSidebar ? "Ocultar Panel CRM" : "Mostrar Panel CRM"}
                               >
                                 <Users size={18} />
