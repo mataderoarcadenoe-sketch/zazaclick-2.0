@@ -1822,7 +1822,7 @@ echo $response;`;
 
       {/* Sidebar */}
       <aside 
-        className={`bg-[#1B4332] dark:bg-surface-950 flex flex-col transition-all duration-300 shadow-premium z-40 ${
+        className={`bg-[#0b2d33] dark:bg-surface-950 flex flex-col transition-all duration-300 shadow-premium z-40 ${
           sidebarOpen ? 'w-64' : 'w-20'
         } ${sidebarOpen ? 'fixed lg:relative h-full' : 'hidden lg:flex'}`}
       >
@@ -1882,7 +1882,7 @@ echo $response;`;
         </nav>
 
         {/* Footer profile actions */}
-        <div className="p-3 border-t border-white/10 dark:border-slate-800/60 bg-[#133024] dark:bg-surface-950">
+        <div className="p-3 border-t border-white/10 dark:border-slate-800/60 bg-[#071e22] dark:bg-surface-950">
           <button
             onClick={logout}
             className={`w-full group flex items-center ${
@@ -2278,7 +2278,7 @@ echo $response;`;
                       </button>
 
                       {showChatsInstanceMenu && (
-                        <div className="absolute top-[100%] right-0 mt-1.5 z-50 bg-[#1B4332] dark:bg-slate-900 rounded-2xl shadow-premium-lg p-1.5 flex flex-col gap-1 min-w-[200px] border-0 text-left animate-fadeIn">
+                        <div className="absolute top-[100%] right-0 mt-1.5 z-50 bg-[#0b2d33] dark:bg-slate-900 rounded-2xl shadow-premium-lg p-1.5 flex flex-col gap-1 min-w-[200px] border-0 text-left animate-fadeIn">
                           {instances.length === 0 ? (
                             <span className="p-3 text-[10px] text-surface-400 dark:text-surface-500 font-bold block text-center">No hay líneas creadas</span>
                           ) : (
@@ -3001,7 +3001,7 @@ echo $response;`;
                                             className="fixed inset-0 z-30" 
                                             onClick={() => setIsDocTypeDropdownOpen(false)} 
                                           />
-                                          <div className="absolute left-0 mt-1 w-24 bg-[#1B4332] dark:bg-slate-955 rounded-xl border-0 shadow-premium-lg py-1 z-40 animate-fadeIn">
+                                          <div className="absolute left-0 mt-1 w-24 bg-[#0b2d33] dark:bg-slate-955 rounded-xl border-0 shadow-premium-lg py-1 z-40 animate-fadeIn">
                                             <button
                                               type="button"
                                               onClick={() => {
@@ -3099,7 +3099,7 @@ echo $response;`;
                                             className="fixed inset-0 z-30" 
                                             onClick={() => setIsCategoryDropdownOpen(false)} 
                                           />
-                                          <div className="absolute left-0 right-0 mt-1 bg-[#1B4332] dark:bg-slate-955 rounded-xl border-0 shadow-premium-lg py-1 z-40 max-h-40 overflow-y-auto animate-fadeIn">
+                                          <div className="absolute left-0 right-0 mt-1 bg-[#0b2d33] dark:bg-slate-955 rounded-xl border-0 shadow-premium-lg py-1 z-40 max-h-40 overflow-y-auto animate-fadeIn">
                                             <button
                                               type="button"
                                               onClick={() => {

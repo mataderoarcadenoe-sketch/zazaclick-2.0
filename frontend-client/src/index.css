@@ -8,7 +8,7 @@
   
   /* Brand colors */
   --color-brand-primary: #40916C; /* Olive */
-  --color-brand-secondary: #1B4332; /* Green Forest */ /* Darker complement */
+  --color-brand-secondary: #0b2d33; /* Green Forest */ /* Darker complement */
   --color-brand-500: var(--color-brand-primary);
   --color-brand-800: var(--color-brand-secondary);
   --color-brand-accent: #74C69D; /* Mint */
