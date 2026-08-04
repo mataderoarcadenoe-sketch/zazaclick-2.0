@@ -2680,8 +2680,8 @@ echo $response;`;
                                   {!selectedChat.remoteJid.endsWith('@g.us') ? (
                                     (() => {
                                       const presenceState = presences[selectedChat.remoteJid];
-                                      let presenceDotClass = "bg-[#12a160] shadow-[0_0_4px_#12a160]";
-                                      let presenceText = "En línea";
+                                      let presenceDotClass = "";
+                                      let presenceText = "";
                                       
                                       if (presenceState === 'composing') {
                                         presenceDotClass = "bg-brand-primary animate-pulse shadow-[0_0_6px_#12a160]";
@@ -2692,20 +2692,21 @@ echo $response;`;
                                       } else if (presenceState === 'available') {
                                         presenceDotClass = "bg-[#12a160] shadow-[0_0_4px_#12a160]";
                                         presenceText = "En línea";
-                                      } else if (presenceState === 'unavailable') {
-                                        presenceDotClass = "bg-slate-400";
-                                        presenceText = "Desconectado";
                                       }
 
                                       return (
                                         <div className="flex items-center gap-3 mt-1.5 text-[10px] text-slate-500 dark:text-slate-400 font-semibold animate-fadeIn">
-                                          <div className="flex items-center gap-1.5">
-                                            <div className={`w-2 h-2 rounded-full transition-all duration-300 ${presenceDotClass}`}></div>
-                                            <span className={presenceState === 'composing' || presenceState === 'recording' ? 'text-brand-primary font-extrabold' : ''}>
-                                              {presenceText}
-                                            </span>
-                                          </div>
-                                          <span className="text-slate-300 dark:text-slate-600 font-normal">|</span>
+                                          {presenceText && (
+                                            <>
+                                              <div className="flex items-center gap-1.5">
+                                                <div className={`w-2 h-2 rounded-full transition-all duration-300 ${presenceDotClass}`}></div>
+                                                <span className={presenceState === 'composing' || presenceState === 'recording' ? 'text-brand-primary font-extrabold' : ''}>
+                                                  {presenceText}
+                                                </span>
+                                              </div>
+                                              <span className="text-slate-300 dark:text-slate-600 font-normal">|</span>
+                                            </>
+                                          )}
                                           <div className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
                                             <MapPin size={11} className="text-slate-400" />
                                             <span>Lima, Perú</span>
