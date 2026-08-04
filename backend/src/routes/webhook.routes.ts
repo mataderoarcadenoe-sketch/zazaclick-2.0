@@ -120,6 +120,24 @@ router.post('/whatsapp', async (req, res) => {
         console.log(`📇 [Webhook] CONTACTS_UPSERT: ${savedCount} contactos procesados para ${instance}`);
       }
     }
+    else if (eventUpper === 'PRESENCE_UPDATE') {
+      const remoteJid = data.id || data.remoteJid;
+      if (remoteJid && data.presences) {
+        let cleanJid = remoteJid.replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net');
+        const jids = Object.keys(data.presences);
+        const targetKey = jids.find(k => k.includes(cleanJid.split('@')[0])) || jids[0];
+        
+        if (targetKey && data.presences[targetKey]) {
+          const status = data.presences[targetKey].lastKnownPresence;
+          console.log(`📬 [Webhook] PRESENCE_UPDATE: JID ${cleanJid} -> ${status} en la instancia ${instance}`);
+          
+          io.to(roomName).emit('presence_update', {
+            remoteJid: cleanJid,
+            status: status
+          });
+        }
+      }
+    }
 
     res.status(200).json({ success: true });
   } catch (error: any) {

@@ -155,6 +155,7 @@ export default function DashboardPage() {
   const [chats, setChats] = useState<any[]>([]);
   const [chatsLoading, setChatsLoading] = useState(false);
   const [selectedChat, setSelectedChat] = useState<any | null>(null);
+  const [presences, setPresences] = useState<Record<string, string>>({});
   const [messages, setMessages] = useState<any[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [newMessageText, setNewMessageText] = useState('');
@@ -803,6 +804,13 @@ export default function DashboardPage() {
           return { ...c, unreadCount };
         }
         return c;
+      }));
+    });
+
+    socket.on('presence_update', ({ remoteJid, status }: { remoteJid: string, status: string }) => {
+      setPresences(prev => ({
+        ...prev,
+        [remoteJid]: status
       }));
     });
 
@@ -2549,22 +2557,46 @@ echo $response;`;
                                   </div>
                                   
                                   {!selectedChat.remoteJid.endsWith('@g.us') ? (
-                                    <div className="flex items-center gap-3 mt-1.5 text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
-                                      <div className="flex items-center gap-1.5">
-                                        <div className="w-2 h-2 rounded-full bg-[#12a160] shadow-[0_0_4px_#12a160]"></div>
-                                        <span>En línea</span>
-                                      </div>
-                                      <span className="text-slate-300 dark:text-slate-600 font-normal">|</span>
-                                      <div className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
-                                        <MapPin size={11} className="text-slate-400" />
-                                        <span>Lima, Perú</span>
-                                      </div>
-                                      <span className="text-slate-300 dark:text-slate-600 font-normal">|</span>
-                                      <div className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
-                                        <Phone size={11} className="text-slate-400" />
-                                        <span>+{selectedChat.remoteJid.split('@')[0]}</span>
-                                      </div>
-                                    </div>
+                                    (() => {
+                                      const presenceState = presences[selectedChat.remoteJid];
+                                      let presenceDotClass = "bg-[#12a160] shadow-[0_0_4px_#12a160]";
+                                      let presenceText = "En línea";
+                                      
+                                      if (presenceState === 'composing') {
+                                        presenceDotClass = "bg-brand-primary animate-pulse shadow-[0_0_6px_#12a160]";
+                                        presenceText = "Escribiendo...";
+                                      } else if (presenceState === 'recording') {
+                                        presenceDotClass = "bg-amber-500 animate-pulse shadow-[0_0_6px_#f59e0b]";
+                                        presenceText = "Grabando audio...";
+                                      } else if (presenceState === 'available') {
+                                        presenceDotClass = "bg-[#12a160] shadow-[0_0_4px_#12a160]";
+                                        presenceText = "En línea";
+                                      } else if (presenceState === 'unavailable') {
+                                        presenceDotClass = "bg-slate-400";
+                                        presenceText = "Desconectado";
+                                      }
+
+                                      return (
+                                        <div className="flex items-center gap-3 mt-1.5 text-[10px] text-slate-500 dark:text-slate-400 font-semibold animate-fadeIn">
+                                          <div className="flex items-center gap-1.5">
+                                            <div className={`w-2 h-2 rounded-full transition-all duration-300 ${presenceDotClass}`}></div>
+                                            <span className={presenceState === 'composing' || presenceState === 'recording' ? 'text-brand-primary font-extrabold' : ''}>
+                                              {presenceText}
+                                            </span>
+                                          </div>
+                                          <span className="text-slate-300 dark:text-slate-600 font-normal">|</span>
+                                          <div className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
+                                            <MapPin size={11} className="text-slate-400" />
+                                            <span>Lima, Perú</span>
+                                          </div>
+                                          <span className="text-slate-300 dark:text-slate-600 font-normal">|</span>
+                                          <div className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
+                                            <Phone size={11} className="text-slate-400" />
+                                            <span>+{selectedChat.remoteJid.split('@')[0]}</span>
+                                          </div>
+                                        </div>
+                                      );
+                                    })()
                                   ) : (
                                     <div className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold mt-1">
                                       Grupo de WhatsApp

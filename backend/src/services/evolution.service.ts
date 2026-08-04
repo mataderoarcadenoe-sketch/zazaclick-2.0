@@ -788,7 +788,8 @@ export class EvolutionService {
             'CHATS_UPDATE',
             'MESSAGES_UPDATE',
             'CONTACTS_UPSERT',
-            'CONTACTS_UPDATE'
+            'CONTACTS_UPDATE',
+            'PRESENCE_UPDATE'
           ]
         }
       });
