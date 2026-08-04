@@ -15,6 +15,8 @@ import {
 import EmojiPicker, { Theme, EmojiStyle, Emoji } from 'emoji-picker-react';
 import { parse } from '@twemoji/parser';
 
+const SMART_TAGS = ['VIP', 'Moroso', 'Pendiente', 'Nuevo', 'Cliente frecuente', 'Prospecto', 'Empresa', 'Mayorista', 'Interesado', 'Pagó', 'Sin responder'];
+
 // Componente para parsear texto y renderizar los mismos Emojis de Apple que usa el selector
 const AppleEmojiText = ({ text, size }: { text: string; size?: number }) => {
   // Fix para el handshake de Emoji 14.0 con el mismo tono de piel (ej. 🫱🏻‍🫲🏻)
@@ -247,6 +249,11 @@ export default function DashboardPage() {
   const [crmClient, setCrmClient] = useState<any | null>(null);
   const [crmContact, setCrmContact] = useState<any | null>(null);
   const [crmContactMap, setCrmContactMap] = useState<Record<string, string>>({});
+  const [crmContactTagsMap, setCrmContactTagsMap] = useState<Record<string, string[]>>({});
+  const [showTagsDropdown, setShowTagsDropdown] = useState(false);
+  const [selectedFilterTag, setSelectedFilterTag] = useState<string | null>(null);
+  const tagsDropdownRef = useRef<HTMLDivElement>(null);
+  const tagsButtonRef = useRef<HTMLButtonElement>(null);
   const [crmCategories, setCrmCategories] = useState<any[]>([]);
   const [crmLoading, setCrmLoading] = useState(false);
   const [crmSaving, setCrmSaving] = useState(false);
@@ -985,6 +992,21 @@ export default function DashboardPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showSyncDropdown]);
 
+  // Cerrar select de etiquetas al hacer clic fuera
+  useEffect(() => {
+    if (!showTagsDropdown) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        tagsDropdownRef.current && !tagsDropdownRef.current.contains(e.target as Node) &&
+        tagsButtonRef.current && !tagsButtonRef.current.contains(e.target as Node)
+      ) {
+        setShowTagsDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showTagsDropdown]);
+
   // Fetch Google Contacts Connection Status
   const fetchGoogleContactsStatus = useCallback(async () => {
     try {
@@ -1130,6 +1152,59 @@ export default function DashboardPage() {
       console.error('Error fetching CRM contact map:', err.message);
     }
   }, []);
+
+  // Fetch CRM Contact Tags Map
+  const fetchCrmContactTagsMap = useCallback(async () => {
+    try {
+      const res = await api.get('/crm/contacts/tags-map');
+      if (res.data?.success) {
+        setCrmContactTagsMap(res.data.data || {});
+      }
+    } catch (err: any) {
+      console.error('Error fetching CRM contact tags map:', err.message);
+    }
+  }, []);
+
+  const toggleTag = async (tag: string) => {
+    if (!selectedChat) return;
+    const currentTags = crmContact?.tags || [];
+    let newTags = [...currentTags];
+    if (newTags.includes(tag)) {
+      newTags = newTags.filter(t => t !== tag);
+    } else {
+      newTags.push(tag);
+    }
+
+    try {
+      const cleanJid = selectedChat.remoteJid.split('@')[0];
+      const res = await api.post('/crm/contacts/tags', {
+        phone_number: cleanJid,
+        tags: newTags
+      });
+
+      if (res.data.success) {
+        setCrmContact((prev: any) => prev ? { ...prev, tags: newTags } : {
+          id: 0,
+          client_id: 0,
+          user_id: selectedInstanceRef.current || '',
+          phone_number: cleanJid,
+          category_id: null,
+          is_active: true,
+          pipeline_stage: 'Nuevo',
+          tags: newTags,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+        
+        setCrmContactTagsMap((prev: any) => ({
+          ...prev,
+          [cleanJid]: newTags
+        }));
+      }
+    } catch (err: any) {
+      console.error('Error toggling tag:', err.message);
+    }
+  };
 
   // Fetch CRM Categories
   const fetchCrmCategories = useCallback(async () => {
@@ -1473,7 +1548,8 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchCrmCategories();
     fetchCrmContactMap();
-  }, [fetchCrmCategories, fetchCrmContactMap]);
+    fetchCrmContactTagsMap();
+  }, [fetchCrmCategories, fetchCrmContactMap, fetchCrmContactTagsMap]);
 
   // Cargar grupos cuando se activa la pestaña y hay instancia seleccionada
   useEffect(() => {
@@ -2563,7 +2639,7 @@ echo $response;`;
                     {/* LEFT PANEL: Chats List */}
                     <div className={`${selectedChat ? 'md:col-span-3' : 'md:col-span-4'} bg-white dark:bg-slate-950 flex-col min-h-0 w-full md:w-auto ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
                       {/* Search Bar */}
-                      <div className="p-4 relative">
+                      <div className="p-4 pb-2 relative">
                         <input
                           type="text"
                           placeholder="Buscar conversación..."
@@ -2572,6 +2648,36 @@ echo $response;`;
                           className="w-full pl-9 pr-4 py-2.5 bg-slate-100/60 dark:bg-slate-900/60 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
                         />
                         <Search size={14} className="absolute left-7 top-1/2 -translate-y-1/2 text-surface-400" />
+                      </div>
+
+                      {/* Barra de Filtro de Etiquetas */}
+                      <div className="px-4 pb-3 flex gap-1.5 overflow-x-auto hide-scrollbar scroll-smooth">
+                        <button
+                          onClick={() => setSelectedFilterTag(null)}
+                          className={`px-2.5 py-1 rounded-full text-[9px] font-bold transition-all cursor-pointer whitespace-nowrap ${
+                            selectedFilterTag === null
+                              ? 'bg-brand-primary text-white'
+                              : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                          }`}
+                        >
+                          Todo
+                        </button>
+                        {SMART_TAGS.map(tag => {
+                          const isSelected = selectedFilterTag === tag;
+                          return (
+                            <button
+                              key={tag}
+                              onClick={() => setSelectedFilterTag(isSelected ? null : tag)}
+                              className={`px-2.5 py-1 rounded-full text-[9px] font-bold transition-all cursor-pointer whitespace-nowrap ${
+                                isSelected
+                                  ? 'bg-brand-primary text-white'
+                                  : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                              }`}
+                            >
+                              {tag}
+                            </button>
+                          );
+                        })}
                       </div>
 
                       {/* Chats List Body */}
@@ -2585,8 +2691,24 @@ echo $response;`;
                         ) : (
                           chats
                             .filter(chat => {
-                              const name = (chat.pushName || chat.remoteJid || '').toLowerCase();
-                              return name.includes(chatsSearchQuery.toLowerCase());
+                              const cleanRemoteJid = chat.remoteJid.split('@')[0];
+                              const contactName = (crmContactMap[cleanRemoteJid] || chat.pushName || cleanRemoteJid).toLowerCase();
+                              const searchLower = chatsSearchQuery.toLowerCase();
+                              const tags = crmContactTagsMap[cleanRemoteJid] || [];
+
+                              // 1. Filtrar por etiqueta seleccionada
+                              if (selectedFilterTag && !tags.includes(selectedFilterTag)) {
+                                return false;
+                              }
+
+                              // 2. Filtrar por texto de búsqueda
+                              if (searchLower) {
+                                const nameMatch = contactName.includes(searchLower);
+                                const tagMatch = tags.some(t => t.toLowerCase().includes(searchLower));
+                                return nameMatch || tagMatch;
+                              }
+
+                              return true;
                             })
                             .map((chat) => {
                               const isActive = selectedChat?.remoteJid === chat.remoteJid;
@@ -2647,6 +2769,26 @@ echo $response;`;
                                           {formatTimeLocal(chat.lastMessage?.messageTimestamp)}
                                         </span>
                                       </div>
+                                      {/* Tags badges in sidebar card */}
+                                      {crmContactTagsMap[cleanRemoteJid] && crmContactTagsMap[cleanRemoteJid].length > 0 && (
+                                        <div className="flex flex-wrap gap-1 mt-0.5">
+                                          {crmContactTagsMap[cleanRemoteJid].slice(0, 2).map(tag => {
+                                            let colorClass = "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400";
+                                            if (tag === 'VIP') colorClass = "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400";
+                                            else if (tag === 'Moroso') colorClass = "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400";
+                                            else if (tag === 'Pendiente') colorClass = "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400";
+                                            else if (tag === 'Nuevo') colorClass = "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400";
+                                            return (
+                                              <span key={tag} className={`px-1.5 py-0.5 text-[8px] font-extrabold rounded ${colorClass}`}>
+                                                {tag}
+                                              </span>
+                                            );
+                                          })}
+                                          {crmContactTagsMap[cleanRemoteJid].length > 2 && (
+                                            <span className="text-[8px] text-slate-400">+{crmContactTagsMap[cleanRemoteJid].length - 2}</span>
+                                          )}
+                                        </div>
+                                      )}
                                       <div className="flex items-center justify-between mt-1">
                                         <p className={`text-[11px] leading-relaxed pb-0.5 truncate flex-1 flex items-center gap-1 ${isUnread ? 'text-slate-800 dark:text-slate-200 font-semibold' : 'text-surface-400 dark:text-surface-500 font-normal'}`}>
                                           <span className="flex-1 block truncate"><AppleEmojiText text={lastMsgText} size={13} /></span>
@@ -2699,11 +2841,26 @@ echo $response;`;
                                     <h4 className="text-[13px] font-extrabold text-slate-800 dark:text-white uppercase tracking-tight">
                                       {crmContactMap[selectedChat.remoteJid.split('@')[0]] || selectedChat.pushName || selectedChat.remoteJid.split('@')[0]}
                                     </h4>
-                                    {!selectedChat.remoteJid.endsWith('@g.us') && (
+{!selectedChat.remoteJid.endsWith('@g.us') && (
                                       <span className="px-2 py-0.5 bg-[#e8f5ed] dark:bg-[#12a160]/20 text-[#12a160] text-[9px] font-bold rounded-full">
                                         Cliente VIP
                                       </span>
                                     )}
+                                    {crmContact?.tags && crmContact.tags.map((tag: string) => {
+                                      let colorClass = "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
+                                      if (tag === 'VIP') colorClass = "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400";
+                                      else if (tag === 'Moroso') colorClass = "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400";
+                                      else if (tag === 'Pendiente') colorClass = "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400";
+                                      else if (tag === 'Nuevo') colorClass = "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400";
+                                      else if (tag === 'Interesado') colorClass = "bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400";
+                                      else if (tag === 'Pagó') colorClass = "bg-teal-100 text-teal-700 dark:bg-teal-500/20 dark:text-teal-400";
+                                      
+                                      return (
+                                        <span key={tag} className={`px-2 py-0.5 text-[9px] font-bold rounded-full transition-all duration-300 transform hover:scale-105 ${colorClass}`}>
+                                          {tag}
+                                        </span>
+                                      );
+                                    })}
                                   </div>
                                   
                                   {!selectedChat.remoteJid.endsWith('@g.us') ? (
@@ -2783,11 +2940,53 @@ echo $response;`;
                                 <span>Asignar</span>
                                 <ChevronDown size={12} className="text-slate-400 ml-1" />
                               </button>
-                              <button className="flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all cursor-pointer whitespace-nowrap">
-                                <Tag size={13} className="text-slate-400 dark:text-slate-400" />
-                                <span>Etiquetar</span>
-                                <ChevronDown size={12} className="text-slate-400 ml-1" />
-                              </button>
+                              <div className="relative">
+                                <button 
+                                  ref={tagsButtonRef}
+                                  onClick={() => setShowTagsDropdown(!showTagsDropdown)}
+                                  className={`flex items-center gap-2 px-3.5 py-1.5 border rounded-xl text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap ${
+                                    showTagsDropdown 
+                                      ? 'bg-brand-primary text-white border-brand-primary' 
+                                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'
+                                  }`}
+                                >
+                                  <Tag size={13} className={showTagsDropdown ? "text-white" : "text-slate-400 dark:text-slate-400"} />
+                                  <span>Etiquetar</span>
+                                  <ChevronDown size={12} className={showTagsDropdown ? "text-white ml-1" : "text-slate-400 ml-1"} />
+                                </button>
+
+                                {showTagsDropdown && (
+                                  <div 
+                                    ref={tagsDropdownRef}
+                                    className="absolute left-0 mt-1.5 w-56 bg-[#0b2d33] dark:bg-slate-950 rounded-2xl shadow-premium-lg border-0 py-2.5 px-1 z-50 animate-fadeIn"
+                                  >
+                                    <div className="px-3 py-1 text-[9px] font-bold text-slate-400 uppercase tracking-wider border-b border-white/5 mb-1.5">
+                                      Etiquetas Inteligentes
+                                    </div>
+                                    <div className="max-h-60 overflow-y-auto space-y-0.5 px-2">
+                                      {SMART_TAGS.map((tag) => {
+                                        const hasTag = (crmContact?.tags || []).includes(tag);
+                                        return (
+                                          <button
+                                            key={tag}
+                                            onClick={() => toggleTag(tag)}
+                                            className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-semibold flex items-center justify-between hover:bg-white/10 text-white transition-colors cursor-pointer"
+                                          >
+                                            <span>{tag}</span>
+                                            <div className={`w-3.5 h-3.5 rounded-md border flex items-center justify-center transition-all ${
+                                              hasTag 
+                                                ? 'bg-brand-primary border-brand-primary text-white' 
+                                                : 'border-white/20 bg-transparent'
+                                            }`}>
+                                              {hasTag && <Check size={10} strokeWidth={3} />}
+                                            </div>
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
                               <div className="relative">
                                 <button 
                                   ref={pipelineButtonRef}

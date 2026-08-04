@@ -565,7 +565,7 @@ router.get('/pipeline', async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.userId;
     // Listar todos los contactos de este usuario con su información de cliente y categoría
     const contacts = await pool.query(
-      `SELECT c.id as contact_id, c.phone_number, c.pipeline_stage, c.is_active,
+      `SELECT c.id as contact_id, c.phone_number, c.pipeline_stage, c.is_active, c.tags,
               cl.id as client_id, cl.name as client_name, cl.doc_type, cl.doc_number, cl.email, cl.notes,
               cat.name as category_name
        FROM crm_contacts c
@@ -631,6 +631,77 @@ router.post('/pipeline/move', async (req: AuthenticatedRequest, res: Response) =
   } catch (error: any) {
     console.error('[CRM Pipeline Move] Error:', error.message);
     return res.status(500).json({ success: false, error: 'Error al mover el contacto en el pipeline.' });
+  }
+});
+
+/**
+ * GET /api/crm/contacts/tags-map - Obtener mapa de etiquetas de todos los contactos
+ */
+router.get('/contacts/tags-map', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const result = await pool.query(
+      'SELECT phone_number, tags FROM crm_contacts WHERE user_id = $1 AND is_active = true',
+      [req.userId]
+    );
+    const tagsMap: Record<string, string[]> = {};
+    result.rows.forEach(row => {
+      tagsMap[row.phone_number] = row.tags || [];
+    });
+    return res.json({ success: true, data: tagsMap });
+  } catch (error: any) {
+    console.error('[CRM Tags Map] Error:', error.message);
+    return res.status(500).json({ success: false, error: 'Error al obtener mapa de etiquetas.' });
+  }
+});
+
+/**
+ * POST /api/crm/contacts/tags - Actualizar etiquetas de un contacto
+ */
+router.post('/contacts/tags', async (req: AuthenticatedRequest, res: Response) => {
+  const { phone_number, tags } = req.body;
+  if (!phone_number || !Array.isArray(tags)) {
+    return res.status(400).json({ success: false, error: 'Faltan parámetros requeridos (phone_number, tags).' });
+  }
+  try {
+    const contactCheck = await pool.query(
+      'SELECT id FROM crm_contacts WHERE user_id = $1 AND phone_number = $2',
+      [req.userId, phone_number]
+    );
+
+    if (contactCheck.rows.length === 0) {
+      let clientRes = await pool.query(
+        'SELECT id FROM crm_clients WHERE user_id = $1 ORDER BY id ASC LIMIT 1',
+        [req.userId]
+      );
+      let clientId;
+      if (clientRes.rows.length === 0) {
+        const tempDocNum = 'TEMP' + Date.now();
+        const newClient = await pool.query(
+          `INSERT INTO crm_clients (user_id, doc_type, doc_number, name) 
+           VALUES ($1, 'DNI', $2, $3) RETURNING id`,
+          [req.userId, tempDocNum, 'Cliente Temporal']
+        );
+        clientId = newClient.rows[0].id;
+      } else {
+        clientId = clientRes.rows[0].id;
+      }
+
+      await pool.query(
+        `INSERT INTO crm_contacts (client_id, user_id, phone_number, tags) 
+         VALUES ($1, $2, $3, $4)`,
+        [clientId, req.userId, phone_number, JSON.stringify(tags)]
+      );
+    } else {
+      await pool.query(
+        'UPDATE crm_contacts SET tags = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2 AND phone_number = $3',
+        [JSON.stringify(tags), req.userId, phone_number]
+      );
+    }
+
+    return res.json({ success: true, message: 'Etiquetas actualizadas correctamente.' });
+  } catch (error: any) {
+    console.error('[CRM Tags Update] Error:', error.message);
+    return res.status(500).json({ success: false, error: 'Error al actualizar etiquetas.' });
   }
 });
 

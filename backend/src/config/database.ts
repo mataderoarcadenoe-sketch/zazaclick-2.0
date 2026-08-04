@@ -151,6 +151,7 @@ export async function initDatabase() {
         category_id INTEGER REFERENCES crm_contact_categories(id) ON DELETE SET NULL,
         is_active BOOLEAN DEFAULT TRUE,
         pipeline_stage VARCHAR(50) DEFAULT 'Nuevo',
+        tags JSONB DEFAULT '[]',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT unique_user_phone UNIQUE (user_id, phone_number)
@@ -160,6 +161,11 @@ export async function initDatabase() {
     // Asegurar columna pipeline_stage en bases de datos existentes
     await pool.query(`
       ALTER TABLE crm_contacts ADD COLUMN IF NOT EXISTS pipeline_stage VARCHAR(50) DEFAULT 'Nuevo';
+    `);
+
+    // Asegurar columna tags en bases de datos existentes
+    await pool.query(`
+      ALTER TABLE crm_contacts ADD COLUMN IF NOT EXISTS tags JSONB DEFAULT '[]';
     `);
 
     // 6. Asegurar rol Administrador para tu correo principal
