@@ -3813,7 +3813,7 @@ echo $response;`;
                             {!crmIsEditing && crmClient ? (
                               <div className="space-y-3.5 pb-6">
                                 {/* Green Header Card */}
-                                <div className="bg-brand-primary rounded-2xl p-4 text-white relative overflow-hidden shadow-sm">
+                                <div className="bg-slate-900 dark:bg-slate-950 rounded-2xl p-4 text-white relative overflow-hidden">
                                   {/* Background decoration */}
                                   <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
                                   <div className="relative z-10 flex items-start gap-3">
