@@ -330,10 +330,25 @@ router.get('/contacts/:phoneNumber', async (req: AuthenticatedRequest, res: Resp
       [req.userId, contact.client_id]
     );
 
+    // Buscar notas asociadas ordenadas por fecha desc
+    let notes: any[] = [];
+    if (contact.client_id) {
+      const notesRes = await pool.query(
+        `SELECT n.*, u.name as agent_name 
+         FROM crm_client_notes n
+         LEFT JOIN users u ON n.agent_id = u.id
+         WHERE n.user_id = $1 AND n.client_id = $2
+         ORDER BY n.created_at DESC`,
+        [req.userId, contact.client_id]
+      );
+      notes = notesRes.rows;
+    }
+
     return res.json({
       success: true,
       contact,
-      client: clientRes.rows[0] || null
+      client: clientRes.rows[0] || null,
+      notes
     });
   } catch (error: any) {
     console.error('[CRM Contacts] Error en GET /contacts/:phoneNumber:', error.message);
@@ -622,6 +637,77 @@ router.put('/clients/:clientId/notes', async (req: AuthenticatedRequest, res: Re
   } catch (error: any) {
     console.error('[CRM Update Notes] Error:', error.message);
     return res.status(500).json({ success: false, error: 'Error al actualizar las notas internas.' });
+  }
+});
+
+/**
+ * POST /api/crm/clients/:clientId/notes - Agregar una nota independiente
+ */
+router.post('/clients/:clientId/notes', async (req: AuthenticatedRequest, res: Response) => {
+  const { clientId } = req.params;
+  const { content } = req.body;
+
+  if (!content || !content.trim()) {
+    return res.status(400).json({ success: false, error: 'La nota no puede estar vacía.' });
+  }
+
+  try {
+    const clientCheck = await pool.query(
+      'SELECT id FROM crm_clients WHERE id = $1 AND user_id = $2',
+      [clientId, req.userId]
+    );
+
+    if (clientCheck.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Cliente no encontrado o sin permisos.' });
+    }
+
+    const noteRes = await pool.query(
+      `INSERT INTO crm_client_notes (client_id, user_id, agent_id, content) 
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [clientId, req.userId, req.userId, content.trim()]
+    );
+
+    // Join with user table to return the agent name immediately
+    const joinedRes = await pool.query(
+      `SELECT n.*, u.name as agent_name 
+       FROM crm_client_notes n
+       LEFT JOIN users u ON n.agent_id = u.id
+       WHERE n.id = $1`,
+      [noteRes.rows[0].id]
+    );
+
+    return res.json({ success: true, note: joinedRes.rows[0] });
+  } catch (error: any) {
+    console.error('[CRM Add Note] Error:', error.message);
+    return res.status(500).json({ success: false, error: 'Error al agregar la nota.' });
+  }
+});
+
+/**
+ * DELETE /api/crm/clients/:clientId/notes/:noteId - Eliminar una nota independiente
+ */
+router.delete('/clients/:clientId/notes/:noteId', async (req: AuthenticatedRequest, res: Response) => {
+  const { clientId, noteId } = req.params;
+
+  try {
+    const check = await pool.query(
+      'SELECT id FROM crm_client_notes WHERE id = $1 AND client_id = $2 AND user_id = $3',
+      [noteId, clientId, req.userId]
+    );
+
+    if (check.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Nota no encontrada o sin permisos.' });
+    }
+
+    await pool.query(
+      'DELETE FROM crm_client_notes WHERE id = $1',
+      [noteId]
+    );
+
+    return res.json({ success: true, message: 'Nota eliminada correctamente.' });
+  } catch (error: any) {
+    console.error('[CRM Delete Note] Error:', error.message);
+    return res.status(500).json({ success: false, error: 'Error al eliminar la nota.' });
   }
 });
 

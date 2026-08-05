@@ -192,6 +192,19 @@ export async function initDatabase() {
       ALTER TABLE crm_contacts ADD COLUMN IF NOT EXISTS assigned_agent_id VARCHAR(255) REFERENCES users(id) ON DELETE SET NULL;
     `);
 
+    // 10. Tabla de Notas Internas de Clientes (Multiples Notas)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS crm_client_notes (
+        id SERIAL PRIMARY KEY,
+        client_id INTEGER NOT NULL REFERENCES crm_clients(id) ON DELETE CASCADE,
+        user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        agent_id VARCHAR(255) REFERENCES users(id) ON DELETE SET NULL,
+        content TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     // 6. Asegurar rol Administrador para tu correo principal
     await pool.query(`
       UPDATE users 

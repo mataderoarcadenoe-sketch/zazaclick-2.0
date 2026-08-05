@@ -298,10 +298,11 @@ export default function DashboardPage() {
   const [crmSaving, setCrmSaving] = useState(false);
   const [crmIsEditing, setCrmIsEditing] = useState(false);
   
-  // Notas Internas States
-  const [isEditingNotes, setIsEditingNotes] = useState(false);
-  const [tempNotes, setTempNotes] = useState('');
-  const [notesSaving, setNotesSaving] = useState(false);
+  // Multi-Notes States
+  const [clientNotes, setClientNotes] = useState<any[]>([]);
+  const [showNotesFloatingWindow, setShowNotesFloatingWindow] = useState(false);
+  const [newNoteText, setNewNoteText] = useState('');
+  const [newNoteLoading, setNewNoteLoading] = useState(false);
   
   // CRM Form States
   const [crmDocType, setCrmDocType] = useState<'DNI' | 'RUC'>('DNI');
@@ -1477,6 +1478,8 @@ export default function DashboardPage() {
     if (!chatJid || chatJid.endsWith('@g.us')) {
       setCrmClient(null);
       setCrmContact(null);
+      setClientNotes([]);
+      setShowNotesFloatingWindow(false);
       return;
     }
     setCrmLoading(true);
@@ -1487,6 +1490,8 @@ export default function DashboardPage() {
         setCrmClient(res.data.client);
         setCrmContact(res.data.contact);
         setCrmIsEditing(false); // Reset to display mode
+        setClientNotes(res.data.notes || []);
+        setShowNotesFloatingWindow(false);
         
         // Populate inputs if client exists
         if (res.data.client) {
@@ -1712,23 +1717,39 @@ export default function DashboardPage() {
     }
   };
 
-  // Save Internal Notes Only
-  const handleSaveNotesOnly = async () => {
+  // Add a new independent note
+  const handleAddNewNote = async () => {
     if (!crmClient) return;
-    setNotesSaving(true);
+    if (!newNoteText.trim()) return;
+    setNewNoteLoading(true);
     try {
-      const res = await api.put(`/crm/clients/${crmClient.id}/notes`, {
-        notes: tempNotes.trim()
+      const res = await api.post(`/crm/clients/${crmClient.id}/notes`, {
+        content: newNoteText.trim()
       });
       if (res.data?.success) {
-        setCrmClient((prev: any) => prev ? { ...prev, notes: res.data.client.notes } : prev);
-        setIsEditingNotes(false);
-        showNotification('Nota interna guardada exitosamente.', 'success');
+        setClientNotes(prev => [res.data.note, ...prev]);
+        setNewNoteText('');
+        showNotification('Nota agregada exitosamente.', 'success');
       }
     } catch (err: any) {
-      showNotification(err.response?.data?.error || 'Error al guardar la nota interna.', 'error');
+      showNotification(err.response?.data?.error || 'Error al agregar la nota.', 'error');
     } finally {
-      setNotesSaving(false);
+      setNewNoteLoading(false);
+    }
+  };
+
+  // Delete an independent note
+  const handleDeleteNote = async (noteId: number) => {
+    if (!crmClient) return;
+    if (!window.confirm('¿Estás seguro de que deseas eliminar esta nota?')) return;
+    try {
+      const res = await api.delete(`/crm/clients/${crmClient.id}/notes/${noteId}`);
+      if (res.data?.success) {
+        setClientNotes(prev => prev.filter((n: any) => n.id !== noteId));
+        showNotification('Nota eliminada exitosamente.', 'success');
+      }
+    } catch (err: any) {
+      showNotification(err.response?.data?.error || 'Error al eliminar la nota.', 'error');
     }
   };
 
@@ -3828,17 +3849,15 @@ echo $response;`;
 
                     {/* CRM Sidebar Pane */}
                     {selectedChat && !selectedChat.remoteJid.endsWith('@g.us') && (
-                      <div className="md:col-span-3 border-l border-slate-200/50 dark:border-slate-800/50 flex flex-col min-h-0 bg-slate-50/45 dark:bg-slate-955 p-4 overflow-y-auto space-y-4 text-left">
-
+                      <div className="md:col-span-3 border-l border-slate-200/50 dark:border-slate-800/50 flex flex-col min-h-0 bg-slate-50/45 dark:bg-slate-955 text-left relative overflow-hidden">
                         {crmLoading ? (
-                          <div className="py-8 text-center text-[11px] text-surface-400 animate-pulse">Cargando datos CRM...</div>
+                          <div className="py-8 text-center text-[11px] text-surface-400 animate-pulse p-4">Cargando datos CRM...</div>
                         ) : (
-                          <div className="space-y-3.5">
-                            {/* Contact info card (Display Mode) */}
+                          <div className="flex-1 overflow-y-auto p-4 space-y-4">
                             {!crmIsEditing && crmClient ? (
                               <div className="space-y-3.5 pb-6">
                                 {/* Green Header Card */}
-                                <div className="bg-slate-900 dark:bg-slate-950 rounded-2xl p-4 text-white relative overflow-hidden">
+                                <div className="bg-slate-900 dark:bg-slate-955 rounded-2xl p-4 text-white relative overflow-hidden">
                                   {/* Background decoration */}
                                   <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
                                   <div className="relative z-10 flex items-start gap-3">
@@ -3867,81 +3886,49 @@ echo $response;`;
                                       setCrmCategoryId(crmContact?.category_id?.toString() || '');
                                       setCrmIsEditing(true);
                                     }}
-                                    className="absolute top-4 right-4 w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-colors cursor-pointer"
+                                    className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 text-white hover:text-white rounded-full transition-all backdrop-blur-sm border border-white/10 hover:scale-105 cursor-pointer flex items-center justify-center shadow-sm"
+                                    title="Editar Cliente"
                                   >
-                                    <Edit2 size={12} className="text-white" />
+                                    <Edit2 size={12} />
                                   </button>
                                 </div>
 
-                                {/* Action Buttons Row */}
-                                <div className="flex items-center justify-between bg-white dark:bg-slate-900/60 rounded-2xl p-3 border border-slate-200/50 dark:border-slate-800/80">
-                                  <button className="flex flex-col items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-brand-primary dark:hover:text-brand-primary transition-colors cursor-pointer w-1/4">
-                                    <Phone size={16} />
-                                    <span className="text-[9px] font-medium">Llamar</span>
-                                  </button>
-                                  <button className="flex flex-col items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-brand-primary dark:hover:text-brand-primary transition-colors cursor-pointer w-1/4">
-                                    <User size={16} />
-                                    <span className="text-[9px] font-medium">Perfil</span>
-                                  </button>
-                                  <button className="flex flex-col items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-brand-primary dark:hover:text-brand-primary transition-colors cursor-pointer w-1/4">
-                                    <Tag size={16} />
-                                    <span className="text-[9px] font-medium">Etiquetar</span>
-                                  </button>
-                                  <button className="flex flex-col items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-brand-primary dark:hover:text-brand-primary transition-colors cursor-pointer w-1/4">
-                                    <MoreVertical size={16} />
-                                    <span className="text-[9px] font-medium">Más</span>
-                                  </button>
-                                </div>
-
-                                {/* Información del contacto */}
-                                <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/80 space-y-4">
-                                  <div className="flex items-center justify-between">
-                                    <h5 className="text-[11px] font-bold text-slate-800 dark:text-white">Información del contacto</h5>
-                                    <button 
-                                      onClick={() => {
-                                        setCrmDocType(crmClient.doc_type === 'MANUAL' ? 'DNI' : crmClient.doc_type);
-                                        setCrmDocNumber(crmClient.doc_type === 'MANUAL' ? '' : crmClient.doc_number);
-                                        setCrmName(crmClient.name);
-                                        setCrmAddress(crmClient.address || '');
-                                        setCrmEmail(crmClient.email || '');
-                                        setCrmNotes(crmClient.notes || '');
-                                        setCrmCategoryId(crmContact?.category_id?.toString() || '');
-                                        setCrmIsEditing(true);
-                                      }}
-                                      className="text-[10px] font-bold text-brand-primary hover:underline cursor-pointer"
-                                    >
-                                      Editar
-                                    </button>
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-y-4 gap-x-2">
+                                {/* Datos Generales */}
+                                <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/80 space-y-3">
+                                  <h5 className="text-[11px] font-bold text-slate-800 dark:text-white">Datos del contacto</h5>
+                                  <div className="space-y-2.5">
                                     <div className="flex gap-2">
-                                      <div className="text-brand-primary bg-brand-primary/10 p-1.5 rounded-lg h-min"><Phone size={12} /></div>
+                                      <div className="text-brand-primary bg-brand-primary/10 p-1.5 rounded-lg h-min"><User size={12} /></div>
                                       <div className="min-w-0">
-                                        <span className="text-[9px] text-surface-400 font-medium block leading-none mb-1">Teléfono</span>
-                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold truncate block">+{selectedChat.remoteJid.split('@')[0].split(':')[0]}</span>
+                                        <span className="text-[9px] text-surface-400 font-medium block leading-none mb-1">Tipo de documento</span>
+                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold truncate block">{crmClient.doc_type}</span>
                                       </div>
                                     </div>
                                     <div className="flex gap-2">
-                                      <div className="text-brand-primary bg-brand-primary/10 p-1.5 rounded-lg h-min"><Mail size={12} /></div>
+                                      <div className="text-brand-primary bg-brand-primary/10 p-1.5 rounded-lg h-min"><FileText size={12} /></div>
                                       <div className="min-w-0">
-                                        <span className="text-[9px] text-surface-400 font-medium block leading-none mb-1">Correo</span>
-                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold truncate block">{crmClient.email || 'No registrado'}</span>
+                                        <span className="text-[9px] text-surface-400 font-medium block leading-none mb-1">Nro de documento</span>
+                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold truncate block">{crmClient.doc_number.startsWith('MANUAL-') ? 'No registrado' : crmClient.doc_number}</span>
                                       </div>
                                     </div>
-                                    <div className="flex gap-2">
-                                      <div className="text-brand-primary bg-brand-primary/10 p-1.5 rounded-lg h-min"><MapPin size={12} /></div>
-                                      <div className="min-w-0">
-                                        <span className="text-[9px] text-surface-400 font-medium block leading-none mb-1">País</span>
-                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold truncate block">Perú</span>
+                                    {crmClient.address && (
+                                      <div className="flex gap-2">
+                                        <div className="text-brand-primary bg-brand-primary/10 p-1.5 rounded-lg h-min"><MapPin size={12} /></div>
+                                        <div className="min-w-0">
+                                          <span className="text-[9px] text-surface-400 font-medium block leading-none mb-1">Dirección fiscal</span>
+                                          <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold break-words block">{crmClient.address}</span>
+                                        </div>
                                       </div>
-                                    </div>
-                                    <div className="flex gap-2">
-                                      <div className="text-brand-primary bg-brand-primary/10 p-1.5 rounded-lg h-min"><Building size={12} /></div>
-                                      <div className="min-w-0">
-                                        <span className="text-[9px] text-surface-400 font-medium block leading-none mb-1">Ciudad</span>
-                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold truncate block">{crmClient.address || 'No registrado'}</span>
+                                    )}
+                                    {crmClient.email && (
+                                      <div className="flex gap-2">
+                                        <div className="text-brand-primary bg-brand-primary/10 p-1.5 rounded-lg h-min"><Mail size={12} /></div>
+                                        <div className="min-w-0">
+                                          <span className="text-[9px] text-surface-400 font-medium block leading-none mb-1">Email</span>
+                                          <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold break-words block">{crmClient.email}</span>
+                                        </div>
                                       </div>
-                                    </div>
+                                    )}
                                     <div className="flex gap-2">
                                       <div className="text-brand-primary bg-brand-primary/10 p-1.5 rounded-lg h-min"><span className="font-bold text-[10px]">A</span></div>
                                       <div className="min-w-0">
@@ -3961,54 +3948,49 @@ echo $response;`;
 
                                 {/* Notas del contacto */}
                                  <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/80 space-y-3">
-                                   <h5 className="text-[11px] font-bold text-slate-800 dark:text-white">Notas del contacto</h5>
+                                   <div className="flex items-center justify-between">
+                                     <h5 className="text-[11px] font-bold text-slate-800 dark:text-white">Notas del contacto</h5>
+                                     {clientNotes.length > 0 && (
+                                       <button 
+                                         type="button"
+                                         onClick={() => setShowNotesFloatingWindow(true)}
+                                         className="text-[10px] font-bold text-brand-primary hover:underline cursor-pointer"
+                                       >
+                                         Ver notas ({clientNotes.length})
+                                       </button>
+                                     )}
+                                   </div>
                                    
-                                   {isEditingNotes ? (
-                                     <div className="space-y-2">
-                                       <textarea
-                                         value={tempNotes}
-                                         onChange={(e) => setTempNotes(e.target.value)}
-                                         rows={4}
-                                         placeholder="Ej: Cliente muy exigente. No ofrecer descuento. Prefiere transferencia..."
-                                         className="w-full p-2.5 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-white rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/30 resize-none font-medium"
-                                       />
-                                       <div className="flex justify-end gap-2 text-[10px] font-bold">
-                                         <button
-                                           onClick={() => setIsEditingNotes(false)}
-                                           disabled={notesSaving}
-                                           className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-850 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg transition-colors cursor-pointer"
-                                         >
-                                           Cancelar
-                                         </button>
-                                         <button
-                                           onClick={handleSaveNotesOnly}
-                                           disabled={notesSaving}
-                                           className="px-3 py-1.5 bg-brand-500 hover:bg-brand-secondary text-white rounded-lg transition-colors cursor-pointer disabled:opacity-50 font-medium"
-                                         >
-                                           {notesSaving ? 'Guardando...' : 'Guardar'}
-                                         </button>
+                                   {clientNotes.length > 0 ? (
+                                     <div className="space-y-1 bg-slate-50 dark:bg-slate-900/40 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/20">
+                                       <p className="text-[10px] text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line font-medium">
+                                         {clientNotes[0].content}
+                                       </p>
+                                       <div className="text-[8px] text-slate-400 dark:text-slate-500 text-right mt-1.5 font-bold flex items-center justify-between">
+                                         <span>Por: {clientNotes[0].agent_name || 'Asesor'}</span>
+                                         <span>{new Date(clientNotes[0].created_at).toLocaleDateString('es-ES')}</span>
                                        </div>
                                      </div>
                                    ) : (
-                                     <>
-                                       <p className="text-[10px] text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line bg-slate-50 dark:bg-slate-900/40 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/20">
-                                         {crmClient.notes || 'Sin notas registradas.'}
-                                       </p>
-                                       <div className="text-right">
-                                         <button 
-                                           onClick={() => {
-                                             setTempNotes(crmClient.notes || '');
-                                             setIsEditingNotes(true);
-                                           }}
-                                           className="text-[10px] font-bold text-brand-primary hover:underline cursor-pointer"
-                                         >
-                                           Editar nota
-                                         </button>
-                                       </div>
-                                     </>
+                                     <p className="text-[10px] text-slate-400 dark:text-slate-500 text-center py-2 italic">
+                                       Sin notas registradas.
+                                     </p>
                                    )}
+                                   
+                                   <div className="text-right">
+                                     <button 
+                                       type="button"
+                                       onClick={() => {
+                                         setNewNoteText('');
+                                         setShowNotesFloatingWindow(true);
+                                       }}
+                                       className="text-[10px] font-bold text-brand-primary hover:underline cursor-pointer"
+                                     >
+                                       + Agregar nota
+                                     </button>
+                                   </div>
                                  </div>
-                                
+
                                 {/* Etiquetas */}
                                 <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/80 space-y-3">
                                   <div className="flex items-center justify-between">
@@ -4065,7 +4047,7 @@ echo $response;`;
                                       <button
                                         type="button"
                                         onClick={() => setIsDocTypeDropdownOpen(!isDocTypeDropdownOpen)}
-                                        className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950/60 border-0 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all cursor-pointer min-w-[65px] justify-between focus:outline-none"
+                                        className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-955 border-0 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all cursor-pointer min-w-[65px] justify-between focus:outline-none"
                                       >
                                         <span>{crmDocType}</span>
                                         <ChevronDown size={10} className={`text-surface-400 transition-transform duration-200 ${isDocTypeDropdownOpen ? 'rotate-180' : ''}`} />
@@ -4108,34 +4090,27 @@ echo $response;`;
                                         </>
                                       )}
                                     </div>
-                                    <div className="relative flex-1">
+
+                                    <div className="flex-1 relative flex items-center">
                                       <input
                                         type="text"
-                                        placeholder={crmDocType === 'DNI' ? '8 dígitos' : '11 dígitos'}
+                                        placeholder={crmDocType === 'DNI' ? "Ingresa DNI de 8 dígitos" : "Ingresa RUC de 11 dígitos"}
                                         value={crmDocNumber}
-                                        maxLength={crmDocType === 'DNI' ? 8 : 11}
-                                        onChange={(e) => {
-                                          const val = e.target.value.replace(/\D/g, '');
-                                          setCrmDocNumber(val);
-                                          const expectedLen = crmDocType === 'DNI' ? 8 : 11;
-                                          if (val.length === expectedLen) {
-                                            setTimeout(() => handleValidateCrmDoc(val), 0);
-                                          }
-                                        }}
-                                        className="w-full pl-2.5 pr-8 py-1.5 bg-slate-100/70 dark:bg-slate-950/60 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
+                                        onChange={(e) => setCrmDocNumber(e.target.value)}
+                                        className="w-full pl-2.5 pr-8 py-1.5 bg-slate-100/70 dark:bg-slate-955 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-655 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
                                       />
-                                      {crmDocNumber.trim() && (
+                                      {crmDocNumber.trim().length >= 8 && (
                                         <button
                                           type="button"
-                                          onClick={handleValidateCrmDoc}
+                                          onClick={() => handleValidateCrmDoc()}
                                           disabled={crmValidationLoading}
-                                          className="absolute right-2 top-1/2 -translate-y-1/2 text-surface-400 hover:text-brand-primary disabled:opacity-50 transition-colors cursor-pointer"
-                                          title="Consultar APIPeru"
+                                          className="absolute right-2 text-brand-primary hover:text-brand-secondary transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center p-1"
+                                          title="Buscar en APIPerú"
                                         >
                                           {crmValidationLoading ? (
-                                            <RefreshCw size={11} className="animate-spin text-brand-primary" />
+                                            <span className="w-3.5 h-3.5 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
                                           ) : (
-                                            <Search size={11} />
+                                            <Search size={12} />
                                           )}
                                         </button>
                                       )}
@@ -4147,10 +4122,10 @@ echo $response;`;
                                   <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Nombre / Razón Social</label>
                                   <input
                                     type="text"
-                                    placeholder="Nombre completo o Empresa"
+                                    placeholder="Nombre completo"
                                     value={crmName}
                                     onChange={(e) => setCrmName(e.target.value)}
-                                    className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950/60 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
+                                    className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-955 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
                                   />
                                 </div>
 
@@ -4222,7 +4197,7 @@ echo $response;`;
                                       rows={2}
                                       value={crmAddress}
                                       onChange={(e) => setCrmAddress(e.target.value)}
-                                      className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950/60 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 resize-none font-medium transition-all"
+                                      className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-955 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 resize-none font-medium transition-all"
                                     />
                                   </div>
                                 )}
@@ -4235,17 +4210,6 @@ echo $response;`;
                                     value={crmEmail}
                                     onChange={(e) => setCrmEmail(e.target.value)}
                                     className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-955 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
-                                  />
-                                </div>
-
-                                <div className="space-y-1 text-left">
-                                  <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Notas de Negocio</label>
-                                  <textarea
-                                    placeholder="Acuerdos, precios, descuentos especiales..."
-                                    rows={3}
-                                    value={crmNotes}
-                                    onChange={(e) => setCrmNotes(e.target.value)}
-                                    className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-955 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 resize-none font-medium transition-all"
                                   />
                                 </div>
 
@@ -4272,6 +4236,76 @@ echo $response;`;
                             )}
                           </div>
                         )}
+
+                        {/* Floating Notes Panel (No Bloqueante) */}
+                        {showNotesFloatingWindow && crmClient && (
+                          <div className="absolute inset-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md z-50 flex flex-col p-4 animate-fadeIn border-l border-slate-200/55 dark:border-slate-800/80">
+                            {/* Header */}
+                            <div className="flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800 pb-3 flex-shrink-0">
+                              <div className="min-w-0">
+                                <h4 className="text-[12px] font-bold text-slate-800 dark:text-white uppercase tracking-tight font-extrabold">Notas de Negocio</h4>
+                                <p className="text-[9.5px] text-slate-400 dark:text-slate-500 truncate mt-0.5">{crmClient.name}</p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setShowNotesFloatingWindow(false)}
+                                className="p-1.5 hover:bg-slate-150 dark:hover:bg-slate-850 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                              >
+                                <X size={15} />
+                              </button>
+                            </div>
+
+                            {/* List of notes */}
+                            <div className="flex-1 overflow-y-auto space-y-3 py-4 pr-0.5">
+                              {clientNotes.length > 0 ? (
+                                clientNotes.map((note: any) => (
+                                  <div key={note.id} className="bg-slate-100/50 dark:bg-slate-955/40 p-3 rounded-2xl border border-slate-200/20 dark:border-slate-800/30 text-left space-y-2 relative group hover:border-slate-200/60 dark:hover:border-slate-800/80 transition-all">
+                                    <p className="text-[10px] text-slate-700 dark:text-slate-350 leading-relaxed whitespace-pre-line font-medium pr-5">
+                                      {note.content}
+                                    </p>
+                                    <div className="flex items-center justify-between text-[8px] font-bold text-slate-400 dark:text-slate-500">
+                                      <span>Por: {note.agent_name || 'Asesor'}</span>
+                                      <div className="flex items-center gap-2">
+                                        <span>{new Date(note.created_at).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}</span>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleDeleteNote(note.id)}
+                                          className="text-red-500 hover:text-red-655 transition-colors p-0.5 hover:bg-red-50 dark:hover:bg-red-950/30 rounded cursor-pointer"
+                                          title="Eliminar nota"
+                                        >
+                                          <Trash2 size={10} />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))
+                              ) : (
+                                <div className="h-full flex flex-col items-center justify-center text-center py-10 space-y-2">
+                                  <span className="text-[10px] text-slate-400 dark:text-slate-500 italic">No hay notas registradas para este cliente.</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Footer (Add note form) */}
+                            <div className="border-t border-slate-200/60 dark:border-slate-800 pt-3 flex-shrink-0 space-y-2">
+                              <textarea
+                                value={newNoteText}
+                                onChange={(e) => setNewNoteText(e.target.value)}
+                                rows={3}
+                                placeholder="Añadir una nueva nota interna..."
+                                className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 text-[11px] text-slate-800 dark:text-white rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/30 resize-none font-medium placeholder-slate-400"
+                              />
+                              <button
+                                type="button"
+                                onClick={handleAddNewNote}
+                                disabled={newNoteLoading || !newNoteText.trim()}
+                                className="w-full py-2 bg-brand-500 hover:bg-brand-secondary text-white text-xs font-bold rounded-xl transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
+                              >
+                                {newNoteLoading ? 'Agregando...' : '+ Agregar Nota'}
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -4279,6 +4313,7 @@ echo $response;`;
                 )}
               </div>
             )}
+
 
             {/* PIPELINE COMERCIAL (KANBAN BOARD) */}
             {activeTab === 'pipeline' && (
