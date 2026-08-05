@@ -3948,7 +3948,7 @@ echo $response;`;
 
                     {/* CRM Sidebar Pane */}
                     {selectedChat && !selectedChat.remoteJid.endsWith('@g.us') && (
-                      <div className="md:col-span-3 border-l border-slate-200/50 dark:border-slate-800/50 flex flex-col min-h-0 bg-slate-50/45 dark:bg-slate-955 text-left relative overflow-hidden">
+                      <div className="md:col-span-3 border-l border-slate-200/50 dark:border-slate-800/50 flex flex-col min-h-0 bg-slate-50/45 dark:bg-slate-950 text-left relative overflow-hidden">
                         {crmLoading ? (
                           <div className="py-8 text-center text-[11px] text-surface-400 animate-pulse p-4">Cargando datos CRM...</div>
                         ) : (
@@ -3956,7 +3956,7 @@ echo $response;`;
                             {!crmIsEditing && crmClient ? (
                               <div className="space-y-3.5 pb-6">
                                 {/* Green Header Card */}
-                                <div className="bg-slate-900 dark:bg-slate-955 rounded-2xl p-4 text-white relative overflow-hidden">
+                                <div className="bg-slate-900 dark:bg-slate-950 rounded-2xl p-4 text-white relative overflow-hidden">
                                   {/* Background decoration */}
                                   <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
                                   <div className="relative z-10 flex items-start gap-3">
@@ -4022,7 +4022,7 @@ echo $response;`;
                                   <div className="grid grid-cols-2 gap-x-4 gap-y-3.5">
                                     {/* Teléfono */}
                                     <div className="flex gap-2.5 items-start text-left">
-                                      <div className="text-slate-400 bg-slate-50 dark:bg-slate-950 dark:text-slate-505 p-2 rounded-xl border border-slate-100 dark:border-slate-850 h-min flex-shrink-0">
+                                      <div className="text-slate-400 bg-slate-50 dark:bg-slate-950 dark:text-slate-500 p-2 rounded-xl border border-slate-100 dark:border-slate-800 h-min flex-shrink-0">
                                         <Smartphone size={13} />
                                       </div>
                                       <div className="min-w-0">
@@ -4035,7 +4035,7 @@ echo $response;`;
 
                                     {/* Correo */}
                                     <div className="flex gap-2.5 items-start text-left">
-                                      <div className="text-slate-450 bg-slate-50 dark:bg-slate-955 dark:text-slate-500 p-2 rounded-xl border border-slate-100 dark:border-slate-850 h-min flex-shrink-0">
+                                      <div className="text-slate-400 bg-slate-50 dark:bg-slate-950 dark:text-slate-500 p-2 rounded-xl border border-slate-100 dark:border-slate-800 h-min flex-shrink-0">
                                         <Mail size={13} />
                                       </div>
                                       <div className="min-w-0">
@@ -4048,7 +4048,7 @@ echo $response;`;
 
                                     {/* Empresa */}
                                     <div className="flex gap-2.5 items-start text-left">
-                                      <div className="text-slate-400 bg-slate-50 dark:bg-slate-955 dark:text-slate-500 p-2 rounded-xl border border-slate-100 dark:border-slate-850 h-min flex-shrink-0">
+                                      <div className="text-slate-400 bg-slate-50 dark:bg-slate-950 dark:text-slate-500 p-2 rounded-xl border border-slate-100 dark:border-slate-800 h-min flex-shrink-0">
                                         <Building size={13} />
                                       </div>
                                       <div className="min-w-0">
@@ -4061,7 +4061,7 @@ echo $response;`;
 
                                     {/* Ciudad */}
                                     <div className="flex gap-2.5 items-start text-left">
-                                      <div className="text-slate-400 bg-slate-50 dark:bg-slate-950 dark:text-slate-500 p-2 rounded-xl border border-slate-100 dark:border-slate-850 h-min flex-shrink-0">
+                                      <div className="text-slate-400 bg-slate-50 dark:bg-slate-950 dark:text-slate-500 p-2 rounded-xl border border-slate-100 dark:border-slate-800 h-min flex-shrink-0">
                                         <MapPin size={13} />
                                       </div>
                                       <div className="min-w-0">
@@ -4074,7 +4074,7 @@ echo $response;`;
 
                                     {/* Idioma */}
                                     <div className="flex gap-2.5 items-start text-left">
-                                      <div className="text-slate-400 bg-slate-50 dark:bg-slate-950 dark:text-slate-500 p-2 rounded-xl border border-slate-100 dark:border-slate-850 h-min flex-shrink-0">
+                                      <div className="text-slate-400 bg-slate-50 dark:bg-slate-950 dark:text-slate-500 p-2 rounded-xl border border-slate-100 dark:border-slate-800 h-min flex-shrink-0">
                                         <Calendar size={13} />
                                       </div>
                                       <div className="min-w-0">
@@ -4087,7 +4087,7 @@ echo $response;`;
 
                                     {/* Cumpleaños */}
                                     <div className="flex gap-2.5 items-start text-left">
-                                      <div className="text-slate-400 bg-slate-50 dark:bg-slate-950 dark:text-slate-500 p-2 rounded-xl border border-slate-100 dark:border-slate-850 h-min flex-shrink-0">
+                                      <div className="text-slate-400 bg-slate-50 dark:bg-slate-950 dark:text-slate-500 p-2 rounded-xl border border-slate-100 dark:border-slate-800 h-min flex-shrink-0">
                                         <Gift size={13} />
                                       </div>
                                       <div className="min-w-0">
@@ -4104,7 +4104,7 @@ echo $response;`;
                                     <button
                                       type="button"
                                       onClick={() => setShowMoreCrmFields(!showMoreCrmFields)}
-                                      className="w-full flex items-center justify-center gap-1 text-[9.5px] font-bold text-slate-400 hover:text-slate-655 dark:hover:text-slate-205 transition-colors cursor-pointer"
+                                      className="w-full flex items-center justify-center gap-1 text-[9.5px] font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
                                     >
                                       <span>{showMoreCrmFields ? 'Ocultar campos adicionales' : 'Ver más campos (6)'}</span>
                                       <ChevronDown size={11} className={`transition-transform duration-200 \${showMoreCrmFields ? 'rotate-180' : ''}`} />
@@ -4114,31 +4114,31 @@ echo $response;`;
                                       <div className="mt-3.5 space-y-2.5 animate-fadeIn">
                                         <div className="flex justify-between items-center text-[10px]">
                                           <span className="text-surface-400 font-medium">Tipo de documento:</span>
-                                          <span className="text-slate-700 dark:text-slate-350 font-bold">{crmClient.doc_type}</span>
+                                          <span className="text-slate-700 dark:text-slate-300 font-bold">{crmClient.doc_type}</span>
                                         </div>
                                         <div className="flex justify-between items-center text-[10px]">
                                           <span className="text-surface-400 font-medium">Nro de documento:</span>
-                                          <span className="text-slate-700 dark:text-slate-350 font-bold">{crmClient.doc_number.startsWith('MANUAL-') ? 'No registrado' : crmClient.doc_number}</span>
+                                          <span className="text-slate-700 dark:text-slate-300 font-bold">{crmClient.doc_number.startsWith('MANUAL-') ? 'No registrado' : crmClient.doc_number}</span>
                                         </div>
                                         <div className="flex justify-between items-center text-[10px]">
                                           <span className="text-surface-400 font-medium">Primer contacto:</span>
-                                          <span className="text-slate-700 dark:text-slate-350 font-bold">
+                                          <span className="text-slate-700 dark:text-slate-300 font-bold">
                                             {crmClient.created_at ? new Date(crmClient.created_at).toLocaleDateString('es-ES') : 'No registrado'}
                                           </span>
                                         </div>
                                         <div className="flex justify-between items-center text-[10px]">
                                           <span className="text-surface-400 font-medium">Categoría:</span>
-                                          <span className="text-slate-700 dark:text-slate-350 font-bold">{crmContact?.category_name || 'Sin Categoría'}</span>
+                                          <span className="text-slate-700 dark:text-slate-300 font-bold">{crmContact?.category_name || 'Sin Categoría'}</span>
                                         </div>
                                         <div className="flex justify-between items-center text-[10px]">
                                           <span className="text-surface-400 font-medium">Asesor Asignado:</span>
-                                          <span className="text-slate-700 dark:text-slate-350 font-bold">
+                                          <span className="text-slate-700 dark:text-slate-300 font-bold">
                                             {crmContact?.assigned_agent_name || 'Sin Asignar'}
                                           </span>
                                         </div>
                                         <div className="flex justify-between items-center text-[10px]">
                                           <span className="text-surface-400 font-medium">ID Cliente:</span>
-                                          <span className="text-slate-700 dark:text-slate-350 font-bold">#{crmClient.id}</span>
+                                          <span className="text-slate-700 dark:text-slate-300 font-bold">#{crmClient.id}</span>
                                         </div>
                                       </div>
                                     )}
@@ -4161,13 +4161,13 @@ echo $response;`;
                                    </div>
                                    
                                    {clientNotes.length > 0 ? (
-                                     <div className="bg-white dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200/60 dark:border-slate-850 shadow-sm">
+                                     <div className="bg-white dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm">
                                        <p className="text-[10px] text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line font-medium pr-1">
                                          {clientNotes[0].content}
                                        </p>
-                                       <div className="text-[8px] text-slate-450 dark:text-slate-505 text-right mt-2.5 font-bold flex items-center justify-between">
+                                       <div className="text-[8px] text-slate-400 dark:text-slate-500 text-right mt-2.5 font-bold flex items-center justify-between">
                                          <span className="flex items-center gap-1.5">
-                                           <span className="w-4 h-4 rounded-full bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-350 text-[8px] font-extrabold flex items-center justify-center">
+                                           <span className="w-4 h-4 rounded-full bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[8px] font-extrabold flex items-center justify-center">
                                              {clientNotes[0].agent_name?.charAt(0).toUpperCase() || 'A'}
                                            </span>
                                            <span>{clientNotes[0].agent_name || 'Asesor'}</span>
@@ -4252,7 +4252,7 @@ echo $response;`;
                                       <button
                                         type="button"
                                         onClick={() => setIsDocTypeDropdownOpen(!isDocTypeDropdownOpen)}
-                                        className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-955 border-0 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all cursor-pointer min-w-[65px] justify-between focus:outline-none"
+                                        className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all cursor-pointer min-w-[65px] justify-between focus:outline-none"
                                       >
                                         <span>{crmDocType}</span>
                                         <ChevronDown size={10} className={`text-surface-400 transition-transform duration-200 \${isDocTypeDropdownOpen ? 'rotate-180' : ''}`} />
@@ -4264,7 +4264,7 @@ echo $response;`;
                                             className="fixed inset-0 z-30" 
                                             onClick={() => setIsDocTypeDropdownOpen(false)} 
                                           />
-                                          <div className="absolute left-0 mt-1 w-24 bg-[#0b2d33] dark:bg-slate-955 rounded-xl border-0 shadow-premium-lg py-1 z-40 animate-fadeIn">
+                                          <div className="absolute left-0 mt-1 w-24 bg-[#0b2d33] dark:bg-slate-950 rounded-xl border-0 shadow-premium-lg py-1 z-40 animate-fadeIn">
                                             <button
                                               type="button"
                                               onClick={() => {
@@ -4302,7 +4302,7 @@ echo $response;`;
                                         placeholder={crmDocType === 'DNI' ? "Ingresa DNI de 8 dígitos" : "Ingresa RUC de 11 dígitos"}
                                         value={crmDocNumber}
                                         onChange={(e) => setCrmDocNumber(e.target.value)}
-                                        className="w-full pl-2.5 pr-8 py-1.5 bg-slate-100/70 dark:bg-slate-955 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-655 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
+                                        className="w-full pl-2.5 pr-8 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-655 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
                                       />
                                       {crmDocNumber.trim().length >= 8 && (
                                         <button
@@ -4330,7 +4330,7 @@ echo $response;`;
                                     placeholder="Nombre completo"
                                     value={crmName}
                                     onChange={(e) => setCrmName(e.target.value)}
-                                    className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-955 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
+                                    className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
                                   />
                                 </div>
 
@@ -4341,7 +4341,7 @@ echo $response;`;
                                       <button
                                         type="button"
                                         onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
-                                        className="w-full flex items-center justify-between px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-955 border-0 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all cursor-pointer focus:outline-none"
+                                        className="w-full flex items-center justify-between px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all cursor-pointer focus:outline-none"
                                       >
                                         <span>
                                           {crmCategories.find(c => c.id.toString() === crmCategoryId)?.name || 'Sin Categoría'}
@@ -4355,7 +4355,7 @@ echo $response;`;
                                             className="fixed inset-0 z-30" 
                                             onClick={() => setIsCategoryDropdownOpen(false)} 
                                           />
-                                          <div className="absolute left-0 right-0 mt-1 bg-[#0b2d33] dark:bg-slate-955 rounded-xl border-0 shadow-premium-lg py-1 z-40 max-h-40 overflow-y-auto animate-fadeIn">
+                                          <div className="absolute left-0 right-0 mt-1 bg-[#0b2d33] dark:bg-slate-950 rounded-xl border-0 shadow-premium-lg py-1 z-40 max-h-40 overflow-y-auto animate-fadeIn">
                                             <button
                                               type="button"
                                               onClick={() => {
@@ -4402,7 +4402,7 @@ echo $response;`;
                                       rows={2}
                                       value={crmAddress}
                                       onChange={(e) => setCrmAddress(e.target.value)}
-                                      className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-955 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 resize-none font-medium transition-all"
+                                      className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 resize-none font-medium transition-all"
                                     />
                                   </div>
                                 )}
@@ -4414,7 +4414,7 @@ echo $response;`;
                                     placeholder="correo@ejemplo.com"
                                     value={crmEmail}
                                     onChange={(e) => setCrmEmail(e.target.value)}
-                                    className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-955 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
+                                    className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
                                   />
                                 </div>
 
@@ -4424,7 +4424,7 @@ echo $response;`;
                                     type="date"
                                     value={crmBirthday}
                                     onChange={(e) => setCrmBirthday(e.target.value)}
-                                    className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-955 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
+                                    className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
                                   />
                                 </div>
 
@@ -4435,7 +4435,7 @@ echo $response;`;
                                     placeholder="Español, Inglés, etc."
                                     value={crmLanguage}
                                     onChange={(e) => setCrmLanguage(e.target.value)}
-                                    className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-955 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
+                                    className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
                                   />
                                 </div>
 
@@ -4444,7 +4444,7 @@ echo $response;`;
                                     <button
                                       type="button"
                                       onClick={() => setCrmIsEditing(false)}
-                                      className="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-surface-600 dark:text-slate-450 text-[11px] font-bold rounded-xl transition-all cursor-pointer"
+                                      className="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-surface-600 dark:text-slate-400 text-[11px] font-bold rounded-xl transition-all cursor-pointer"
                                     >
                                       Cancelar
                                     </button>
@@ -4465,7 +4465,7 @@ echo $response;`;
 
                         {/* Floating Notes Panel (No Bloqueante) */}
                         {showNotesFloatingWindow && crmClient && (
-                          <div className="absolute inset-0 bg-white dark:bg-slate-900/98 z-50 flex flex-col p-4 animate-fadeIn border-l border-slate-100 dark:border-slate-800 shadow-2xl">
+                          <div className="absolute inset-0 bg-white dark:bg-slate-900/95 z-50 flex flex-col p-4 animate-fadeIn border-l border-slate-100 dark:border-slate-800 shadow-2xl">
                             {/* Header */}
                             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 flex-shrink-0">
                               <div className="min-w-0 space-y-0.5 text-left">
@@ -4480,7 +4480,7 @@ echo $response;`;
                               <button
                                 type="button"
                                 onClick={() => setShowNotesFloatingWindow(false)}
-                                className="p-1.5 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-605 dark:hover:text-slate-202 rounded-xl transition-all cursor-pointer border border-slate-100 dark:border-slate-800"
+                                className="p-1.5 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl transition-all cursor-pointer border border-slate-100 dark:border-slate-800"
                               >
                                 <X size={14} />
                               </button>
@@ -4493,15 +4493,15 @@ echo $response;`;
                                   return (
                                     <div 
                                       key={note.id} 
-                                      className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-150 dark:border-slate-800/50 text-left space-y-2.5 hover:bg-slate-100/50 dark:hover:bg-slate-850/50 transition-all duration-200"
+                                      className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800/50 text-left space-y-2.5 hover:bg-slate-100/50 dark:hover:bg-slate-850/50 transition-all duration-200"
                                     >
-                                      <p className="text-[10.5px] text-slate-750 dark:text-slate-300 leading-relaxed whitespace-pre-line font-medium pr-5">
+                                      <p className="text-[10.5px] text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line font-medium pr-5">
                                         {note.content}
                                       </p>
                                       
                                       <div className="flex items-center justify-between text-[8px] font-bold text-slate-400 dark:text-slate-500">
                                         <span className="flex items-center gap-1.5">
-                                          <span className="w-4 h-4 rounded-full bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-350 text-[8px] font-extrabold flex items-center justify-center">
+                                          <span className="w-4 h-4 rounded-full bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[8px] font-extrabold flex items-center justify-center">
                                             {note.agent_name?.charAt(0).toUpperCase() || 'A'}
                                           </span>
                                           <span className="max-w-[100px] truncate">{note.agent_name || 'Asesor'}</span>
@@ -4524,19 +4524,19 @@ echo $response;`;
                                 })
                               ) : (
                                 <div className="h-full flex flex-col items-center justify-center text-center py-10 space-y-2">
-                                  <span className="text-[10px] text-slate-400 dark:text-slate-505 italic">No hay notas registradas para este cliente.</span>
+                                  <span className="text-[10px] text-slate-400 dark:text-slate-500 italic">No hay notas registradas para este cliente.</span>
                                 </div>
                               )}
                             </div>
 
                             {/* Footer (Add note form) */}
-                            <div className="border-t border-slate-100 dark:border-slate-855 pt-3 flex-shrink-0 space-y-2.5">
+                            <div className="border-t border-slate-100 dark:border-slate-800 pt-3 flex-shrink-0 space-y-2.5">
                               <textarea
                                 value={newNoteText}
                                 onChange={(e) => setNewNoteText(e.target.value)}
                                 rows={3}
                                 placeholder="Escribe una nueva nota interna..."
-                                className="w-full p-3 bg-slate-50 dark:bg-slate-955 border border-slate-200 dark:border-slate-850 text-[11px] text-slate-800 dark:text-white rounded-2xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 resize-none font-medium placeholder-slate-400 transition-all"
+                                className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-800 dark:text-white rounded-2xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 resize-none font-medium placeholder-slate-400 transition-all"
                               />
                               <button
                                 type="button"
@@ -4575,7 +4575,7 @@ echo $response;`;
                       type="button"
                       onClick={() => fetchPipelineData()}
                       disabled={pipelineLoading}
-                      className="p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-surface-600 dark:text-slate-350 rounded-xl transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5 text-xs font-bold"
+                      className="p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-surface-600 dark:text-slate-300 rounded-xl transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5 text-xs font-bold"
                     >
                       <RefreshCw size={13} className={pipelineLoading ? 'animate-spin' : ''} />
                       <span>Actualizar Tablero</span>
@@ -4669,7 +4669,7 @@ echo $response;`;
                                             </button>
 
                                             {openMoveDropdownJid === item.remoteJid && (
-                                              <div className="absolute right-0 mt-1 w-44 bg-[#0b2d33] dark:bg-slate-955 rounded-xl shadow-premium-lg border-0 py-1.5 z-40 animate-fadeIn">
+                                              <div className="absolute right-0 mt-1 w-44 bg-[#0b2d33] dark:bg-slate-950 rounded-xl shadow-premium-lg border-0 py-1.5 z-40 animate-fadeIn">
                                                 <div className="px-2.5 py-0.5 text-[8px] font-bold text-slate-400 uppercase tracking-wider border-b border-white/5 mb-1">
                                                   Cambiar a etapa:
                                                 </div>
@@ -5401,7 +5401,7 @@ echo $response;`;
                                         <button
                                           type="button"
                                           onClick={() => handleUpdateGroupParticipant('demote', cleanId)}
-                                          className="p-1 bg-white dark:bg-slate-900 text-surface-400 hover:text-slate-800 dark:hover:text-white rounded-lg border border-slate-100 dark:border-slate-850 cursor-pointer shadow-sm transition-colors text-[9px] font-semibold"
+                                          className="p-1 bg-white dark:bg-slate-900 text-surface-400 hover:text-slate-800 dark:hover:text-white rounded-lg border border-slate-100 dark:border-slate-800 cursor-pointer shadow-sm transition-colors text-[9px] font-semibold"
                                           title="Degradar a miembro"
                                         >
                                           Degradar
@@ -5410,7 +5410,7 @@ echo $response;`;
                                         <button
                                           type="button"
                                           onClick={() => handleUpdateGroupParticipant('promote', cleanId)}
-                                          className="p-1 bg-white dark:bg-slate-900 text-surface-400 hover:text-slate-800 dark:hover:text-white rounded-lg border border-slate-100 dark:border-slate-850 cursor-pointer shadow-sm transition-colors text-[9px] font-semibold"
+                                          className="p-1 bg-white dark:bg-slate-900 text-surface-400 hover:text-slate-800 dark:hover:text-white rounded-lg border border-slate-100 dark:border-slate-800 cursor-pointer shadow-sm transition-colors text-[9px] font-semibold"
                                           title="Ascender a admin"
                                         >
                                           Promover
@@ -5420,7 +5420,7 @@ echo $response;`;
                                       <button
                                         type="button"
                                         onClick={() => handleUpdateGroupParticipant('remove', cleanId)}
-                                        className="p-1 bg-white hover:bg-rose-50 dark:bg-slate-900 text-surface-400 hover:text-rose-600 rounded-lg border border-slate-100 dark:border-slate-850 cursor-pointer shadow-sm transition-colors flex items-center justify-center"
+                                        className="p-1 bg-white hover:bg-rose-50 dark:bg-slate-900 text-surface-400 hover:text-rose-600 rounded-lg border border-slate-100 dark:border-slate-800 cursor-pointer shadow-sm transition-colors flex items-center justify-center"
                                         title="Eliminar del grupo"
                                       >
                                         <Trash2 size={11} />
@@ -6022,7 +6022,7 @@ echo $response;`;
                     </div>
                   ) : clientsWithBirthdays.length === 0 ? (
                     <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 p-8 rounded-3xl text-center space-y-3">
-                      <Gift className="mx-auto w-10 h-10 text-slate-400 dark:text-slate-655" />
+                      <Gift className="mx-auto w-10 h-10 text-slate-400 dark:text-slate-600" />
                       <h4 className="text-sm font-bold text-slate-800 dark:text-white">No hay cumpleaños registrados</h4>
                       <p className="text-xs text-surface-400 max-w-sm mx-auto">Edita las fichas de tus clientes en el CRM y añade sus fechas de nacimiento para verlos organizados aquí.</p>
                     </div>
@@ -6044,7 +6044,7 @@ echo $response;`;
                                       ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20 animate-pulse'
                                       : daysRemaining <= 7
                                         ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
-                                        : 'bg-slate-50 dark:bg-slate-950 text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-850'
+                                        : 'bg-slate-50 dark:bg-slate-950 text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-800'
                                   }`}>
                                     {isToday ? '🎂' : new Date(client.birthday).getDate()}
                                   </div>
@@ -6857,7 +6857,7 @@ echo $response;`;
                     value={agentDocNumber}
                     onChange={(e) => setAgentDocNumber(e.target.value)}
                     placeholder="Ingresa DNI de 8 dígitos o RUC de 11"
-                    className="w-full pl-4 pr-10 py-3 bg-slate-50 dark:bg-slate-955 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-brand-primary"
+                    className="w-full pl-4 pr-10 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-brand-primary"
                   />
                   {agentDocNumber.trim().length >= 8 && (
                     <button
