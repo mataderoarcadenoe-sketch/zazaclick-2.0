@@ -334,9 +334,10 @@ router.get('/contacts/:phoneNumber', async (req: AuthenticatedRequest, res: Resp
     let notes: any[] = [];
     if (contact.client_id) {
       const notesRes = await pool.query(
-        `SELECT n.*, u.name as agent_name 
+        `SELECT n.*, COALESCE(ap.name, u.email) as agent_name 
          FROM crm_client_notes n
          LEFT JOIN users u ON n.agent_id = u.id
+         LEFT JOIN agent_profiles ap ON u.id = ap.user_id
          WHERE n.user_id = $1 AND n.client_id = $2
          ORDER BY n.created_at DESC`,
         [req.userId, contact.client_id]
@@ -669,9 +670,10 @@ router.post('/clients/:clientId/notes', async (req: AuthenticatedRequest, res: R
 
     // Join with user table to return the agent name immediately
     const joinedRes = await pool.query(
-      `SELECT n.*, u.name as agent_name 
+      `SELECT n.*, COALESCE(ap.name, u.email) as agent_name 
        FROM crm_client_notes n
        LEFT JOIN users u ON n.agent_id = u.id
+       LEFT JOIN agent_profiles ap ON u.id = ap.user_id
        WHERE n.id = $1`,
       [noteRes.rows[0].id]
     );
