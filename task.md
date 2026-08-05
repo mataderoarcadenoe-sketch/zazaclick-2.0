@@ -1,7 +1,11 @@
 - `[x]` Agregar columna `tags` de tipo `JSONB` en la tabla `crm_contacts`
 - `[x]` Crear endpoints `GET /contacts/tags-map` y `POST /contacts/tags` en el backend crm.routes.ts
 - `[x]` Implementar dropdown interactivo multi-select en el botón "Etiquetar" del frontend
-- `[x]` Mostrar micro-badges de colores en las tarjetas de chat del sidebar y en la cabecera activa
+- `[x]` 5. Frontend: Lógica del Botón "Asignar" en Chats
+  - `[x]` Cargar mapa de colaboradores asignados y sus estados al arrancar la UI.
+  - `[x]` Desarrollar el menú dropdown "Asignar" en la barra de herramientas del chat activo.
+  - `[x]` Ejecutar llamada `POST /crm/contacts/assign` al seleccionar un colaborador y refrescar asignaciones.
+  - `[x]` Pintar el badge de colaborador asignado en los chats del sidebar y en la cabecera. activa
 - `[x]` Agregar barra horizontal de filtros rápidos por etiquetas debajo del buscador en el sidebar
 - `[x]` Eliminar `shadow-sm` y `animate-pulseGlow` del globo de mensajes no leídos (círculo verde) en el sidebar
 - `[x]` Probar compilación del backend y frontend client

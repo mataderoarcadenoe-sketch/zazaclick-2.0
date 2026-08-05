@@ -44,6 +44,7 @@ export async function initDatabase() {
         email VARCHAR(255) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
         role VARCHAR(50) DEFAULT 'client',
+        parent_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
@@ -152,9 +153,22 @@ export async function initDatabase() {
         is_active BOOLEAN DEFAULT TRUE,
         pipeline_stage VARCHAR(50) DEFAULT 'Nuevo',
         tags JSONB DEFAULT '[]',
+        assigned_agent_id VARCHAR(255) REFERENCES users(id) ON DELETE SET NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT unique_user_phone UNIQUE (user_id, phone_number)
+      );
+    `);
+
+    // 9. Tabla de Perfiles de Asesores (Colaboradores)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS agent_profiles (
+        user_id VARCHAR(255) PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        name VARCHAR(255) NOT NULL,
+        status VARCHAR(50) DEFAULT 'available',
+        response_time_sec INTEGER DEFAULT 45,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
@@ -166,6 +180,16 @@ export async function initDatabase() {
     // Asegurar columna tags en bases de datos existentes
     await pool.query(`
       ALTER TABLE crm_contacts ADD COLUMN IF NOT EXISTS tags JSONB DEFAULT '[]';
+    `);
+
+    // Asegurar columna parent_id en bases de datos existentes (users)
+    await pool.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS parent_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE;
+    `);
+
+    // Asegurar columna assigned_agent_id en bases de datos existentes (crm_contacts)
+    await pool.query(`
+      ALTER TABLE crm_contacts ADD COLUMN IF NOT EXISTS assigned_agent_id VARCHAR(255) REFERENCES users(id) ON DELETE SET NULL;
     `);
 
     // 6. Asegurar rol Administrador para tu correo principal

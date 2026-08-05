@@ -9,7 +9,7 @@ import {
   Moon, Sun, Menu, X, Check, Play, ExternalLink, Sparkles, BookOpen, Clock,
   MessageSquare, Search, MessageCircle, Smile, ArrowLeft,
   Paperclip, FileText, Image, Video, Download, ChevronDown, Users, Users2, Settings,
-  Edit2, Phone, User, Tag, MoreVertical, Mail, MapPin, Building, Calendar,
+  Edit2, Phone, User, UserMinus, Tag, MoreVertical, Mail, MapPin, Building, Calendar,
   Star, GitBranch, Grip
 } from 'lucide-react';
 import EmojiPicker, { Theme, EmojiStyle, Emoji } from 'emoji-picker-react';
@@ -136,7 +136,19 @@ export default function DashboardPage() {
   });
 
   // Active Tab/Section State
-  const [activeTab, setActiveTab] = useState<'overview' | 'instances' | 'chats' | 'pipeline' | 'contacts' | 'groups' | 'playground' | 'docs' | 'subscription'>('overview');
+  const [activeTab, setActiveTab] = useState<string>('overview');
+
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'admin') {
+        setActiveTab('admin_overview');
+      } else if (user.role === 'agent') {
+        setActiveTab('chats');
+      } else {
+        setActiveTab('overview');
+      }
+    }
+  }, [user]);
 
   // Modal / Form state for new instance
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -250,10 +262,37 @@ export default function DashboardPage() {
   const [crmContact, setCrmContact] = useState<any | null>(null);
   const [crmContactMap, setCrmContactMap] = useState<Record<string, string>>({});
   const [crmContactTagsMap, setCrmContactTagsMap] = useState<Record<string, string[]>>({});
+  
+  // Colaboradores (Equipo) States
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const [teamLoading, setTeamLoading] = useState(false);
+  const [showCreateAgentModal, setShowCreateAgentModal] = useState(false);
+  const [newAgentName, setNewAgentName] = useState('');
+  const [newAgentEmail, setNewAgentEmail] = useState('');
+  const [newAgentPassword, setNewAgentPassword] = useState('');
+  const [agentCreateLoading, setAgentCreateLoading] = useState(false);
+  const [agentCreateError, setAgentCreateError] = useState<string | null>(null);
+  
+  // Super Admin Platform States
+  const [adminStats, setAdminStats] = useState<any | null>(null);
+  const [adminStatsLoading, setAdminStatsLoading] = useState(false);
+  const [adminUsers, setAdminUsers] = useState<any[]>([]);
+  const [adminUsersLoading, setAdminUsersLoading] = useState(false);
+  const [adminInstances, setAdminInstances] = useState<any[]>([]);
+  const [adminInstancesLoading, setAdminInstancesLoading] = useState(false);
+  const [editingUserSub, setEditingUserSub] = useState<any | null>(null);
+  const [showEditSubModal, setShowEditSubModal] = useState(false);
+  const [adminNewPlanId, setAdminNewPlanId] = useState('plan_basic');
+  const [adminNewSubStatus, setAdminNewSubStatus] = useState('active');
+  const [adminNewDuration, setAdminNewDuration] = useState('1');
+  const [adminSubLoading, setAdminSubLoading] = useState(false);
   const [showTagsDropdown, setShowTagsDropdown] = useState(false);
   const [selectedFilterTag, setSelectedFilterTag] = useState<string | null>(null);
   const tagsDropdownRef = useRef<HTMLDivElement>(null);
   const tagsButtonRef = useRef<HTMLButtonElement>(null);
+  const [showAssignDropdown, setShowAssignDropdown] = useState(false);
+  const assignDropdownRef = useRef<HTMLDivElement>(null);
+  const assignButtonRef = useRef<HTMLButtonElement>(null);
   const [crmCategories, setCrmCategories] = useState<any[]>([]);
   const [crmLoading, setCrmLoading] = useState(false);
   const [crmSaving, setCrmSaving] = useState(false);
@@ -1011,6 +1050,21 @@ export default function DashboardPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showTagsDropdown]);
 
+  // Cerrar select de asignación al hacer clic fuera
+  useEffect(() => {
+    if (!showAssignDropdown) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        assignDropdownRef.current && !assignDropdownRef.current.contains(e.target as Node) &&
+        assignButtonRef.current && !assignButtonRef.current.contains(e.target as Node)
+      ) {
+        setShowAssignDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showAssignDropdown]);
+
   // Fetch Google Contacts Connection Status
   const fetchGoogleContactsStatus = useCallback(async () => {
     try {
@@ -1168,6 +1222,194 @@ export default function DashboardPage() {
       console.error('Error fetching CRM contact tags map:', err.message);
     }
   }, []);
+
+  const [crmContactAgentsMap, setCrmContactAgentsMap] = useState<Record<string, { id: string, name: string, status: string }>>({});
+
+  // Fetch CRM Contact Agents Map
+  const fetchCrmContactAgentsMap = useCallback(async () => {
+    try {
+      const res = await api.get('/crm/contacts/agents-map');
+      if (res.data?.success) {
+        setCrmContactAgentsMap(res.data.data || {});
+      }
+    } catch (err: any) {
+      console.error('Error fetching CRM contact agents map:', err.message);
+    }
+  }, []);
+
+  const fetchTeamMembers = useCallback(async () => {
+    if (user?.role !== 'client' && user?.role !== 'agent') return;
+    setTeamLoading(true);
+    try {
+      const res = await api.get('/crm/agents');
+      if (res.data?.success) {
+        setTeamMembers(res.data.data || []);
+      }
+    } catch (err: any) {
+      console.error('Error fetching team members:', err.message);
+      showNotification('Error al cargar colaboradores.', 'error');
+    } finally {
+      setTeamLoading(false);
+    }
+  }, [user]);
+
+  // Create Team Member (Collaborator)
+  const handleCreateAgent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAgentName.trim() || !newAgentEmail.trim() || !newAgentPassword.trim()) return;
+    setAgentCreateLoading(true);
+    setAgentCreateError(null);
+    try {
+      const res = await api.post('/crm/agents', {
+        name: newAgentName,
+        email: newAgentEmail,
+        password: newAgentPassword
+      });
+      if (res.data?.success) {
+        showNotification('Colaborador registrado exitosamente.');
+        setNewAgentName('');
+        setNewAgentEmail('');
+        setNewAgentPassword('');
+        setShowCreateAgentModal(false);
+        fetchTeamMembers();
+      }
+    } catch (err: any) {
+      setAgentCreateError(err.response?.data?.error || 'Error al registrar colaborador.');
+    } finally {
+      setAgentCreateLoading(false);
+    }
+  };
+
+  // Toggle Agent Status
+  const handleToggleAgentStatus = async (agentId: string, currentStatus: string) => {
+    const statuses = ['available', 'busy', 'offline'] as const;
+    const currentIndex = statuses.indexOf(currentStatus as any);
+    const nextStatus = statuses[(currentIndex + 1) % statuses.length];
+    
+    try {
+      const res = await api.put(`/crm/agents/${agentId}/status`, { status: nextStatus });
+      if (res.data?.success) {
+        showNotification('Estado del colaborador actualizado.');
+        fetchTeamMembers();
+      }
+    } catch (err: any) {
+      showNotification('Error al actualizar estado.', 'error');
+    }
+  };
+
+  // Delete Agent
+  const handleDeleteAgent = (agentId: string, agentName: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Eliminar Colaborador',
+      message: `¿Estás seguro de que deseas eliminar a ${agentName}? Se desasignará de todos sus chats.`,
+      confirmText: 'Eliminar',
+      isDanger: true,
+      onConfirm: async () => {
+        try {
+          const res = await api.delete(`/crm/agents/${agentId}`);
+          if (res.data?.success) {
+            showNotification('Colaborador eliminado.');
+            fetchTeamMembers();
+          }
+        } catch (err: any) {
+          showNotification('Error al eliminar colaborador.', 'error');
+        }
+      }
+    });
+  };
+
+  // Assign chat to Advisor
+  const handleAssignAgent = async (agentId: string | null) => {
+    if (!selectedChat) return;
+    const cleanJid = selectedChat.remoteJid.split('@')[0].split(':')[0].split(':')[0];
+    try {
+      const res = await api.post('/crm/contacts/assign', {
+        phone_number: cleanJid,
+        agent_id: agentId
+      });
+      if (res.data?.success) {
+        showNotification(agentId ? 'Chat asignado correctamente.' : 'Chat desasignado.');
+        fetchCrmContactAgentsMap();
+        // Force refresh active contact
+        fetchCrmContactForChat(selectedChat.remoteJid);
+      }
+    } catch (err: any) {
+      showNotification(err.response?.data?.error || 'Error al asignar chat.', 'error');
+    }
+  };
+
+  // Super Admin: Load Platform stats
+  const fetchAdminStats = useCallback(async () => {
+    if (user?.role !== 'admin') return;
+    setAdminStatsLoading(true);
+    try {
+      const res = await api.get('/admin/stats');
+      if (res.data?.success) {
+        setAdminStats(res.data.stats);
+      }
+    } catch (err: any) {
+      console.error('Error fetching admin stats:', err.message);
+    } finally {
+      setAdminStatsLoading(false);
+    }
+  }, [user]);
+
+  // Super Admin: Load Users list
+  const fetchAdminUsers = useCallback(async () => {
+    if (user?.role !== 'admin') return;
+    setAdminUsersLoading(true);
+    try {
+      const res = await api.get('/admin/users');
+      if (res.data?.success) {
+        setAdminUsers(res.data.users || []);
+      }
+    } catch (err: any) {
+      console.error('Error fetching admin users:', err.message);
+    } finally {
+      setAdminUsersLoading(false);
+    }
+  }, [user]);
+
+  // Super Admin: Load Instances list
+  const fetchAdminInstances = useCallback(async () => {
+    if (user?.role !== 'admin') return;
+    setAdminInstancesLoading(true);
+    try {
+      const res = await api.get('/admin/instances');
+      if (res.data?.success) {
+        setAdminInstances(res.data.instances || []);
+      }
+    } catch (err: any) {
+      console.error('Error fetching admin instances:', err.message);
+    } finally {
+      setAdminInstancesLoading(false);
+    }
+  }, [user]);
+
+  // Super Admin: Update subscription
+  const handleUpdateSubscription = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUserSub) return;
+    setAdminSubLoading(true);
+    try {
+      const res = await api.put(`/admin/users/${editingUserSub.id}/subscription`, {
+        planId: adminNewPlanId,
+        status: adminNewSubStatus,
+        durationMonths: adminNewDuration
+      });
+      if (res.data?.success) {
+        showNotification('Suscripción actualizada correctamente.');
+        setShowEditSubModal(false);
+        setEditingUserSub(null);
+        fetchAdminUsers();
+      }
+    } catch (err: any) {
+      showNotification(err.response?.data?.error || 'Error al actualizar suscripción.', 'error');
+    } finally {
+      setAdminSubLoading(false);
+    }
+  };
 
   const toggleTag = async (tag: string) => {
     if (!selectedChat) return;
@@ -1579,7 +1821,21 @@ export default function DashboardPage() {
     fetchCrmCategories();
     fetchCrmContactMap();
     fetchCrmContactTagsMap();
-  }, [fetchCrmCategories, fetchCrmContactMap, fetchCrmContactTagsMap]);
+    fetchCrmContactAgentsMap();
+  }, [fetchCrmCategories, fetchCrmContactMap, fetchCrmContactTagsMap, fetchCrmContactAgentsMap]);
+
+  // Cargar colaboradores y vistas de Super Admin al cambiar de pestaña
+  useEffect(() => {
+    if (activeTab === 'team' || activeTab === 'chats') {
+      fetchTeamMembers();
+    } else if (activeTab === 'admin_overview') {
+      fetchAdminStats();
+    } else if (activeTab === 'admin_users') {
+      fetchAdminUsers();
+    } else if (activeTab === 'admin_instances') {
+      fetchAdminInstances();
+    }
+  }, [activeTab, fetchTeamMembers, fetchAdminStats, fetchAdminUsers, fetchAdminInstances]);
 
   // Cargar grupos cuando se activa la pestaña y hay instancia seleccionada
   useEffect(() => {
@@ -1881,16 +2137,33 @@ export default function DashboardPage() {
   };
 
   const menuItems = [
-    { id: 'overview', label: 'Resumen', icon: LayoutGrid },
-    { id: 'instances', label: 'Líneas / QR', icon: Smartphone },
-    { id: 'chats', label: 'Chats en Vivo', icon: MessageSquare },
-    { id: 'pipeline', label: 'Pipeline Comercial', icon: GitBranch },
-    { id: 'contacts', label: 'Clientes / Agenda', icon: Users },
-    { id: 'groups', label: 'Grupos (WhatsApp)', icon: Users2 },
-    { id: 'playground', label: 'Probar Envío', icon: Play },
-    { id: 'docs', label: 'Documentación API', icon: Terminal },
-    { id: 'subscription', label: 'Suscripción', icon: Key },
-  ] as const;
+    // Super Admin Tabs
+    ...(user?.role === 'admin' ? [
+      { id: 'admin_overview', label: 'Resumen Global', icon: LayoutGrid },
+      { id: 'admin_users', label: 'Empresas / Clientes', icon: Building },
+      { id: 'admin_instances', label: 'Líneas Totales', icon: Smartphone },
+    ] : []),
+
+    // Tenant / Client Admin Tabs
+    ...(user?.role === 'client' ? [
+      { id: 'overview', label: 'Resumen', icon: LayoutGrid },
+      { id: 'instances', label: 'Líneas / QR', icon: Smartphone },
+      { id: 'chats', label: 'Chats en Vivo', icon: MessageSquare },
+      { id: 'pipeline', label: 'Pipeline Comercial', icon: GitBranch },
+      { id: 'contacts', label: 'Clientes / Agenda', icon: Users },
+      { id: 'groups', label: 'Grupos (WhatsApp)', icon: Users2 },
+      { id: 'team', label: 'Mi Equipo', icon: User },
+      { id: 'playground', label: 'Probar Envío', icon: Play },
+      { id: 'docs', label: 'Documentación API', icon: Terminal },
+      { id: 'subscription', label: 'Suscripción', icon: Key },
+    ] : []),
+
+    // Collaborator / Agent Tabs
+    ...(user?.role === 'agent' ? [
+      { id: 'chats', label: 'Chats en Vivo', icon: MessageSquare },
+      { id: 'contacts', label: 'Clientes / Agenda', icon: Users },
+    ] : []),
+  ];
 
   const currentBackendUrl = window.location.origin.includes('localhost') 
     ? 'http://localhost:3000' 
@@ -2792,10 +3065,17 @@ echo $response;`;
                                     {/* Details */}
                                     <div className="flex-1 min-w-0 space-y-1">
                                       <div className="flex items-center justify-between">
-                                        <span className={`text-xs truncate ${isActive || isUnread ? 'text-slate-900 dark:text-white font-bold' : 'text-surface-500 dark:text-surface-400 font-normal'}`}>
-                                          {contactName}
-                                        </span>
-                                        <span className={`text-[10px] font-medium ${isUnread ? 'text-brand-primary font-bold' : 'text-surface-400'}`}>
+                                        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                          <span className={`text-xs truncate ${isActive || isUnread ? 'text-slate-900 dark:text-white font-bold' : 'text-surface-500 dark:text-surface-400 font-normal'}`}>
+                                            {contactName}
+                                          </span>
+                                          {crmContactAgentsMap[cleanRemoteJid] && (
+                                            <span className="px-1 py-0.5 rounded text-[7.5px] bg-indigo-500/10 text-indigo-500 font-bold truncate max-w-[65px] flex-shrink-0" title={`Asignado a: ${crmContactAgentsMap[cleanRemoteJid].name}`}>
+                                              👤 {crmContactAgentsMap[cleanRemoteJid].name.split(' ')[0]}
+                                            </span>
+                                          )}
+                                        </div>
+                                        <span className={`text-[10px] font-medium ${isUnread ? 'text-brand-primary font-bold' : 'text-surface-400'} flex-shrink-0`}>
                                           {formatTimeLocal(chat.lastMessage?.messageTimestamp)}
                                         </span>
                                       </div>
@@ -2887,6 +3167,19 @@ echo $response;`;
                                         </span>
                                       );
                                     })}
+                                    
+                                    {/* Assigned Advisor badge */}
+                                    {(() => {
+                                      const cleanPhone = selectedChat.remoteJid.split('@')[0].split(':')[0].split(':')[0];
+                                      const assignedAgent = crmContactAgentsMap[cleanPhone];
+                                      if (!assignedAgent) return null;
+                                      return (
+                                        <span className="px-2 py-0.5 text-[9px] font-bold rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+                                          <span className="w-1 h-1 rounded-full bg-indigo-500" />
+                                          <span>Asignado: {assignedAgent.name}</span>
+                                        </span>
+                                      );
+                                    })()}
                                   </div>
                                   
                                   {!selectedChat.remoteJid.endsWith('@g.us') ? (
@@ -2961,11 +3254,72 @@ echo $response;`;
                             
                             {/* Bottom Row - Actions Toolbar */}
                             <div className="px-4 py-2.5 flex items-center gap-2.5 overflow-visible flex-wrap bg-slate-50/50 dark:bg-slate-900/50">
-                              <button className="flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all cursor-pointer whitespace-nowrap">
-                                <User size={13} className="text-slate-400 dark:text-slate-400" />
-                                <span>Asignar</span>
-                                <ChevronDown size={12} className="text-slate-400 ml-1" />
-                              </button>
+                              <div className="relative">
+                                <button
+                                  ref={assignButtonRef}
+                                  onClick={() => setShowAssignDropdown(!showAssignDropdown)}
+                                  className={`flex items-center gap-2 px-3.5 py-1.5 border rounded-xl text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap ${
+                                    showAssignDropdown
+                                      ? 'bg-brand-primary text-white border-brand-primary'
+                                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'
+                                  }`}
+                                >
+                                  <User size={13} className={showAssignDropdown ? "text-white" : "text-slate-400 dark:text-slate-400"} />
+                                  <span>Asignar</span>
+                                  <ChevronDown size={12} className={showAssignDropdown ? "text-white ml-1" : "text-slate-400 ml-1"} />
+                                </button>
+
+                                {showAssignDropdown && (
+                                  <div
+                                    ref={assignDropdownRef}
+                                    className="absolute left-0 mt-2 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 p-2 space-y-1 animate-fadeIn text-left"
+                                  >
+                                    <div className="px-2 py-1.5 text-[9px] font-bold uppercase tracking-wider text-surface-400">Asignar Asesor</div>
+                                    
+                                    <button
+                                      onClick={() => {
+                                        handleAssignAgent(null);
+                                        setShowAssignDropdown(false);
+                                      }}
+                                      className="w-full px-2.5 py-2 hover:bg-rose-500/10 text-rose-500 rounded-xl text-xs font-bold text-left transition-colors flex items-center gap-2 cursor-pointer"
+                                    >
+                                      <UserMinus size={14} />
+                                      <span>Sin Asignar (Disponible)</span>
+                                    </button>
+
+                                    <div className="border-t border-slate-100 dark:border-slate-800/40 my-1" />
+
+                                    {teamMembers.length === 0 ? (
+                                      <div className="px-3 py-2 text-[10px] text-surface-400 italic font-semibold">No hay colaboradores registrados.</div>
+                                    ) : (
+                                      teamMembers.map((agent: any) => {
+                                        const cleanPhone = selectedChat ? selectedChat.remoteJid.split('@')[0].split(':')[0].split(':')[0] : '';
+                                        const currentAssigned = crmContactAgentsMap[cleanPhone]?.id === agent.id;
+                                        return (
+                                          <button
+                                            key={agent.id}
+                                            onClick={() => {
+                                              handleAssignAgent(agent.id);
+                                              setShowAssignDropdown(false);
+                                            }}
+                                            className={`w-full px-2.5 py-2 hover:bg-slate-50 dark:hover:bg-slate-850 rounded-xl text-xs font-bold text-left transition-colors flex items-center justify-between cursor-pointer ${
+                                              currentAssigned ? 'text-brand-primary bg-pastel-100/30' : 'text-slate-700 dark:text-slate-300'
+                                            }`}
+                                          >
+                                            <div className="flex items-center gap-2">
+                                              <span className={`w-1.5 h-1.5 rounded-full ${
+                                                agent.status === 'available' ? 'bg-emerald-500' : agent.status === 'busy' ? 'bg-amber-500' : 'bg-slate-400'
+                                              }`} />
+                                              <span>{agent.name}</span>
+                                            </div>
+                                            {currentAssigned && <Check size={12} className="text-brand-primary" />}
+                                          </button>
+                                        );
+                                      })
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                               <div className="relative">
                                 <button 
                                   ref={tagsButtonRef}
@@ -5179,6 +5533,263 @@ echo $response;`;
               </div>
             )}
 
+            {/* TEAM SECTION */}
+            {activeTab === 'team' && (
+              <div className="space-y-6 animate-fadeIn text-left">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-0.5">
+                    <h3 className="text-base font-bold text-slate-800 dark:text-white">Mi Equipo de Asesores</h3>
+                    <p className="text-xs text-surface-400">Gestiona las cuentas de los colaboradores de tu empresa y supervisa sus chats activos.</p>
+                  </div>
+                  <button
+                    onClick={() => setShowCreateAgentModal(true)}
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-500 hover:bg-brand-secondary active:scale-[0.99] text-white text-xs font-bold rounded-2xl shadow-lg shadow-brand-500/10 transition-all cursor-pointer font-medium"
+                  >
+                    <Plus size={16} />
+                    <span>Agregar Colaborador</span>
+                  </button>
+                </div>
+
+                {teamLoading ? (
+                  <div className="flex flex-col items-center justify-center py-12 gap-3">
+                    <RefreshCw size={24} className="animate-spin text-brand-primary" />
+                    <span className="text-xs text-surface-400 font-bold uppercase">Cargando colaboradores...</span>
+                  </div>
+                ) : teamMembers.length === 0 ? (
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 p-8 rounded-3xl text-center space-y-3">
+                    <Users2 className="mx-auto w-10 h-10 text-slate-400 dark:text-slate-600" />
+                    <h4 className="text-sm font-bold text-slate-800 dark:text-white">No tienes colaboradores registrados</h4>
+                    <p className="text-xs text-surface-400 max-w-sm mx-auto">Crea cuentas individuales para tus agentes. Podrás asignarles chats específicos en tiempo real.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {teamMembers.map((agent: any) => {
+                      const isActiveStatus = agent.status === 'available';
+                      const isBusyStatus = agent.status === 'busy';
+                      return (
+                        <div key={agent.id} className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 p-5 rounded-3xl space-y-4 flex flex-col justify-between hover:shadow-md transition-all">
+                          <div className="space-y-3">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold text-sm uppercase">
+                                  {agent.name.slice(0, 2)}
+                                </div>
+                                <div className="text-left">
+                                  <h4 className="text-xs font-bold text-slate-800 dark:text-white">{agent.name}</h4>
+                                  <p className="text-[10px] text-surface-400">{agent.email}</p>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => handleToggleAgentStatus(agent.id, agent.status)}
+                                className={`px-2.5 py-1 rounded-xl text-[9px] font-bold uppercase transition-all cursor-pointer flex items-center gap-1.5 ${
+                                  isActiveStatus 
+                                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
+                                    : isBusyStatus 
+                                      ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' 
+                                      : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                                }`}
+                              >
+                                <span className={`w-1.5 h-1.5 rounded-full ${
+                                  isActiveStatus ? 'bg-emerald-500' : isBusyStatus ? 'bg-amber-500' : 'bg-slate-400'
+                                }`} />
+                                <span>
+                                  {agent.status === 'available' && 'Disponible'}
+                                  {agent.status === 'busy' && 'Ocupado'}
+                                  {agent.status === 'offline' && 'Desconectado'}
+                                </span>
+                              </button>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3 pt-2 text-xs">
+                              <div className="p-3 bg-slate-50 dark:bg-slate-950/40 rounded-2xl text-center">
+                                <span className="block text-[10px] text-surface-400 font-bold uppercase tracking-wider font-bold">Chats Activos</span>
+                                <span className="text-base font-bold text-slate-800 dark:text-white mt-1 block">{agent.active_chats || 0}</span>
+                              </div>
+                              <div className="p-3 bg-slate-50 dark:bg-slate-950/40 rounded-2xl text-center">
+                                <span className="block text-[10px] text-surface-400 font-bold uppercase tracking-wider font-bold">Respuesta Promedio</span>
+                                <span className="text-base font-bold text-slate-800 dark:text-white mt-1 block">{agent.response_time_sec || 45}s</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="pt-3 border-t border-slate-100 dark:border-slate-800/40 flex items-center justify-between gap-3">
+                            <span className="text-[9px] font-bold text-surface-400 uppercase">
+                              Creado el {new Date(agent.created_at).toLocaleDateString()}
+                            </span>
+                            <button
+                              onClick={() => handleDeleteAgent(agent.id, agent.name)}
+                              className="p-2 hover:bg-rose-500/10 text-rose-500 rounded-xl transition-all cursor-pointer"
+                              title="Eliminar Colaborador"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* SUPER ADMIN OVERVIEW SECTION */}
+            {activeTab === 'admin_overview' && (
+              <div className="space-y-6 animate-fadeIn text-left">
+                <div className="space-y-0.5">
+                  <h3 className="text-base font-bold text-slate-800 dark:text-white">Panel Global de Super Admin</h3>
+                  <p className="text-xs text-surface-400">Estadísticas globales de uso y actividad del SaaS Zaza.click 2.0.</p>
+                </div>
+
+                {adminStatsLoading ? (
+                  <div className="flex flex-col items-center justify-center py-12 gap-3">
+                    <RefreshCw size={24} className="animate-spin text-brand-primary" />
+                    <span className="text-xs text-surface-400 font-bold uppercase">Cargando estadísticas globales...</span>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {[
+                      { label: 'Empresas Registradas', value: adminStats?.total_users || 0, color: 'text-indigo-500' },
+                      { label: 'Instancias Totales', value: adminStats?.total_instances || 0, color: 'text-brand-primary' },
+                      { label: 'Líneas Conectadas', value: adminStats?.connected_instances || 0, color: 'text-emerald-500' },
+                      { label: 'Suscripciones Activas', value: adminStats?.active_subscriptions || 0, color: 'text-amber-500' },
+                    ].map((card, idx) => (
+                      <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 p-5 rounded-3xl shadow-sm">
+                        <span className="block text-[10px] text-surface-400 font-bold uppercase tracking-wider">{card.label}</span>
+                        <span className={`text-2xl font-bold mt-2 block ${card.color}`}>{card.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* SUPER ADMIN USERS SECTION */}
+            {activeTab === 'admin_users' && (
+              <div className="space-y-6 animate-fadeIn text-left">
+                <div className="space-y-0.5">
+                  <h3 className="text-base font-bold text-slate-800 dark:text-white">Administración de Empresas</h3>
+                  <p className="text-xs text-surface-400">Listado de empresas clientes y control de sus suscripciones y licencias.</p>
+                </div>
+
+                {adminUsersLoading ? (
+                  <div className="flex flex-col items-center justify-center py-12 gap-3">
+                    <RefreshCw size={24} className="animate-spin text-brand-primary" />
+                    <span className="text-xs text-surface-400 font-bold uppercase">Cargando empresas...</span>
+                  </div>
+                ) : (
+                  <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/50 dark:border-slate-800/80 overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs divide-y divide-slate-100 dark:divide-slate-800/40">
+                        <thead className="bg-slate-50 dark:bg-slate-950/40 text-[10px] font-bold text-surface-500 uppercase tracking-widest">
+                          <tr>
+                            <th className="px-6 py-4">Empresa / Email</th>
+                            <th className="px-6 py-4">Líneas</th>
+                            <th className="px-6 py-4">Plan Actual</th>
+                            <th className="px-6 py-4">Vencimiento Plan</th>
+                            <th className="px-6 py-4">Estado</th>
+                            <th className="px-6 py-4 text-right">Acciones</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 font-medium text-slate-700 dark:text-slate-300">
+                          {adminUsers.map((client: any) => (
+                            <tr key={client.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/50">
+                              <td className="px-6 py-4">
+                                <span className="font-bold text-slate-800 dark:text-white block">{client.email}</span>
+                                <span className="text-[9px] text-surface-400 font-mono">ID: {client.id}</span>
+                              </td>
+                              <td className="px-6 py-4">{client.instances_count || 0} de {client.max_instances || 1}</td>
+                              <td className="px-6 py-4">
+                                <span className="px-2.5 py-1 bg-brand-primary/10 text-brand-primary font-bold rounded-xl uppercase text-[9px]">
+                                  {client.plan_name || 'Básico'}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4">
+                                {client.subscription_end_date ? new Date(client.subscription_end_date).toLocaleDateString() : 'N/A'}
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
+                                  client.subscription_status === 'active' 
+                                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
+                                    : 'bg-rose-500/10 text-rose-500'
+                                }`}>
+                                  {client.subscription_status || 'Sin Plan'}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                <button
+                                  onClick={() => {
+                                    setEditingUserSub(client);
+                                    setAdminNewPlanId(client.plan_id || 'plan_basic');
+                                    setAdminNewSubStatus(client.subscription_status || 'active');
+                                    setShowEditSubModal(true);
+                                  }}
+                                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl transition-all cursor-pointer text-[10px]"
+                                >
+                                  Modificar Licencia
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* SUPER ADMIN INSTANCES SECTION */}
+            {activeTab === 'admin_instances' && (
+              <div className="space-y-6 animate-fadeIn text-left">
+                <div className="space-y-0.5">
+                  <h3 className="text-base font-bold text-slate-800 dark:text-white">Líneas de WhatsApp del Sistema</h3>
+                  <p className="text-xs text-surface-400">Supervisión general de instancias creadas por todas las empresas.</p>
+                </div>
+
+                {adminInstancesLoading ? (
+                  <div className="flex flex-col items-center justify-center py-12 gap-3">
+                    <RefreshCw size={24} className="animate-spin text-brand-primary" />
+                    <span className="text-xs text-surface-400 font-bold uppercase">Cargando líneas globales...</span>
+                  </div>
+                ) : (
+                  <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/50 dark:border-slate-800/80 overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs divide-y divide-slate-100 dark:divide-slate-800/40">
+                        <thead className="bg-slate-50 dark:bg-slate-950/40 text-[10px] font-bold text-surface-500 uppercase tracking-widest">
+                          <tr>
+                            <th className="px-6 py-4">Dueño (Empresa)</th>
+                            <th className="px-6 py-4">Línea</th>
+                            <th className="px-6 py-4">Número</th>
+                            <th className="px-6 py-4">Fecha de Alta</th>
+                            <th className="px-6 py-4">Estado Conexión</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 font-medium text-slate-700 dark:text-slate-300">
+                          {adminInstances.map((inst: any) => (
+                            <tr key={inst.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/50">
+                              <td className="px-6 py-4 font-bold text-slate-800 dark:text-white">{inst.owner_email}</td>
+                              <td className="px-6 py-4 font-mono">{inst.instance_name}</td>
+                              <td className="px-6 py-4">{inst.phone || 'Sin vincular'}</td>
+                              <td className="px-6 py-4">{new Date(inst.created_at).toLocaleDateString()}</td>
+                              <td className="px-6 py-4">
+                                <span className={`px-2.5 py-1 rounded-xl text-[9px] font-bold uppercase ${
+                                  inst.status === 'connected' 
+                                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
+                                    : 'bg-rose-500/10 text-rose-500'
+                                }`}>
+                                  {inst.status === 'connected' ? 'Conectado' : 'Desconectado'}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
           </div>
 
         </main>
@@ -5731,6 +6342,184 @@ echo $response;`;
           ) : (
             <div className="h-10" />
           )}
+        </div>
+      )}
+
+      {/* Modal para Registrar Colaborador */}
+      {showCreateAgentModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 w-full max-w-md p-6 sm:p-7 rounded-3xl space-y-4 shadow-premium-lg relative animate-fadeIn text-left">
+            
+            <button
+              onClick={() => {
+                setShowCreateAgentModal(false);
+                setNewAgentName('');
+                setNewAgentEmail('');
+                setNewAgentPassword('');
+                setAgentCreateError(null);
+              }}
+              className="absolute top-5 right-5 text-surface-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="space-y-1.5">
+              <h3 className="text-base font-bold text-slate-800 dark:text-white">Nuevo Colaborador</h3>
+              <p className="text-xs text-surface-400">Registra un nuevo colaborador. Recibirá su propio usuario para ingresar a la plataforma y atender chats.</p>
+            </div>
+
+            {agentCreateError && (
+              <div className="p-3 mb-2 bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs rounded-xl text-center font-bold">
+                ⚠️ {agentCreateError}
+              </div>
+            )}
+
+            <form onSubmit={handleCreateAgent} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-widest">Nombre Completo</label>
+                <input
+                  type="text"
+                  value={newAgentName}
+                  onChange={(e) => setNewAgentName(e.target.value)}
+                  placeholder="Ej: Carlos Ortega"
+                  required
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-brand-primary"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-widest">Correo de Acceso</label>
+                <input
+                  type="email"
+                  value={newAgentEmail}
+                  onChange={(e) => setNewAgentEmail(e.target.value)}
+                  placeholder="carlos@tuempresa.com"
+                  required
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-brand-primary"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-widest">Contraseña</label>
+                <input
+                  type="password"
+                  value={newAgentPassword}
+                  onChange={(e) => setNewAgentPassword(e.target.value)}
+                  placeholder="Min. 6 caracteres"
+                  required
+                  minLength={6}
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-brand-primary"
+                />
+              </div>
+
+              <div className="flex gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCreateAgentModal(false);
+                    setNewAgentName('');
+                    setNewAgentEmail('');
+                    setNewAgentPassword('');
+                    setAgentCreateError(null);
+                  }}
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-950 dark:hover:bg-slate-800 text-xs text-slate-700 dark:text-slate-300 font-bold rounded-2xl transition-all cursor-pointer border border-slate-200/20"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={agentCreateLoading}
+                  className="flex-1 py-3 bg-brand-500 hover:bg-brand-secondary active:scale-[0.99] disabled:opacity-40 text-xs text-white font-bold rounded-2xl shadow-lg shadow-brand-500/10 transition-all cursor-pointer font-medium"
+                >
+                  {agentCreateLoading ? 'Registrando...' : 'Registrar'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para Modificar Licencia / Plan de Clientes (Super Admin) */}
+      {showEditSubModal && editingUserSub && (
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 w-full max-w-md p-6 sm:p-7 rounded-3xl space-y-4 shadow-premium-lg relative animate-fadeIn text-left">
+            
+            <button
+              onClick={() => {
+                setShowEditSubModal(false);
+                setEditingUserSub(null);
+              }}
+              className="absolute top-5 right-5 text-surface-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="space-y-1.5">
+              <h3 className="text-base font-bold text-slate-800 dark:text-white">Modificar Suscripción</h3>
+              <p className="text-xs text-surface-400">Actualiza las condiciones de la licencia para: <strong>{editingUserSub.email}</strong>.</p>
+            </div>
+
+            <form onSubmit={handleUpdateSubscription} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-widest">Plan</label>
+                <select
+                  value={adminNewPlanId}
+                  onChange={(e) => setAdminNewPlanId(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white focus:outline-none"
+                >
+                  <option value="plan_basic">Básico (1 número)</option>
+                  <option value="plan_standard">Estándar (3 números)</option>
+                  <option value="plan_pro">Pro (ILIMITADO)</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-widest">Estado</label>
+                <select
+                  value={adminNewSubStatus}
+                  onChange={(e) => setAdminNewSubStatus(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white focus:outline-none"
+                >
+                  <option value="active">Activo</option>
+                  <option value="expired">Expirado / Impago</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-widest">Duración (Meses)</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="120"
+                  value={adminNewDuration}
+                  onChange={(e) => setAdminNewDuration(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white focus:outline-none font-medium"
+                />
+              </div>
+
+              <div className="flex gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditSubModal(false);
+                    setEditingUserSub(null);
+                  }}
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-950 dark:hover:bg-slate-800 text-xs text-slate-700 dark:text-slate-300 font-bold rounded-2xl transition-all cursor-pointer border border-slate-200/20"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={adminSubLoading}
+                  className="flex-1 py-3 bg-brand-500 hover:bg-brand-secondary active:scale-[0.99] disabled:opacity-40 text-xs text-white font-bold rounded-2xl shadow-lg shadow-brand-500/10 transition-all cursor-pointer font-medium"
+                >
+                  {adminSubLoading ? 'Guardando...' : 'Guardar Cambios'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

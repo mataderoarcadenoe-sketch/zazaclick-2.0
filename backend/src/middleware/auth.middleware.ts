@@ -6,6 +6,8 @@ const JWT_SECRET = process.env.JWT_SECRET || 'whatsapp-secret-key-2024';
 export interface AuthenticatedRequest extends Request {
   userId?: string;
   userRole?: string;
+  tenantId?: string;
+  agentId?: string;
 }
 
 export function authMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction) {
@@ -32,8 +34,10 @@ export function authMiddleware(req: AuthenticatedRequest, res: Response, next: N
       return res.status(401).json({ success: false, error: 'Token inválido o expirado' });
     }
 
-    req.userId = decoded.id;
+    req.userId = decoded.tenantId || decoded.id;
     req.userRole = decoded.role;
+    req.tenantId = decoded.tenantId || decoded.id;
+    req.agentId = decoded.id;
     return next();
   });
 }

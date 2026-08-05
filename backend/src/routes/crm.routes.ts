@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { authMiddleware, AuthenticatedRequest } from '../middleware/auth.middleware';
 import pool from '../config/database';
 import axios from 'axios';
+import * as bcrypt from 'bcryptjs';
 
 const router = Router();
 router.use(authMiddleware);
@@ -239,6 +240,61 @@ router.get('/contacts/map', async (req: AuthenticatedRequest, res: Response) => 
   } catch (error: any) {
     console.error('[CRM Contacts Map] Error:', error.message);
     return res.status(500).json({ success: false, error: 'Error al obtener mapa de contactos CRM' });
+  }
+});
+
+/**
+ * GET /api/crm/contacts/tags-map - Obtener mapa de etiquetas de todos los contactos
+ */
+router.get('/contacts/tags-map', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const result = await pool.query(
+      'SELECT phone_number, tags FROM crm_contacts WHERE user_id = $1',
+      [req.userId]
+    );
+    const tagsMap: Record<string, string[]> = {};
+    result.rows.forEach(row => {
+      const cleanPhone = row.phone_number.split(':')[0];
+      let tgs = row.tags;
+      if (typeof tgs === 'string') {
+        try { tgs = JSON.parse(tgs); } catch(e) { tgs = []; }
+      }
+      tagsMap[cleanPhone] = Array.isArray(tgs) ? tgs : [];
+    });
+    return res.json({ success: true, data: tagsMap });
+  } catch (error: any) {
+    console.error('[CRM Tags Map] Error:', error.message);
+    return res.status(500).json({ success: false, error: 'Error al obtener mapa de etiquetas.' });
+  }
+});
+
+/**
+ * GET /api/crm/contacts/agents-map - Obtener mapa de asignación de asesores
+ */
+router.get('/contacts/agents-map', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const result = await pool.query(`
+      SELECT c.phone_number, u.id as agent_id, ap.name as agent_name, ap.status as agent_status
+      FROM crm_contacts c
+      JOIN users u ON c.assigned_agent_id = u.id
+      JOIN agent_profiles ap ON u.id = ap.user_id
+      WHERE c.user_id = $1
+    `, [req.userId]);
+
+    const agentsMap: Record<string, { id: string, name: string, status: string }> = {};
+    result.rows.forEach(row => {
+      const cleanPhone = row.phone_number.split(':')[0];
+      agentsMap[cleanPhone] = {
+        id: row.agent_id,
+        name: row.agent_name,
+        status: row.agent_status
+      };
+    });
+
+    return res.json({ success: true, data: agentsMap });
+  } catch (error: any) {
+    console.error('[CRM Agents Map] Error:', error.message);
+    return res.status(500).json({ success: false, error: 'Error al obtener mapa de asignación de colaboradores.' });
   }
 });
 
@@ -649,31 +705,6 @@ router.post('/pipeline/move', async (req: AuthenticatedRequest, res: Response) =
 });
 
 /**
- * GET /api/crm/contacts/tags-map - Obtener mapa de etiquetas de todos los contactos
- */
-router.get('/contacts/tags-map', async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const result = await pool.query(
-      'SELECT phone_number, tags FROM crm_contacts WHERE user_id = $1',
-      [req.userId]
-    );
-    const tagsMap: Record<string, string[]> = {};
-    result.rows.forEach(row => {
-      const cleanPhone = row.phone_number.split(':')[0];
-      let tgs = row.tags;
-      if (typeof tgs === 'string') {
-        try { tgs = JSON.parse(tgs); } catch(e) { tgs = []; }
-      }
-      tagsMap[cleanPhone] = Array.isArray(tgs) ? tgs : [];
-    });
-    return res.json({ success: true, data: tagsMap });
-  } catch (error: any) {
-    console.error('[CRM Tags Map] Error:', error.message);
-    return res.status(500).json({ success: false, error: 'Error al obtener mapa de etiquetas.' });
-  }
-});
-
-/**
  * POST /api/crm/contacts/tags - Actualizar etiquetas de un contacto
  */
 router.post('/contacts/tags', async (req: AuthenticatedRequest, res: Response) => {
@@ -722,6 +753,196 @@ router.post('/contacts/tags', async (req: AuthenticatedRequest, res: Response) =
   } catch (error: any) {
     console.error('[CRM Tags Update] Error:', error.message);
     return res.status(500).json({ success: false, error: 'Error al actualizar etiquetas.' });
+  }
+});
+
+// Helper function to generate IDs
+function generateId(prefix: string): string {
+  return `${prefix}_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
+}
+
+/**
+ * GET /api/crm/agents - Listar colaboradores
+ */
+router.get('/agents', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const agents = await pool.query(`
+      SELECT u.id, u.email, u.created_at, ap.name, ap.status, ap.response_time_sec,
+        (SELECT COUNT(*) FROM crm_contacts WHERE assigned_agent_id = u.id AND is_active = true) as active_chats
+      FROM users u
+      JOIN agent_profiles ap ON u.id = ap.user_id
+      WHERE u.parent_id = $1
+      ORDER BY ap.name ASC
+    `, [req.userId]);
+
+    return res.json({ success: true, data: agents.rows });
+  } catch (error: any) {
+    console.error('[CRM List Agents] Error:', error.message);
+    return res.status(500).json({ success: false, error: 'Error al listar colaboradores.' });
+  }
+});
+
+/**
+ * POST /api/crm/agents - Crear colaborador
+ */
+router.post('/agents', async (req: AuthenticatedRequest, res: Response) => {
+  const { name, email, password } = req.body;
+  if (!name || !email || !password) {
+    return res.status(400).json({ success: false, error: 'Faltan parámetros requeridos (name, email, password).' });
+  }
+
+  try {
+    const emailCheck = await pool.query('SELECT id FROM users WHERE email = $1', [email.toLowerCase()]);
+    if (emailCheck.rows.length > 0) {
+      return res.status(400).json({ success: false, error: 'El correo electrónico ya está registrado.' });
+    }
+
+    const agentId = generateId('user');
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await pool.query('BEGIN');
+
+    await pool.query(`
+      INSERT INTO users (id, email, password, role, parent_id)
+      VALUES ($1, $2, $3, 'agent', $4)
+    `, [agentId, email.toLowerCase(), hashedPassword, req.userId]);
+
+    await pool.query(`
+      INSERT INTO agent_profiles (user_id, name, status)
+      VALUES ($1, $2, 'available')
+    `, [agentId, name]);
+
+    await pool.query('COMMIT');
+
+    return res.json({ success: true, message: 'Colaborador creado exitosamente.' });
+  } catch (error: any) {
+    await pool.query('ROLLBACK');
+    console.error('[CRM Create Agent] Error:', error.message);
+    return res.status(500).json({ success: false, error: 'Error al crear colaborador.' });
+  }
+});
+
+/**
+ * PUT /api/crm/agents/:agentId/status - Cambiar estado del colaborador
+ */
+router.put('/agents/:agentId/status', async (req: AuthenticatedRequest, res: Response) => {
+  const { agentId } = req.params;
+  const { status } = req.body;
+
+  if (!status || !['available', 'busy', 'offline'].includes(status)) {
+    return res.status(400).json({ success: false, error: 'Estado inválido.' });
+  }
+
+  try {
+    const agentCheck = await pool.query('SELECT id FROM users WHERE id = $1 AND parent_id = $2', [agentId, req.userId]);
+    const isSelfUpdate = req.agentId === agentId;
+    
+    if (agentCheck.rows.length === 0 && !isSelfUpdate) {
+      return res.status(403).json({ success: false, error: 'No autorizado para modificar este colaborador.' });
+    }
+
+    await pool.query(
+      'UPDATE agent_profiles SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2',
+      [status, agentId]
+    );
+
+    return res.json({ success: true, message: 'Estado del colaborador actualizado.' });
+  } catch (error: any) {
+    console.error('[CRM Update Agent Status] Error:', error.message);
+    return res.status(500).json({ success: false, error: 'Error al cambiar estado del colaborador.' });
+  }
+});
+
+/**
+ * DELETE /api/crm/agents/:agentId - Eliminar colaborador
+ */
+router.delete('/agents/:agentId', async (req: AuthenticatedRequest, res: Response) => {
+  const { agentId } = req.params;
+
+  try {
+    const agentCheck = await pool.query('SELECT id FROM users WHERE id = $1 AND parent_id = $2', [agentId, req.userId]);
+    if (agentCheck.rows.length === 0) {
+      return res.status(403).json({ success: false, error: 'No autorizado para eliminar este colaborador.' });
+    }
+
+    await pool.query('BEGIN');
+    
+    await pool.query(
+      'UPDATE crm_contacts SET assigned_agent_id = NULL WHERE assigned_agent_id = $1',
+      [agentId]
+    );
+
+    await pool.query('DELETE FROM users WHERE id = $1', [agentId]);
+
+    await pool.query('COMMIT');
+
+    return res.json({ success: true, message: 'Colaborador eliminado exitosamente.' });
+  } catch (error: any) {
+    await pool.query('ROLLBACK');
+    console.error('[CRM Delete Agent] Error:', error.message);
+    return res.status(500).json({ success: false, error: 'Error al eliminar colaborador.' });
+  }
+});
+
+/**
+ * POST /api/crm/contacts/assign - Asignar chat a un colaborador
+ */
+router.post('/contacts/assign', async (req: AuthenticatedRequest, res: Response) => {
+  const { phone_number, agent_id } = req.body;
+  if (!phone_number) {
+    return res.status(400).json({ success: false, error: 'El parámetro phone_number es requerido.' });
+  }
+
+  const cleanPhone = phone_number.split('@')[0].split(':')[0];
+
+  try {
+    if (agent_id) {
+      const agentCheck = await pool.query('SELECT id FROM users WHERE id = $1 AND parent_id = $2', [agent_id, req.userId]);
+      if (agentCheck.rows.length === 0) {
+        return res.status(400).json({ success: false, error: 'El colaborador no existe o no pertenece a tu empresa.' });
+      }
+    }
+
+    const contactCheck = await pool.query(
+      'SELECT id FROM crm_contacts WHERE user_id = $1 AND phone_number = $2',
+      [req.userId, cleanPhone]
+    );
+
+    if (contactCheck.rows.length === 0) {
+      let clientRes = await pool.query(
+        'SELECT id FROM crm_clients WHERE user_id = $1 ORDER BY id ASC LIMIT 1',
+        [req.userId]
+      );
+      let clientId;
+      if (clientRes.rows.length === 0) {
+        const tempDocNum = 'TEMP' + Date.now();
+        const newClient = await pool.query(
+          `INSERT INTO crm_clients (user_id, doc_type, doc_number, name) 
+           VALUES ($1, 'DNI', $2, $3) RETURNING id`,
+          [req.userId, tempDocNum, 'Cliente Temporal']
+        );
+        clientId = newClient.rows[0].id;
+      } else {
+        clientId = clientRes.rows[0].id;
+      }
+
+      await pool.query(
+        `INSERT INTO crm_contacts (client_id, user_id, phone_number, assigned_agent_id) 
+         VALUES ($1, $2, $3, $4)`,
+        [clientId, req.userId, cleanPhone, agent_id]
+      );
+    } else {
+      const contactId = contactCheck.rows[0].id;
+      await pool.query(
+        'UPDATE crm_contacts SET assigned_agent_id = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+        [agent_id, contactId]
+      );
+    }
+
+    return res.json({ success: true, message: 'Chat asignado correctamente.' });
+  } catch (error: any) {
+    console.error('[CRM Assign Chat] Error:', error.message);
+    return res.status(500).json({ success: false, error: 'Error al asignar el chat.' });
   }
 });
 

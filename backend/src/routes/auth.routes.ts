@@ -59,7 +59,7 @@ router.post('/register', async (req, res) => {
     await pool.query('COMMIT');
 
     // Generar token JWT
-    const token = jwt.sign({ id: userId, role: assignedRole }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: userId, role: assignedRole, tenantId: userId }, JWT_SECRET, { expiresIn: '7d' });
 
     res.status(201).json({
       success: true,
@@ -98,7 +98,8 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ success: false, error: 'Credenciales inválidas' });
     }
 
-    const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+    const tenantId = user.parent_id || user.id;
+    const token = jwt.sign({ id: user.id, role: user.role, tenantId }, JWT_SECRET, { expiresIn: '7d' });
 
     res.json({
       success: true,
@@ -118,7 +119,8 @@ router.post('/login', async (req, res) => {
  */
 router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res) => {
   try {
-    const userRes = await pool.query('SELECT id, email, role, created_at FROM users WHERE id = $1', [req.userId]);
+    const targetUserId = req.agentId || req.userId;
+    const userRes = await pool.query('SELECT id, email, role, created_at FROM users WHERE id = $1', [targetUserId]);
     if (userRes.rows.length === 0) {
       return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
     }
@@ -211,7 +213,8 @@ router.post('/google-login', async (req, res) => {
     }
 
     // 4. Generar Token JWT de Zaza.click
-    const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+    const tenantId = user.parent_id || user.id;
+    const token = jwt.sign({ id: user.id, role: user.role, tenantId }, JWT_SECRET, { expiresIn: '7d' });
 
     res.json({
       success: true,
