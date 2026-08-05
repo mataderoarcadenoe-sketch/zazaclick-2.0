@@ -3123,7 +3123,7 @@ echo $response;`;
                         <div className="flex-1 flex flex-col min-h-0">
                           
                           {/* Chat Window Header */}
-                          <div className="bg-white dark:bg-slate-900 border-b border-slate-200/60 dark:border-slate-800 flex flex-col z-20 shadow-sm relative">
+                          <div className="bg-white dark:bg-slate-900 border-b border-slate-200/60 dark:border-slate-800 flex flex-col z-20 relative">
                             {/* Top Row */}
                             <div className="p-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/50">
                               <div className="flex items-center gap-3.5">
