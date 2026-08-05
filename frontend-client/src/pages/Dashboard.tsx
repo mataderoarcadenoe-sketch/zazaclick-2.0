@@ -3084,7 +3084,7 @@ echo $response;`;
         </header>
 
         {/* Interactive Content Container */}
-        <main className={`flex-1 bg-transparent relative ${activeTab === 'chats' ? 'overflow-hidden p-0' : 'p-4 sm:p-6 lg:p-6 overflow-y-auto'}`}>
+        <main className={`flex-1 bg-transparent relative ${activeTab === 'chats' ? 'overflow-hidden p-3.5 md:p-4 pb-4' : 'p-4 sm:p-6 lg:p-6 overflow-y-auto'}`}>
           
           {/* Active Section Renderer */}
           <div className={`w-full ${activeTab === 'chats' ? 'h-full flex flex-col space-y-0' : 'space-y-6'}`}>
