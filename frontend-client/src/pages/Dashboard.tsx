@@ -2878,7 +2878,7 @@ echo $response;`;
         <main className={`flex-1 p-4 sm:p-6 lg:p-6 bg-transparent relative ${activeTab === 'chats' ? 'overflow-hidden' : 'overflow-y-auto'}`}>
           
           {/* Active Section Renderer */}
-          <div className={`max-w-7xl mx-auto ${activeTab === 'chats' ? 'h-full flex flex-col space-y-0' : 'space-y-6'}`}>
+          <div className={`w-full ${activeTab === 'chats' ? 'h-full flex flex-col space-y-0' : 'space-y-6'}`}>
             
             {/* OVERVIEW SECTION */}
             {activeTab === 'overview' && (
