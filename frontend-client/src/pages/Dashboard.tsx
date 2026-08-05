@@ -4364,44 +4364,79 @@ echo $response;`;
                           <div className="flex-1 overflow-y-auto p-4 space-y-4">
                             {!crmIsEditing && crmClient ? (
                               <div className="space-y-3.5 pb-6">
-                                {/* Green Header Card */}
-                                <div className="bg-slate-900 dark:bg-slate-950 rounded-2xl p-4 text-white relative overflow-hidden">
-                                  {/* Background decoration */}
-                                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
-                                  <div className="relative z-10 flex items-start gap-3">
-                                    <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center text-xl font-bold flex-shrink-0 border border-white/30 backdrop-blur-sm">
-                                      {crmClient.name.split(' ').slice(0, 2).map((n: string) => n[0]).join('').toUpperCase() || 'C'}
-                                    </div>
-                                    <div className="flex-1 min-w-0 pr-6">
-                                      <h4 className="text-[13px] font-extrabold leading-tight tracking-wide uppercase break-words">
-                                        {crmClient.name}
-                                      </h4>
-                                      <span className="inline-block mt-1.5 px-2.5 py-0.5 bg-white/20 text-white text-[9px] font-bold rounded-full border border-white/20 shadow-sm">
-                                        {crmContact?.category_name || 'Cliente'}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  {/* Edit Button */}
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setCrmDocType(crmClient.doc_type === 'MANUAL' ? 'DNI' : crmClient.doc_type);
-                                      setCrmDocNumber(crmClient.doc_type === 'MANUAL' ? '' : crmClient.doc_number);
-                                      setCrmName(crmClient.name);
-                                      setCrmAddress(crmClient.address || '');
-                                      setCrmEmail(crmClient.email || '');
-                                      setCrmNotes(crmClient.notes || '');
-                                      setCrmCategoryId(crmContact?.category_id?.toString() || '');
-                                      setCrmBirthday(crmClient.birthday ? crmClient.birthday.substring(0, 10) : '');
-                                      setCrmLanguage(crmClient.idioma || 'Español');
-                                      setCrmIsEditing(true);
-                                    }}
-                                    className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 text-white hover:text-white rounded-full transition-all backdrop-blur-sm border border-white/10 hover:scale-105 cursor-pointer flex items-center justify-center shadow-sm"
-                                    title="Editar Cliente"
-                                  >
-                                    <Edit2 size={12} />
-                                  </button>
-                                </div>
+                                {/* Premium Header Card */}
+                                 <div className="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-slate-800 shadow-md">
+                                   {/* Decorative background glow */}
+                                   <div className="absolute -top-10 -right-10 w-28 h-28 bg-brand-primary/10 rounded-full blur-2xl pointer-events-none"></div>
+                                   <div className="absolute -bottom-10 -left-10 w-28 h-28 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none"></div>
+                                   
+                                   <div className="relative z-10 flex items-center gap-3.5">
+                                     {/* Avatar with status ring */}
+                                     <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-brand-primary via-indigo-600 to-indigo-500 flex items-center justify-center text-[15px] font-black text-white flex-shrink-0 shadow-inner ring-2 ring-slate-800 ring-offset-2 ring-offset-slate-950 uppercase">
+                                       {crmClient.name.split(' ').slice(0, 2).map((n: string) => n[0]).join('').toUpperCase() || 'C'}
+                                     </div>
+                                     
+                                     {/* Name and Status Badges */}
+                                     <div className="flex-1 min-w-0 pr-6 text-left">
+                                       <h4 className="text-[12px] font-extrabold leading-snug tracking-wide text-white uppercase break-words">
+                                         {crmClient.name}
+                                       </h4>
+                                       
+                                       {/* Dynamic Category Pill Badge */}
+                                       <div className="flex items-center gap-1.5 mt-1.5">
+                                         {(() => {
+                                           const cat = crmContact?.category_name || 'Cliente';
+                                           let badgeStyle = 'bg-brand-primary/10 text-brand-primary border-brand-primary/20';
+                                           if (cat === 'VIP' || cat === 'Cliente frecuente') {
+                                             badgeStyle = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+                                           } else if (cat === 'Moroso' || cat === 'Pendiente') {
+                                             badgeStyle = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+                                           } else if (cat === 'Interesado' || cat === 'Prospecto') {
+                                             badgeStyle = 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+                                           } else if (cat === 'Pagó') {
+                                             badgeStyle = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+                                           }
+                                           return (
+                                             <span className={`inline-block px-2 py-0.5 text-[8.5px] font-black uppercase rounded-lg border ${badgeStyle}`}>
+                                               {cat}
+                                             </span>
+                                           );
+                                         })()}
+                                         
+                                         {crmClient.doc_type && crmClient.doc_type !== 'MANUAL' && (
+                                           <span className="inline-block px-2 py-0.5 text-[8.5px] font-bold text-slate-400 bg-slate-800/40 border border-slate-800 rounded-lg">
+                                             {crmClient.doc_type}
+                                           </span>
+                                         )}
+                                       </div>
+                                     </div>
+                                   </div>
+                                   
+                                   {/* Edit Button with glass container */}
+                                   <button
+                                     type="button"
+                                     onClick={() => {
+                                       setCrmDocType(crmClient.doc_type === 'MANUAL' ? 'DNI' : crmClient.doc_type);
+                                       setCrmDocNumber(crmClient.doc_type === 'MANUAL' ? '' : crmClient.doc_number);
+                                       setCrmName(crmClient.name);
+                                       setCrmAddress(crmClient.address || '');
+                                       setCrmEmail(crmClient.email || '');
+                                       setCrmNotes(crmClient.notes || '');
+                                       setCrmLanguage(crmClient.language || 'Español');
+                                       setCrmBirthday(crmClient.birthday || '');
+                                       if (crmClient.category_id) {
+                                         setCrmCategoryId(crmClient.category_id.toString());
+                                       } else {
+                                         setCrmCategoryId('');
+                                       }
+                                       setCrmIsEditing(true);
+                                     }}
+                                     className="absolute top-3.5 right-3.5 p-2 bg-white/5 hover:bg-white/10 active:scale-95 border border-white/5 hover:border-white/15 rounded-xl transition-all duration-200 cursor-pointer text-white/80 hover:text-white flex items-center justify-center"
+                                     title="Editar ficha"
+                                   >
+                                     <Edit2 size={10} className="stroke-[2.5]" />
+                                   </button>
+                                 </div>
 
                                 {/* Información del contacto */}
                                 <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/80 space-y-4 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.02)]">
