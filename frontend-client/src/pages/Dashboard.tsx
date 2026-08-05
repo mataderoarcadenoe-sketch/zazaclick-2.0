@@ -2798,7 +2798,7 @@ echo $response;`;
                                           <span className="flex-1 block truncate"><AppleEmojiText text={lastMsgText} size={13} /></span>
                                         </p>
                                         {isUnread && (
-                                          <div className="bg-brand-primary text-white text-[10px] font-bold px-1.5 min-w-[1.25rem] h-5 rounded-full flex items-center justify-center flex-shrink-0 ml-2 shadow-sm animate-pulseGlow">
+                                          <div className="bg-brand-primary text-white text-[10px] font-bold px-1.5 min-w-[1.25rem] h-5 rounded-full flex items-center justify-center flex-shrink-0 ml-2">
                                             {unreadCount}
                                           </div>
                                         )}
