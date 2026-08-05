@@ -4035,7 +4035,7 @@ echo $response;`;
 
                                     {/* Correo */}
                                     <div className="flex gap-2.5 items-start text-left">
-                                      <div className="text-slate-450 bg-slate-50 dark:bg-slate-950 dark:text-slate-500 p-2 rounded-xl border border-slate-100 dark:border-slate-850 h-min flex-shrink-0">
+                                      <div className="text-slate-450 bg-slate-50 dark:bg-slate-955 dark:text-slate-500 p-2 rounded-xl border border-slate-100 dark:border-slate-850 h-min flex-shrink-0">
                                         <Mail size={13} />
                                       </div>
                                       <div className="min-w-0">
@@ -4146,14 +4146,14 @@ echo $response;`;
                                 </div>
 
                                 {/* Notas del contacto */}
-                                 <div className="bg-gradient-to-br from-emerald-500/[0.03] to-teal-500/[0.01] dark:from-slate-900/60 dark:to-slate-850/40 rounded-2xl p-4 border border-emerald-500/10 dark:border-slate-855 space-y-3.5 shadow-[0_4px_20px_-4px_rgba(16,185,129,0.05)]">
+                                 <div className="bg-slate-50 dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/80 space-y-3.5">
                                    <div className="flex items-center justify-between">
                                      <h5 className="text-[11px] font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">Notas del contacto</h5>
                                      {clientNotes.length > 0 && (
                                        <button 
                                          type="button"
                                          onClick={() => setShowNotesFloatingWindow(true)}
-                                         className="px-2.5 py-0.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[9px] font-bold rounded-full transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shadow-sm shadow-emerald-500/5"
+                                         className="px-2.5 py-0.5 bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary text-[9px] font-bold rounded-full transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
                                        >
                                          Ver notas ({clientNotes.length})
                                        </button>
@@ -4161,16 +4161,13 @@ echo $response;`;
                                    </div>
                                    
                                    {clientNotes.length > 0 ? (
-                                     <div className="relative overflow-hidden bg-white dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-850 shadow-sm pl-4">
-                                       {/* Left accent color bar */}
-                                       <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-l-xl"></div>
-                                       
+                                     <div className="bg-white dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200/60 dark:border-slate-850 shadow-sm">
                                        <p className="text-[10px] text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line font-medium pr-1">
                                          {clientNotes[0].content}
                                        </p>
-                                       <div className="text-[8px] text-slate-450 dark:text-slate-505 text-right mt-2 font-bold flex items-center justify-between">
+                                       <div className="text-[8px] text-slate-450 dark:text-slate-505 text-right mt-2.5 font-bold flex items-center justify-between">
                                          <span className="flex items-center gap-1.5">
-                                           <span className="w-4 h-4 rounded-full bg-emerald-500/10 text-emerald-600 text-[8px] font-extrabold flex items-center justify-center">
+                                           <span className="w-4 h-4 rounded-full bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-350 text-[8px] font-extrabold flex items-center justify-center">
                                              {clientNotes[0].agent_name?.charAt(0).toUpperCase() || 'A'}
                                            </span>
                                            <span>{clientNotes[0].agent_name || 'Asesor'}</span>
@@ -4191,9 +4188,9 @@ echo $response;`;
                                          setNewNoteText('');
                                          setShowNotesFloatingWindow(true);
                                        }}
-                                       className="flex items-center gap-1 text-[9.5px] font-extrabold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-355 transition-colors cursor-pointer"
+                                       className="flex items-center gap-1 text-[9.5px] font-extrabold text-brand-primary hover:text-brand-secondary transition-colors cursor-pointer"
                                      >
-                                       <span className="w-4 h-4 rounded-full bg-emerald-500/15 flex items-center justify-center text-[10px] font-bold">+</span>
+                                       <span className="w-4 h-4 rounded-full bg-brand-primary/10 flex items-center justify-center text-[10px] font-bold">+</span>
                                        <span>Agregar nota</span>
                                      </button>
                                    </div>
@@ -4249,7 +4246,7 @@ echo $response;`;
                               /* Create / Edit Form Mode */
                               <div className="space-y-3">
                                 <div className="space-y-1 text-left">
-                                  <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Identificación DNI / RUC</label>
+                                  <label className="text-[8.5px] font-bold text-surface-505 dark:text-surface-400 uppercase tracking-wider block">Identificación DNI / RUC</label>
                                   <div className="flex gap-1.5">
                                     <div className="relative">
                                       <button
@@ -4327,7 +4324,7 @@ echo $response;`;
                                 </div>
 
                                 <div className="space-y-1 text-left">
-                                  <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Nombre / Razón Social</label>
+                                  <label className="text-[8.5px] font-bold text-surface-550 dark:text-surface-400 uppercase tracking-wider block">Nombre / Razón Social</label>
                                   <input
                                     type="text"
                                     placeholder="Nombre completo"
@@ -4468,12 +4465,12 @@ echo $response;`;
 
                         {/* Floating Notes Panel (No Bloqueante) */}
                         {showNotesFloatingWindow && crmClient && (
-                          <div className="absolute inset-0 bg-white/97 dark:bg-slate-900/97 backdrop-blur-md z-50 flex flex-col p-4 animate-fadeIn border-l border-slate-250 dark:border-slate-800/80 shadow-2xl">
+                          <div className="absolute inset-0 bg-white dark:bg-slate-900/98 z-50 flex flex-col p-4 animate-fadeIn border-l border-slate-100 dark:border-slate-800 shadow-2xl">
                             {/* Header */}
                             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 flex-shrink-0">
                               <div className="min-w-0 space-y-0.5 text-left">
-                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[8px] font-bold uppercase tracking-wider border border-emerald-500/10">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary text-[8px] font-bold uppercase tracking-wider border border-brand-primary/20">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse"></span>
                                   Notas de Negocio
                                 </span>
                                 <h4 className="text-[12px] font-extrabold text-slate-800 dark:text-white uppercase tracking-tight truncate pr-2">
@@ -4492,28 +4489,17 @@ echo $response;`;
                             {/* List of notes */}
                             <div className="flex-1 overflow-y-auto space-y-3.5 py-4 pr-1 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800 scrollbar-track-transparent">
                               {clientNotes.length > 0 ? (
-                                clientNotes.map((note: any, index: number) => {
-                                  // Alternate background pastel gradients to make it colorful
-                                  const gradients = [
-                                    'from-emerald-500/[0.04] to-teal-500/[0.02] border-emerald-500/10 dark:from-emerald-950/20 dark:to-teal-950/10 dark:border-emerald-900/30',
-                                    'from-blue-500/[0.04] to-indigo-500/[0.02] border-blue-500/10 dark:from-blue-950/20 dark:to-indigo-950/10 dark:border-blue-900/30',
-                                    'from-violet-500/[0.04] to-purple-500/[0.02] border-violet-500/10 dark:from-violet-950/20 dark:to-purple-950/10 dark:border-violet-900/30'
-                                  ];
-                                  const gradClass = gradients[index % gradients.length];
-                                  
+                                clientNotes.map((note: any) => {
                                   return (
                                     <div 
                                       key={note.id} 
-                                      className={`bg-gradient-to-br ${gradClass} p-3 rounded-2xl border text-left space-y-2.5 relative group hover:shadow-sm transition-all duration-200 pl-4`}
+                                      className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-150 dark:border-slate-800/50 text-left space-y-2.5 hover:bg-slate-100/50 dark:hover:bg-slate-850/50 transition-all duration-200"
                                     >
-                                      {/* Small decorative bar */}
-                                      <div className="absolute left-0 top-3 bottom-3 w-0.5 bg-slate-300 dark:bg-slate-700 rounded-full group-hover:bg-brand-primary transition-all"></div>
-                                      
                                       <p className="text-[10.5px] text-slate-750 dark:text-slate-300 leading-relaxed whitespace-pre-line font-medium pr-5">
                                         {note.content}
                                       </p>
                                       
-                                      <div className="flex items-center justify-between text-[8px] font-bold text-slate-400 dark:text-slate-505">
+                                      <div className="flex items-center justify-between text-[8px] font-bold text-slate-400 dark:text-slate-500">
                                         <span className="flex items-center gap-1.5">
                                           <span className="w-4 h-4 rounded-full bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-350 text-[8px] font-extrabold flex items-center justify-center">
                                             {note.agent_name?.charAt(0).toUpperCase() || 'A'}
@@ -4538,7 +4524,7 @@ echo $response;`;
                                 })
                               ) : (
                                 <div className="h-full flex flex-col items-center justify-center text-center py-10 space-y-2">
-                                  <span className="text-[10px] text-slate-400 dark:text-slate-500 italic">No hay notas registradas para este cliente.</span>
+                                  <span className="text-[10px] text-slate-400 dark:text-slate-505 italic">No hay notas registradas para este cliente.</span>
                                 </div>
                               )}
                             </div>
@@ -4550,13 +4536,13 @@ echo $response;`;
                                 onChange={(e) => setNewNoteText(e.target.value)}
                                 rows={3}
                                 placeholder="Escribe una nueva nota interna..."
-                                className="w-full p-3 bg-slate-50 dark:bg-slate-955 border border-slate-200 dark:border-slate-850 text-[11px] text-slate-800 dark:text-white rounded-2xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/25 resize-none font-medium placeholder-slate-400 transition-all"
+                                className="w-full p-3 bg-slate-50 dark:bg-slate-955 border border-slate-200 dark:border-slate-850 text-[11px] text-slate-800 dark:text-white rounded-2xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 resize-none font-medium placeholder-slate-400 transition-all"
                               />
                               <button
                                 type="button"
                                 onClick={handleAddNewNote}
                                 disabled={newNoteLoading || !newNoteText.trim()}
-                                className="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-xs font-extrabold rounded-2xl shadow-md shadow-emerald-500/10 hover:shadow-emerald-500/20 active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100 disabled:shadow-none cursor-pointer flex items-center justify-center gap-1.5"
+                                className="w-full py-2.5 bg-brand-500 hover:bg-brand-secondary text-white text-xs font-bold rounded-2xl shadow-lg shadow-brand-500/10 active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100 disabled:shadow-none cursor-pointer flex items-center justify-center gap-1.5"
                               >
                                 {newNoteLoading ? (
                                   <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
