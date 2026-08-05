@@ -8,15 +8,18 @@ const router = Router();
 /**
  * POST /api/webhooks/whatsapp - Recibir eventos de Evolution API
  */
-router.post('/whatsapp', async (req, res) => {
-  const { event, instance, data } = req.body;
+router.post(['/whatsapp', '/whatsapp/:event'], async (req, res) => {
+  let { event, instance, data } = req.body;
+  if (!event && req.params.event) {
+    event = req.params.event;
+  }
 
   if (!event || !instance || !data) {
     return res.status(200).json({ success: false, error: 'Payload de webhook incompleto' });
   }
 
   // No loguear cada evento de contacto para no saturar los logs
-  const eventUpper = event.toUpperCase().replace('.', '_');
+  const eventUpper = event.toUpperCase().replace('.', '_').replace('-', '_');
   if (eventUpper !== 'CONTACTS_UPSERT' && eventUpper !== 'CONTACTS_UPDATE') {
     console.log(`📬 [Webhook] Recibido evento "${event}" para la instancia "${instance}"`);
   }
