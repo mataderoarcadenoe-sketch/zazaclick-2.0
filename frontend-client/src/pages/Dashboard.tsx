@@ -10,7 +10,7 @@ import {
   MessageSquare, Search, MessageCircle, Smile, ArrowLeft,
   Paperclip, FileText, Image, Video, Download, ChevronDown, ChevronLeft, ChevronRight, Users, Users2, Settings,
   Edit2, Phone, User, UserMinus, Tag, MoreVertical, Mail, MapPin, Building, Calendar,
-  Star, GitBranch, Grip, Gift
+  Star, GitBranch, Grip, Gift, ListTodo
 } from 'lucide-react';
 import EmojiPicker, { Theme, EmojiStyle, Emoji } from 'emoji-picker-react';
 import { parse } from '@twemoji/parser';
@@ -359,6 +359,16 @@ export default function DashboardPage() {
   const [crmEditingCategoryName, setCrmEditingCategoryName] = useState('');
 
   // CRM Clients Tab States
+  // CRM Global Tasks States
+  const [globalTasks, setGlobalTasks] = useState<any[]>([]);
+  const [globalTasksLoading, setGlobalTasksLoading] = useState(false);
+  const [tasksFilter, setTasksFilter] = useState<string>('pending');
+  const [tasksSearchQuery, setTasksSearchQuery] = useState('');
+  const [newTaskClientId, setNewTaskClientId] = useState<string>('');
+  const [newTaskTitle, setNewTaskTitle] = useState<string>('');
+  const [newTaskDueDate, setNewTaskDueDate] = useState<string>('');
+  const [newTaskCreating, setNewTaskCreating] = useState<boolean>(false);
+
   const [crmClients, setCrmClients] = useState<any[]>([]);
   const [crmClientsLoading, setCrmClientsLoading] = useState(false);
   const [crmClientsSearch, setCrmClientsSearch] = useState('');
@@ -1993,7 +2003,122 @@ export default function DashboardPage() {
     }
   };
 
-  // Fetch CRM Clients for the Clients Tab
+  
+  // Fetch global CRM tasks
+  const fetchGlobalTasks = useCallback(async () => {
+    setGlobalTasksLoading(true);
+    try {
+      const res = await api.get('/crm/tasks');
+      if (res.data?.success) {
+        setGlobalTasks(res.data.data || []);
+      }
+    } catch (err: any) {
+      console.error('Error fetching CRM tasks:', err.message);
+    } finally {
+      setGlobalTasksLoading(false);
+    }
+  }, []);
+
+  const handleToggleGlobalTask = async (task: any) => {
+    try {
+      const newCompleted = !task.completed;
+      const res = await api.put(`/crm/tasks/${task.id}`, {
+        completed: newCompleted,
+        due_date: task.due_date
+      });
+      if (res.data?.success) {
+        setGlobalTasks(prev => 
+          prev.map(t => t.id === task.id ? { ...t, completed: newCompleted } : t)
+        );
+        showNotification(newCompleted ? 'Tarea marcada como completada.' : 'Tarea marcada como pendiente.', 'success');
+      }
+    } catch (err: any) {
+      showNotification('Error al actualizar la tarea.', 'error');
+    }
+  };
+
+  const handleDeleteGlobalTask = async (taskId: number) => {
+    if (!window.confirm('¿Estás seguro de que deseas eliminar esta tarea?')) return;
+    try {
+      const res = await api.delete(`/crm/tasks/${taskId}`);
+      if (res.data?.success) {
+        setGlobalTasks(prev => prev.filter(t => t.id !== taskId));
+        showNotification('Tarea eliminada correctamente.', 'success');
+      }
+    } catch (err: any) {
+      showNotification('Error al eliminar la tarea.', 'error');
+    }
+  };
+
+  const handleUpdateGlobalTaskDate = async (task: any, newDate: string | null) => {
+    try {
+      const res = await api.put(`/crm/tasks/${task.id}`, {
+        completed: task.completed,
+        due_date: newDate
+      });
+      if (res.data?.success) {
+        setGlobalTasks(prev => 
+          prev.map(t => t.id === task.id ? { ...t, due_date: newDate } : t)
+        );
+        showNotification('Fecha límite de la tarea actualizada.', 'success');
+      }
+    } catch (err: any) {
+      showNotification('Error al actualizar la fecha de la tarea.', 'error');
+    }
+  };
+
+  const handleCreateGlobalTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTaskClientId) {
+      showNotification('Selecciona un cliente para la tarea.', 'error');
+      return;
+    }
+    if (!newTaskTitle.trim()) {
+      showNotification('Ingresa la descripción de la tarea.', 'error');
+      return;
+    }
+    setNewTaskCreating(true);
+    try {
+      const res = await api.post(`/crm/clients/${newTaskClientId}/tasks`, {
+        title: newTaskTitle.trim(),
+        due_date: newTaskDueDate || null
+      });
+      if (res.data?.success) {
+        fetchGlobalTasks();
+        setNewTaskTitle('');
+        setNewTaskDueDate('');
+        showNotification('Tarea creada exitosamente.', 'success');
+      }
+    } catch (err: any) {
+      showNotification('Error al crear la tarea.', 'error');
+    } finally {
+      setNewTaskCreating(false);
+    }
+  };
+
+  const handleGoToChat = (phone: string, clientName: string) => {
+    const matchingChat = chats.find(c => c.remoteJid.split('@')[0].split(':')[0] === phone);
+    if (matchingChat) {
+      setSelectedChat(matchingChat);
+    } else {
+      setSelectedChat({
+        remoteJid: `${phone}@s.whatsapp.net`,
+        pushName: clientName,
+        unreadCount: 0
+      });
+    }
+    setActiveTab('chats');
+  };
+
+  const getLocalDateString = (dateStr: string | null) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    const offset = d.getTimezoneOffset();
+    const localD = new Date(d.getTime() - (offset * 60 * 1000));
+    return localD.toISOString().substring(0, 10);
+  };
+
+// Fetch CRM Clients for the Clients Tab
   const fetchCrmClients = useCallback(async (searchQuery?: string) => {
     setCrmClientsLoading(true);
     try {
@@ -2025,7 +2150,17 @@ export default function DashboardPage() {
   }, []);
 
   // Load CRM clients when contacts or birthdays tab is active
+  
+  // Load global tasks when tasks tab is active
   useEffect(() => {
+    if (activeTab === 'tasks') {
+      fetchGlobalTasks();
+      // Load clients list too so they can be assigned in the select dropdown
+      fetchCrmClients();
+    }
+  }, [activeTab, fetchGlobalTasks, fetchCrmClients]);
+
+useEffect(() => {
     if (activeTab === 'contacts' || activeTab === 'birthdays') {
       fetchCrmClients();
     }
@@ -2393,8 +2528,10 @@ export default function DashboardPage() {
       { id: 'instances', label: 'Líneas / QR', icon: Smartphone },
       { id: 'chats', label: 'Chats en Vivo', icon: MessageSquare },
       { id: 'pipeline', label: 'Pipeline Comercial', icon: GitBranch },
+      { id: 'tasks', label: 'Tareas CRM', icon: ListTodo },
       { id: 'contacts', label: 'Clientes / Agenda', icon: Users },
       { id: 'birthdays', label: 'Cumpleaños', icon: Gift },
+      { id: 'tasks', label: 'Tareas CRM', icon: ListTodo },
       { id: 'groups', label: 'Grupos (WhatsApp)', icon: Users2 },
       { id: 'team', label: 'Mi Equipo', icon: User },
       { id: 'playground', label: 'Probar Envío', icon: Play },
@@ -2407,6 +2544,7 @@ export default function DashboardPage() {
       { id: 'chats', label: 'Chats en Vivo', icon: MessageSquare },
       { id: 'contacts', label: 'Clientes / Agenda', icon: Users },
       { id: 'birthdays', label: 'Cumpleaños', icon: Gift },
+      { id: 'tasks', label: 'Tareas CRM', icon: ListTodo },
     ] : []),
   ];
 
@@ -2761,6 +2899,10 @@ echo $response;`;
               ) : activeTab === 'pipeline' ? (
                 <p className="text-[9px] sm:text-[10px] text-surface-400 font-medium leading-none mt-0.5 hidden sm:block">
                   Visualiza y gestiona las etapas de tus prospectos y clientes.
+                </p>
+              ) : activeTab === 'tasks' ? (
+                <p className="text-[9px] sm:text-[10px] text-surface-400 font-medium leading-none mt-0.5 hidden sm:block">
+                  Visualiza, administra y completa las tareas asignadas a tus clientes.
                 </p>
               ) : activeTab === 'contacts' ? (
                 <p className="text-[9px] sm:text-[10px] text-surface-400 font-medium leading-none mt-0.5 hidden sm:block">
@@ -5065,6 +5207,279 @@ echo $response;`;
                     );
                   })()
                 )}
+              </div>
+            )}
+
+            
+            {/* TASKS CRM SECTION */}
+            {activeTab === 'tasks' && (
+              <div className="space-y-6 animate-fadeIn text-left">
+                {/* Stats Counters */}
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Tareas</p>
+                      <h4 className="text-xl font-black text-slate-800 dark:text-white mt-1">{globalTasks.length}</h4>
+                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-500">
+                      <ListTodo size={20} />
+                    </div>
+                  </div>
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pendientes</p>
+                      <h4 className="text-xl font-black text-slate-800 dark:text-white mt-1">{globalTasks.filter(t => !t.completed).length}</h4>
+                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/20 flex items-center justify-center text-amber-500">
+                      <Clock size={20} />
+                    </div>
+                  </div>
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Completadas</p>
+                      <h4 className="text-xl font-black text-slate-800 dark:text-white mt-1">{globalTasks.filter(t => t.completed).length}</h4>
+                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 flex items-center justify-center text-emerald-500">
+                      <CheckCircle2 size={20} />
+                    </div>
+                  </div>
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Vencidas</p>
+                      <h4 className="text-xl font-black text-slate-800 dark:text-white mt-1">
+                        {globalTasks.filter(t => !t.completed && t.due_date && new Date(t.due_date) < new Date(new Date().setHours(0,0,0,0))).length}
+                      </h4>
+                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/20 flex items-center justify-center text-rose-500">
+                      <AlertCircle size={20} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Left Column: Create task form */}
+                  <div className="lg:col-span-1 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 rounded-3xl p-5 shadow-sm space-y-4 self-start">
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 dark:border-slate-800 pb-3">
+                      <Plus size={14} className="text-brand-primary" />
+                      <span>Nueva Tarea CRM</span>
+                    </h4>
+                    <form onSubmit={handleCreateGlobalTask} className="space-y-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Asignar a Cliente</label>
+                        <select
+                          value={newTaskClientId}
+                          onChange={(e) => setNewTaskClientId(e.target.value)}
+                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 dark:text-white focus:outline-none focus:border-brand-primary cursor-pointer"
+                        >
+                          <option value="">-- Seleccionar Cliente --</option>
+                          {crmClients.map(c => (
+                            <option key={c.id} value={c.id}>{c.name} ({c.doc_type}: {c.doc_number})</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Descripción de Tarea</label>
+                        <input
+                          type="text"
+                          value={newTaskTitle}
+                          onChange={(e) => setNewTaskTitle(e.target.value)}
+                          placeholder="Ej: Llamarlo mañana..."
+                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-brand-primary"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Fecha Límite</label>
+                        <input
+                          type="date"
+                          value={newTaskDueDate}
+                          onChange={(e) => setNewTaskDueDate(e.target.value)}
+                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 dark:text-white focus:outline-none focus:border-brand-primary cursor-pointer"
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={newTaskCreating}
+                        className="w-full py-2.5 bg-brand-500 hover:bg-brand-secondary text-white font-bold text-xs rounded-xl shadow-md shadow-brand-500/10 active:scale-95 transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                      >
+                        <Plus size={13} />
+                        <span>Crear Tarea</span>
+                      </button>
+                    </form>
+                  </div>
+
+                  {/* Right Column: Tasks list with filters */}
+                  <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 rounded-3xl p-5 shadow-sm space-y-4">
+                    {/* Filters & Search Header */}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+                      {/* Filter Switcher Tabs */}
+                      <div className="flex bg-slate-100 dark:bg-slate-800/60 rounded-xl p-0.5 self-start">
+                        {[
+                          { id: 'pending', label: 'Pendientes' },
+                          { id: 'completed', label: 'Completadas' },
+                          { id: 'overdue', label: 'Vencidas' },
+                          { id: 'all', label: 'Todas' }
+                        ].map(f => (
+                          <button
+                            key={f.id}
+                            type="button"
+                            onClick={() => setTasksFilter(f.id)}
+                            className={`px-3 py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+                              tasksFilter === f.id 
+                                ? 'bg-white dark:bg-slate-700 text-slate-850 dark:text-white shadow-sm' 
+                                : 'text-slate-450 hover:text-slate-700'
+                            }`}
+                          >
+                            {f.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Search Bar */}
+                      <div className="relative w-full sm:w-56 font-sans">
+                        <Search size={13} className="absolute left-3 top-2.5 text-slate-400" />
+                        <input
+                          type="text"
+                          value={tasksSearchQuery}
+                          onChange={(e) => setTasksSearchQuery(e.target.value)}
+                          placeholder="Buscar tareas..."
+                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 pl-8 pr-3 py-1.5 rounded-xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-brand-primary"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Tasks List */}
+                    {globalTasksLoading ? (
+                      <div className="py-12 text-center text-xs text-slate-400 animate-pulse">Cargando la lista de tareas...</div>
+                    ) : (
+                      (() => {
+                        const filtered = globalTasks
+                          .filter(t => {
+                            if (tasksFilter === 'pending') return !t.completed;
+                            if (tasksFilter === 'completed') return t.completed;
+                            if (tasksFilter === 'overdue') {
+                              return !t.completed && t.due_date && new Date(t.due_date) < new Date(new Date().setHours(0,0,0,0));
+                            }
+                            return true;
+                          })
+                          .filter(t => {
+                            if (!tasksSearchQuery.trim()) return true;
+                            const q = tasksSearchQuery.toLowerCase();
+                            return t.title.toLowerCase().includes(q) || (t.client_name && t.client_name.toLowerCase().includes(q));
+                          });
+
+                        if (filtered.length === 0) {
+                          return (
+                            <div className="py-16 text-center space-y-3">
+                              <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-400 mx-auto border border-dashed border-slate-200 dark:border-slate-700/60">
+                                <ListTodo size={20} />
+                              </div>
+                              <div className="space-y-0.5">
+                                <p className="text-xs font-bold text-slate-700 dark:text-slate-350">No hay tareas encontradas</p>
+                                <p className="text-[10px] text-slate-400 dark:text-slate-500">Prueba cambiando los filtros o buscando otro término.</p>
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div className="space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
+                            {filtered.map(task => {
+                              const isOverdue = !task.completed && task.due_date && new Date(task.due_date) < new Date(new Date().setHours(0,0,0,0));
+                              const isDueToday = !task.completed && task.due_date && new Date(task.due_date).toDateString() === new Date().toDateString();
+                              
+                              return (
+                                <div
+                                  key={task.id}
+                                  className={`p-3.5 bg-slate-50/50 dark:bg-slate-900/40 border rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:-translate-y-0.5 transition-all duration-200 ${
+                                    task.completed 
+                                      ? 'border-slate-100 dark:border-slate-800/40 opacity-75'
+                                      : isOverdue 
+                                      ? 'border-rose-100 dark:border-rose-900/20 bg-rose-50/10'
+                                      : isDueToday
+                                      ? 'border-amber-100 dark:border-amber-900/20 bg-amber-50/10'
+                                      : 'border-slate-200/50 dark:border-slate-800/60'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-3.5 flex-1 min-w-0">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleToggleGlobalTask(task)}
+                                      className={`w-5 h-5 rounded-lg border flex items-center justify-center flex-shrink-0 transition-all cursor-pointer ${
+                                        task.completed 
+                                          ? 'bg-emerald-500 border-emerald-500 text-white' 
+                                          : isOverdue 
+                                          ? 'border-rose-300 hover:border-rose-500 bg-rose-50 dark:bg-rose-950/20'
+                                          : 'border-slate-300 hover:border-slate-400 bg-white dark:bg-slate-800'
+                                      }`}
+                                    >
+                                      {task.completed && <Check size={12} className="stroke-[3]" />}
+                                    </button>
+
+                                    <div className="text-left min-w-0">
+                                      <h5 className={`text-xs font-bold truncate leading-snug ${
+                                        task.completed 
+                                          ? 'text-slate-400 line-through' 
+                                          : 'text-slate-850 dark:text-white'
+                                      }`}>
+                                        {task.title}
+                                      </h5>
+                                      <div className="flex items-center gap-1.5 mt-0.5">
+                                        <span className="text-[10px] text-slate-500 font-bold uppercase truncate max-w-[150px]">
+                                          👤 {task.client_name}
+                                        </span>
+                                        {task.client_phone && (
+                                          <button
+                                            type="button"
+                                            onClick={() => handleGoToChat(task.client_phone, task.client_name)}
+                                            className="text-[9.5px] text-brand-primary hover:text-brand-secondary font-black hover:underline cursor-pointer flex items-center gap-0.5"
+                                          >
+                                            <span>• Ir al chat</span>
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-3 self-end sm:self-auto flex-shrink-0">
+                                    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-[10px] font-bold ${
+                                      task.completed
+                                        ? 'bg-slate-100/50 dark:bg-slate-800/40 border-slate-200/20 text-slate-400'
+                                        : isOverdue
+                                        ? 'bg-rose-50 dark:bg-rose-950/30 border-rose-200/30 text-rose-600 dark:text-rose-450'
+                                        : isDueToday
+                                        ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200/30 text-amber-600 dark:text-amber-450'
+                                        : 'bg-slate-50 dark:bg-slate-800 border-slate-200/50 dark:border-slate-700/60 text-slate-600 dark:text-slate-400'
+                                    }`}>
+                                      <Calendar size={11} className="flex-shrink-0" />
+                                      <input
+                                        type="date"
+                                        value={getLocalDateString(task.due_date)}
+                                        onChange={(e) => handleUpdateGlobalTaskDate(task, e.target.value || null)}
+                                        className="bg-transparent border-0 p-0 text-[10px] font-bold text-inherit focus:outline-none cursor-pointer w-[80px]"
+                                      />
+                                    </div>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteGlobalTask(task.id)}
+                                      className="p-1.5 bg-slate-50 hover:bg-rose-50 dark:bg-slate-800 dark:hover:bg-rose-950/30 text-slate-400 hover:text-rose-500 rounded-xl transition-all cursor-pointer"
+                                      title="Eliminar tarea"
+                                    >
+                                      <Trash2 size={12} />
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 
