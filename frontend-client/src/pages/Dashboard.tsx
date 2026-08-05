@@ -2754,11 +2754,23 @@ echo $response;`;
               <h2 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-white leading-tight">
                 {activeTab === 'chats' ? 'Chats en Vivo' : (menuItems.find(i => i.id === activeTab)?.label || 'Panel')}
               </h2>
-              {activeTab === 'chats' && (
+              {activeTab === 'chats' ? (
                 <p className="text-[9px] sm:text-[10px] text-surface-400 font-medium leading-none mt-0.5 hidden sm:block">
                   Administra tus conversaciones de WhatsApp en tiempo real.
                 </p>
-              )}
+              ) : activeTab === 'pipeline' ? (
+                <p className="text-[9px] sm:text-[10px] text-surface-400 font-medium leading-none mt-0.5 hidden sm:block">
+                  Visualiza y gestiona las etapas de tus prospectos y clientes.
+                </p>
+              ) : activeTab === 'contacts' ? (
+                <p className="text-[9px] sm:text-[10px] text-surface-400 font-medium leading-none mt-0.5 hidden sm:block">
+                  Gestiona tu base de clientes, contactos y agenda de Google.
+                </p>
+              ) : activeTab === 'birthdays' ? (
+                <p className="text-[9px] sm:text-[10px] text-surface-400 font-medium leading-none mt-0.5 hidden sm:block">
+                  Seguimiento de cumpleaños de tus contactos del CRM para fortalecer relaciones comerciales.
+                </p>
+              ) : null}
             </div>
           </div>
 
@@ -4897,11 +4909,8 @@ echo $response;`;
             {/* PIPELINE COMERCIAL (KANBAN BOARD) */}
             {activeTab === 'pipeline' && (
               <div className="space-y-5 animate-fadeIn h-full flex flex-col min-h-0 text-left">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 flex-shrink-0">
-                  <div className="text-left space-y-0.5">
-                    <h3 className="text-base font-bold text-slate-800 dark:text-white">Pipeline Comercial</h3>
-                    <p className="text-xs text-surface-400">Visualiza y gestiona las etapas de tus prospectos y clientes.</p>
-                  </div>
+                <div className="flex items-center justify-end gap-3 flex-shrink-0">
+                  
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
@@ -5063,11 +5072,7 @@ echo $response;`;
             {activeTab === 'contacts' && (
               <div className="space-y-5 animate-fadeIn">
                 {/* Header con sub-tabs */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div className="text-left space-y-0.5">
-                    <h3 className="text-base font-bold text-slate-800 dark:text-white">Agenda de Clientes</h3>
-                    <p className="text-xs text-surface-400">Gestiona tu base de clientes, contactos y agenda de Google.</p>
-                  </div>
+                <div className="flex items-center justify-end gap-3 flex-shrink-0">
                   {/* Sub-tab switcher */}
                   <div className="flex items-center gap-2">
                     <div className="flex bg-slate-100 dark:bg-slate-800/60 rounded-xl p-0.5">
@@ -6318,10 +6323,7 @@ echo $response;`;
 
               return (
                 <div className="space-y-6 animate-fadeIn text-left">
-                  <div className="space-y-0.5">
-                    <h3 className="text-base font-bold text-slate-800 dark:text-white">Cumpleaños de Clientes</h3>
-                    <p className="text-xs text-surface-400">Seguimiento de cumpleaños de tus contactos del CRM para fortalecer relaciones comerciales.</p>
-                  </div>
+                  
 
                   {/* Filtros y Contadores */}
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3.5 bg-slate-50 dark:bg-slate-900/60 p-4 rounded-3xl border border-slate-200/50 dark:border-slate-800/80">
