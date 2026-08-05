@@ -1063,4 +1063,172 @@ router.post('/contacts/assign', async (req: AuthenticatedRequest, res: Response)
   }
 });
 
+/**
+ * GET /api/crm/clients/:clientId/tasks - Listar o inicializar las tareas de un cliente
+ */
+router.get('/clients/:clientId/tasks', async (req: AuthenticatedRequest, res: Response) => {
+  const { clientId } = req.params;
+
+  try {
+    // Verificar que el cliente pertenezca al usuario
+    const clientCheck = await pool.query(
+      'SELECT id FROM crm_clients WHERE id = $1 AND user_id = $2',
+      [clientId, req.userId]
+    );
+
+    if (clientCheck.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Cliente no encontrado.' });
+    }
+
+    // Consultar tareas existentes
+    const tasksRes = await pool.query(
+      'SELECT * FROM crm_client_tasks WHERE client_id = $1 ORDER BY id ASC',
+      [clientId]
+    );
+
+    if (tasksRes.rows.length > 0) {
+      return res.json({ success: true, tasks: tasksRes.rows });
+    }
+
+    // Si no tiene tareas, inicializar las 5 por defecto
+    const defaultTasks = [
+      'Llamarlo mañana',
+      'Enviar factura',
+      'Cobrar',
+      'Renovación',
+      'Programar visita'
+    ];
+
+    const insertedTasks = [];
+    for (const title of defaultTasks) {
+      const insRes = await pool.query(
+        'INSERT INTO crm_client_tasks (client_id, title) VALUES ($1, $2) RETURNING *',
+        [clientId, title]
+      );
+      insertedTasks.push(insRes.rows[0]);
+    }
+
+    return res.json({ success: true, tasks: insertedTasks });
+  } catch (error: any) {
+    console.error('[CRM Get Tasks] Error:', error.message);
+    return res.status(500).json({ success: false, error: 'Error al obtener las tareas.' });
+  }
+});
+
+/**
+ * POST /api/crm/clients/:clientId/tasks - Crear una nueva tarea personalizada para el cliente
+ */
+router.post('/clients/:clientId/tasks', async (req: AuthenticatedRequest, res: Response) => {
+  const { clientId } = req.params;
+  const { title, due_date } = req.body;
+
+  if (!title || !title.trim()) {
+    return res.status(400).json({ success: false, error: 'El título de la tarea es obligatorio.' });
+  }
+
+  try {
+    // Verificar que el cliente pertenezca al usuario
+    const clientCheck = await pool.query(
+      'SELECT id FROM crm_clients WHERE id = $1 AND user_id = $2',
+      [clientId, req.userId]
+    );
+
+    if (clientCheck.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Cliente no encontrado.' });
+    }
+
+    const insRes = await pool.query(
+      'INSERT INTO crm_client_tasks (client_id, title, due_date) VALUES ($1, $2, $3) RETURNING *',
+      [clientId, title.trim(), due_date || null]
+    );
+
+    return res.json({ success: true, task: insRes.rows[0] });
+  } catch (error: any) {
+    console.error('[CRM Create Task] Error:', error.message);
+    return res.status(500).json({ success: false, error: 'Error al crear la tarea.' });
+  }
+});
+
+/**
+ * PUT /api/crm/tasks/:taskId - Actualizar una tarea (completado y/o fecha límite)
+ */
+router.put('/tasks/:taskId', async (req: AuthenticatedRequest, res: Response) => {
+  const { taskId } = req.params;
+  const { completed, due_date } = req.body;
+
+  try {
+    // Verificar propiedad a través del cliente
+    const taskCheck = await pool.query(
+      `SELECT t.id, t.client_id 
+       FROM crm_client_tasks t
+       JOIN crm_clients c ON t.client_id = c.id
+       WHERE t.id = $1 AND c.user_id = $2`,
+      [taskId, req.userId]
+    );
+
+    if (taskCheck.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Tarea no encontrada o sin permisos.' });
+    }
+
+    const updates: string[] = [];
+    const values: any[] = [];
+    let valIdx = 1;
+
+    if (completed !== undefined) {
+      updates.push(`completed = $${valIdx++}`);
+      values.push(completed);
+    }
+
+    if (due_date !== undefined) {
+      updates.push(`due_date = $${valIdx++}`);
+      values.push(due_date || null);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ success: false, error: 'No hay campos para actualizar.' });
+    }
+
+    values.push(taskId);
+    const updateQuery = `
+      UPDATE crm_client_tasks 
+      SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP 
+      WHERE id = $${valIdx} 
+      RETURNING *`;
+
+    const result = await pool.query(updateQuery, values);
+    return res.json({ success: true, task: result.rows[0] });
+  } catch (error: any) {
+    console.error('[CRM Update Task] Error:', error.message);
+    return res.status(500).json({ success: false, error: 'Error al actualizar la tarea.' });
+  }
+});
+
+/**
+ * DELETE /api/crm/tasks/:taskId - Eliminar una tarea
+ */
+router.delete('/tasks/:taskId', async (req: AuthenticatedRequest, res: Response) => {
+  const { taskId } = req.params;
+
+  try {
+    // Verificar propiedad
+    const taskCheck = await pool.query(
+      `SELECT t.id 
+       FROM crm_client_tasks t
+       JOIN crm_clients c ON t.client_id = c.id
+       WHERE t.id = $1 AND c.user_id = $2`,
+      [taskId, req.userId]
+    );
+
+    if (taskCheck.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Tarea no encontrada o sin permisos.' });
+    }
+
+    await pool.query('DELETE FROM crm_client_tasks WHERE id = $1', [taskId]);
+    return res.json({ success: true, message: 'Tarea eliminada correctamente.' });
+  } catch (error: any) {
+    console.error('[CRM Delete Task] Error:', error.message);
+    return res.status(500).json({ success: false, error: 'Error al eliminar la tarea.' });
+  }
+});
+
 export default router;

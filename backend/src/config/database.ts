@@ -204,6 +204,19 @@ export async function initDatabase() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    // 11. Tabla de Tareas de Clientes
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS crm_client_tasks (
+        id SERIAL PRIMARY KEY,
+        client_id INTEGER NOT NULL REFERENCES crm_clients(id) ON DELETE CASCADE,
+        title VARCHAR(255) NOT NULL,
+        completed BOOLEAN DEFAULT false,
+        due_date DATE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
     // Asegurar columnas de cumpleaños e idioma en crm_clients
     await pool.query(`
       ALTER TABLE crm_clients ADD COLUMN IF NOT EXISTS birthday DATE;

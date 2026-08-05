@@ -314,6 +314,16 @@ export default function DashboardPage() {
   const [datePickerYear, setDatePickerYear] = useState(new Date().getFullYear());
   const [datePickerMonth, setDatePickerMonth] = useState(new Date().getMonth());
   const [crmLanguage, setCrmLanguage] = useState('Español');
+
+  // Client Tasks States
+  const [showActionsDropdown, setShowActionsDropdown] = useState(false);
+  const [showTasksModal, setShowTasksModal] = useState(false);
+  const [clientTasks, setClientTasks] = useState<any[]>([]);
+  const [tasksLoading, setTasksLoading] = useState(false);
+  const [newCustomTaskTitle, setNewCustomTaskTitle] = useState('');
+  const [taskDatePickerId, setTaskDatePickerId] = useState<number | null>(null);
+  const [datePickerYearTask, setDatePickerYearTask] = useState(new Date().getFullYear());
+  const [datePickerMonthTask, setDatePickerMonthTask] = useState(new Date().getMonth());
   const [showMoreCrmFields, setShowMoreCrmFields] = useState(false);
   
   // CRM Form States
@@ -1487,6 +1497,82 @@ export default function DashboardPage() {
   }, [crmCategoryId]);
 
   // Fetch CRM details for the active chat JID
+  const fetchClientTasks = async (clientId: number) => {
+    setTasksLoading(true);
+    try {
+      const res = await api.get(`/crm/clients/${clientId}/tasks`);
+      if (res.data?.success) {
+        setClientTasks(res.data.tasks);
+      }
+    } catch (err: any) {
+      console.error('Error fetching tasks:', err);
+      showNotification('Error al cargar las tareas del cliente', 'error');
+    } finally {
+      setTasksLoading(false);
+    }
+  };
+
+  const handleToggleTask = async (taskId: number, currentCompleted: boolean) => {
+    try {
+      setClientTasks(prev => prev.map(t => t.id === taskId ? { ...t, completed: !currentCompleted } : t));
+      const res = await api.put(`/crm/tasks/${taskId}`, {
+        completed: !currentCompleted
+      });
+      if (!res.data?.success) {
+        setClientTasks(prev => prev.map(t => t.id === taskId ? { ...t, completed: currentCompleted } : t));
+        showNotification('Error al actualizar la tarea', 'error');
+      }
+    } catch (err: any) {
+      console.error('Error toggling task:', err);
+      setClientTasks(prev => prev.map(t => t.id === taskId ? { ...t, completed: currentCompleted } : t));
+      showNotification('Error al actualizar la tarea', 'error');
+    }
+  };
+
+  const handleUpdateTaskDate = async (taskId: number, dateStr: string | null) => {
+    try {
+      setClientTasks(prev => prev.map(t => t.id === taskId ? { ...t, due_date: dateStr } : t));
+      const res = await api.put(`/crm/tasks/${taskId}`, {
+        due_date: dateStr
+      });
+      if (!res.data?.success) {
+        showNotification('Error al guardar la fecha de la tarea', 'error');
+      }
+    } catch (err: any) {
+      console.error('Error updating task date:', err);
+      showNotification('Error al guardar la fecha de la tarea', 'error');
+    }
+  };
+
+  const handleCreateCustomTask = async () => {
+    if (!newCustomTaskTitle.trim() || !crmClient) return;
+    try {
+      const res = await api.post(`/crm/clients/${crmClient.id}/tasks`, {
+        title: newCustomTaskTitle.trim()
+      });
+      if (res.data?.success) {
+        setClientTasks(prev => [...prev, res.data.task]);
+        setNewCustomTaskTitle('');
+      }
+    } catch (err: any) {
+      console.error('Error creating custom task:', err);
+      showNotification('Error al crear la tarea personalizada', 'error');
+    }
+  };
+
+  const handleDeleteTask = async (taskId: number) => {
+    try {
+      setClientTasks(prev => prev.filter(t => t.id !== taskId));
+      const res = await api.delete(`/crm/tasks/${taskId}`);
+      if (!res.data?.success) {
+        showNotification('Error al eliminar la tarea', 'error');
+      }
+    } catch (err: any) {
+      console.error('Error deleting task:', err);
+      showNotification('Error al eliminar la tarea', 'error');
+    }
+  };
+
   const fetchCrmContactForChat = useCallback(async (chatJid: string) => {
     if (!chatJid || chatJid.endsWith('@g.us')) {
       setCrmClient(null);
@@ -1501,6 +1587,12 @@ export default function DashboardPage() {
       const res = await api.get(`/crm/contacts/${cleanJid}`);
       if (res.data?.success) {
         setCrmClient(res.data.client);
+        if (res.data.client) {
+          fetchClientTasks(res.data.client.id);
+        } else {
+          setClientTasks([]);
+          setShowTasksModal(false);
+        }
         setCrmContact(res.data.contact);
         setCrmIsEditing(false); // Reset to display mode
         setClientNotes(res.data.notes || []);
@@ -3566,11 +3658,45 @@ echo $response;`;
                                   </div>
                                 )}
                               </div>
-                              <button className="flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all cursor-pointer whitespace-nowrap">
-                                <Grip size={13} className="text-slate-400 dark:text-slate-400" />
-                                <span>Más acciones</span>
-                                <ChevronDown size={12} className="text-slate-400 ml-1" />
-                              </button>
+                              <div className="relative">
+                                <button
+                                  type="button"
+                                  onClick={() => setShowActionsDropdown(!showActionsDropdown)}
+                                  className={`flex items-center gap-2 px-3.5 py-1.5 border rounded-xl text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap ${
+                                    showActionsDropdown
+                                      ? 'bg-brand-primary text-white border-brand-primary'
+                                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'
+                                  }`}
+                                >
+                                  <Grip size={13} className={showActionsDropdown ? "text-white" : "text-slate-400 dark:text-slate-400"} />
+                                  <span>Más acciones</span>
+                                  <ChevronDown size={12} className={showActionsDropdown ? "text-white ml-1" : "text-slate-400 ml-1"} />
+                                </button>
+
+                                {showActionsDropdown && (
+                                  <>
+                                    <div className="fixed inset-0 z-30" onClick={() => setShowActionsDropdown(false)} />
+                                    <div className="absolute right-0 mt-1.5 w-52 bg-[#0b2d33] dark:bg-slate-950 rounded-2xl shadow-premium-lg border-0 py-2 z-40 animate-fadeIn text-left">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setShowActionsDropdown(false);
+                                          if (crmClient) {
+                                            fetchClientTasks(crmClient.id);
+                                            setShowTasksModal(true);
+                                          } else {
+                                            showNotification('Registra los datos del cliente primero para gestionar tareas.', 'error');
+                                          }
+                                        }}
+                                        className="w-full px-3.5 py-2 text-left text-xs font-semibold flex items-center gap-2 hover:bg-white/10 text-white transition-colors cursor-pointer"
+                                      >
+                                        <CheckCircle2 size={13} className="text-slate-300" />
+                                        <span>Tareas del Cliente</span>
+                                      </button>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
                             </div>
                           </div>
 
@@ -6656,6 +6782,270 @@ echo $response;`;
                 className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-surface-600 dark:text-surface-400 text-xs font-bold rounded-2xl transition-all cursor-pointer text-center"
               >
                 Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+            {/* Modal de Tareas del Cliente */}
+      {showTasksModal && (
+        <div className="fixed inset-0 z-[60] bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 w-full max-w-md p-6 rounded-3xl space-y-4 shadow-premium-lg relative animate-fadeIn text-left">
+            <button
+              onClick={() => {
+                setShowTasksModal(false);
+                setTaskDatePickerId(null);
+              }}
+              className="absolute top-5 right-5 text-surface-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="space-y-1.5 pr-6">
+              <h3 className="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                <CheckCircle2 size={18} className="text-brand-primary" />
+                <span>Tareas del Cliente</span>
+              </h3>
+              <p className="text-[10px] text-surface-400 font-bold uppercase tracking-wider">
+                {crmClient?.name || 'Cliente'}
+              </p>
+            </div>
+
+            {/* List of Tasks */}
+            <div className="max-h-64 overflow-y-auto space-y-2.5 pr-1 min-h-[120px] flex flex-col justify-start">
+              {tasksLoading ? (
+                <div className="flex-1 flex items-center justify-center py-6 text-xs text-surface-400 animate-pulse">
+                  Cargando tareas...
+                </div>
+              ) : clientTasks.length === 0 ? (
+                <div className="flex-1 flex items-center justify-center py-6 text-xs text-surface-400 italic">
+                  Sin tareas registradas.
+                </div>
+              ) : (
+                clientTasks.map((task: any) => {
+                  return (
+                    <div 
+                      key={task.id} 
+                      className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-950/30 rounded-2xl border border-slate-100 dark:border-slate-850 hover:bg-slate-100/50 dark:hover:bg-slate-900/40 transition-colors"
+                    >
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleTask(task.id, task.completed)}
+                          className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all cursor-pointer ${
+                            task.completed 
+                              ? 'bg-brand-primary border-brand-primary text-white shadow-sm' 
+                              : 'border-slate-300 dark:border-slate-700 hover:border-slate-400 bg-white dark:bg-slate-800'
+                          }`}
+                        >
+                          {task.completed && <Check size={12} strokeWidth={3} />}
+                        </button>
+                        <span className={`text-[11.5px] truncate pr-2 ${
+                          task.completed 
+                            ? 'line-through text-slate-400 dark:text-slate-500 font-medium' 
+                            : 'text-slate-700 dark:text-slate-200 font-extrabold'
+                        }`}>
+                          {task.title}
+                        </span>
+                      </div>
+
+                      {/* Right column - date or delete */}
+                      <div className="flex items-center gap-2">
+                        {/* Selector de fecha para "Programar visita" */}
+                        {task.title === 'Programar visita' && (
+                          <div className="relative">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (taskDatePickerId === task.id) {
+                                  setTaskDatePickerId(null);
+                                } else {
+                                  setTaskDatePickerId(task.id);
+                                  if (task.due_date) {
+                                    const d = new Date(task.due_date + 'T00:00:00');
+                                    if (!isNaN(d.getTime())) {
+                                      setDatePickerYearTask(d.getFullYear());
+                                      setDatePickerMonthTask(d.getMonth());
+                                    }
+                                  } else {
+                                    setDatePickerYearTask(new Date().getFullYear());
+                                    setDatePickerMonthTask(new Date().getMonth());
+                                  }
+                                }
+                              }}
+                              className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-[9px] font-extrabold border transition-all cursor-pointer ${
+                                task.due_date
+                                  ? 'bg-brand-primary/10 border-brand-primary/20 text-brand-primary'
+                                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-450 hover:bg-slate-50 dark:hover:bg-slate-700'
+                              }`}
+                            >
+                              <Calendar size={10} />
+                              <span>{task.due_date ? formatBirthdayString(task.due_date) : 'Definir Fecha'}</span>
+                            </button>
+
+                            {taskDatePickerId === task.id && (
+                              <>
+                                <div className="fixed inset-0 z-30" onClick={() => setTaskDatePickerId(null)} />
+                                <div className="absolute right-0 bottom-full mb-1.5 w-[230px] bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-2xl shadow-xl p-3 z-40 animate-fadeIn text-left">
+                                  {/* Datepicker header */}
+                                  <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800/60">
+                                    <div className="flex items-center gap-1">
+                                      <select
+                                        value={datePickerMonthTask}
+                                        onChange={(e) => setDatePickerMonthTask(parseInt(e.target.value))}
+                                        className="bg-transparent text-[10px] font-bold text-slate-800 dark:text-white border-0 p-0 focus:ring-0 focus:outline-none cursor-pointer"
+                                      >
+                                        {['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'].map((m, idx) => (
+                                          <option key={m} value={idx} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white font-bold">{m}</option>
+                                        ))}
+                                      </select>
+                                      <select
+                                        value={datePickerYearTask}
+                                        onChange={(e) => setDatePickerYearTask(parseInt(e.target.value))}
+                                        className="bg-transparent text-[10px] font-bold text-slate-800 dark:text-white border-0 p-0 focus:ring-0 focus:outline-none cursor-pointer"
+                                      >
+                                        {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() + i).map(year => (
+                                          <option key={year} value={year} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white font-bold">{year}</option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                    <div className="flex gap-0.5">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          if (datePickerMonthTask === 0) {
+                                            setDatePickerMonthTask(11);
+                                            setDatePickerYearTask(datePickerYearTask - 1);
+                                          } else {
+                                            setDatePickerMonthTask(datePickerMonthTask - 1);
+                                          }
+                                        }}
+                                        className="p-0.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-500 cursor-pointer"
+                                      >
+                                        <ChevronLeft size={11} />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          if (datePickerMonthTask === 11) {
+                                            setDatePickerMonthTask(0);
+                                            setDatePickerYearTask(datePickerYearTask + 1);
+                                          } else {
+                                            setDatePickerMonthTask(datePickerMonthTask + 1);
+                                          }
+                                        }}
+                                        className="p-0.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-500 cursor-pointer"
+                                      >
+                                        <ChevronRight size={11} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Week headers */}
+                                  <div className="grid grid-cols-7 gap-0.5 text-center py-1 text-[8px] font-bold text-slate-400">
+                                    {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map(d => <span key={d}>{d}</span>)}
+                                  </div>
+                                  
+                                  {/* Days Grid */}
+                                  <div className="grid grid-cols-7 gap-0.5 justify-items-center">
+                                    {(() => {
+                                      const firstDay = new Date(datePickerYearTask, datePickerMonthTask, 1).getDay();
+                                      const days = new Date(datePickerYearTask, datePickerMonthTask + 1, 0).getDate();
+                                      const cells = [];
+                                      for (let i = 0; i < firstDay; i++) {
+                                        cells.push(<div key={`empty-${i}`} className="h-4 w-4" />);
+                                      }
+                                      for (let d = 1; d <= days; d++) {
+                                        const formatted = `${datePickerYearTask}-${String(datePickerMonthTask + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                                        const isSel = task.due_date === formatted;
+                                        cells.push(
+                                          <button
+                                            key={`day-${d}`}
+                                            type="button"
+                                            onClick={() => {
+                                              handleUpdateTaskDate(task.id, formatted);
+                                              setTaskDatePickerId(null);
+                                            }}
+                                            className={`h-4.5 w-4.5 text-[9px] font-bold rounded flex items-center justify-center cursor-pointer ${
+                                              isSel ? 'bg-brand-primary text-white shadow-sm' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                            }`}
+                                          >
+                                            {d}
+                                          </button>
+                                        );
+                                      }
+                                      return cells;
+                                    })()}
+                                  </div>
+                                  
+                                  {/* Footer */}
+                                  <div className="flex justify-between items-center pt-1.5 mt-1.5 border-t border-slate-100 dark:border-slate-800/60 text-[9px] font-bold">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        handleUpdateTaskDate(task.id, null);
+                                        setTaskDatePickerId(null);
+                                      }}
+                                      className="text-red-500 hover:underline cursor-pointer"
+                                    >
+                                      Limpiar
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const today = new Date();
+                                        const formatted = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                                        handleUpdateTaskDate(task.id, formatted);
+                                        setTaskDatePickerId(null);
+                                      }}
+                                      className="text-brand-primary hover:underline cursor-pointer"
+                                    >
+                                      Hoy
+                                    </button>
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Delete button */}
+                        {!['Llamarlo mañana', 'Enviar factura', 'Cobrar', 'Renovación', 'Programar visita'].includes(task.title) && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteTask(task.id)}
+                            className="text-slate-400 hover:text-red-500 dark:hover:text-red-400 p-1 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors cursor-pointer"
+                          >
+                            <Trash2 size={11} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Create custom task */}
+            <div className="flex gap-2 border-t border-slate-100 dark:border-slate-800/60 pt-3">
+              <input
+                type="text"
+                placeholder="Nueva tarea personalizada..."
+                value={newCustomTaskTitle}
+                onChange={(e) => setNewCustomTaskTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleCreateCustomTask();
+                }}
+                className="flex-1 px-3 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-800 dark:text-white rounded-xl focus:outline-none focus:border-brand-primary placeholder-slate-400 dark:placeholder-slate-600"
+              />
+              <button
+                type="button"
+                onClick={handleCreateCustomTask}
+                className="px-3.5 bg-brand-primary hover:bg-brand-secondary text-white text-[11px] font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 shadow-sm"
+              >
+                <span>+</span>
+                <span>Añadir</span>
               </button>
             </div>
           </div>
