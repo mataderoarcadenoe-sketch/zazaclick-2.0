@@ -3973,14 +3973,14 @@ echo $response;`;
                                 </div>
 
                                 {/* Notas del contacto */}
-                                 <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/80 space-y-3">
+                                 <div className="bg-gradient-to-br from-emerald-500/[0.03] to-teal-500/[0.01] dark:from-slate-900/60 dark:to-slate-850/40 rounded-2xl p-4 border border-emerald-500/10 dark:border-slate-850 space-y-3.5 shadow-[0_4px_20px_-4px_rgba(16,185,129,0.05)]">
                                    <div className="flex items-center justify-between">
-                                     <h5 className="text-[11px] font-bold text-slate-800 dark:text-white">Notas del contacto</h5>
+                                     <h5 className="text-[11px] font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">Notas del contacto</h5>
                                      {clientNotes.length > 0 && (
                                        <button 
                                          type="button"
                                          onClick={() => setShowNotesFloatingWindow(true)}
-                                         className="text-[10px] font-bold text-brand-primary hover:underline cursor-pointer"
+                                         className="px-2.5 py-0.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[9px] font-bold rounded-full transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shadow-sm shadow-emerald-500/5"
                                        >
                                          Ver notas ({clientNotes.length})
                                        </button>
@@ -3988,31 +3988,40 @@ echo $response;`;
                                    </div>
                                    
                                    {clientNotes.length > 0 ? (
-                                     <div className="space-y-1 bg-slate-50 dark:bg-slate-900/40 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/20">
-                                       <p className="text-[10px] text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line font-medium">
+                                     <div className="relative overflow-hidden bg-white dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-850 shadow-sm pl-4">
+                                       {/* Left accent color bar */}
+                                       <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-l-xl"></div>
+                                       
+                                       <p className="text-[10px] text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line font-medium pr-1">
                                          {clientNotes[0].content}
                                        </p>
-                                       <div className="text-[8px] text-slate-400 dark:text-slate-500 text-right mt-1.5 font-bold flex items-center justify-between">
-                                         <span>Por: {clientNotes[0].agent_name || 'Asesor'}</span>
+                                       <div className="text-[8px] text-slate-450 dark:text-slate-500 text-right mt-2 font-bold flex items-center justify-between">
+                                         <span className="flex items-center gap-1.5">
+                                           <span className="w-4 h-4 rounded-full bg-emerald-500/10 text-emerald-600 text-[8px] font-extrabold flex items-center justify-center">
+                                             {clientNotes[0].agent_name?.charAt(0).toUpperCase() || 'A'}
+                                           </span>
+                                           <span>{clientNotes[0].agent_name || 'Asesor'}</span>
+                                         </span>
                                          <span>{new Date(clientNotes[0].created_at).toLocaleDateString('es-ES')}</span>
                                        </div>
                                      </div>
                                    ) : (
-                                     <p className="text-[10px] text-slate-400 dark:text-slate-500 text-center py-2 italic">
+                                     <p className="text-[10px] text-slate-400 dark:text-slate-500 text-center py-2 italic font-medium">
                                        Sin notas registradas.
                                      </p>
                                    )}
                                    
-                                   <div className="text-right">
+                                   <div className="flex justify-end pt-0.5">
                                      <button 
                                        type="button"
                                        onClick={() => {
                                          setNewNoteText('');
                                          setShowNotesFloatingWindow(true);
                                        }}
-                                       className="text-[10px] font-bold text-brand-primary hover:underline cursor-pointer"
+                                       className="flex items-center gap-1 text-[9.5px] font-extrabold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-355 transition-colors cursor-pointer"
                                      >
-                                       + Agregar nota
+                                       <span className="w-4 h-4 rounded-full bg-emerald-500/15 flex items-center justify-center text-[10px] font-bold">+</span>
+                                       <span>Agregar nota</span>
                                      </button>
                                    </div>
                                  </div>
@@ -4265,46 +4274,74 @@ echo $response;`;
 
                         {/* Floating Notes Panel (No Bloqueante) */}
                         {showNotesFloatingWindow && crmClient && (
-                          <div className="absolute inset-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md z-50 flex flex-col p-4 animate-fadeIn border-l border-slate-200/55 dark:border-slate-800/80">
+                          <div className="absolute inset-0 bg-white/97 dark:bg-slate-900/97 backdrop-blur-md z-50 flex flex-col p-4 animate-fadeIn border-l border-slate-250 dark:border-slate-800/80 shadow-2xl">
                             {/* Header */}
-                            <div className="flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800 pb-3 flex-shrink-0">
-                              <div className="min-w-0">
-                                <h4 className="text-[12px] font-bold text-slate-800 dark:text-white uppercase tracking-tight font-extrabold">Notas de Negocio</h4>
-                                <p className="text-[9.5px] text-slate-400 dark:text-slate-500 truncate mt-0.5">{crmClient.name}</p>
+                            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 flex-shrink-0">
+                              <div className="min-w-0 space-y-0.5 text-left">
+                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[8px] font-bold uppercase tracking-wider border border-emerald-500/10">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                  Notas de Negocio
+                                </span>
+                                <h4 className="text-[12px] font-extrabold text-slate-800 dark:text-white uppercase tracking-tight truncate pr-2">
+                                  {crmClient.name}
+                                </h4>
                               </div>
                               <button
                                 type="button"
                                 onClick={() => setShowNotesFloatingWindow(false)}
-                                className="p-1.5 hover:bg-slate-150 dark:hover:bg-slate-850 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                                className="p-1.5 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-605 dark:hover:text-slate-200 rounded-xl transition-all cursor-pointer border border-slate-100 dark:border-slate-800"
                               >
-                                <X size={15} />
+                                <X size={14} />
                               </button>
                             </div>
 
                             {/* List of notes */}
-                            <div className="flex-1 overflow-y-auto space-y-3 py-4 pr-0.5">
+                            <div className="flex-1 overflow-y-auto space-y-3.5 py-4 pr-1 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800 scrollbar-track-transparent">
                               {clientNotes.length > 0 ? (
-                                clientNotes.map((note: any) => (
-                                  <div key={note.id} className="bg-slate-100/50 dark:bg-slate-955/40 p-3 rounded-2xl border border-slate-200/20 dark:border-slate-800/30 text-left space-y-2 relative group hover:border-slate-200/60 dark:hover:border-slate-800/80 transition-all">
-                                    <p className="text-[10px] text-slate-700 dark:text-slate-350 leading-relaxed whitespace-pre-line font-medium pr-5">
-                                      {note.content}
-                                    </p>
-                                    <div className="flex items-center justify-between text-[8px] font-bold text-slate-400 dark:text-slate-500">
-                                      <span>Por: {note.agent_name || 'Asesor'}</span>
-                                      <div className="flex items-center gap-2">
-                                        <span>{new Date(note.created_at).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}</span>
-                                        <button
-                                          type="button"
-                                          onClick={() => handleDeleteNote(note.id)}
-                                          className="text-red-500 hover:text-red-655 transition-colors p-0.5 hover:bg-red-50 dark:hover:bg-red-950/30 rounded cursor-pointer"
-                                          title="Eliminar nota"
-                                        >
-                                          <Trash2 size={10} />
-                                        </button>
+                                clientNotes.map((note: any, index: number) => {
+                                  // Alternate background pastel gradients to make it colorful
+                                  const gradients = [
+                                    'from-emerald-500/[0.04] to-teal-500/[0.02] border-emerald-500/10 dark:from-emerald-950/20 dark:to-teal-950/10 dark:border-emerald-900/30',
+                                    'from-blue-500/[0.04] to-indigo-500/[0.02] border-blue-500/10 dark:from-blue-950/20 dark:to-indigo-950/10 dark:border-blue-900/30',
+                                    'from-violet-500/[0.04] to-purple-500/[0.02] border-violet-500/10 dark:from-violet-950/20 dark:to-purple-950/10 dark:border-violet-900/30'
+                                  ];
+                                  const gradClass = gradients[index % gradients.length];
+                                  
+                                  return (
+                                    <div 
+                                      key={note.id} 
+                                      className={`bg-gradient-to-br ${gradClass} p-3 rounded-2xl border text-left space-y-2.5 relative group hover:shadow-sm transition-all duration-200 pl-4`}
+                                    >
+                                      {/* Small decorative bar */}
+                                      <div className="absolute left-0 top-3 bottom-3 w-0.5 bg-slate-300 dark:bg-slate-700 rounded-full group-hover:bg-brand-primary transition-all"></div>
+                                      
+                                      <p className="text-[10.5px] text-slate-750 dark:text-slate-300 leading-relaxed whitespace-pre-line font-medium pr-5">
+                                        {note.content}
+                                      </p>
+                                      
+                                      <div className="flex items-center justify-between text-[8px] font-bold text-slate-400 dark:text-slate-500">
+                                        <span className="flex items-center gap-1.5">
+                                          <span className="w-4 h-4 rounded-full bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-350 text-[8px] font-extrabold flex items-center justify-center">
+                                            {note.agent_name?.charAt(0).toUpperCase() || 'A'}
+                                          </span>
+                                          <span className="max-w-[100px] truncate">{note.agent_name || 'Asesor'}</span>
+                                        </span>
+                                        
+                                        <div className="flex items-center gap-1.5">
+                                          <span>{new Date(note.created_at).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}</span>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDeleteNote(note.id)}
+                                            className="text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors p-1 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg cursor-pointer"
+                                            title="Eliminar nota"
+                                          >
+                                            <Trash2 size={10} />
+                                          </button>
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                ))
+                                  );
+                                })
                               ) : (
                                 <div className="h-full flex flex-col items-center justify-center text-center py-10 space-y-2">
                                   <span className="text-[10px] text-slate-400 dark:text-slate-500 italic">No hay notas registradas para este cliente.</span>
@@ -4313,21 +4350,25 @@ echo $response;`;
                             </div>
 
                             {/* Footer (Add note form) */}
-                            <div className="border-t border-slate-200/60 dark:border-slate-800 pt-3 flex-shrink-0 space-y-2">
+                            <div className="border-t border-slate-100 dark:border-slate-850 pt-3 flex-shrink-0 space-y-2.5">
                               <textarea
                                 value={newNoteText}
                                 onChange={(e) => setNewNoteText(e.target.value)}
                                 rows={3}
-                                placeholder="Añadir una nueva nota interna..."
-                                className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 text-[11px] text-slate-800 dark:text-white rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/30 resize-none font-medium placeholder-slate-400"
+                                placeholder="Escribe una nueva nota interna..."
+                                className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 text-[11px] text-slate-800 dark:text-white rounded-2xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/25 resize-none font-medium placeholder-slate-400 transition-all"
                               />
                               <button
                                 type="button"
                                 onClick={handleAddNewNote}
                                 disabled={newNoteLoading || !newNoteText.trim()}
-                                className="w-full py-2 bg-brand-500 hover:bg-brand-secondary text-white text-xs font-bold rounded-xl transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
+                                className="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-xs font-extrabold rounded-2xl shadow-md shadow-emerald-500/10 hover:shadow-emerald-500/20 active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100 disabled:shadow-none cursor-pointer flex items-center justify-center gap-1.5"
                               >
-                                {newNoteLoading ? 'Agregando...' : '+ Agregar Nota'}
+                                {newNoteLoading ? (
+                                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  <span>+ Agregar Nota</span>
+                                )}
                               </button>
                             </div>
                           </div>
