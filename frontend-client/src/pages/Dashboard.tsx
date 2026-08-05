@@ -4945,13 +4945,13 @@ echo $response;`;
                               </div>
 
                               {/* Column Body / Cards List */}
-                              <div className="flex-1 overflow-y-auto p-3 space-y-2.5 min-h-[200px]">
+                              <div className="flex-1 overflow-y-auto p-3 pb-24 space-y-2.5 min-h-[200px]">
                                 {items.length === 0 ? (
                                   <div className="h-28 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex items-center justify-center text-[10px] text-slate-400 font-medium">
                                     Sin contactos
                                   </div>
                                 ) : (
-                                  items.map((item) => {
+                                  items.map((item, index) => {
                                     const initials = item.name.substring(0, 2).toUpperCase();
                                     const isCrm = item.type === 'crm';
                                     return (
@@ -5001,7 +5001,11 @@ echo $response;`;
                                             </button>
 
                                             {openMoveDropdownJid === item.remoteJid && (
-                                              <div className="absolute right-0 mt-1 w-44 bg-[#0b2d33] dark:bg-slate-950 rounded-xl shadow-premium-lg border-0 py-1.5 z-40 animate-fadeIn">
+                                                <div className={`absolute right-0 w-44 bg-[#0b2d33] dark:bg-slate-950 rounded-xl shadow-premium-lg border-0 py-1.5 z-40 animate-fadeIn ${
+                                                  index > 0 && index === items.length - 1
+                                                    ? 'bottom-full mb-1 origin-bottom-right'
+                                                    : 'top-full mt-1 origin-top-right'
+                                                }`}>
                                                 <div className="px-2.5 py-0.5 text-[8px] font-bold text-slate-400 uppercase tracking-wider border-b border-white/5 mb-1">
                                                   Cambiar a etapa:
                                                 </div>
