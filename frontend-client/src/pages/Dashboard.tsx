@@ -1180,7 +1180,7 @@ export default function DashboardPage() {
     }
 
     try {
-      const cleanJid = selectedChat.remoteJid.split('@')[0];
+      const cleanJid = selectedChat.remoteJid.split('@')[0].split(':')[0].split(':')[0];
       const res = await api.post('/crm/contacts/tags', {
         phone_number: cleanJid,
         tags: newTags
@@ -1234,7 +1234,7 @@ export default function DashboardPage() {
     }
     setCrmLoading(true);
     try {
-      const cleanJid = chatJid.split('@')[0];
+      const cleanJid = chatJid.split('@')[0].split(':')[0];
       const res = await api.get(`/crm/contacts/${cleanJid}`);
       if (res.data?.success) {
         setCrmClient(res.data.client);
@@ -1344,7 +1344,7 @@ export default function DashboardPage() {
   // Link Client and WhatsApp Chat (with optional mergeAction)
   const handleSaveCrmContact = async (mergeAction?: string) => {
     if (!selectedChat) return;
-    const cleanJid = selectedChat.remoteJid.split('@')[0];
+    const cleanJid = selectedChat.remoteJid.split('@')[0].split(':')[0];
 
     // If manual name with no document number entered
     if (!crmDocNumber.trim()) {
@@ -2034,7 +2034,7 @@ echo $response;`;
     const crmPhones = new Set(pipelineData.map(p => p.phone_number.replace(/\D/g, '')));
     chats.forEach(chat => {
       if (chat.remoteJid.endsWith('@g.us')) return;
-      const phone = chat.remoteJid.split('@')[0].replace(/\D/g, '');
+      const phone = chat.remoteJid.split('@')[0].split(':')[0].replace(/\D/g, '');
       if (!crmPhones.has(phone)) {
         columns['Nuevo'].push({
           type: 'chat',
@@ -2695,7 +2695,7 @@ echo $response;`;
                         ) : (
                           chats
                             .filter(chat => {
-                              const cleanRemoteJid = chat.remoteJid.split('@')[0];
+                              const cleanRemoteJid = chat.remoteJid.split('@')[0].split(':')[0];
                               const contactName = (crmContactMap[cleanRemoteJid] || chat.pushName || cleanRemoteJid).toLowerCase();
                               const searchLower = chatsSearchQuery.toLowerCase();
                               const tags = crmContactTagsMap[cleanRemoteJid] || [];
@@ -2718,7 +2718,7 @@ echo $response;`;
                               const isActive = selectedChat?.remoteJid === chat.remoteJid;
                               const unreadCount = Number(chat.unreadCount) || 0;
                               const isUnread = unreadCount > 0;
-                              const cleanRemoteJid = chat.remoteJid.split('@')[0];
+                              const cleanRemoteJid = chat.remoteJid.split('@')[0].split(':')[0].split(':')[0];
                               const contactName = crmContactMap[cleanRemoteJid] || chat.pushName || cleanRemoteJid;
                               
                               // Extract last message text
@@ -2835,7 +2835,7 @@ echo $response;`;
                                   {selectedChat.profilePicUrl ? (
                                     <img src={selectedChat.profilePicUrl} alt="" className="w-full h-full object-cover" />
                                   ) : (
-                                    <span className="uppercase tracking-wide">{String(crmContactMap[selectedChat.remoteJid.split('@')[0]] || selectedChat.pushName || selectedChat.remoteJid).substring(0, 2)}</span>
+                                    <span className="uppercase tracking-wide">{String(crmContactMap[selectedChat.remoteJid.split('@')[0].split(':')[0]] || selectedChat.pushName || selectedChat.remoteJid).substring(0, 2)}</span>
                                   )}
                                 </div>
                                 
@@ -2843,13 +2843,9 @@ echo $response;`;
                                 <div className="flex flex-col justify-center">
                                   <div className="flex items-center gap-2.5">
                                     <h4 className="text-[13px] font-extrabold text-slate-800 dark:text-white uppercase tracking-tight">
-                                      {crmContactMap[selectedChat.remoteJid.split('@')[0]] || selectedChat.pushName || selectedChat.remoteJid.split('@')[0]}
+                                      {crmContactMap[selectedChat.remoteJid.split('@')[0].split(':')[0]] || selectedChat.pushName || selectedChat.remoteJid.split('@')[0].split(':')[0]}
                                     </h4>
-{!selectedChat.remoteJid.endsWith('@g.us') && (
-                                      <span className="px-2 py-0.5 bg-[#e8f5ed] dark:bg-[#12a160]/20 text-[#12a160] text-[9px] font-bold rounded-full">
-                                        Cliente VIP
-                                      </span>
-                                    )}
+
                                     {crmContact?.tags && crmContact.tags.map((tag: string) => {
                                       let colorClass = "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
                                       if (tag === 'VIP') colorClass = "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400";
@@ -2910,7 +2906,7 @@ echo $response;`;
                                           <span className="text-slate-300 dark:text-slate-600 font-normal">|</span>
                                           <div className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
                                             <Phone size={11} className="text-slate-400" />
-                                            <span>+{selectedChat.remoteJid.split('@')[0]}</span>
+                                            <span>+{selectedChat.remoteJid.split('@')[0].split(':')[0]}</span>
                                           </div>
                                         </div>
                                       );
@@ -3022,7 +3018,7 @@ echo $response;`;
                                             movePipelineStage(
                                               selectedChat.remoteJid,
                                               stg,
-                                              selectedChat.pushName || selectedChat.remoteJid.split('@')[0]
+                                              selectedChat.pushName || selectedChat.remoteJid.split('@')[0].split(':')[0]
                                             );
                                             setShowPipelineDropdown(false);
                                           }}
@@ -3517,7 +3513,7 @@ echo $response;`;
                                       <div className="text-brand-primary bg-brand-primary/10 p-1.5 rounded-lg h-min"><Phone size={12} /></div>
                                       <div className="min-w-0">
                                         <span className="text-[9px] text-surface-400 font-medium block leading-none mb-1">Teléfono</span>
-                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold truncate block">+{selectedChat.remoteJid.split('@')[0]}</span>
+                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold truncate block">+{selectedChat.remoteJid.split('@')[0].split(':')[0]}</span>
                                       </div>
                                     </div>
                                     <div className="flex gap-2">

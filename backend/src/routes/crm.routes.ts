@@ -247,6 +247,7 @@ router.get('/contacts/map', async (req: AuthenticatedRequest, res: Response) => 
  */
 router.get('/contacts/:phoneNumber', async (req: AuthenticatedRequest, res: Response) => {
   const { phoneNumber } = req.params;
+  const cleanPhone = phoneNumber.split(':')[0];
 
   try {
     // Buscar contacto activo
@@ -255,7 +256,7 @@ router.get('/contacts/:phoneNumber', async (req: AuthenticatedRequest, res: Resp
        FROM crm_contacts c 
        LEFT JOIN crm_contact_categories cat ON c.category_id = cat.id 
        WHERE c.user_id = $1 AND c.phone_number = $2`,
-      [req.userId, phoneNumber]
+      [req.userId, cleanPhone]
     );
 
     if (contactRes.rows.length === 0) {
@@ -263,6 +264,9 @@ router.get('/contacts/:phoneNumber', async (req: AuthenticatedRequest, res: Resp
     }
 
     const contact = contactRes.rows[0];
+    if (contact && typeof contact.tags === 'string') {
+      try { contact.tags = JSON.parse(contact.tags); } catch(e) { contact.tags = []; }
+    }
 
     // Buscar cliente asociado
     const clientRes = await pool.query(
@@ -645,7 +649,12 @@ router.get('/contacts/tags-map', async (req: AuthenticatedRequest, res: Response
     );
     const tagsMap: Record<string, string[]> = {};
     result.rows.forEach(row => {
-      tagsMap[row.phone_number] = row.tags || [];
+      const cleanPhone = row.phone_number.split(':')[0];
+      let tgs = row.tags;
+      if (typeof tgs === 'string') {
+        try { tgs = JSON.parse(tgs); } catch(e) { tgs = []; }
+      }
+      tagsMap[cleanPhone] = Array.isArray(tgs) ? tgs : [];
     });
     return res.json({ success: true, data: tagsMap });
   } catch (error: any) {
@@ -662,10 +671,11 @@ router.post('/contacts/tags', async (req: AuthenticatedRequest, res: Response) =
   if (!phone_number || !Array.isArray(tags)) {
     return res.status(400).json({ success: false, error: 'Faltan parámetros requeridos (phone_number, tags).' });
   }
+  const cleanPhone = phone_number.split(':')[0];
   try {
     const contactCheck = await pool.query(
       'SELECT id FROM crm_contacts WHERE user_id = $1 AND phone_number = $2',
-      [req.userId, phone_number]
+      [req.userId, cleanPhone]
     );
 
     if (contactCheck.rows.length === 0) {
@@ -689,12 +699,12 @@ router.post('/contacts/tags', async (req: AuthenticatedRequest, res: Response) =
       await pool.query(
         `INSERT INTO crm_contacts (client_id, user_id, phone_number, tags) 
          VALUES ($1, $2, $3, $4)`,
-        [clientId, req.userId, phone_number, JSON.stringify(tags)]
+        [clientId, req.userId, cleanPhone, JSON.stringify(tags)]
       );
     } else {
       await pool.query(
         'UPDATE crm_contacts SET tags = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2 AND phone_number = $3',
-        [JSON.stringify(tags), req.userId, phone_number]
+        [JSON.stringify(tags), req.userId, cleanPhone]
       );
     }
 
