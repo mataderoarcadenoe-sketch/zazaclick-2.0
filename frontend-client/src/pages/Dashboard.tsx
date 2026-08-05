@@ -360,6 +360,11 @@ export default function DashboardPage() {
 
   // CRM Clients Tab States
   // CRM Global Tasks States
+  // CRM Sidebar Tab Integration (Billing / Catalog)
+  const [crmSidebarTab, setCrmSidebarTab] = useState<'info' | 'billing'>('info');
+  const [billingSearchQuery, setBillingSearchQuery] = useState('');
+  const [billingCategory, setBillingCategory] = useState<string>('all');
+
   const [globalTasks, setGlobalTasks] = useState<any[]>([]);
   const [globalTasksLoading, setGlobalTasksLoading] = useState(false);
   const [tasksFilter, setTasksFilter] = useState<string>('pending');
@@ -2110,6 +2115,64 @@ export default function DashboardPage() {
     setActiveTab('chats');
   };
 
+  
+  const handleSendProductToChat = async (product: any) => {
+    if (!selectedChat) {
+      showNotification('Selecciona una conversación activa para enviar el producto.', 'error');
+      return;
+    }
+    const messageText = `📦 *${product.name}*
+💵 *Precio*: ${product.price}
+
+📝 *Detalles*: ${product.description}
+
+🔗 *Imagen de referencia*: ${product.originalImage}`;
+
+    try {
+      const res = await api.post(`/instances/chats/${selectedInstanceForChats}/send`, {
+        remoteJid: selectedChat.remoteJid,
+        text: messageText
+      });
+      if (res.data?.success) {
+        showNotification('Ficha del producto enviada al chat.', 'success');
+        await fetchMessages(true);
+      }
+    } catch (err: any) {
+      showNotification('Error al enviar el producto.', 'error');
+    }
+  };
+
+  const handleSendQuoteToChat = async (product: any) => {
+    if (!selectedChat) {
+      showNotification('Selecciona una conversación activa para enviar la cotización.', 'error');
+      return;
+    }
+    const quoteId = Math.floor(100000 + Math.random() * 900000);
+    const messageText = `🧾 *COTIZACIÓN PRELIMINAR #${quoteId}*
+---------------------------------------
+👤 *Cliente*: ${selectedChat.pushName || 'Contacto'}
+📦 *Producto*: ${product.name}
+💵 *Subtotal*: ${product.price}
+📊 *IGV (18%)*: Incluido
+---------------------------------------
+💰 *TOTAL A PAGAR*: ${product.price}
+
+*Nota*: Esta cotización tiene una validez de 7 días hábiles. Si deseas proceder con la compra, confírmanos por este medio.`;
+
+    try {
+      const res = await api.post(`/instances/chats/${selectedInstanceForChats}/send`, {
+        remoteJid: selectedChat.remoteJid,
+        text: messageText
+      });
+      if (res.data?.success) {
+        showNotification('Cotización formal enviada al chat.', 'success');
+        await fetchMessages(true);
+      }
+    } catch (err: any) {
+      showNotification('Error al enviar la cotización.', 'error');
+    }
+  };
+
   const getLocalDateString = (dateStr: string | null) => {
     if (!dateStr) return '';
     const d = new Date(dateStr);
@@ -3017,7 +3080,7 @@ echo $response;`;
         </header>
 
         {/* Interactive Content Container */}
-        <main className={`flex-1 p-4 sm:p-6 lg:p-6 bg-transparent relative ${activeTab === 'chats' ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+        <main className={`flex-1 bg-transparent relative ${activeTab === 'chats' ? 'overflow-hidden p-0' : 'p-4 sm:p-6 lg:p-6 overflow-y-auto'}`}>
           
           {/* Active Section Renderer */}
           <div className={`w-full ${activeTab === 'chats' ? 'h-full flex flex-col space-y-0' : 'space-y-6'}`}>
@@ -4270,9 +4333,34 @@ echo $response;`;
                     {/* CRM Sidebar Pane */}
                     {selectedChat && !selectedChat.remoteJid.endsWith('@g.us') && (
                       <div className="md:col-span-3 border-l border-slate-200/50 dark:border-slate-800/50 flex flex-col min-h-0 bg-slate-50/45 dark:bg-slate-950 text-left relative overflow-hidden">
+                        {/* Tab Switcher */}
+                        <div className="flex border-b border-slate-100 dark:border-slate-800/80 p-2 bg-white dark:bg-slate-950/80 backdrop-blur-sm gap-1 flex-shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => setCrmSidebarTab('info')}
+                            className={`flex-1 py-1.5 text-center text-[9.5px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
+                              crmSidebarTab === 'info' 
+                                ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/10' 
+                                : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900'
+                            }`}
+                          >
+                            👤 Info CRM
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setCrmSidebarTab('billing')}
+                            className={`flex-1 py-1.5 text-center text-[9.5px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
+                              crmSidebarTab === 'billing' 
+                                ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/10' 
+                                : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900'
+                            }`}
+                          >
+                            ⚡ Facturación
+                          </button>
+                        </div>
                         {crmLoading ? (
-                          <div className="py-8 text-center text-[11px] text-surface-400 animate-pulse p-4">Cargando datos CRM...</div>
-                        ) : (
+                          <div className="flex-1 flex items-center justify-center py-8 text-center text-[11px] text-surface-400 animate-pulse p-4">Cargando datos CRM...</div>
+                        ) : crmSidebarTab === 'info' ? (
                           <div className="flex-1 overflow-y-auto p-4 space-y-4">
                             {!crmIsEditing && crmClient ? (
                               <div className="space-y-3.5 pb-6">
@@ -4938,6 +5026,146 @@ echo $response;`;
                                 </div>
                               </div>
                             )}
+                          </div>
+                        ) : (
+                          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white dark:bg-slate-950/20">
+                            <div className="space-y-4">
+                              {/* Integration Header Banner */}
+                              <div className="p-3 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl text-white relative overflow-hidden shadow-sm">
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-xl -mr-8 -mt-8"></div>
+                                <h5 className="text-[11px] font-extrabold uppercase tracking-wider relative z-10 flex items-center gap-1">
+                                  <span>🧾 Facturación API</span>
+                                </h5>
+                                <p className="text-[9px] text-white/90 mt-1 leading-relaxed relative z-10 font-medium">
+                                  Conectado a tu Facturador Electrónico. Selecciona un producto para enviar ficha o cotizar al cliente.
+                                </p>
+                              </div>
+
+                              {/* Search & Category Tabs */}
+                              <div className="space-y-2">
+                                <div className="relative font-sans">
+                                  <Search size={12} className="absolute left-3 top-2.5 text-slate-400" />
+                                  <input 
+                                    type="text"
+                                    placeholder="Buscar producto..."
+                                    value={billingSearchQuery}
+                                    onChange={(e) => setBillingSearchQuery(e.target.value)}
+                                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-brand-primary"
+                                  />
+                                </div>
+
+                                <div className="flex bg-slate-50 dark:bg-slate-900 p-0.5 rounded-lg gap-0.5">
+                                  {[
+                                    { id: 'all', label: 'Todos' },
+                                    { id: 'soft', label: 'Software' },
+                                    { id: 'hard', label: 'Equipos' }
+                                  ].map(cat => (
+                                    <button
+                                      key={cat.id}
+                                      type="button"
+                                      onClick={() => setBillingCategory(cat.id)}
+                                      className={`flex-1 py-1 text-[8.5px] font-black rounded transition-all cursor-pointer ${
+                                        billingCategory === cat.id
+                                          ? 'bg-white dark:bg-slate-800 text-slate-800 dark:text-white shadow-sm'
+                                          : 'text-slate-450 hover:text-slate-700'
+                                      }`}
+                                    >
+                                      {cat.label}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Products List */}
+                              <div className="space-y-3">
+                                {(() => {
+                                  const products = [
+                                    {
+                                      id: 1,
+                                      name: 'Facturación Electrónica Pro',
+                                      price: 'S/ 150.00',
+                                      category: 'soft',
+                                      description: 'Sistema ERP completo de facturación electrónica. Emite boletas, facturas y notas de crédito homologado por la SUNAT.',
+                                      image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=120&auto=format&fit=crop&q=60',
+                                      originalImage: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c'
+                                    },
+                                    {
+                                      id: 2,
+                                      name: 'Ticketera Térmica Bluetooth 58mm',
+                                      price: 'S/ 120.00',
+                                      category: 'hard',
+                                      description: 'Impresora térmica de tickets de alta velocidad. Conectividad Bluetooth y USB, ideal para emitir boletas de venta rápidas.',
+                                      image: 'https://images.unsplash.com/photo-1616083778396-75a4a90d05ee?w=120&auto=format&fit=crop&q=60',
+                                      originalImage: 'https://images.unsplash.com/photo-1616083778396-75a4a90d05ee'
+                                    },
+                                    {
+                                      id: 3,
+                                      name: 'Lector de Código de Barras Láser',
+                                      price: 'S/ 180.00',
+                                      category: 'hard',
+                                      description: 'Escáner de mano ergonómico con conexión USB plug & play. Lectura rápida y precisa de códigos UPC, EAN y 1D.',
+                                      image: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=120&auto=format&fit=crop&q=60',
+                                      originalImage: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7'
+                                    },
+                                    {
+                                      id: 4,
+                                      name: 'Kit Comercial Facturación',
+                                      price: 'S/ 450.00',
+                                      category: 'hard',
+                                      description: 'Combo premium: Ticketera térmica + Lector láser + Licencia de Facturación Electrónica por 6 meses.',
+                                      image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=120&auto=format&fit=crop&q=60',
+                                      originalImage: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d'
+                                    }
+                                  ];
+
+                                  const filtered = products
+                                    .filter(p => billingCategory === 'all' || p.category === billingCategory)
+                                    .filter(p => !billingSearchQuery.trim() || p.name.toLowerCase().includes(billingSearchQuery.toLowerCase()));
+
+                                  if (filtered.length === 0) {
+                                    return <div className="text-center py-8 text-xs text-slate-400 italic">No se encontraron productos.</div>;
+                                  }
+
+                                  return filtered.map(prod => (
+                                    <div key={prod.id} className="bg-slate-50/50 dark:bg-slate-900/40 border border-slate-150 dark:border-slate-800 rounded-2xl p-3 space-y-2.5 hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-150">
+                                      <div className="flex items-start gap-3">
+                                        <img 
+                                          src={prod.image} 
+                                          alt={prod.name} 
+                                          className="w-12 h-12 rounded-xl object-cover border border-slate-200/40 dark:border-slate-800 flex-shrink-0"
+                                        />
+                                        <div className="flex-1 min-w-0 text-left">
+                                          <h6 className="text-[11px] font-bold text-slate-800 dark:text-white truncate leading-tight">{prod.name}</h6>
+                                          <span className="inline-block mt-0.5 px-2 py-0.2 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 text-[9.5px] font-black rounded-lg">
+                                            {prod.price}
+                                          </span>
+                                          <p className="text-[9.5px] text-slate-400 dark:text-slate-500 mt-1 line-clamp-2 leading-relaxed pr-1 font-medium">{prod.description}</p>
+                                        </div>
+                                      </div>
+
+                                      <div className="flex gap-2 pt-1 border-t border-slate-100/50 dark:border-slate-850">
+                                        <button
+                                          type="button"
+                                          onClick={() => handleSendProductToChat(prod)}
+                                          className="flex-1 py-1.5 bg-brand-500 hover:bg-brand-secondary text-white font-bold text-[9px] rounded-xl flex items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer shadow-sm shadow-brand-500/10"
+                                        >
+                                          <Send size={9.5} />
+                                          <span>Enviar Ficha</span>
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleSendQuoteToChat(prod)}
+                                          className="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-[9px] rounded-xl flex items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer"
+                                        >
+                                          <FileText size={9.5} />
+                                          <span>Cotizar</span>
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ));
+                                })()}
+                              </div>
+                            </div>
                           </div>
                         )}
 
