@@ -4489,19 +4489,27 @@ echo $response;`;
                             {/* List of notes */}
                             <div className="flex-1 overflow-y-auto space-y-3.5 py-4 pr-1 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800 scrollbar-track-transparent">
                               {clientNotes.length > 0 ? (
-                                clientNotes.map((note: any) => {
+                                clientNotes.map((note: any, idx: number) => {
+                                  const noteColors = [
+                                    { bg: 'bg-emerald-50 dark:bg-emerald-950/30', hover: 'hover:bg-emerald-100/70 dark:hover:bg-emerald-950/50', avatar: 'bg-emerald-200 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300', text: 'text-emerald-600/70 dark:text-emerald-400/70' },
+                                    { bg: 'bg-blue-50 dark:bg-blue-950/30', hover: 'hover:bg-blue-100/70 dark:hover:bg-blue-950/50', avatar: 'bg-blue-200 dark:bg-blue-900 text-blue-700 dark:text-blue-300', text: 'text-blue-600/70 dark:text-blue-400/70' },
+                                    { bg: 'bg-violet-50 dark:bg-violet-950/30', hover: 'hover:bg-violet-100/70 dark:hover:bg-violet-950/50', avatar: 'bg-violet-200 dark:bg-violet-900 text-violet-700 dark:text-violet-300', text: 'text-violet-600/70 dark:text-violet-400/70' },
+                                    { bg: 'bg-amber-50 dark:bg-amber-950/30', hover: 'hover:bg-amber-100/70 dark:hover:bg-amber-950/50', avatar: 'bg-amber-200 dark:bg-amber-900 text-amber-700 dark:text-amber-300', text: 'text-amber-600/70 dark:text-amber-400/70' },
+                                    { bg: 'bg-rose-50 dark:bg-rose-950/30', hover: 'hover:bg-rose-100/70 dark:hover:bg-rose-950/50', avatar: 'bg-rose-200 dark:bg-rose-900 text-rose-700 dark:text-rose-300', text: 'text-rose-600/70 dark:text-rose-400/70' },
+                                  ];
+                                  const color = noteColors[idx % noteColors.length];
                                   return (
                                     <div 
                                       key={note.id} 
-                                      className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800/50 text-left space-y-2.5 hover:bg-slate-100/50 dark:hover:bg-slate-850/50 transition-all duration-200"
+                                      className={`${color.bg} ${color.hover} p-3.5 rounded-2xl text-left space-y-2.5 transition-all duration-200`}
                                     >
                                       <p className="text-[10.5px] text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line font-medium pr-5">
                                         {note.content}
                                       </p>
                                       
-                                      <div className="flex items-center justify-between text-[8px] font-bold text-slate-400 dark:text-slate-500">
+                                      <div className={`flex items-center justify-between text-[8px] font-bold ${color.text}`}>
                                         <span className="flex items-center gap-1.5">
-                                          <span className="w-4 h-4 rounded-full bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[8px] font-extrabold flex items-center justify-center">
+                                          <span className={`w-4 h-4 rounded-full ${color.avatar} text-[8px] font-extrabold flex items-center justify-center`}>
                                             {note.agent_name?.charAt(0).toUpperCase() || 'A'}
                                           </span>
                                           <span className="max-w-[100px] truncate">{note.agent_name || 'Asesor'}</span>
