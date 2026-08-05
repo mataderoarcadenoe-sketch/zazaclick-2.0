@@ -2126,24 +2126,26 @@ export default function DashboardPage() {
       showNotification('Selecciona una conversación activa para enviar el producto.', 'error');
       return;
     }
-    const messageText = `📦 *${product.name}*
+    const captionText = `📦 *${product.name}*
 💵 *Precio*: ${product.price}
 
-📝 *Detalles*: ${product.description}
-
-🔗 *Imagen de referencia*: ${product.originalImage}`;
+📝 *Detalles*: ${product.description}`;
 
     try {
-      const res = await api.post(`/instances/chats/${selectedInstanceForChats}/send`, {
+      const res = await api.post(`/instances/chats/${selectedInstanceForChats}/send-media`, {
         remoteJid: selectedChat.remoteJid,
-        text: messageText
+        media: product.originalImage,
+        mediatype: 'image',
+        mimetype: 'image/jpeg',
+        caption: captionText,
+        fileName: `${product.name.replace(/[^a-zA-Z0-9]/g, '_')}.jpg`
       });
       if (res.data?.success) {
-        showNotification('Ficha del producto enviada al chat.', 'success');
+        showNotification('Ficha de producto enviada con imagen.', 'success');
         await fetchMessages(true);
       }
     } catch (err: any) {
-      showNotification('Error al enviar el producto.', 'error');
+      showNotification('Error al enviar el producto con imagen.', 'error');
     }
   };
 
@@ -5156,37 +5158,40 @@ echo $response;`;
                                   }
 
                                   return filtered.map(prod => (
-                                    <div key={prod.id} className="bg-slate-50/50 dark:bg-slate-900/40 border border-slate-150 dark:border-slate-800 rounded-2xl p-3 space-y-2.5 hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-150">
-                                      <div className="flex items-start gap-3">
+                                    <div key={prod.id} className="bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl p-3.5 space-y-3 hover:-translate-y-0.5 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-200">
+                                      <div className="flex items-start gap-3.5">
                                         <img 
                                           src={prod.image} 
                                           alt={prod.name} 
-                                          className="w-12 h-12 rounded-xl object-cover border border-slate-200/40 dark:border-slate-800 flex-shrink-0"
+                                          onError={(e) => {
+                                            e.currentTarget.src = 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=100';
+                                          }}
+                                          className="w-14 h-14 rounded-xl object-cover border border-slate-200/50 dark:border-slate-800 flex-shrink-0 shadow-sm"
                                         />
                                         <div className="flex-1 min-w-0 text-left">
-                                          <h6 className="text-[11px] font-bold text-slate-800 dark:text-white truncate leading-tight">{prod.name}</h6>
-                                          <span className="inline-block mt-0.5 px-2 py-0.2 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 text-[9.5px] font-black rounded-lg">
+                                          <h6 className="text-[11.5px] font-black text-slate-800 dark:text-white truncate leading-tight tracking-wide">{prod.name}</h6>
+                                          <span className="inline-block mt-1 px-2.5 py-0.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 text-[9.5px] font-black rounded-lg border border-emerald-500/10">
                                             {prod.price}
                                           </span>
-                                          <p className="text-[9.5px] text-slate-400 dark:text-slate-500 mt-1 line-clamp-2 leading-relaxed pr-1 font-medium">{prod.description}</p>
+                                          <p className="text-[9.5px] text-slate-400 dark:text-slate-500 mt-1.5 line-clamp-2 leading-relaxed pr-1 font-medium">{prod.description}</p>
                                         </div>
                                       </div>
 
-                                      <div className="flex gap-2 pt-1 border-t border-slate-100/50 dark:border-slate-850">
+                                      <div className="flex gap-2 pt-2 border-t border-slate-100/65 dark:border-slate-800/50">
                                         <button
                                           type="button"
                                           onClick={() => handleSendProductToChat(prod)}
-                                          className="flex-1 py-1.5 bg-brand-500 hover:bg-brand-secondary text-white font-bold text-[9px] rounded-xl flex items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer shadow-sm shadow-brand-500/10"
+                                          className="flex-1 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black text-[9px] uppercase rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer shadow-sm shadow-emerald-500/10"
                                         >
-                                          <Send size={9.5} />
+                                          <Send size={9} className="stroke-[2.5]" />
                                           <span>Enviar Ficha</span>
                                         </button>
                                         <button
                                           type="button"
                                           onClick={() => handleSendQuoteToChat(prod)}
-                                          className="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-[9px] rounded-xl flex items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer"
+                                          className="flex-1 py-2 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/20 dark:hover:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-200/20 dark:border-indigo-800/35 font-black text-[9px] uppercase rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
                                         >
-                                          <FileText size={9.5} />
+                                          <FileText size={9} className="stroke-[2.5]" />
                                           <span>Cotizar</span>
                                         </button>
                                       </div>
