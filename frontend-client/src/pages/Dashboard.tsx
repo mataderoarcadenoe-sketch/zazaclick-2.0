@@ -324,6 +324,7 @@ export default function DashboardPage() {
   const [taskDatePickerId, setTaskDatePickerId] = useState<number | null>(null);
   const [datePickerYearTask, setDatePickerYearTask] = useState(new Date().getFullYear());
   const [datePickerMonthTask, setDatePickerMonthTask] = useState(new Date().getMonth());
+  const [selectedBirthdayMonth, setSelectedBirthdayMonth] = useState(new Date().getMonth());
   const [showMoreCrmFields, setShowMoreCrmFields] = useState(false);
   
   // CRM Form States
@@ -1746,11 +1747,14 @@ export default function DashboardPage() {
     
     const isToday = birthdayDate.getDate() === today.getDate() && birthdayDate.getMonth() === today.getMonth();
     
+    const age = today.getFullYear() - birthdayDate.getFullYear();
+    
     return {
       date: birthdayDate,
       nextDate: nextBirthday,
       daysRemaining: isToday ? 0 : diffDays,
-      isToday
+      isToday,
+      age
     };
   };
 
@@ -6300,12 +6304,14 @@ echo $response;`;
                   ...c,
                   bInfo: getBirthdayInfo(c)
                 }))
-                .filter((c: any) => c.bInfo !== null)
-                .sort((a: any, b: any) => a.bInfo.daysRemaining - b.bInfo.daysRemaining);
+                .filter((c: any) => c.bInfo !== null);
 
-              const bToday = clientsWithBirthdays.filter(c => c.bInfo.isToday);
-              
-              
+              const monthClients = clientsWithBirthdays
+                .filter((c: any) => c.bInfo.date.getMonth() === selectedBirthdayMonth)
+                .sort((a: any, b: any) => a.bInfo.date.getDate() - b.bInfo.date.getDate());
+
+              const countForMonth = monthClients.length;
+
               return (
                 <div className="space-y-6 animate-fadeIn text-left">
                   <div className="space-y-0.5">
@@ -6313,126 +6319,133 @@ echo $response;`;
                     <p className="text-xs text-surface-400">Seguimiento de cumpleaños de tus contactos del CRM para fortalecer relaciones comerciales.</p>
                   </div>
 
-                  {/* Cumpleaños de hoy banner */}
-                  {bToday.length > 0 && (
-                    <div className="bg-gradient-to-r from-pink-500 to-rose-500 rounded-3xl p-5 sm:p-6 text-white relative overflow-hidden shadow-premium-lg shadow-pink-500/10">
-                      <div className="absolute right-[-5%] top-[-20%] w-48 h-48 bg-white/10 rounded-full blur-2xl" />
-                      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex items-start gap-4">
-                          <span className="text-3xl sm:text-4xl">🎉</span>
-                          <div className="space-y-1">
-                            <h4 className="text-sm sm:text-base font-extrabold uppercase tracking-wider">¡Hoy cumple años un cliente!</h4>
-                            <p className="text-xs text-white/90 max-w-xl">
-                              Envía un saludo personalizado por WhatsApp a <strong>{bToday.map(c => c.name).join(', ')}</strong> y demuéstrale la excelencia de tu atención.
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex gap-2.5">
-                          {bToday.map(c => (
-                            <button
-                              key={c.id}
-                              onClick={() => handleWishBirthday(c)}
-                              className="px-4.5 py-2.5 bg-white text-rose-600 hover:bg-slate-50 active:scale-[0.98] text-xs font-extrabold rounded-2xl shadow-sm transition-all cursor-pointer flex items-center gap-2"
-                            >
-                              <span>Felicitar a {c.name.split(' ')[0]}</span>
-                              <span>🎂</span>
-                            </button>
-                          ))}
-                        </div>
+                  {/* Filtros y Contadores */}
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3.5 bg-slate-50 dark:bg-slate-900/60 p-4 rounded-3xl border border-slate-200/50 dark:border-slate-800/80">
+                    <div className="relative">
+                      <select
+                        value={selectedBirthdayMonth}
+                        onChange={(e) => setSelectedBirthdayMonth(parseInt(e.target.value))}
+                        className="appearance-none bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-4 py-2 pr-9 rounded-2xl text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-brand-primary cursor-pointer w-44"
+                      >
+                        {['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'].map((m, idx) => (
+                          <option key={m} value={idx}>{m}</option>
+                        ))}
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
+                        <ChevronDown size={14} />
                       </div>
                     </div>
-                  )}
+                    <span className="text-xs font-extrabold text-slate-500 dark:text-slate-400">
+                      {countForMonth} {countForMonth === 1 ? 'cumpleaños' : 'cumpleaños'} en {['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][selectedBirthdayMonth]}
+                    </span>
+                  </div>
 
                   {crmClientsLoading ? (
                     <div className="flex flex-col items-center justify-center py-12 gap-3">
                       <RefreshCw size={24} className="animate-spin text-brand-primary" />
                       <span className="text-xs text-surface-400 font-bold uppercase">Cargando cumpleaños...</span>
                     </div>
-                  ) : clientsWithBirthdays.length === 0 ? (
+                  ) : monthClients.length === 0 ? (
                     <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 p-8 rounded-3xl text-center space-y-3">
                       <Gift className="mx-auto w-10 h-10 text-slate-400 dark:text-slate-600" />
                       <h4 className="text-sm font-bold text-slate-800 dark:text-white">No hay cumpleaños registrados</h4>
-                      <p className="text-xs text-surface-400 max-w-sm mx-auto">Edita las fichas de tus clientes en el CRM y añade sus fechas de nacimiento para verlos organizados aquí.</p>
+                      <p className="text-xs text-surface-400 max-w-sm mx-auto">No se encontraron cumpleaños registrados para este mes.</p>
                     </div>
                   ) : (
-                    <div className="space-y-5">
-                      {/* Upcoming lists */}
-                      <div className="bg-white dark:bg-slate-900/60 rounded-3xl border border-slate-200/50 dark:border-slate-800/80 p-4 sm:p-5 space-y-4">
-                        <h4 className="text-xs font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">Cronograma de Cumpleaños</h4>
-                        <div className="divide-y divide-slate-100 dark:divide-slate-800/50">
-                          {clientsWithBirthdays.map((client) => {
-                            const isToday = client.bInfo.isToday;
-                            const daysRemaining = client.bInfo.daysRemaining;
-                            
-                            return (
-                              <div key={client.id} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 first:pt-0 last:pb-0">
-                                <div className="flex items-center gap-3">
-                                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-xs flex-shrink-0 ${
-                                    isToday 
-                                      ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20 animate-pulse'
-                                      : daysRemaining <= 7
-                                        ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
-                                        : 'bg-slate-50 dark:bg-slate-950 text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-800'
-                                  }`}>
-                                    {isToday ? '🎂' : new Date(client.birthday).getDate()}
-                                  </div>
-                                  
-                                  <div className="space-y-0.5 text-left">
-                                    <h5 className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
-                                      <span>{client.name}</span>
-                                      {isToday && (
-                                        <span className="px-2 py-0.5 bg-rose-500/10 text-rose-500 text-[8px] font-extrabold rounded-full border border-rose-500/10 uppercase tracking-widest">
-                                          Hoy
-                                        </span>
-                                      )}
-                                    </h5>
-                                    <div className="flex flex-wrap gap-x-2.5 gap-y-0.5 text-[10px] text-surface-400 font-medium">
-                                      {client.phone_number && <span>Tel: +{client.phone_number}</span>}
-                                      {client.email && <span>Email: {client.email}</span>}
-                                    </div>
-                                  </div>
-                                </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {monthClients.map((client: any) => {
+                        const isToday = client.bInfo.isToday;
+                        const birthDay = client.bInfo.date.getDate();
+                        const birthMonthAbbr = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'][client.bInfo.date.getMonth()];
+                        const age = client.bInfo.age;
+                        const formattedDayMonth = `${birthDay} de ${['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'][client.bInfo.date.getMonth()]}`;
 
-                                <div className="flex items-center justify-between sm:justify-end gap-4">
-                                  <div className="text-right space-y-0.5">
-                                    <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold block">
-                                      {formatBirthdayString(client.birthday)}
-                                    </span>
-                                    <span className={`text-[9px] font-bold block ${
-                                      isToday 
-                                        ? 'text-rose-500' 
-                                        : daysRemaining <= 7
-                                          ? 'text-amber-500'
-                                          : 'text-surface-400'
-                                    }`}>
-                                      {isToday 
-                                        ? '¡Hoy es su día!' 
-                                        : daysRemaining === 1 
-                                          ? 'Mañana' 
-                                          : `En ${daysRemaining} días`}
-                                    </span>
-                                  </div>
-
-                                  <button
-                                    onClick={() => handleWishBirthday(client)}
-                                    className="px-3.5 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 active:scale-[0.98] text-emerald-700 dark:text-emerald-400 text-[10px] font-extrabold rounded-xl transition-all cursor-pointer flex items-center gap-1"
-                                    title="Felicitar por WhatsApp"
-                                  >
-                                    <span>Felicitar</span>
-                                    <span>🎂</span>
-                                  </button>
-                                </div>
+                        return (
+                          <div 
+                            key={client.id}
+                            className={`p-4 rounded-3xl border flex items-center justify-between shadow-sm relative overflow-hidden transition-all duration-200 hover:scale-[1.01] hover:shadow-md ${
+                              isToday 
+                                ? 'bg-pink-50/40 dark:bg-pink-950/10 border-pink-200 dark:border-pink-900/60 shadow-pink-500/5'
+                                : 'bg-white dark:bg-slate-900 border-slate-200/50 dark:border-slate-800/80'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3.5 flex-1 min-w-0">
+                              {/* Left Date Badge */}
+                              <div className={`w-12 h-12 rounded-2xl flex flex-col items-center justify-center font-black flex-shrink-0 text-center select-none ${
+                                isToday 
+                                  ? 'bg-gradient-to-br from-pink-500 to-rose-500 text-white shadow-md shadow-pink-500/10'
+                                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-350'
+                              }`}>
+                                <span className="text-[13px] leading-none">{birthDay}</span>
+                                <span className="text-[8px] tracking-wider mt-0.5 opacity-80">{birthMonthAbbr}</span>
                               </div>
-                            );
-                          })}
-                        </div>
-                      </div>
+
+                              {/* Details */}
+                              <div className="flex-1 min-w-0 space-y-0.5 text-left">
+                                <h5 className="text-[11.5px] font-black text-slate-850 dark:text-white uppercase truncate flex items-center gap-1.5">
+                                  <span>{client.name}</span>
+                                  {isToday && (
+                                    <span className="px-1.5 py-0.5 bg-pink-100 dark:bg-pink-950/60 text-pink-700 dark:text-pink-400 text-[7.5px] font-black rounded uppercase tracking-wider">
+                                      Hoy 🎁
+                                    </span>
+                                  )}
+                                </h5>
+                                
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded ${
+                                    isToday 
+                                      ? 'bg-pink-100/50 dark:bg-pink-950/30 text-pink-700 dark:text-pink-400'
+                                      : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                                  }`}>
+                                    {age} años
+                                  </span>
+                                  <span className={`text-[9.5px] font-bold ${
+                                    isToday 
+                                      ? 'text-pink-600 dark:text-pink-400'
+                                      : 'text-slate-400 dark:text-slate-500'
+                                  }`}>
+                                    • {formattedDayMonth}
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center gap-1 text-[9px] text-slate-400 dark:text-slate-500 font-bold">
+                                  <Phone size={9} />
+                                  <span>{client.phone_number || 'Sin teléfono'}</span>
+                                </div>
+
+                                {isToday && (
+                                  <div className="flex items-center gap-1 text-[9px] text-pink-600 dark:text-pink-400 font-black mt-0.5">
+                                    <span>🎁 ¡Cumpleaños hoy!</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Right Action */}
+                            <div className="ml-2">
+                              {isToday ? (
+                                <button
+                                  type="button"
+                                  onClick={() => handleWishBirthday(client)}
+                                  className="w-9 h-9 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-500 text-white flex items-center justify-center shadow-lg shadow-pink-500/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                                  title="Felicitar por WhatsApp"
+                                >
+                                  <Send size={13} className="ml-[1px] mt-[-0.5px]" />
+                                </button>
+                              ) : (
+                                <div className="w-7 h-7 flex items-center justify-center text-slate-200 dark:text-slate-800/60 select-none">
+                                  <Sparkles size={13} />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
               );
             })()}
-
             {/* SUPER ADMIN OVERVIEW SECTION */}
             {activeTab === 'admin_overview' && (
               <div className="space-y-6 animate-fadeIn text-left">
