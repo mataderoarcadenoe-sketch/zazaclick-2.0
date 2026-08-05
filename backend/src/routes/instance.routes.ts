@@ -318,12 +318,16 @@ router.post('/send', async (req, res) => {
     }
 
     // Enviar el mensaje
-    const sent = await EvolutionService.sendTextMessage(instanceName, number, text);
+    const sentResult = await EvolutionService.sendTextMessage(instanceName, number, text);
 
-    if (sent) {
+    if (sentResult.success) {
       return res.json({ success: true, message: 'Mensaje enviado exitosamente.' });
     }
-    res.status(500).json({ success: false, error: 'Error en el servidor al enviar el mensaje de WhatsApp.' });
+    res.status(555).json({ 
+      success: false, 
+      error: `Error en el servidor al enviar el mensaje de WhatsApp: ${sentResult.error || ''}`,
+      details: sentResult.details
+    });
 
   } catch (error: any) {
     console.error('[Instance] Error en POST /send:', error.message);
@@ -484,12 +488,15 @@ router.post('/chats/:instanceName/send', authMiddleware, async (req: Authenticat
     }
 
     const number = remoteJid.split('@')[0];
-
-    const sent = await EvolutionService.sendTextMessage(instanceName, number, text);
-    if (sent) {
+    const sentResult = await EvolutionService.sendTextMessage(instanceName, number, text);
+    if (sentResult.success) {
       return res.json({ success: true, message: 'Mensaje enviado exitosamente.' });
     }
-    res.status(500).json({ success: false, error: 'Error en el servidor al enviar el mensaje.' });
+    res.status(500).json({ 
+      success: false, 
+      error: `Error en el servidor al enviar el mensaje: ${sentResult.error || ''}`,
+      details: sentResult.details
+    });
   } catch (error: any) {
     console.error('[Instance] Error en POST /chats/send:', error.message);
     res.status(500).json({ success: false, error: 'Error interno en el servidor.' });

@@ -193,7 +193,7 @@ export class EvolutionService {
   /**
    * Enviar un mensaje de texto a través de una instancia específica
    */
-  public static async sendTextMessage(instanceName: string, number: string, text: string): Promise<boolean> {
+  public static async sendTextMessage(instanceName: string, number: string, text: string): Promise<any> {
     try {
       let cleanNumber = number.replace(/\D/g, '');
       if (cleanNumber.length === 9 && cleanNumber.startsWith('9')) {
@@ -203,10 +203,14 @@ export class EvolutionService {
         number: cleanNumber,
         text: text,
       });
-      return response.status === 200 || response.status === 201;
+      return { success: response.status === 200 || response.status === 201 };
     } catch (err: any) {
-      console.error(`[EvolutionService] Error enviando mensaje a ${number}:`, err.message);
-      return false;
+      console.error(`[EvolutionService] Error enviando mensaje a ${number}:`, err.message, err.response?.data);
+      return { 
+        success: false, 
+        error: err.message, 
+        details: err.response?.data 
+      };
     }
   }
 
