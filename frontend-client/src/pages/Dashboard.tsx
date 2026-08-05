@@ -3294,12 +3294,12 @@ echo $response;`;
                                 </div>
                                 
                                 {/* Contact Info */}
-                                <div className="flex flex-col justify-center">
-                                  <div className="flex items-center gap-2.5">
-                                    <h4 className="text-[13px] font-extrabold text-slate-800 dark:text-white uppercase tracking-tight">
-                                      {crmContactMap[selectedChat.remoteJid.split('@')[0].split(':')[0]] || selectedChat.pushName || selectedChat.remoteJid.split('@')[0].split(':')[0]}
-                                    </h4>
-
+                                <div className="flex flex-col justify-center text-left">
+                                  <h4 className="text-[13px] font-extrabold text-slate-800 dark:text-white uppercase tracking-tight">
+                                    {crmContactMap[selectedChat.remoteJid.split('@')[0].split(':')[0]] || selectedChat.pushName || selectedChat.remoteJid.split('@')[0].split(':')[0]}
+                                  </h4>
+                                  
+                                  <div className="flex flex-wrap items-center gap-2 mt-1.5">
                                     {crmContact?.tags && crmContact.tags.map((tag: string) => {
                                       let colorClass = "bg-slate-500 text-white shadow-sm";
                                       if (tag === 'VIP') colorClass = "bg-amber-500 text-white shadow-sm";
@@ -3310,7 +3310,7 @@ echo $response;`;
                                       else if (tag === 'Pagó') colorClass = "bg-teal-500 text-white shadow-sm";
                                       
                                       return (
-                                        <span key={tag} className={`px-2 py-0.5 text-[9px] font-bold rounded-full transition-all duration-300 transform hover:scale-105 ${colorClass}`}>
+                                        <span key={tag} className={`px-2 py-0.5 text-[8.5px] font-bold rounded-full transition-all duration-300 transform hover:scale-105 ${colorClass}`}>
                                           {tag}
                                         </span>
                                       );
@@ -3323,7 +3323,7 @@ echo $response;`;
                                       if (!assignedAgent) return null;
                                       return (
                                         <span className="px-2 py-0.5 text-[9px] font-bold rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
-                                          <span className="w-1 h-1 rounded-full bg-indigo-500" />
+                                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
                                           <span>Asignado: {assignedAgent.name}</span>
                                         </span>
                                       );
