@@ -10,6 +10,37 @@ router.use(authMiddleware);
 // Token por defecto provisto por el usuario
 const APIPERU_TOKEN = process.env.APIPERU_TOKEN || '76ca7246c8a8c464fd551b6555e780791a69ff89acb8887558d65b23f05ab81b';
 
+// Helper to resolve LID to real phone number using Evolution API Connection
+async function getRealPhoneIfNeeded(userId: string | undefined, phone: string): Promise<string> {
+  const cleanPhone = phone.split('@')[0].split(':')[0];
+  if (!userId) return cleanPhone;
+  const isLid = cleanPhone.startsWith('1000') && cleanPhone.length >= 13;
+  if (isLid) {
+    try {
+      const userCheck = await pool.query("SELECT parent_id FROM users WHERE id = $1", [userId]);
+      const parentId = userCheck.rows[0]?.parent_id || userId;
+      const instRes = await pool.query(
+        "SELECT instance_name FROM instances WHERE user_id = $1 LIMIT 1",
+        [parentId]
+      );
+      if (instRes.rows.length > 0) {
+        const instanceName = instRes.rows[0].instance_name;
+        const { EvolutionService } = require('../services/evolution.service');
+        const resolvedJid = await EvolutionService.resolveLidToPhone(instanceName, cleanPhone + '@lid');
+        if (resolvedJid && resolvedJid.endsWith('@s.whatsapp.net')) {
+          const resolvedPhone = resolvedJid.split('@')[0];
+          console.log(`[CRM Routes] Resolved LID ${cleanPhone} to real phone ${resolvedPhone}`);
+          return resolvedPhone;
+        }
+      }
+    } catch (err: any) {
+      console.warn(`[CRM Routes] Error resolving LID ${phone}:`, err.message);
+    }
+  }
+  return cleanPhone;
+}
+
+
 /**
  * GET /api/crm/categories - Listar categorías de contacto
  */
@@ -306,16 +337,34 @@ router.get('/contacts/:phoneNumber', async (req: AuthenticatedRequest, res: Resp
   const cleanPhone = phoneNumber.split(':')[0];
 
   try {
-    // Buscar contacto activo
+    const resolvedPhone = await getRealPhoneIfNeeded(req.userId, cleanPhone);
+
+    // Buscar contacto activo (con fallback para LID o real)
     const contactRes = await pool.query(
       `SELECT c.*, cat.name as category_name 
        FROM crm_contacts c 
        LEFT JOIN crm_contact_categories cat ON c.category_id = cat.id 
-       WHERE c.user_id = $1 AND c.phone_number = $2`,
-      [req.userId, cleanPhone]
+       WHERE c.user_id = $1 AND (c.phone_number = $2 OR c.phone_number = $3)`,
+      [req.userId, cleanPhone, resolvedPhone]
     );
 
-    if (contactRes.rows.length === 0) {
+    if (contactRes.rows.length > 0) {
+      const contact = contactRes.rows[0];
+      // Auto-actualizar LID a número real en DB si cambió
+      if (contact.phone_number.startsWith('1000') && resolvedPhone && resolvedPhone !== contact.phone_number) {
+        try {
+          await pool.query(
+            'UPDATE crm_contacts SET phone_number = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+            [resolvedPhone, contact.id]
+          );
+          contact.phone_number = resolvedPhone;
+          console.log(`[CRM GET Contact] Auto-updated contact ID ${contact.id} from LID ${cleanPhone} to real number ${resolvedPhone}`);
+        } catch (err: any) {
+          console.warn(`[CRM GET Contact] Error auto-updating LID:`, err.message);
+        }
+      }
+    }
+if (contactRes.rows.length === 0) {
       return res.json({ success: true, contact: null, client: null });
     }
 
@@ -368,6 +417,7 @@ router.post('/link-doc', async (req: AuthenticatedRequest, res: Response) => {
   }
 
   try {
+    const resolvedPhone = await getRealPhoneIfNeeded(req.userId, phone_number);
     // 1. Verificar si el DNI/RUC ya existe para este user_id
     const clientCheck = await pool.query(
       'SELECT id, name FROM crm_clients WHERE user_id = $1 AND doc_type = $2 AND doc_number = $3',
@@ -411,10 +461,11 @@ router.post('/link-doc', async (req: AuthenticatedRequest, res: Response) => {
 
         await pool.query(
           `INSERT INTO crm_contacts (client_id, user_id, phone_number, category_id, is_active) 
-           VALUES ($1, $2, $3, $4, true) 
-           ON CONFLICT (user_id, phone_number) 
-           DO UPDATE SET client_id = $1, category_id = $4, is_active = true, updated_at = CURRENT_TIMESTAMP`,
-          [clientId, req.userId, phone_number, primCatId]
+            VALUES ($1, $2, $3, $4, true) 
+            ON CONFLICT (user_id, phone_number) 
+            DO UPDATE SET client_id = $1, category_id = $4, is_active = true, updated_at = CURRENT_TIMESTAMP` 
+          , 
+          [clientId, req.userId, resolvedPhone, primCatId]
         );
 
       } else if (mergeAction === 'deactivate') {
@@ -432,20 +483,22 @@ router.post('/link-doc', async (req: AuthenticatedRequest, res: Response) => {
 
         await pool.query(
           `INSERT INTO crm_contacts (client_id, user_id, phone_number, category_id, is_active) 
-           VALUES ($1, $2, $3, $4, true) 
-           ON CONFLICT (user_id, phone_number) 
-           DO UPDATE SET client_id = $1, category_id = $4, is_active = true, updated_at = CURRENT_TIMESTAMP`,
-          [clientId, req.userId, phone_number, primCatId]
+            VALUES ($1, $2, $3, $4, true) 
+            ON CONFLICT (user_id, phone_number) 
+            DO UPDATE SET client_id = $1, category_id = $4, is_active = true, updated_at = CURRENT_TIMESTAMP` 
+          , 
+          [clientId, req.userId, resolvedPhone, primCatId]
         );
 
       } else {
         // Opción 2 ('keep'): Simplemente vincular este número con la categoría seleccionada
         await pool.query(
           `INSERT INTO crm_contacts (client_id, user_id, phone_number, category_id, is_active) 
-           VALUES ($1, $2, $3, $4, true) 
-           ON CONFLICT (user_id, phone_number) 
-           DO UPDATE SET client_id = $1, category_id = $4, is_active = true, updated_at = CURRENT_TIMESTAMP`,
-          [clientId, req.userId, phone_number, categoryId || null]
+            VALUES ($1, $2, $3, $4, true) 
+            ON CONFLICT (user_id, phone_number) 
+            DO UPDATE SET client_id = $1, category_id = $4, is_active = true, updated_at = CURRENT_TIMESTAMP` 
+          , 
+          [clientId, req.userId, resolvedPhone, categoryId || null]
         );
       }
 
@@ -469,10 +522,11 @@ router.post('/link-doc', async (req: AuthenticatedRequest, res: Response) => {
 
       await pool.query(
         `INSERT INTO crm_contacts (client_id, user_id, phone_number, category_id, is_active) 
-         VALUES ($1, $2, $3, $4, true) 
-         ON CONFLICT (user_id, phone_number) 
-         DO UPDATE SET client_id = $1, category_id = $4, is_active = true, updated_at = CURRENT_TIMESTAMP`,
-        [clientId, req.userId, phone_number, finalCatId]
+            VALUES ($1, $2, $3, $4, true) 
+            ON CONFLICT (user_id, phone_number) 
+            DO UPDATE SET client_id = $1, category_id = $4, is_active = true, updated_at = CURRENT_TIMESTAMP` 
+          , 
+          [clientId, req.userId, resolvedPhone, finalCatId]
       );
     }
 
@@ -481,8 +535,9 @@ router.post('/link-doc', async (req: AuthenticatedRequest, res: Response) => {
       `SELECT c.*, cat.name as category_name 
        FROM crm_contacts c 
        LEFT JOIN crm_contact_categories cat ON c.category_id = cat.id 
-       WHERE c.user_id = $1 AND c.phone_number = $2`,
-      [req.userId, phone_number]
+       WHERE c.user_id = $1 AND c.phone_number = $2` 
+      , 
+      [req.userId, resolvedPhone]
     );
 
     const contact = contactInfo.rows[0];
@@ -514,9 +569,10 @@ router.post('/link-manual', async (req: AuthenticatedRequest, res: Response) => 
   }
 
   try {
+    const resolvedPhone = await getRealPhoneIfNeeded(req.userId, phone_number);
     const contactCheck = await pool.query(
       'SELECT client_id FROM crm_contacts WHERE user_id = $1 AND phone_number = $2',
-      [req.userId, phone_number]
+      [req.userId, resolvedPhone]
     );
 
     let clientId: number;
@@ -533,7 +589,7 @@ router.post('/link-manual', async (req: AuthenticatedRequest, res: Response) => 
       if (categoryId) {
         await pool.query(
           'UPDATE crm_contacts SET category_id = $1 WHERE user_id = $2 AND phone_number = $3',
-          [categoryId, req.userId, phone_number]
+          [categoryId, req.userId, resolvedPhone]
         );
       }
     } else {
@@ -556,8 +612,9 @@ router.post('/link-manual', async (req: AuthenticatedRequest, res: Response) => 
 
       await pool.query(
         `INSERT INTO crm_contacts (client_id, user_id, phone_number, category_id, is_active) 
-         VALUES ($1, $2, $3, $4, true)`,
-        [clientId, req.userId, phone_number, finalCatId]
+            VALUES ($1, $2, $3, $4, true)` 
+          , 
+          [clientId, req.userId, resolvedPhone, finalCatId]
       );
     }
 
@@ -566,8 +623,9 @@ router.post('/link-manual', async (req: AuthenticatedRequest, res: Response) => 
       `SELECT c.*, cat.name as category_name 
        FROM crm_contacts c 
        LEFT JOIN crm_contact_categories cat ON c.category_id = cat.id 
-       WHERE c.user_id = $1 AND c.phone_number = $2`,
-      [req.userId, phone_number]
+       WHERE c.user_id = $1 AND c.phone_number = $2` 
+      , 
+      [req.userId, resolvedPhone]
     );
 
     const contact = contactInfo.rows[0];
@@ -594,19 +652,44 @@ router.get('/clients', async (req: AuthenticatedRequest, res: Response) => {
   const { search } = req.query;
 
   try {
-    let query = 'SELECT * FROM crm_clients WHERE user_id = $1';
+    // Join the primary contact number for each client
+    let query = `
+      SELECT cl.*, 
+             co.phone_number
+      FROM crm_clients cl
+      LEFT JOIN crm_contacts co ON cl.id = co.client_id AND co.user_id = cl.user_id AND co.is_active = true
+      WHERE cl.user_id = $1
+    `;
     const params: any[] = [req.userId];
 
     if (search && (search as string).trim()) {
-      query += ' AND (doc_number ILIKE $2 OR name ILIKE $2)';
+      query += ' AND (cl.doc_number ILIKE $2 OR cl.name ILIKE $2 OR co.phone_number ILIKE $2)';
       params.push(`%${(search as string).trim()}%`);
     }
 
-    query += ' ORDER BY name ASC';
+    query += ' ORDER BY cl.name ASC';
     const result = await pool.query(query, params);
 
-    return res.json({ success: true, data: result.rows });
-  } catch (error: any) {
+    // Resolve any LIDs to real numbers and auto-update DB in the background/during execution
+    const rows = result.rows;
+    for (const row of rows) {
+      if (row.phone_number && row.phone_number.startsWith('1000') && row.phone_number.length >= 13) {
+        const resolved = await getRealPhoneIfNeeded(req.userId, row.phone_number);
+        if (resolved && resolved !== row.phone_number) {
+          try {
+            await pool.query(
+              'UPDATE crm_contacts SET phone_number = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2 AND phone_number = $3',
+              [resolved, req.userId, row.phone_number]
+            );
+            row.phone_number = resolved;
+          } catch (e: any) {
+            console.warn('[CRM GET Clients] Error auto-updating LID:', e.message);
+          }
+        }
+      }
+    }
+
+    return res.json({ success: true, data: rows });  } catch (error: any) {
     console.error('[CRM Clients] Error en GET /clients:', error.message);
     return res.status(500).json({ success: false, error: 'Error al listar clientes.' });
   }
