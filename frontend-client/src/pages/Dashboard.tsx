@@ -304,6 +304,10 @@ export default function DashboardPage() {
   const [newNoteText, setNewNoteText] = useState('');
   const [newNoteLoading, setNewNoteLoading] = useState(false);
   
+  // Agent Creation Validation States
+  const [agentDocNumber, setAgentDocNumber] = useState('');
+  const [agentValidationLoading, setAgentValidationLoading] = useState(false);
+  
   // CRM Form States
   const [crmDocType, setCrmDocType] = useState<'DNI' | 'RUC'>('DNI');
   const [crmDocNumber, setCrmDocNumber] = useState('');
@@ -454,7 +458,7 @@ export default function DashboardPage() {
             setQrBase64(null);
           }
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error al verificar vinculación:', err);
       }
     };
@@ -1276,6 +1280,7 @@ export default function DashboardPage() {
         setNewAgentName('');
         setNewAgentEmail('');
         setNewAgentPassword('');
+        setAgentDocNumber('');
         setShowCreateAgentModal(false);
         fetchTeamMembers();
       }
@@ -1590,6 +1595,27 @@ export default function DashboardPage() {
       showNotification(err.response?.data?.error || 'Documento no encontrado o error en APIPerú.', 'error');
     } finally {
       setCrmValidationLoading(false);
+    }
+  };
+
+  // Query collaborator details using APIPeru
+  const handleQueryAgentDoc = async () => {
+    if (!agentDocNumber || (agentDocNumber.length !== 8 && agentDocNumber.length !== 11)) {
+      showNotification('Ingresa un DNI de 8 dígitos o RUC de 11 dígitos.', 'error');
+      return;
+    }
+    setAgentValidationLoading(true);
+    try {
+      const res = await api.post('/crm/validate-doc', { docNumber: agentDocNumber });
+      if (res.data?.success) {
+        setNewAgentName(res.data.name);
+        showNotification('Documento consultado exitosamente con APIPerú.', 'success');
+      }
+    } catch (err: any) {
+      console.error('Error validating agent document:', err.response?.data || err.message);
+      showNotification(err.response?.data?.error || 'Documento no encontrado o error en APIPerú.', 'error');
+    } finally {
+      setAgentValidationLoading(false);
     }
   };
 
@@ -6441,6 +6467,7 @@ echo $response;`;
                 setNewAgentName('');
                 setNewAgentEmail('');
                 setNewAgentPassword('');
+                setAgentDocNumber('');
                 setAgentCreateError(null);
               }}
               className="absolute top-5 right-5 text-surface-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
@@ -6460,6 +6487,34 @@ echo $response;`;
             )}
 
             <form onSubmit={handleCreateAgent} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-widest block">Consultar DNI / RUC (Opcional)</label>
+                <div className="relative flex items-center">
+                  <input
+                    type="text"
+                    value={agentDocNumber}
+                    onChange={(e) => setAgentDocNumber(e.target.value)}
+                    placeholder="Ingresa DNI de 8 dígitos o RUC de 11"
+                    className="w-full pl-4 pr-10 py-3 bg-slate-50 dark:bg-slate-955 border border-slate-200 dark:border-slate-800/80 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-brand-primary"
+                  />
+                  {agentDocNumber.trim().length >= 8 && (
+                    <button
+                      type="button"
+                      onClick={handleQueryAgentDoc}
+                      disabled={agentValidationLoading}
+                      className="absolute right-3 text-brand-primary hover:text-brand-secondary transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center p-1"
+                      title="Buscar en APIPerú"
+                    >
+                      {agentValidationLoading ? (
+                        <span className="w-3.5 h-3.5 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Search size={15} />
+                      )}
+                    </button>
+                  )}
+                </div>
+              </div>
+
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-widest">Nombre Completo</label>
                 <input
