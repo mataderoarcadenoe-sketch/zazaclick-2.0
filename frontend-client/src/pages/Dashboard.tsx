@@ -2594,7 +2594,6 @@ useEffect(() => {
       { id: 'tasks', label: 'Tareas CRM', icon: ListTodo },
       { id: 'contacts', label: 'Clientes / Agenda', icon: Users },
       { id: 'birthdays', label: 'Cumpleaños', icon: Gift },
-      { id: 'tasks', label: 'Tareas CRM', icon: ListTodo },
       { id: 'groups', label: 'Grupos (WhatsApp)', icon: Users2 },
       { id: 'team', label: 'Mi Equipo', icon: User },
       { id: 'playground', label: 'Probar Envío', icon: Play },
