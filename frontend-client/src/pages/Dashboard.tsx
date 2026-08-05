@@ -365,7 +365,6 @@ export default function DashboardPage() {
   const [taskFormDatePickerYear, setTaskFormDatePickerYear] = useState<number>(new Date().getFullYear());
   const [taskFormDatePickerMonth, setTaskFormDatePickerMonth] = useState<number>(new Date().getMonth());
   // CRM Sidebar Tab Integration (Billing / Catalog)
-  const [crmSidebarTab, setCrmSidebarTab] = useState<'info' | 'billing'>('info');
   const [billingSearchQuery, setBillingSearchQuery] = useState('');
   const [billingCategory, setBillingCategory] = useState<string>('all');
 
@@ -3407,7 +3406,7 @@ echo $response;`;
                   <div className="flex-1 min-h-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md rounded-3xl overflow-hidden flex md:grid md:grid-cols-12 shadow-premium-lg text-left">
                     
                     {/* LEFT PANEL: Chats List */}
-                    <div className={`${selectedChat ? 'md:col-span-3' : 'md:col-span-4'} bg-white dark:bg-slate-950 flex-col min-h-0 w-full md:w-auto ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
+                    <div className={`${selectedChat ? (!selectedChat.remoteJid.endsWith('@g.us') ? 'md:col-span-2' : 'md:col-span-3') : 'md:col-span-4'} bg-white dark:bg-slate-950 flex-col min-h-0 w-full md:w-auto ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
                       {/* Search Bar */}
                       <div className="p-4 pb-2 relative">
                         <input
@@ -3585,7 +3584,7 @@ echo $response;`;
                     </div>
 
                     {/* RIGHT PANEL: Message Area */}
-                    <div className={`${selectedChat ? (!selectedChat.remoteJid.endsWith('@g.us') ? 'md:col-span-6' : 'md:col-span-9') : 'md:col-span-8'} flex-col min-h-0 bg-gradient-to-b from-slate-50/50 via-slate-100/20 to-indigo-50/15 dark:from-slate-950/65 dark:via-slate-900/40 dark:to-slate-950/55 w-full md:w-auto ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
+                    <div className={`${selectedChat ? (!selectedChat.remoteJid.endsWith('@g.us') ? 'md:col-span-4' : 'md:col-span-9') : 'md:col-span-8'} flex-col min-h-0 bg-gradient-to-b from-slate-50/50 via-slate-100/20 to-indigo-50/15 dark:from-slate-950/65 dark:via-slate-900/40 dark:to-slate-950/55 w-full md:w-auto ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
                       {selectedChat ? (
                         <div className="flex-1 flex flex-col min-h-0">
                           
@@ -4337,36 +4336,13 @@ echo $response;`;
 
                     {/* CRM Sidebar Pane */}
                     {selectedChat && !selectedChat.remoteJid.endsWith('@g.us') && (
-                      <div className="md:col-span-3 border-l border-slate-200/50 dark:border-slate-800/50 flex flex-col min-h-0 bg-slate-50/45 dark:bg-slate-950 text-left relative overflow-hidden">
-                        {/* Tab Switcher */}
-                        <div className="flex border-b border-slate-100 dark:border-slate-800/80 p-2 bg-white dark:bg-slate-950/80 backdrop-blur-sm gap-1 flex-shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => setCrmSidebarTab('info')}
-                            className={`flex-1 py-1.5 text-center text-[9.5px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
-                              crmSidebarTab === 'info' 
-                                ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/10' 
-                                : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900'
-                            }`}
-                          >
-                            👤 Info CRM
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setCrmSidebarTab('billing')}
-                            className={`flex-1 py-1.5 text-center text-[9.5px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
-                              crmSidebarTab === 'billing' 
-                                ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/10' 
-                                : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900'
-                            }`}
-                          >
-                            ⚡ Facturación
-                          </button>
-                        </div>
-                        {crmLoading ? (
-                          <div className="flex-1 flex items-center justify-center py-8 text-center text-[11px] text-surface-400 animate-pulse p-4">Cargando datos CRM...</div>
-                        ) : crmSidebarTab === 'info' ? (
-                          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                      <div className="md:col-span-6 grid grid-cols-1 lg:grid-cols-2 min-h-0 relative">
+                        {/* Column 1: CRM Details */}
+                        <div className="flex flex-col min-h-0 bg-slate-50/45 dark:bg-slate-950 text-left relative overflow-hidden">
+                          {crmLoading ? (
+                            <div className="flex-1 flex items-center justify-center py-8 text-center text-[11px] text-surface-400 animate-pulse p-4">Cargando datos CRM...</div>
+                          ) : (
+                            <div className="flex-1 overflow-y-auto p-4 space-y-4">
                             {!crmIsEditing && crmClient ? (
                               <div className="space-y-3.5 pb-6">
                                 {/* Premium Header Card */}
@@ -5067,7 +5043,11 @@ echo $response;`;
                               </div>
                             )}
                           </div>
-                        ) : (
+                          )}
+                        </div>
+
+                        {/* Column 2: Facturación / Catálogo */}
+                        <div className="border-l border-slate-200/50 dark:border-slate-800/50 flex flex-col min-h-0 bg-slate-50/45 dark:bg-slate-950 text-left relative overflow-hidden">
                           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white dark:bg-slate-950/20">
                             <div className="space-y-4">
                               {/* Integration Header Banner */}
@@ -5207,8 +5187,7 @@ echo $response;`;
                               </div>
                             </div>
                           </div>
-                        )}
-
+                        </div>
                         {/* Floating Notes Panel (No Bloqueante) */}
                         {showNotesFloatingWindow && crmClient && (
                           <div className="absolute inset-0 bg-white dark:bg-slate-900/95 z-50 flex flex-col p-4 animate-fadeIn border-l border-slate-100 dark:border-slate-800 shadow-2xl">
