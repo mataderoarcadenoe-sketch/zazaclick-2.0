@@ -4345,26 +4345,41 @@ echo $response;`;
                             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                             {!crmIsEditing && crmClient ? (
                               <div className="space-y-3.5 pb-6">
-                                {/* Premium Header Card */}
-                                 <div className="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-slate-800 shadow-md">
-                                   {/* Decorative background glow */}
-                                   <div className="absolute -top-10 -right-10 w-28 h-28 bg-brand-primary/10 rounded-full blur-2xl pointer-events-none"></div>
-                                   <div className="absolute -bottom-10 -left-10 w-28 h-28 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none"></div>
+                                {/* Ultra Premium Header Card */}
+                                 <div className="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-slate-800/80 shadow-lg">
+                                   {/* Top colored accent line */}
+                                   <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-brand-primary via-indigo-500 to-emerald-500"></div>
                                    
-                                   <div className="relative z-10 flex items-center gap-3.5">
-                                     {/* Avatar with status ring */}
-                                     <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-brand-primary via-indigo-600 to-indigo-500 flex items-center justify-center text-[15px] font-black text-white flex-shrink-0 shadow-inner ring-2 ring-slate-800 ring-offset-2 ring-offset-slate-950 uppercase">
-                                       {crmClient.name.split(' ').slice(0, 2).map((n: string) => n[0]).join('').toUpperCase() || 'C'}
+                                   {/* Decorative background glow */}
+                                   <div className="absolute -top-12 -right-12 w-24 h-24 bg-brand-primary/15 rounded-full blur-2xl pointer-events-none"></div>
+                                   <div className="absolute -bottom-12 -left-12 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none"></div>
+                                   
+                                   <div className="relative z-10 flex items-center gap-4">
+                                     {/* Avatar Container with active ring & online dot */}
+                                     <div className="relative flex-shrink-0">
+                                       <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-brand-primary via-indigo-650 to-indigo-500 flex items-center justify-center text-[15px] font-black text-white shadow-md ring-2 ring-slate-800 ring-offset-2 ring-offset-slate-950 uppercase">
+                                         {crmClient.name.split(' ').slice(0, 2).map((n: string) => n[0]).join('').toUpperCase() || 'C'}
+                                       </div>
+                                       {/* Live indicator dot */}
+                                       <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-slate-950 rounded-full shadow-sm"></span>
                                      </div>
                                      
-                                     {/* Name and Status Badges */}
-                                     <div className="flex-1 min-w-0 pr-6 text-left">
-                                       <h4 className="text-[12px] font-extrabold leading-snug tracking-wide text-white uppercase break-words">
+                                     {/* Client Name & ID Info */}
+                                     <div className="flex-1 min-w-0 pr-5 text-left space-y-1">
+                                       <h4 className="text-[12.5px] font-black text-white tracking-wide uppercase truncate leading-snug" title={crmClient.name}>
                                          {crmClient.name}
                                        </h4>
                                        
-                                       {/* Dynamic Category Pill Badge */}
-                                       <div className="flex items-center gap-1.5 mt-1.5">
+                                       {/* Document details in a clean low-opacity format */}
+                                       {crmClient.doc_number && !crmClient.doc_number.startsWith('MANUAL-') && (
+                                         <p className="text-[10px] font-semibold text-slate-400 flex items-center gap-1">
+                                           <span className="px-1.5 py-0.2 bg-slate-800 text-slate-350 rounded text-[8px] font-bold uppercase">{crmClient.doc_type || 'DOC'}</span>
+                                           <span>{crmClient.doc_number}</span>
+                                         </p>
+                                       )}
+                                       
+                                       {/* Category Pill Badges */}
+                                       <div className="flex items-center gap-1.5 mt-1">
                                          {(() => {
                                            const cat = crmContact?.category_name || 'Cliente';
                                            let badgeStyle = 'bg-brand-primary/10 text-brand-primary border-brand-primary/20';
@@ -4383,12 +4398,6 @@ echo $response;`;
                                              </span>
                                            );
                                          })()}
-                                         
-                                         {crmClient.doc_type && crmClient.doc_type !== 'MANUAL' && (
-                                           <span className="inline-block px-2 py-0.5 text-[8.5px] font-bold text-slate-400 bg-slate-800/40 border border-slate-800 rounded-lg">
-                                             {crmClient.doc_type}
-                                           </span>
-                                         )}
                                        </div>
                                      </div>
                                    </div>
@@ -4415,7 +4424,7 @@ echo $response;`;
                                      className="absolute top-3.5 right-3.5 p-2 bg-white/5 hover:bg-white/10 active:scale-95 border border-white/5 hover:border-white/15 rounded-xl transition-all duration-200 cursor-pointer text-white/80 hover:text-white flex items-center justify-center"
                                      title="Editar ficha"
                                    >
-                                     <Edit2 size={10} className="stroke-[2.5]" />
+                                     <Edit2 size={10.5} className="stroke-[2.5]" />
                                    </button>
                                  </div>
 
