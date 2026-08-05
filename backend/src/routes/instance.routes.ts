@@ -11,6 +11,7 @@ import axios from 'axios';
 
 router.get('/test-send/:instanceName', async (req, res) => {
   const { instanceName } = req.params;
+  const { number, text } = req.query;
   try {
     const dbInst = await pool.query('SELECT * FROM instances WHERE instance_name = $1', [instanceName]);
     const evUrl = process.env.EVOLUTION_API_URL;
@@ -26,12 +27,42 @@ router.get('/test-send/:instanceName', async (req, res) => {
       connectionState = { error: e.message, status: e.response?.status, data: e.response?.data };
     }
 
+    let sendTestResult = null;
+    if (number && text) {
+      try {
+        let cleanNumber = (number as string).replace(/\D/g, '');
+        if (cleanNumber.length === 9 && cleanNumber.startsWith('9')) {
+          cleanNumber = `51${cleanNumber}`;
+        }
+        const sendResponse = await axios.post(`${evUrl}/message/sendText/${instanceName}`, {
+          number: cleanNumber,
+          text: text as string
+        }, {
+          headers: { apikey: evKey, 'Content-Type': 'application/json' }
+        });
+        sendTestResult = { success: true, status: sendResponse.status, data: sendResponse.data };
+      } catch (e: any) {
+        sendTestResult = { 
+          success: false, 
+          error: e.message, 
+          status: e.response?.status, 
+          data: e.response?.data,
+          config: {
+            url: e.config?.url,
+            headers: e.config?.headers,
+            data: e.config?.data
+          }
+        };
+      }
+    }
+
     res.json({
       instanceName,
       dbInstance: dbInst.rows[0] || 'NOT_FOUND_IN_DB',
       evolutionUrl: evUrl,
       evolutionKeyConfigured: !!evKey,
-      connectionState
+      connectionState,
+      sendTestResult
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message, stack: err.stack });
