@@ -10,3 +10,9 @@
 - `[x]` Eliminar `shadow-sm` y `animate-pulseGlow` del globo de mensajes no leídos (círculo verde) en el sidebar
 - `[x]` Probar compilación del backend y frontend client
 - `[x]` Realizar git commit y git push a GitHub
+- `[ ]` 6. Notas Internas en Contactos
+  - `[x]` Crear endpoint `PUT /api/crm/clients/:clientId/notes` en `crm.routes.ts`.
+  - `[x]` Declarar estados frontend `isEditingNotes` y `tempNotes` en `Dashboard.tsx`.
+  - `[x]` Desarrollar el componente de edición inline en la tarjeta "Notas del contacto" de `Dashboard.tsx`.
+  - `[x]` Conectar el botón "Guardar" de la nota con la API del backend.
+  - `[ ]` Verificar compilación y desplegar a Railway.

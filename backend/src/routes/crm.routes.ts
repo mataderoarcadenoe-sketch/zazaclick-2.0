@@ -597,6 +597,35 @@ router.get('/clients', async (req: AuthenticatedRequest, res: Response) => {
 });
 
 /**
+ * PUT /api/crm/clients/:clientId/notes - Actualizar notas internas del cliente
+ */
+router.put('/clients/:clientId/notes', async (req: AuthenticatedRequest, res: Response) => {
+  const { clientId } = req.params;
+  const { notes } = req.body;
+
+  try {
+    const clientCheck = await pool.query(
+      'SELECT id FROM crm_clients WHERE id = $1 AND user_id = $2',
+      [clientId, req.userId]
+    );
+
+    if (clientCheck.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Cliente no encontrado o sin permisos.' });
+    }
+
+    const result = await pool.query(
+      'UPDATE crm_clients SET notes = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
+      [notes !== undefined ? notes : null, clientId]
+    );
+
+    return res.json({ success: true, client: result.rows[0] });
+  } catch (error: any) {
+    console.error('[CRM Update Notes] Error:', error.message);
+    return res.status(500).json({ success: false, error: 'Error al actualizar las notas internas.' });
+  }
+});
+
+/**
  * GET /api/crm/clients/:clientId/contacts - Listar todos los contactos vinculados a un cliente
  */
 router.get('/clients/:clientId/contacts', async (req: AuthenticatedRequest, res: Response) => {

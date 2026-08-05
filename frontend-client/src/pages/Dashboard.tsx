@@ -298,6 +298,11 @@ export default function DashboardPage() {
   const [crmSaving, setCrmSaving] = useState(false);
   const [crmIsEditing, setCrmIsEditing] = useState(false);
   
+  // Notas Internas States
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
+  const [tempNotes, setTempNotes] = useState('');
+  const [notesSaving, setNotesSaving] = useState(false);
+  
   // CRM Form States
   const [crmDocType, setCrmDocType] = useState<'DNI' | 'RUC'>('DNI');
   const [crmDocNumber, setCrmDocNumber] = useState('');
@@ -1704,6 +1709,26 @@ export default function DashboardPage() {
       showNotification(err.response?.data?.error || 'Error al vincular cliente.', 'error');
     } finally {
       setCrmSaving(false);
+    }
+  };
+
+  // Save Internal Notes Only
+  const handleSaveNotesOnly = async () => {
+    if (!crmClient) return;
+    setNotesSaving(true);
+    try {
+      const res = await api.put(`/crm/clients/${crmClient.id}/notes`, {
+        notes: tempNotes.trim()
+      });
+      if (res.data?.success) {
+        setCrmClient((prev: any) => prev ? { ...prev, notes: res.data.client.notes } : prev);
+        setIsEditingNotes(false);
+        showNotification('Nota interna guardada exitosamente.', 'success');
+      }
+    } catch (err: any) {
+      showNotification(err.response?.data?.error || 'Error al guardar la nota interna.', 'error');
+    } finally {
+      setNotesSaving(false);
     }
   };
 
@@ -3935,29 +3960,54 @@ echo $response;`;
                                 </div>
 
                                 {/* Notas del contacto */}
-                                <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/80 space-y-3">
-                                  <h5 className="text-[11px] font-bold text-slate-800 dark:text-white">Notas del contacto</h5>
-                                  <p className="text-[10px] text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line bg-slate-50 dark:bg-slate-900/40 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/20">
-                                    {crmClient.notes || 'Sin notas registradas.'}
-                                  </p>
-                                  <div className="text-right">
-                                    <button 
-                                      onClick={() => {
-                                        setCrmDocType(crmClient.doc_type === 'MANUAL' ? 'DNI' : crmClient.doc_type);
-                                        setCrmDocNumber(crmClient.doc_type === 'MANUAL' ? '' : crmClient.doc_number);
-                                        setCrmName(crmClient.name);
-                                        setCrmAddress(crmClient.address || '');
-                                        setCrmEmail(crmClient.email || '');
-                                        setCrmNotes(crmClient.notes || '');
-                                        setCrmCategoryId(crmContact?.category_id?.toString() || '');
-                                        setCrmIsEditing(true);
-                                      }}
-                                      className="text-[10px] font-bold text-brand-primary hover:underline cursor-pointer"
-                                    >
-                                      Editar nota
-                                    </button>
-                                  </div>
-                                </div>
+                                 <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/80 space-y-3">
+                                   <h5 className="text-[11px] font-bold text-slate-800 dark:text-white">Notas del contacto</h5>
+                                   
+                                   {isEditingNotes ? (
+                                     <div className="space-y-2">
+                                       <textarea
+                                         value={tempNotes}
+                                         onChange={(e) => setTempNotes(e.target.value)}
+                                         rows={4}
+                                         placeholder="Ej: Cliente muy exigente. No ofrecer descuento. Prefiere transferencia..."
+                                         className="w-full p-2.5 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-white rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/30 resize-none font-medium"
+                                       />
+                                       <div className="flex justify-end gap-2 text-[10px] font-bold">
+                                         <button
+                                           onClick={() => setIsEditingNotes(false)}
+                                           disabled={notesSaving}
+                                           className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-850 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg transition-colors cursor-pointer"
+                                         >
+                                           Cancelar
+                                         </button>
+                                         <button
+                                           onClick={handleSaveNotesOnly}
+                                           disabled={notesSaving}
+                                           className="px-3 py-1.5 bg-brand-500 hover:bg-brand-secondary text-white rounded-lg transition-colors cursor-pointer disabled:opacity-50 font-medium"
+                                         >
+                                           {notesSaving ? 'Guardando...' : 'Guardar'}
+                                         </button>
+                                       </div>
+                                     </div>
+                                   ) : (
+                                     <>
+                                       <p className="text-[10px] text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line bg-slate-50 dark:bg-slate-900/40 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/20">
+                                         {crmClient.notes || 'Sin notas registradas.'}
+                                       </p>
+                                       <div className="text-right">
+                                         <button 
+                                           onClick={() => {
+                                             setTempNotes(crmClient.notes || '');
+                                             setIsEditingNotes(true);
+                                           }}
+                                           className="text-[10px] font-bold text-brand-primary hover:underline cursor-pointer"
+                                         >
+                                           Editar nota
+                                         </button>
+                                       </div>
+                                     </>
+                                   )}
+                                 </div>
                                 
                                 {/* Etiquetas */}
                                 <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/80 space-y-3">
