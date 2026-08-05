@@ -413,11 +413,16 @@ router.post('/link-doc', async (req: AuthenticatedRequest, res: Response) => {
       [req.userId, phone_number]
     );
 
+    const contact = contactInfo.rows[0];
+    if (contact && typeof contact.tags === 'string') {
+      try { contact.tags = JSON.parse(contact.tags); } catch(e) { contact.tags = []; }
+    }
+
     return res.json({
       success: true,
       isMerged,
       client: clientInfo.rows[0],
-      contact: contactInfo.rows[0]
+      contact
     });
 
   } catch (error: any) {
@@ -493,10 +498,15 @@ router.post('/link-manual', async (req: AuthenticatedRequest, res: Response) => 
       [req.userId, phone_number]
     );
 
+    const contact = contactInfo.rows[0];
+    if (contact && typeof contact.tags === 'string') {
+      try { contact.tags = JSON.parse(contact.tags); } catch(e) { contact.tags = []; }
+    }
+
     return res.json({
       success: true,
       client: clientInfo.rows[0],
-      contact: contactInfo.rows[0]
+      contact
     });
 
   } catch (error: any) {

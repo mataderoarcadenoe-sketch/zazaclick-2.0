@@ -3,5 +3,6 @@
 - `[x]` Implementar dropdown interactivo multi-select en el botón "Etiquetar" del frontend
 - `[x]` Mostrar micro-badges de colores en las tarjetas de chat del sidebar y en la cabecera activa
 - `[x]` Agregar barra horizontal de filtros rápidos por etiquetas debajo del buscador en el sidebar
+- `[x]` Eliminar `shadow-sm` y `animate-pulseGlow` del globo de mensajes no leídos (círculo verde) en el sidebar
 - `[x]` Probar compilación del backend y frontend client
 - `[x]` Realizar git commit y git push a GitHub

@@ -1363,7 +1363,20 @@ export default function DashboardPage() {
         });
         if (res.data?.success) {
           setCrmClient(res.data.client);
-          setCrmContact(res.data.contact);
+          
+          let parsedContact = res.data.contact;
+          if (parsedContact && typeof parsedContact.tags === 'string') {
+            try { parsedContact.tags = JSON.parse(parsedContact.tags); } catch(e) { parsedContact.tags = []; }
+          }
+          setCrmContact(parsedContact);
+          
+          if (parsedContact) {
+            setCrmContactTagsMap((prev: any) => ({
+              ...prev,
+              [cleanJid]: parsedContact.tags || []
+            }));
+          }
+          
           setCrmIsEditing(false);
           fetchCrmContactMap();
           showNotification('Contacto guardado exitosamente.', 'success');
@@ -1425,7 +1438,20 @@ export default function DashboardPage() {
 
       if (res.data?.success) {
         setCrmClient(res.data.client);
-        setCrmContact(res.data.contact);
+        
+        let parsedContact = res.data.contact;
+        if (parsedContact && typeof parsedContact.tags === 'string') {
+          try { parsedContact.tags = JSON.parse(parsedContact.tags); } catch(e) { parsedContact.tags = []; }
+        }
+        setCrmContact(parsedContact);
+        
+        if (parsedContact) {
+          setCrmContactTagsMap((prev: any) => ({
+            ...prev,
+            [cleanJid]: parsedContact.tags || []
+          }));
+        }
+        
         setCrmIsEditing(false);
         setCrmMergeModal(prev => ({ ...prev, isOpen: false }));
         fetchCrmContactMap();
