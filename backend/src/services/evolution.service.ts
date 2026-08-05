@@ -479,16 +479,20 @@ export class EvolutionService {
       realJid = realJid.replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net');
 
       // Obtener el contador de mensajes no leídos tolerando la base de datos de Zaza o la API de Evolution
-      let unreadCountNum = 0;
+      const chatUnread = (chat.unreadMessages !== undefined && chat.unreadMessages !== null) 
+        ? chat.unreadMessages 
+        : (chat.unreadCount !== undefined && chat.unreadCount !== null)
+        ? chat.unreadCount
+        : (chat.unread_messages !== undefined && chat.unread_messages !== null)
+        ? chat.unread_messages
+        : chat.unread;
+      const chatUnreadNum = Number(chatUnread) || 0;
+
+      let unreadCountNum = chatUnreadNum;
       if (dbUnreadCounts) {
         const countReal = dbUnreadCounts.get(realJid) || 0;
         const countOrig = dbUnreadCounts.get(chat.remoteJid) || 0;
-        unreadCountNum = Math.max(countReal, countOrig);
-      } else {
-        const chatUnread = (chat.unreadMessages !== undefined && chat.unreadMessages !== null) 
-          ? chat.unreadMessages 
-          : chat.unreadCount;
-        unreadCountNum = Number(chatUnread) || 0;
+        unreadCountNum = Math.max(unreadCountNum, countReal, countOrig);
       }
 
       // Aplicar el override del contador de mensajes no leídos si el último mensaje es anterior al timestamp de lectura marcado
