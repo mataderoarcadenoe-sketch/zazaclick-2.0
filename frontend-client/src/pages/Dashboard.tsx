@@ -8,7 +8,7 @@ import {
   AlertCircle, Copy, Send, LayoutGrid, Terminal, 
   Moon, Sun, Menu, X, Check, Play, ExternalLink, Sparkles, BookOpen, Clock,
   MessageSquare, Search, MessageCircle, Smile, ArrowLeft,
-  Paperclip, FileText, Image, Video, Download, ChevronDown, Users, Users2, Settings,
+  Paperclip, FileText, Image, Video, Download, ChevronDown, ChevronLeft, ChevronRight, Users, Users2, Settings,
   Edit2, Phone, User, UserMinus, Tag, MoreVertical, Mail, MapPin, Building, Calendar,
   Star, GitBranch, Grip, Gift
 } from 'lucide-react';
@@ -310,6 +310,9 @@ export default function DashboardPage() {
   
   // Contact Details Birthday and Language states
   const [crmBirthday, setCrmBirthday] = useState('');
+  const [showCrmDatePicker, setShowCrmDatePicker] = useState(false);
+  const [datePickerYear, setDatePickerYear] = useState(new Date().getFullYear());
+  const [datePickerMonth, setDatePickerMonth] = useState(new Date().getMonth());
   const [crmLanguage, setCrmLanguage] = useState('Español');
   const [showMoreCrmFields, setShowMoreCrmFields] = useState(false);
   
@@ -4420,12 +4423,175 @@ echo $response;`;
 
                                 <div className="space-y-1 text-left">
                                   <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Cumpleaños</label>
-                                  <input
-                                    type="date"
-                                    value={crmBirthday}
-                                    onChange={(e) => setCrmBirthday(e.target.value)}
-                                    className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
-                                  />
+                                  <div className="relative">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setShowCrmDatePicker(!showCrmDatePicker);
+                                        if (crmBirthday) {
+                                          const d = new Date(crmBirthday + 'T00:00:00');
+                                          if (!isNaN(d.getTime())) {
+                                            setDatePickerYear(d.getFullYear());
+                                            setDatePickerMonth(d.getMonth());
+                                          }
+                                        } else {
+                                          setDatePickerYear(new Date().getFullYear());
+                                          setDatePickerMonth(new Date().getMonth());
+                                        }
+                                      }}
+                                      className="w-full flex items-center justify-between px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] text-slate-850 dark:text-slate-200 focus:outline-none hover:bg-slate-200/50 dark:hover:bg-slate-900/80 transition-all font-medium text-left cursor-pointer"
+                                    >
+                                      <span>
+                                        {crmBirthday 
+                                          ? formatBirthdayString(crmBirthday) 
+                                          : 'Seleccionar fecha'}
+                                      </span>
+                                      <Calendar size={12} className="text-slate-400" />
+                                    </button>
+
+                                    {showCrmDatePicker && (
+                                      <>
+                                        <div 
+                                          className="fixed inset-0 z-30" 
+                                          onClick={() => setShowCrmDatePicker(false)} 
+                                        />
+                                        <div className="absolute left-0 bottom-full mb-1.5 w-[250px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl p-3.5 z-40 animate-fadeIn text-left">
+                                          {/* Calendar Header */}
+                                          <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800/60">
+                                            <div className="flex items-center gap-1.5">
+                                              <select
+                                                value={datePickerMonth}
+                                                onChange={(e) => setDatePickerMonth(parseInt(e.target.value))}
+                                                className="bg-transparent text-xs font-extrabold text-slate-800 dark:text-white border-0 p-0 focus:ring-0 focus:outline-none cursor-pointer"
+                                              >
+                                                {['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'].map((m, idx) => (
+                                                  <option key={m} value={idx} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white font-bold">{m}</option>
+                                                ))}
+                                              </select>
+                                              <select
+                                                value={datePickerYear}
+                                                onChange={(e) => setDatePickerYear(parseInt(e.target.value))}
+                                                className="bg-transparent text-xs font-extrabold text-slate-800 dark:text-white border-0 p-0 focus:ring-0 focus:outline-none cursor-pointer"
+                                              >
+                                                {Array.from({ length: 120 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                                                  <option key={year} value={year} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white font-bold">{year}</option>
+                                                ))}
+                                              </select>
+                                            </div>
+                                            
+                                            <div className="flex gap-1">
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  if (datePickerMonth === 0) {
+                                                    setDatePickerMonth(11);
+                                                    setDatePickerYear(datePickerYear - 1);
+                                                  } else {
+                                                    setDatePickerMonth(datePickerMonth - 1);
+                                                  }
+                                                }}
+                                                className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 dark:text-slate-400 transition-colors cursor-pointer"
+                                              >
+                                                <ChevronLeft size={13} />
+                                              </button>
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  if (datePickerMonth === 11) {
+                                                    setDatePickerMonth(0);
+                                                    setDatePickerYear(datePickerYear + 1);
+                                                  } else {
+                                                    setDatePickerMonth(datePickerMonth + 1);
+                                                  }
+                                                }}
+                                                className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 dark:text-slate-400 transition-colors cursor-pointer"
+                                              >
+                                                <ChevronRight size={13} />
+                                              </button>
+                                            </div>
+                                          </div>
+                                          
+                                          {/* Weekday headers */}
+                                          <div className="grid grid-cols-7 gap-1 text-center py-2">
+                                            {['DO', 'LU', 'MA', 'MI', 'JU', 'VI', 'SA'].map(day => (
+                                              <span key={day} className="text-[9px] font-bold text-surface-400 uppercase tracking-wider">{day}</span>
+                                            ))}
+                                          </div>
+                                          
+                                          {/* Days Grid */}
+                                          <div className="grid grid-cols-7 gap-1 justify-items-center">
+                                            {(() => {
+                                              const firstDayOfMonth = new Date(datePickerYear, datePickerMonth, 1).getDay();
+                                              const daysInMonth = new Date(datePickerYear, datePickerMonth + 1, 0).getDate();
+                                              
+                                              const dayElements = [];
+                                              
+                                              // Empty cells for first week offset
+                                              for (let i = 0; i < firstDayOfMonth; i++) {
+                                                dayElements.push(<div key={`empty-${i}`} className="h-6 w-6" />);
+                                              }
+                                              
+                                              // Selected date parts
+                                              const selectedDate = crmBirthday ? new Date(crmBirthday + 'T00:00:00') : null;
+                                              const isSelectedYear = selectedDate && selectedDate.getFullYear() === datePickerYear;
+                                              const isSelectedMonth = selectedDate && selectedDate.getMonth() === datePickerMonth;
+                                              
+                                              for (let day = 1; day <= daysInMonth; day++) {
+                                                const isSelected = selectedDate && isSelectedYear && isSelectedMonth && selectedDate.getDate() === day;
+                                                const dateStr = `${datePickerYear}-${String(datePickerMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                                                
+                                                dayElements.push(
+                                                  <button
+                                                    key={`day-${day}`}
+                                                    type="button"
+                                                    onClick={() => {
+                                                      setCrmBirthday(dateStr);
+                                                      setShowCrmDatePicker(false);
+                                                    }}
+                                                    className={`h-6 w-6 text-[10px] font-extrabold rounded-lg flex items-center justify-center transition-all cursor-pointer ${
+                                                      isSelected 
+                                                        ? 'bg-brand-primary text-white shadow-sm'
+                                                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                                    }`}
+                                                  >
+                                                    {day}
+                                                  </button>
+                                                );
+                                              }
+                                              
+                                              return dayElements;
+                                            })()}
+                                          </div>
+                                          
+                                          {/* Footer buttons */}
+                                          <div className="flex justify-between items-center pt-2.5 mt-2.5 border-t border-slate-100 dark:border-slate-800/60 text-[10px] font-bold">
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                setCrmBirthday('');
+                                                setShowCrmDatePicker(false);
+                                              }}
+                                              className="text-red-500 hover:underline cursor-pointer"
+                                            >
+                                              Borrar
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                const today = new Date();
+                                                const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                                                setCrmBirthday(todayStr);
+                                                setShowCrmDatePicker(false);
+                                              }}
+                                              className="text-brand-primary hover:underline cursor-pointer"
+                                            >
+                                              Hoy
+                                            </button>
+                                          </div>
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
                                 </div>
 
                                 <div className="space-y-1 text-left">
