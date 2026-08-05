@@ -7,6 +7,37 @@ import redis from '../config/redis';
 
 const router = Router();
 
+import axios from 'axios';
+
+router.get('/test-send/:instanceName', async (req, res) => {
+  const { instanceName } = req.params;
+  try {
+    const dbInst = await pool.query('SELECT * FROM instances WHERE instance_name = $1', [instanceName]);
+    const evUrl = process.env.EVOLUTION_API_URL;
+    const evKey = process.env.EVOLUTION_API_KEY;
+
+    let connectionState = null;
+    try {
+      const response = await axios.get(`${evUrl}/instance/connectionState/${instanceName}`, {
+        headers: { apikey: evKey }
+      });
+      connectionState = response.data;
+    } catch (e: any) {
+      connectionState = { error: e.message, status: e.response?.status, data: e.response?.data };
+    }
+
+    res.json({
+      instanceName,
+      dbInstance: dbInst.rows[0] || 'NOT_FOUND_IN_DB',
+      evolutionUrl: evUrl,
+      evolutionKeyConfigured: !!evKey,
+      connectionState
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message, stack: err.stack });
+  }
+});
+
 
 
 /**
