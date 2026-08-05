@@ -204,6 +204,11 @@ export async function initDatabase() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+    // Asegurar columnas de cumpleaños e idioma en crm_clients
+    await pool.query(`
+      ALTER TABLE crm_clients ADD COLUMN IF NOT EXISTS birthday DATE;
+      ALTER TABLE crm_clients ADD COLUMN IF NOT EXISTS idioma VARCHAR(50) DEFAULT 'Español';
+    `);
 
     // 6. Asegurar rol Administrador para tu correo principal
     await pool.query(`

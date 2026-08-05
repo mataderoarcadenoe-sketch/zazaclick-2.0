@@ -10,7 +10,7 @@ import {
   MessageSquare, Search, MessageCircle, Smile, ArrowLeft,
   Paperclip, FileText, Image, Video, Download, ChevronDown, Users, Users2, Settings,
   Edit2, Phone, User, UserMinus, Tag, MoreVertical, Mail, MapPin, Building, Calendar,
-  Star, GitBranch, Grip
+  Star, GitBranch, Grip, Gift
 } from 'lucide-react';
 import EmojiPicker, { Theme, EmojiStyle, Emoji } from 'emoji-picker-react';
 import { parse } from '@twemoji/parser';
@@ -307,6 +307,11 @@ export default function DashboardPage() {
   // Agent Creation Validation States
   const [agentDocNumber, setAgentDocNumber] = useState('');
   const [agentValidationLoading, setAgentValidationLoading] = useState(false);
+  
+  // Contact Details Birthday and Language states
+  const [crmBirthday, setCrmBirthday] = useState('');
+  const [crmLanguage, setCrmLanguage] = useState('Español');
+  const [showMoreCrmFields, setShowMoreCrmFields] = useState(false);
   
   // CRM Form States
   const [crmDocType, setCrmDocType] = useState<'DNI' | 'RUC'>('DNI');
@@ -1506,6 +1511,8 @@ export default function DashboardPage() {
           setCrmAddress(res.data.client.address || '');
           setCrmEmail(res.data.client.email || '');
           setCrmNotes(res.data.client.notes || '');
+          setCrmBirthday(res.data.client.birthday ? res.data.client.birthday.substring(0, 10) : '');
+          setCrmLanguage(res.data.client.idioma || 'Español');
         } else {
           // Clear inputs for new chat
           setCrmDocType('DNI');
@@ -1514,6 +1521,8 @@ export default function DashboardPage() {
           setCrmAddress('');
           setCrmEmail('');
           setCrmNotes('');
+          setCrmBirthday('');
+          setCrmLanguage('Español');
         }
         if (res.data.contact) {
           setCrmCategoryId(res.data.contact.category_id?.toString() || '');
@@ -1598,6 +1607,64 @@ export default function DashboardPage() {
     }
   };
 
+  // Format birthday date string to Spanish
+  const formatBirthdayString = (dateStr: string) => {
+    if (!dateStr) return 'No registrado';
+    try {
+      const date = new Date(dateStr);
+      const userTimezoneOffset = date.getTimezoneOffset() * 60000;
+      const adjustedDate = new Date(date.getTime() + userTimezoneOffset);
+      const day = adjustedDate.getDate();
+      const monthNames = [
+        'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+        'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+      ];
+      const month = monthNames[adjustedDate.getMonth()];
+      return `${day} de ${month}`;
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
+  // Get days remaining and isToday for client birthday
+  const getBirthdayInfo = (client: any) => {
+    if (!client.birthday) return null;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const bdate = new Date(client.birthday);
+    const userTimezoneOffset = bdate.getTimezoneOffset() * 60000;
+    const birthdayDate = new Date(bdate.getTime() + userTimezoneOffset);
+    birthdayDate.setHours(0, 0, 0, 0);
+    
+    const nextBirthday = new Date(birthdayDate);
+    nextBirthday.setFullYear(today.getFullYear());
+    
+    if (nextBirthday < today) {
+      nextBirthday.setFullYear(today.getFullYear() + 1);
+    }
+    
+    const diffTime = nextBirthday.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    const isToday = birthdayDate.getDate() === today.getDate() && birthdayDate.getMonth() === today.getMonth();
+    
+    return {
+      date: birthdayDate,
+      nextDate: nextBirthday,
+      daysRemaining: isToday ? 0 : diffDays,
+      isToday
+    };
+  };
+
+  const handleWishBirthday = (client: any) => {
+    const phone = client.phone_number || '';
+    const text = encodeURIComponent(`¡Hola, ${client.name}! 🎂 De parte de todo el equipo, te deseamos un muy feliz cumpleaños. Que pases un excelente día. 🎉`);
+    const url = `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${text}`;
+    window.open(url, '_blank');
+  };
+
   // Query collaborator details using APIPeru
   const handleQueryAgentDoc = async () => {
     if (!agentDocNumber || (agentDocNumber.length !== 8 && agentDocNumber.length !== 11)) {
@@ -1637,7 +1704,9 @@ export default function DashboardPage() {
           name: crmName.trim(),
           email: crmEmail.trim(),
           notes: crmNotes.trim(),
-          categoryId: crmCategoryId ? parseInt(crmCategoryId, 10) : null
+          categoryId: crmCategoryId ? parseInt(crmCategoryId, 10) : null,
+          birthday: crmBirthday || null,
+          idioma: crmLanguage || 'Español'
         });
         if (res.data?.success) {
           setCrmClient(res.data.client);
@@ -1711,7 +1780,9 @@ export default function DashboardPage() {
         email: crmEmail.trim(),
         notes: crmNotes.trim(),
         categoryId: crmCategoryId ? parseInt(crmCategoryId, 10) : null,
-        mergeAction
+        mergeAction,
+        birthday: crmBirthday || null,
+        idioma: crmLanguage || 'Español'
       });
 
       if (res.data?.success) {
@@ -1853,9 +1924,9 @@ export default function DashboardPage() {
     }
   }, []);
 
-  // Load CRM clients when contacts tab is active
+  // Load CRM clients when contacts or birthdays tab is active
   useEffect(() => {
-    if (activeTab === 'contacts') {
+    if (activeTab === 'contacts' || activeTab === 'birthdays') {
       fetchCrmClients();
     }
   }, [activeTab, fetchCrmClients]);
@@ -2223,6 +2294,7 @@ export default function DashboardPage() {
       { id: 'chats', label: 'Chats en Vivo', icon: MessageSquare },
       { id: 'pipeline', label: 'Pipeline Comercial', icon: GitBranch },
       { id: 'contacts', label: 'Clientes / Agenda', icon: Users },
+      { id: 'birthdays', label: 'Cumpleaños', icon: Gift },
       { id: 'groups', label: 'Grupos (WhatsApp)', icon: Users2 },
       { id: 'team', label: 'Mi Equipo', icon: User },
       { id: 'playground', label: 'Probar Envío', icon: Play },
@@ -2234,6 +2306,7 @@ export default function DashboardPage() {
     ...(user?.role === 'agent' ? [
       { id: 'chats', label: 'Chats en Vivo', icon: MessageSquare },
       { id: 'contacts', label: 'Clientes / Agenda', icon: Users },
+      { id: 'birthdays', label: 'Cumpleaños', icon: Gift },
     ] : []),
   ];
 
@@ -3910,6 +3983,8 @@ echo $response;`;
                                       setCrmEmail(crmClient.email || '');
                                       setCrmNotes(crmClient.notes || '');
                                       setCrmCategoryId(crmContact?.category_id?.toString() || '');
+                                      setCrmBirthday(crmClient.birthday ? crmClient.birthday.substring(0, 10) : '');
+                                      setCrmLanguage(crmClient.idioma || 'Español');
                                       setCrmIsEditing(true);
                                     }}
                                     className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 text-white hover:text-white rounded-full transition-all backdrop-blur-sm border border-white/10 hover:scale-105 cursor-pointer flex items-center justify-center shadow-sm"
@@ -3919,61 +3994,159 @@ echo $response;`;
                                   </button>
                                 </div>
 
-                                {/* Datos Generales */}
-                                <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/80 space-y-3">
-                                  <h5 className="text-[11px] font-bold text-slate-800 dark:text-white">Datos del contacto</h5>
-                                  <div className="space-y-2.5">
-                                    <div className="flex gap-2">
-                                      <div className="text-brand-primary bg-brand-primary/10 p-1.5 rounded-lg h-min"><User size={12} /></div>
+                                {/* Información del contacto */}
+                                <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/80 space-y-4 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.02)]">
+                                  <div className="flex items-center justify-between">
+                                    <h5 className="text-[11px] font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">Información del contacto</h5>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setCrmDocType(crmClient.doc_type === 'MANUAL' ? 'DNI' : crmClient.doc_type);
+                                        setCrmDocNumber(crmClient.doc_type === 'MANUAL' ? '' : crmClient.doc_number);
+                                        setCrmName(crmClient.name);
+                                        setCrmAddress(crmClient.address || '');
+                                        setCrmEmail(crmClient.email || '');
+                                        setCrmNotes(crmClient.notes || '');
+                                        setCrmCategoryId(crmContact?.category_id?.toString() || '');
+                                        setCrmBirthday(crmClient.birthday ? crmClient.birthday.substring(0, 10) : '');
+                                        setCrmLanguage(crmClient.idioma || 'Español');
+                                        setCrmIsEditing(true);
+                                      }}
+                                      className="text-[10px] font-bold text-brand-primary hover:underline cursor-pointer"
+                                    >
+                                      Editar
+                                    </button>
+                                  </div>
+
+                                  {/* Grid 2x3 Layout matching mockup */}
+                                  <div className="grid grid-cols-2 gap-x-4 gap-y-3.5">
+                                    {/* Teléfono */}
+                                    <div className="flex gap-2.5 items-start text-left">
+                                      <div className="text-slate-400 bg-slate-50 dark:bg-slate-950 dark:text-slate-505 p-2 rounded-xl border border-slate-100 dark:border-slate-850 h-min flex-shrink-0">
+                                        <Smartphone size={13} />
+                                      </div>
                                       <div className="min-w-0">
-                                        <span className="text-[9px] text-surface-400 font-medium block leading-none mb-1">Tipo de documento</span>
-                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold truncate block">{crmClient.doc_type}</span>
+                                        <span className="text-[8.5px] text-surface-400 font-bold block leading-none mb-1 uppercase tracking-wider">Teléfono</span>
+                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-extrabold break-words block leading-tight">
+                                          +{crmContact?.phone_number || selectedChat?.remoteJid?.split('@')[0]}
+                                        </span>
                                       </div>
                                     </div>
-                                    <div className="flex gap-2">
-                                      <div className="text-brand-primary bg-brand-primary/10 p-1.5 rounded-lg h-min"><FileText size={12} /></div>
+
+                                    {/* Correo */}
+                                    <div className="flex gap-2.5 items-start text-left">
+                                      <div className="text-slate-450 bg-slate-50 dark:bg-slate-950 dark:text-slate-500 p-2 rounded-xl border border-slate-100 dark:border-slate-850 h-min flex-shrink-0">
+                                        <Mail size={13} />
+                                      </div>
                                       <div className="min-w-0">
-                                        <span className="text-[9px] text-surface-400 font-medium block leading-none mb-1">Nro de documento</span>
-                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold truncate block">{crmClient.doc_number.startsWith('MANUAL-') ? 'No registrado' : crmClient.doc_number}</span>
+                                        <span className="text-[8.5px] text-surface-400 font-bold block leading-none mb-1 uppercase tracking-wider">Correo</span>
+                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-extrabold break-words block leading-tight">
+                                          {crmClient.email || 'No registrado'}
+                                        </span>
                                       </div>
                                     </div>
-                                    {crmClient.address && (
-                                      <div className="flex gap-2">
-                                        <div className="text-brand-primary bg-brand-primary/10 p-1.5 rounded-lg h-min"><MapPin size={12} /></div>
-                                        <div className="min-w-0">
-                                          <span className="text-[9px] text-surface-400 font-medium block leading-none mb-1">Dirección fiscal</span>
-                                          <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold break-words block">{crmClient.address}</span>
+
+                                    {/* Empresa */}
+                                    <div className="flex gap-2.5 items-start text-left">
+                                      <div className="text-slate-400 bg-slate-50 dark:bg-slate-955 dark:text-slate-500 p-2 rounded-xl border border-slate-100 dark:border-slate-850 h-min flex-shrink-0">
+                                        <Building size={13} />
+                                      </div>
+                                      <div className="min-w-0">
+                                        <span className="text-[8.5px] text-surface-400 font-bold block leading-none mb-1 uppercase tracking-wider">Empresa</span>
+                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-extrabold break-words block leading-tight">
+                                          {crmClient.doc_type === 'RUC' ? crmClient.name : 'No registrada'}
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    {/* Ciudad */}
+                                    <div className="flex gap-2.5 items-start text-left">
+                                      <div className="text-slate-400 bg-slate-50 dark:bg-slate-950 dark:text-slate-500 p-2 rounded-xl border border-slate-100 dark:border-slate-850 h-min flex-shrink-0">
+                                        <MapPin size={13} />
+                                      </div>
+                                      <div className="min-w-0">
+                                        <span className="text-[8.5px] text-surface-400 font-bold block leading-none mb-1 uppercase tracking-wider">Ciudad</span>
+                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-extrabold break-words block leading-tight">
+                                          {crmClient.address || 'No registrado'}
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    {/* Idioma */}
+                                    <div className="flex gap-2.5 items-start text-left">
+                                      <div className="text-slate-400 bg-slate-50 dark:bg-slate-950 dark:text-slate-500 p-2 rounded-xl border border-slate-100 dark:border-slate-850 h-min flex-shrink-0">
+                                        <Calendar size={13} />
+                                      </div>
+                                      <div className="min-w-0">
+                                        <span className="text-[8.5px] text-surface-400 font-bold block leading-none mb-1 uppercase tracking-wider">Idioma</span>
+                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-extrabold break-words block leading-tight">
+                                          {crmClient.idioma || 'Español'}
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    {/* Cumpleaños */}
+                                    <div className="flex gap-2.5 items-start text-left">
+                                      <div className="text-slate-400 bg-slate-50 dark:bg-slate-950 dark:text-slate-500 p-2 rounded-xl border border-slate-100 dark:border-slate-850 h-min flex-shrink-0">
+                                        <Gift size={13} />
+                                      </div>
+                                      <div className="min-w-0">
+                                        <span className="text-[8.5px] text-surface-400 font-bold block leading-none mb-1 uppercase tracking-wider">Cumpleaños</span>
+                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-extrabold break-words block leading-tight">
+                                          {crmClient.birthday ? formatBirthdayString(crmClient.birthday) : 'No registrado'}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Collapsible More Fields Accordion */}
+                                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800/40">
+                                    <button
+                                      type="button"
+                                      onClick={() => setShowMoreCrmFields(!showMoreCrmFields)}
+                                      className="w-full flex items-center justify-center gap-1 text-[9.5px] font-bold text-slate-400 hover:text-slate-655 dark:hover:text-slate-205 transition-colors cursor-pointer"
+                                    >
+                                      <span>{showMoreCrmFields ? 'Ocultar campos adicionales' : 'Ver más campos (6)'}</span>
+                                      <ChevronDown size={11} className={`transition-transform duration-200 \${showMoreCrmFields ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    
+                                    {showMoreCrmFields && (
+                                      <div className="mt-3.5 space-y-2.5 animate-fadeIn">
+                                        <div className="flex justify-between items-center text-[10px]">
+                                          <span className="text-surface-400 font-medium">Tipo de documento:</span>
+                                          <span className="text-slate-700 dark:text-slate-350 font-bold">{crmClient.doc_type}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-[10px]">
+                                          <span className="text-surface-400 font-medium">Nro de documento:</span>
+                                          <span className="text-slate-700 dark:text-slate-350 font-bold">{crmClient.doc_number.startsWith('MANUAL-') ? 'No registrado' : crmClient.doc_number}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-[10px]">
+                                          <span className="text-surface-400 font-medium">Primer contacto:</span>
+                                          <span className="text-slate-700 dark:text-slate-350 font-bold">
+                                            {crmClient.created_at ? new Date(crmClient.created_at).toLocaleDateString('es-ES') : 'No registrado'}
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-[10px]">
+                                          <span className="text-surface-400 font-medium">Categoría:</span>
+                                          <span className="text-slate-700 dark:text-slate-350 font-bold">{crmContact?.category_name || 'Sin Categoría'}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-[10px]">
+                                          <span className="text-surface-400 font-medium">Asesor Asignado:</span>
+                                          <span className="text-slate-700 dark:text-slate-350 font-bold">
+                                            {crmContact?.assigned_agent_name || 'Sin Asignar'}
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-[10px]">
+                                          <span className="text-surface-400 font-medium">ID Cliente:</span>
+                                          <span className="text-slate-700 dark:text-slate-350 font-bold">#{crmClient.id}</span>
                                         </div>
                                       </div>
                                     )}
-                                    {crmClient.email && (
-                                      <div className="flex gap-2">
-                                        <div className="text-brand-primary bg-brand-primary/10 p-1.5 rounded-lg h-min"><Mail size={12} /></div>
-                                        <div className="min-w-0">
-                                          <span className="text-[9px] text-surface-400 font-medium block leading-none mb-1">Email</span>
-                                          <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold break-words block">{crmClient.email}</span>
-                                        </div>
-                                      </div>
-                                    )}
-                                    <div className="flex gap-2">
-                                      <div className="text-brand-primary bg-brand-primary/10 p-1.5 rounded-lg h-min"><span className="font-bold text-[10px]">A</span></div>
-                                      <div className="min-w-0">
-                                        <span className="text-[9px] text-surface-400 font-medium block leading-none mb-1">Idioma</span>
-                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold truncate block">Español</span>
-                                      </div>
-                                    </div>
-                                    <div className="flex gap-2">
-                                      <div className="text-brand-primary bg-brand-primary/10 p-1.5 rounded-lg h-min"><Calendar size={12} /></div>
-                                      <div className="min-w-0">
-                                        <span className="text-[9px] text-surface-400 font-medium block leading-none mb-1">Primer contacto</span>
-                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold truncate block">{crmClient.created_at ? new Date(crmClient.created_at).toLocaleDateString('es-ES') : '17/06/2026'}</span>
-                                      </div>
-                                    </div>
                                   </div>
                                 </div>
 
                                 {/* Notas del contacto */}
-                                 <div className="bg-gradient-to-br from-emerald-500/[0.03] to-teal-500/[0.01] dark:from-slate-900/60 dark:to-slate-850/40 rounded-2xl p-4 border border-emerald-500/10 dark:border-slate-850 space-y-3.5 shadow-[0_4px_20px_-4px_rgba(16,185,129,0.05)]">
+                                 <div className="bg-gradient-to-br from-emerald-500/[0.03] to-teal-500/[0.01] dark:from-slate-900/60 dark:to-slate-850/40 rounded-2xl p-4 border border-emerald-500/10 dark:border-slate-855 space-y-3.5 shadow-[0_4px_20px_-4px_rgba(16,185,129,0.05)]">
                                    <div className="flex items-center justify-between">
                                      <h5 className="text-[11px] font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">Notas del contacto</h5>
                                      {clientNotes.length > 0 && (
@@ -3995,7 +4168,7 @@ echo $response;`;
                                        <p className="text-[10px] text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line font-medium pr-1">
                                          {clientNotes[0].content}
                                        </p>
-                                       <div className="text-[8px] text-slate-450 dark:text-slate-500 text-right mt-2 font-bold flex items-center justify-between">
+                                       <div className="text-[8px] text-slate-450 dark:text-slate-505 text-right mt-2 font-bold flex items-center justify-between">
                                          <span className="flex items-center gap-1.5">
                                            <span className="w-4 h-4 rounded-full bg-emerald-500/10 text-emerald-600 text-[8px] font-extrabold flex items-center justify-center">
                                              {clientNotes[0].agent_name?.charAt(0).toUpperCase() || 'A'}
@@ -4085,7 +4258,7 @@ echo $response;`;
                                         className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-955 border-0 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all cursor-pointer min-w-[65px] justify-between focus:outline-none"
                                       >
                                         <span>{crmDocType}</span>
-                                        <ChevronDown size={10} className={`text-surface-400 transition-transform duration-200 ${isDocTypeDropdownOpen ? 'rotate-180' : ''}`} />
+                                        <ChevronDown size={10} className={`text-surface-400 transition-transform duration-200 \${isDocTypeDropdownOpen ? 'rotate-180' : ''}`} />
                                       </button>
 
                                       {isDocTypeDropdownOpen && (
@@ -4104,7 +4277,7 @@ echo $response;`;
                                                 setCrmAddress('');
                                                 setIsDocTypeDropdownOpen(false);
                                               }}
-                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-[#40916C]/40 hover:text-white transition-colors cursor-pointer ${crmDocType === 'DNI' ? 'text-white bg-[#40916C]' : 'text-slate-100 dark:text-slate-200'}`}
+                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-[#40916C]/40 hover:text-white transition-colors cursor-pointer \${crmDocType === 'DNI' ? 'text-white bg-[#40916C]' : 'text-slate-100 dark:text-slate-200'}`}
                                             >
                                               DNI
                                             </button>
@@ -4117,7 +4290,7 @@ echo $response;`;
                                                 setCrmAddress('');
                                                 setIsDocTypeDropdownOpen(false);
                                               }}
-                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-[#40916C]/40 hover:text-white transition-colors cursor-pointer ${crmDocType === 'RUC' ? 'text-white bg-[#40916C]' : 'text-slate-100 dark:text-slate-200'}`}
+                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-[#40916C]/40 hover:text-white transition-colors cursor-pointer \${crmDocType === 'RUC' ? 'text-white bg-[#40916C]' : 'text-slate-100 dark:text-slate-200'}`}
                                             >
                                               RUC
                                             </button>
@@ -4176,7 +4349,7 @@ echo $response;`;
                                         <span>
                                           {crmCategories.find(c => c.id.toString() === crmCategoryId)?.name || 'Sin Categoría'}
                                         </span>
-                                        <ChevronDown size={11} className={`text-surface-400 transition-transform duration-200 ${isCategoryDropdownOpen ? 'rotate-180' : ''}`} />
+                                        <ChevronDown size={11} className={`text-surface-400 transition-transform duration-200 \${isCategoryDropdownOpen ? 'rotate-180' : ''}`} />
                                       </button>
 
                                       {isCategoryDropdownOpen && (
@@ -4192,7 +4365,7 @@ echo $response;`;
                                                 setCrmCategoryId('');
                                                 setIsCategoryDropdownOpen(false);
                                               }}
-                                              className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-[#40916C]/40 hover:text-white transition-colors cursor-pointer ${crmCategoryId === '' ? 'text-white bg-[#40916C]' : 'text-slate-100 dark:text-slate-200'}`}
+                                              className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-[#40916C]/40 hover:text-white transition-colors cursor-pointer \${crmCategoryId === '' ? 'text-white bg-[#40916C]' : 'text-slate-100 dark:text-slate-200'}`}
                                             >
                                               Sin Categoría
                                             </button>
@@ -4204,7 +4377,7 @@ echo $response;`;
                                                   setCrmCategoryId(cat.id.toString());
                                                   setIsCategoryDropdownOpen(false);
                                                 }}
-                                                className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-[#40916C]/40 hover:text-white transition-colors cursor-pointer ${crmCategoryId === cat.id.toString() ? 'text-white bg-[#40916C]' : 'text-slate-100 dark:text-slate-200'}`}
+                                                className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-[#40916C]/40 hover:text-white transition-colors cursor-pointer \${crmCategoryId === cat.id.toString() ? 'text-white bg-[#40916C]' : 'text-slate-100 dark:text-slate-200'}`}
                                               >
                                                 {cat.name}
                                               </button>
@@ -4244,6 +4417,27 @@ echo $response;`;
                                     placeholder="correo@ejemplo.com"
                                     value={crmEmail}
                                     onChange={(e) => setCrmEmail(e.target.value)}
+                                    className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-955 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
+                                  />
+                                </div>
+
+                                <div className="space-y-1 text-left">
+                                  <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Cumpleaños</label>
+                                  <input
+                                    type="date"
+                                    value={crmBirthday}
+                                    onChange={(e) => setCrmBirthday(e.target.value)}
+                                    className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-955 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
+                                  />
+                                </div>
+
+                                <div className="space-y-1 text-left">
+                                  <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Idioma</label>
+                                  <input
+                                    type="text"
+                                    placeholder="Español, Inglés, etc."
+                                    value={crmLanguage}
+                                    onChange={(e) => setCrmLanguage(e.target.value)}
                                     className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-955 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
                                   />
                                 </div>
@@ -4289,7 +4483,7 @@ echo $response;`;
                               <button
                                 type="button"
                                 onClick={() => setShowNotesFloatingWindow(false)}
-                                className="p-1.5 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-605 dark:hover:text-slate-200 rounded-xl transition-all cursor-pointer border border-slate-100 dark:border-slate-800"
+                                className="p-1.5 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-605 dark:hover:text-slate-202 rounded-xl transition-all cursor-pointer border border-slate-100 dark:border-slate-800"
                               >
                                 <X size={14} />
                               </button>
@@ -4319,7 +4513,7 @@ echo $response;`;
                                         {note.content}
                                       </p>
                                       
-                                      <div className="flex items-center justify-between text-[8px] font-bold text-slate-400 dark:text-slate-500">
+                                      <div className="flex items-center justify-between text-[8px] font-bold text-slate-400 dark:text-slate-505">
                                         <span className="flex items-center gap-1.5">
                                           <span className="w-4 h-4 rounded-full bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-350 text-[8px] font-extrabold flex items-center justify-center">
                                             {note.agent_name?.charAt(0).toUpperCase() || 'A'}
@@ -4350,13 +4544,13 @@ echo $response;`;
                             </div>
 
                             {/* Footer (Add note form) */}
-                            <div className="border-t border-slate-100 dark:border-slate-850 pt-3 flex-shrink-0 space-y-2.5">
+                            <div className="border-t border-slate-100 dark:border-slate-855 pt-3 flex-shrink-0 space-y-2.5">
                               <textarea
                                 value={newNoteText}
                                 onChange={(e) => setNewNoteText(e.target.value)}
                                 rows={3}
                                 placeholder="Escribe una nueva nota interna..."
-                                className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 text-[11px] text-slate-800 dark:text-white rounded-2xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/25 resize-none font-medium placeholder-slate-400 transition-all"
+                                className="w-full p-3 bg-slate-50 dark:bg-slate-955 border border-slate-200 dark:border-slate-850 text-[11px] text-slate-800 dark:text-white rounded-2xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/25 resize-none font-medium placeholder-slate-400 transition-all"
                               />
                               <button
                                 type="button"
@@ -5783,6 +5977,147 @@ echo $response;`;
                 )}
               </div>
             )}
+
+            {/* BIRTHDAYS CALENDAR SECTION */}
+            {activeTab === 'birthdays' && (() => {
+              const clientsWithBirthdays = crmClients
+                .filter((c: any) => c.birthday)
+                .map((c: any) => ({
+                  ...c,
+                  bInfo: getBirthdayInfo(c)
+                }))
+                .filter((c: any) => c.bInfo !== null)
+                .sort((a: any, b: any) => a.bInfo.daysRemaining - b.bInfo.daysRemaining);
+
+              const bToday = clientsWithBirthdays.filter(c => c.bInfo.isToday);
+              
+              
+              return (
+                <div className="space-y-6 animate-fadeIn text-left">
+                  <div className="space-y-0.5">
+                    <h3 className="text-base font-bold text-slate-800 dark:text-white">Cumpleaños de Clientes</h3>
+                    <p className="text-xs text-surface-400">Seguimiento de cumpleaños de tus contactos del CRM para fortalecer relaciones comerciales.</p>
+                  </div>
+
+                  {/* Cumpleaños de hoy banner */}
+                  {bToday.length > 0 && (
+                    <div className="bg-gradient-to-r from-pink-500 to-rose-500 rounded-3xl p-5 sm:p-6 text-white relative overflow-hidden shadow-premium-lg shadow-pink-500/10">
+                      <div className="absolute right-[-5%] top-[-20%] w-48 h-48 bg-white/10 rounded-full blur-2xl" />
+                      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex items-start gap-4">
+                          <span className="text-3xl sm:text-4xl">🎉</span>
+                          <div className="space-y-1">
+                            <h4 className="text-sm sm:text-base font-extrabold uppercase tracking-wider">¡Hoy cumple años un cliente!</h4>
+                            <p className="text-xs text-white/90 max-w-xl">
+                              Envía un saludo personalizado por WhatsApp a <strong>{bToday.map(c => c.name).join(', ')}</strong> y demuéstrale la excelencia de tu atención.
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2.5">
+                          {bToday.map(c => (
+                            <button
+                              key={c.id}
+                              onClick={() => handleWishBirthday(c)}
+                              className="px-4.5 py-2.5 bg-white text-rose-600 hover:bg-slate-50 active:scale-[0.98] text-xs font-extrabold rounded-2xl shadow-sm transition-all cursor-pointer flex items-center gap-2"
+                            >
+                              <span>Felicitar a {c.name.split(' ')[0]}</span>
+                              <span>🎂</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {crmClientsLoading ? (
+                    <div className="flex flex-col items-center justify-center py-12 gap-3">
+                      <RefreshCw size={24} className="animate-spin text-brand-primary" />
+                      <span className="text-xs text-surface-400 font-bold uppercase">Cargando cumpleaños...</span>
+                    </div>
+                  ) : clientsWithBirthdays.length === 0 ? (
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 p-8 rounded-3xl text-center space-y-3">
+                      <Gift className="mx-auto w-10 h-10 text-slate-400 dark:text-slate-655" />
+                      <h4 className="text-sm font-bold text-slate-800 dark:text-white">No hay cumpleaños registrados</h4>
+                      <p className="text-xs text-surface-400 max-w-sm mx-auto">Edita las fichas de tus clientes en el CRM y añade sus fechas de nacimiento para verlos organizados aquí.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-5">
+                      {/* Upcoming lists */}
+                      <div className="bg-white dark:bg-slate-900/60 rounded-3xl border border-slate-200/50 dark:border-slate-800/80 p-4 sm:p-5 space-y-4">
+                        <h4 className="text-xs font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">Cronograma de Cumpleaños</h4>
+                        <div className="divide-y divide-slate-100 dark:divide-slate-800/50">
+                          {clientsWithBirthdays.map((client) => {
+                            const isToday = client.bInfo.isToday;
+                            const daysRemaining = client.bInfo.daysRemaining;
+                            
+                            return (
+                              <div key={client.id} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 first:pt-0 last:pb-0">
+                                <div className="flex items-center gap-3">
+                                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-xs flex-shrink-0 ${
+                                    isToday 
+                                      ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20 animate-pulse'
+                                      : daysRemaining <= 7
+                                        ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
+                                        : 'bg-slate-50 dark:bg-slate-950 text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-850'
+                                  }`}>
+                                    {isToday ? '🎂' : new Date(client.birthday).getDate()}
+                                  </div>
+                                  
+                                  <div className="space-y-0.5 text-left">
+                                    <h5 className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                                      <span>{client.name}</span>
+                                      {isToday && (
+                                        <span className="px-2 py-0.5 bg-rose-500/10 text-rose-500 text-[8px] font-extrabold rounded-full border border-rose-500/10 uppercase tracking-widest">
+                                          Hoy
+                                        </span>
+                                      )}
+                                    </h5>
+                                    <div className="flex flex-wrap gap-x-2.5 gap-y-0.5 text-[10px] text-surface-400 font-medium">
+                                      {client.phone_number && <span>Tel: +{client.phone_number}</span>}
+                                      {client.email && <span>Email: {client.email}</span>}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center justify-between sm:justify-end gap-4">
+                                  <div className="text-right space-y-0.5">
+                                    <span className="text-[10px] text-slate-800 dark:text-slate-200 font-bold block">
+                                      {formatBirthdayString(client.birthday)}
+                                    </span>
+                                    <span className={`text-[9px] font-bold block ${
+                                      isToday 
+                                        ? 'text-rose-500' 
+                                        : daysRemaining <= 7
+                                          ? 'text-amber-500'
+                                          : 'text-surface-400'
+                                    }`}>
+                                      {isToday 
+                                        ? '¡Hoy es su día!' 
+                                        : daysRemaining === 1 
+                                          ? 'Mañana' 
+                                          : `En ${daysRemaining} días`}
+                                    </span>
+                                  </div>
+
+                                  <button
+                                    onClick={() => handleWishBirthday(client)}
+                                    className="px-3.5 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 active:scale-[0.98] text-emerald-700 dark:text-emerald-400 text-[10px] font-extrabold rounded-xl transition-all cursor-pointer flex items-center gap-1"
+                                    title="Felicitar por WhatsApp"
+                                  >
+                                    <span>Felicitar</span>
+                                    <span>🎂</span>
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* SUPER ADMIN OVERVIEW SECTION */}
             {activeTab === 'admin_overview' && (
