@@ -360,6 +360,10 @@ export default function DashboardPage() {
 
   // CRM Clients Tab States
   // CRM Global Tasks States
+  const [isClientDropdownOpen, setIsClientDropdownOpen] = useState(false);
+  const [showTaskFormDatePicker, setShowTaskFormDatePicker] = useState(false);
+  const [taskFormDatePickerYear, setTaskFormDatePickerYear] = useState<number>(new Date().getFullYear());
+  const [taskFormDatePickerMonth, setTaskFormDatePickerMonth] = useState<number>(new Date().getMonth());
   // CRM Sidebar Tab Integration (Billing / Catalog)
   const [crmSidebarTab, setCrmSidebarTab] = useState<'info' | 'billing'>('info');
   const [billingSearchQuery, setBillingSearchQuery] = useState('');
@@ -389,6 +393,8 @@ export default function DashboardPage() {
   const [openMoveDropdownJid, setOpenMoveDropdownJid] = useState<string | null>(null);
   const pipelineDropdownRef = useRef<HTMLDivElement>(null);
   const pipelineButtonRef = useRef<HTMLButtonElement>(null);
+  const clientDropdownRef = useRef<HTMLDivElement>(null);
+  const taskFormDateRef = useRef<HTMLDivElement>(null);
 
   // Refs para scroll inteligente y emoji picker click-outside
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -5528,16 +5534,55 @@ echo $response;`;
                     <form onSubmit={handleCreateGlobalTask} className="space-y-4">
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Asignar a Cliente</label>
-                        <select
-                          value={newTaskClientId}
-                          onChange={(e) => setNewTaskClientId(e.target.value)}
-                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 dark:text-white focus:outline-none focus:border-brand-primary cursor-pointer"
-                        >
-                          <option value="">-- Seleccionar Cliente --</option>
-                          {crmClients.map(c => (
-                            <option key={c.id} value={c.id}>{c.name} ({c.doc_type}: {c.doc_number})</option>
-                          ))}
-                        </select>
+                        <div className="relative font-sans" ref={clientDropdownRef}>
+                          <button
+                            type="button"
+                            onClick={() => setIsClientDropdownOpen(!isClientDropdownOpen)}
+                            className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-medium text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-900 transition-all cursor-pointer focus:outline-none"
+                          >
+                            <span className="truncate">
+                              {newTaskClientId 
+                                ? crmClients.find(c => c.id.toString() === newTaskClientId)?.name || 'Seleccionar Cliente'
+                                : 'Seleccionar Cliente'}
+                            </span>
+                            <ChevronDown size={12} className={`text-slate-400 transition-transform duration-200 ${isClientDropdownOpen ? 'rotate-180' : ''}`} />
+                          </button>
+
+                          {isClientDropdownOpen && (
+                            <>
+                              <div className="fixed inset-0 z-30" onClick={() => setIsClientDropdownOpen(false)} />
+                              <div className="absolute left-0 right-0 mt-1.5 bg-[#0b2d33] dark:bg-slate-950 rounded-xl border-0 shadow-premium-lg py-1 z-40 max-h-48 overflow-y-auto animate-fadeIn text-left">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setNewTaskClientId('');
+                                    setIsClientDropdownOpen(false);
+                                  }}
+                                  className="w-full text-left px-3.5 py-2 text-xs text-slate-350 dark:text-slate-450 hover:bg-[#40916C]/40 hover:text-white transition-colors cursor-pointer"
+                                >
+                                  -- Seleccionar Cliente --
+                                </button>
+                                {crmClients.map(c => (
+                                  <button
+                                    key={c.id}
+                                    type="button"
+                                    onClick={() => {
+                                      setNewTaskClientId(c.id.toString());
+                                      setIsClientDropdownOpen(false);
+                                    }}
+                                    className={`w-full text-left px-3.5 py-2 text-xs hover:bg-[#40916C]/40 hover:text-white transition-colors cursor-pointer ${
+                                      newTaskClientId === c.id.toString() 
+                                        ? 'text-white bg-[#40916C]' 
+                                        : 'text-slate-100 dark:text-slate-200'
+                                    }`}
+                                  >
+                                    {c.name} ({c.doc_type}: {c.doc_number.startsWith('MANUAL-') ? 'No registrado' : c.doc_number})
+                                  </button>
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </div>
                       </div>
 
                       <div className="space-y-1">
@@ -5553,12 +5598,138 @@ echo $response;`;
 
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Fecha Límite</label>
-                        <input
-                          type="date"
-                          value={newTaskDueDate}
-                          onChange={(e) => setNewTaskDueDate(e.target.value)}
-                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 dark:text-white focus:outline-none focus:border-brand-primary cursor-pointer"
-                        />
+                        <div className="relative" ref={taskFormDateRef}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowTaskFormDatePicker(!showTaskFormDatePicker);
+                              const d = newTaskDueDate ? new Date(newTaskDueDate + 'T00:00:00') : new Date();
+                              setTaskFormDatePickerYear(d.getFullYear());
+                              setTaskFormDatePickerMonth(d.getMonth());
+                            }}
+                            className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none hover:bg-slate-100 dark:hover:bg-slate-900 transition-all cursor-pointer text-left"
+                          >
+                            <span>
+                              {newTaskDueDate 
+                                ? formatBirthdayString(newTaskDueDate)
+                                : 'Seleccionar fecha'}
+                            </span>
+                            <Calendar size={13} className="text-slate-450" />
+                          </button>
+
+                          {showTaskFormDatePicker && (
+                            <>
+                              <div className="fixed inset-0 z-30" onClick={() => setShowTaskFormDatePicker(false)} />
+                              <div className="absolute left-0 top-full mt-1.5 w-60 bg-[#0b2d33] dark:bg-slate-950 border-0 rounded-2xl shadow-premium-lg p-3.5 z-40 animate-fadeIn font-sans">
+                                <div className="flex items-center justify-between mb-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (taskFormDatePickerMonth === 0) {
+                                        setTaskFormDatePickerMonth(11);
+                                        setTaskFormDatePickerYear(taskFormDatePickerYear - 1);
+                                      } else {
+                                        setTaskFormDatePickerMonth(taskFormDatePickerMonth - 1);
+                                      }
+                                    }}
+                                    className="p-1 hover:bg-white/10 rounded-lg text-white transition-colors cursor-pointer"
+                                  >
+                                    <ChevronLeft size={13} />
+                                  </button>
+                                  <span className="text-[10px] font-bold text-white uppercase tracking-wider">
+                                    {['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][taskFormDatePickerMonth]} {taskFormDatePickerYear}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (taskFormDatePickerMonth === 11) {
+                                        setTaskFormDatePickerMonth(0);
+                                        setTaskFormDatePickerYear(taskFormDatePickerYear + 1);
+                                      } else {
+                                        setTaskFormDatePickerMonth(taskFormDatePickerMonth + 1);
+                                      }
+                                    }}
+                                    className="p-1 hover:bg-white/10 rounded-lg text-white transition-colors cursor-pointer"
+                                  >
+                                    <ChevronRight size={13} />
+                                  </button>
+                                </div>
+
+                                <div className="grid grid-cols-7 gap-1 text-center text-[9px] font-black text-slate-450 uppercase tracking-widest mb-1.5">
+                                  {['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'].map(d => (
+                                    <div key={d} className="h-5 flex items-center justify-center">{d}</div>
+                                  ))}
+                                </div>
+
+                                <div className="grid grid-cols-7 gap-1">
+                                  {(() => {
+                                    const days = [];
+                                    const firstDay = new Date(taskFormDatePickerYear, taskFormDatePickerMonth, 1).getDay();
+                                    const totalDays = new Date(taskFormDatePickerYear, taskFormDatePickerMonth + 1, 0).getDate();
+
+                                    for (let i = 0; i < firstDay; i++) {
+                                      days.push(<div key={`empty-${i}`} className="h-6 w-6" />);
+                                    }
+
+                                    const selectedDate = newTaskDueDate ? new Date(newTaskDueDate + 'T00:00:00') : null;
+                                    const isSelectedYear = selectedDate && selectedDate.getFullYear() === taskFormDatePickerYear;
+                                    const isSelectedMonth = selectedDate && selectedDate.getMonth() === taskFormDatePickerMonth;
+
+                                    for (let d = 1; d <= totalDays; d++) {
+                                      const isSelected = selectedDate && isSelectedYear && isSelectedMonth && selectedDate.getDate() === d;
+                                      const dateStr = `${taskFormDatePickerYear}-${String(taskFormDatePickerMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+
+                                      days.push(
+                                        <button
+                                          key={`day-${d}`}
+                                          type="button"
+                                          onClick={() => {
+                                            setNewTaskDueDate(dateStr);
+                                            setShowTaskFormDatePicker(false);
+                                          }}
+                                          className={`h-6 w-6 text-[9.5px] font-extrabold rounded-lg flex items-center justify-center transition-all cursor-pointer ${
+                                            isSelected
+                                              ? 'bg-brand-primary text-white shadow-sm'
+                                              : 'text-slate-100 hover:bg-white/10'
+                                          }`}
+                                        >
+                                          {d}
+                                        </button>
+                                      );
+                                    }
+
+                                    return days;
+                                  })()}
+                                </div>
+
+                                <div className="flex justify-between items-center pt-2 mt-2 border-t border-slate-750 text-[9.5px] font-bold">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setNewTaskDueDate('');
+                                      setShowTaskFormDatePicker(false);
+                                    }}
+                                    className="text-rose-450 hover:underline cursor-pointer"
+                                  >
+                                    Borrar
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const today = new Date();
+                                      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-\ ${String(today.getDate()).padStart(2, '0')}`.replace(/\s/g, '');
+                                      setNewTaskDueDate(todayStr);
+                                      setShowTaskFormDatePicker(false);
+                                    }}
+                                    className="text-brand-primary hover:underline cursor-pointer"
+                                  >
+                                    Hoy
+                                  </button>
+                                </div>
+                              </div>
+                            </>
+                          )}
+                        </div>
                       </div>
 
                       <button
