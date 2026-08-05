@@ -220,20 +220,24 @@ export class EvolutionService {
   public static async sendMediaMessage(
     instanceName: string,
     number: string,
-    media: string, // string Base64 o URL
+    media: string,
     mediatype: 'image' | 'video' | 'document' | 'audio',
     mimetype: string,
     caption?: string,
     fileName?: string
-  ): Promise<boolean> {
+  ): Promise<any> {
     try {
-      let cleanNumber = number.replace(/\D/g, '');
-      if (cleanNumber.length === 9 && cleanNumber.startsWith('9')) {
-        cleanNumber = `51${cleanNumber}`;
+      let targetNumber = number;
+      if (!number.includes('@')) {
+        let cleanNumber = number.replace(/\D/g, '');
+        if (cleanNumber.length === 9 && cleanNumber.startsWith('9')) {
+          cleanNumber = `51${cleanNumber}`;
+        }
+        targetNumber = cleanNumber;
       }
       
       const payload: any = {
-        number: cleanNumber,
+        number: targetNumber,
         mediatype,
         mimetype,
         media,
@@ -247,10 +251,14 @@ export class EvolutionService {
       }
 
       const response = await api.post(`/message/sendMedia/${instanceName}`, payload);
-      return response.status === 200 || response.status === 201;
+      return { success: response.status === 200 || response.status === 201 };
     } catch (err: any) {
-      console.error(`[EvolutionService] Error enviando media (${mediatype}) a ${number}:`, err.message);
-      return false;
+      console.error(`[EvolutionService] Error enviando media (${mediatype}) a ${number}:`, err.message, err.response?.data);
+      return {
+        success: false,
+        error: err.message,
+        details: err.response?.data
+      };
     }
   }
 

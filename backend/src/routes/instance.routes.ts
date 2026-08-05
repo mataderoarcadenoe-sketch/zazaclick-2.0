@@ -487,8 +487,7 @@ router.post('/chats/:instanceName/send', authMiddleware, async (req: Authenticat
       return res.status(403).json({ success: false, error: 'Acceso no autorizado.' });
     }
 
-    const number = remoteJid.split('@')[0];
-    const sentResult = await EvolutionService.sendTextMessage(instanceName, number, text);
+    const sentResult = await EvolutionService.sendTextMessage(instanceName, remoteJid, text);
     if (sentResult.success) {
       return res.json({ success: true, message: 'Mensaje enviado exitosamente.' });
     }
@@ -521,13 +520,15 @@ router.post('/chats/:instanceName/send-media', authMiddleware, async (req: Authe
       return res.status(403).json({ success: false, error: 'Acceso no autorizado.' });
     }
 
-    const number = remoteJid.split('@')[0];
-
-    const sent = await EvolutionService.sendMediaMessage(instanceName, number, media, mediatype, mimetype, caption, fileName);
-    if (sent) {
+    const sentResult = await EvolutionService.sendMediaMessage(instanceName, remoteJid, media, mediatype, mimetype, caption, fileName);
+    if (sentResult.success) {
       return res.json({ success: true, message: 'Mensaje multimedia enviado exitosamente.' });
     }
-    res.status(500).json({ success: false, error: 'Error en el servidor al enviar el mensaje multimedia.' });
+    res.status(500).json({ 
+      success: false, 
+      error: `Error en el servidor al enviar el mensaje multimedia: ${sentResult.error || ''}`,
+      details: sentResult.details 
+    });
   } catch (error: any) {
     console.error('[Instance] Error en POST /chats/send-media:', error.message);
     res.status(500).json({ success: false, error: 'Error interno en el servidor.' });
