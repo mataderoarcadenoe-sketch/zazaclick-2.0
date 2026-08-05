@@ -659,7 +659,8 @@ export default function DashboardPage() {
       });
       if (res.data?.success) {
         const base64Data = res.data.data.base64 || res.data.data;
-        const mimetype = messageContent.imageMessage?.mimetype || 
+        const mimetype = messageContent.stickerMessage?.mimetype || 
+                         messageContent.imageMessage?.mimetype || 
                          messageContent.audioMessage?.mimetype || 
                          messageContent.videoMessage?.mimetype || 
                          messageContent.documentMessage?.mimetype || 
@@ -3738,6 +3739,39 @@ echo $response;`;
                                   const renderMessageContent = () => {
                                     const content = msg.message;
                                     if (!content) return null;
+
+                                    if (content.stickerMessage) {
+                                      const isLoaded = !!loadedMedia[msgId];
+                                      const isLoading = !!mediaLoadingStates[msgId];
+                                      
+                                      if (!isLoaded && !isLoading) {
+                                        setTimeout(() => {
+                                          downloadMedia(msgId, msg.key, content);
+                                        }, 0);
+                                      }
+
+                                      if (isLoaded) {
+                                        return (
+                                          <div className="text-center p-1">
+                                            <img 
+                                              src={loadedMedia[msgId]} 
+                                              alt="Sticker" 
+                                              className="w-[120px] h-[120px] object-contain rounded-lg hover:scale-105 transition-transform cursor-pointer"
+                                              onClick={() => setLightboxMedia({
+                                                url: loadedMedia[msgId],
+                                                type: 'image'
+                                              })}
+                                            />
+                                          </div>
+                                        );
+                                      }
+
+                                      return (
+                                        <div className="w-[120px] h-[120px] bg-slate-100 dark:bg-slate-900/60 rounded-xl flex items-center justify-center animate-pulse">
+                                          <span className="text-[9px] font-bold text-surface-400 dark:text-surface-500">Cargando sticker...</span>
+                                        </div>
+                                      );
+                                    }
 
                                     if (content.imageMessage) {
                                       const isLoaded = !!loadedMedia[msgId];
