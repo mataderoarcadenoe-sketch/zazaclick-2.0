@@ -4347,35 +4347,24 @@ echo $response;`;
                             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                             {!crmIsEditing && crmClient ? (
                               <div className="space-y-3.5 pb-6">
-                                {/* Ultra Premium Header Card */}
-                                 <div className="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-slate-800/80 shadow-lg">
-                                   {/* Top colored accent line */}
-                                   <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-brand-primary via-indigo-500 to-emerald-500"></div>
-                                   
-                                   {/* Decorative background glow */}
-                                   <div className="absolute -top-12 -right-12 w-24 h-24 bg-brand-primary/15 rounded-full blur-2xl pointer-events-none"></div>
-                                   <div className="absolute -bottom-12 -left-12 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none"></div>
-                                   
-                                   <div className="relative z-10 flex items-center gap-4">
-                                     {/* Avatar Container with active ring & online dot */}
-                                     <div className="relative flex-shrink-0">
-                                       <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-brand-primary via-indigo-650 to-indigo-500 flex items-center justify-center text-[15px] font-black text-white shadow-md ring-2 ring-slate-800 ring-offset-2 ring-offset-slate-950 uppercase">
-                                         {crmClient.name.split(' ').slice(0, 2).map((n: string) => n[0]).join('').toUpperCase() || 'C'}
-                                       </div>
-                                       {/* Live indicator dot */}
-                                       <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-slate-950 rounded-full shadow-sm"></span>
+                                {/* Clean Corporate Header Card */}
+                                 <div className="relative rounded-2xl p-4 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 shadow-sm text-left">
+                                   <div className="flex items-center gap-3.5">
+                                     {/* Simple Round Avatar */}
+                                     <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-sm font-bold text-slate-700 dark:text-slate-200 flex-shrink-0 uppercase">
+                                       {crmClient.name.split(' ').slice(0, 2).map((n: string) => n[0]).join('').toUpperCase() || 'C'}
                                      </div>
                                      
                                      {/* Client Name & ID Info */}
-                                     <div className="flex-1 min-w-0 pr-5 text-left space-y-1">
-                                       <h4 className="text-[12.5px] font-black text-white tracking-wide uppercase truncate leading-snug" title={crmClient.name}>
+                                     <div className="flex-1 min-w-0 pr-6 space-y-1">
+                                       <h4 className="text-[13px] font-bold text-slate-800 dark:text-white tracking-wide uppercase truncate leading-tight" title={crmClient.name}>
                                          {crmClient.name}
                                        </h4>
                                        
-                                       {/* Document details in a clean low-opacity format */}
+                                       {/* Document details */}
                                        {crmClient.doc_number && !crmClient.doc_number.startsWith('MANUAL-') && (
-                                         <p className="text-[10px] font-semibold text-slate-400 flex items-center gap-1">
-                                           <span className="px-1.5 py-0.2 bg-slate-800 text-slate-350 rounded text-[8px] font-bold uppercase">{crmClient.doc_type || 'DOC'}</span>
+                                         <p className="text-[10px] font-semibold text-slate-550 dark:text-slate-450 flex items-center gap-1.5">
+                                           <span className="px-1.5 py-0.2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-350 rounded text-[8px] font-bold uppercase">{crmClient.doc_type || 'DOC'}</span>
                                            <span>{crmClient.doc_number}</span>
                                          </p>
                                        )}
@@ -4384,18 +4373,18 @@ echo $response;`;
                                        <div className="flex items-center gap-1.5 mt-1">
                                          {(() => {
                                            const cat = crmContact?.category_name || 'Cliente';
-                                           let badgeStyle = 'bg-brand-primary/10 text-brand-primary border-brand-primary/20';
+                                           let badgeStyle = 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-450 border border-slate-200/50 dark:border-slate-700/50';
                                            if (cat === 'VIP' || cat === 'Cliente frecuente') {
-                                             badgeStyle = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+                                             badgeStyle = 'bg-amber-50 text-amber-700 border-amber-200/60 dark:bg-amber-950/20 dark:text-amber-450 dark:border-amber-900/30';
                                            } else if (cat === 'Moroso' || cat === 'Pendiente') {
-                                             badgeStyle = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+                                             badgeStyle = 'bg-rose-50 text-rose-700 border-rose-200/60 dark:bg-rose-950/20 dark:text-rose-450 dark:border-rose-900/30';
                                            } else if (cat === 'Interesado' || cat === 'Prospecto') {
-                                             badgeStyle = 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+                                             badgeStyle = 'bg-blue-50 text-blue-700 border-blue-200/60 dark:bg-blue-950/20 dark:text-blue-450 dark:border-blue-900/30';
                                            } else if (cat === 'Pagó') {
-                                             badgeStyle = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+                                             badgeStyle = 'bg-emerald-50 text-emerald-700 border-emerald-200/60 dark:bg-emerald-950/20 dark:text-emerald-450 dark:border-emerald-900/30';
                                            }
                                            return (
-                                             <span className={`inline-block px-2 py-0.5 text-[8.5px] font-black uppercase rounded-lg border ${badgeStyle}`}>
+                                             <span className={`inline-block px-2 py-0.5 text-[8.5px] font-bold uppercase rounded-lg border ${badgeStyle}`}>
                                                {cat}
                                              </span>
                                            );
@@ -4404,7 +4393,7 @@ echo $response;`;
                                      </div>
                                    </div>
                                    
-                                   {/* Edit Button with glass container */}
+                                   {/* Simple Edit Button */}
                                    <button
                                      type="button"
                                      onClick={() => {
@@ -4423,10 +4412,10 @@ echo $response;`;
                                        }
                                        setCrmIsEditing(true);
                                      }}
-                                     className="absolute top-3.5 right-3.5 p-2 bg-white/5 hover:bg-white/10 active:scale-95 border border-white/5 hover:border-white/15 rounded-xl transition-all duration-200 cursor-pointer text-white/80 hover:text-white flex items-center justify-center"
+                                     className="absolute top-3.5 right-3.5 p-1.5 text-slate-400 hover:text-slate-650 dark:hover:text-slate-250 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
                                      title="Editar ficha"
                                    >
-                                     <Edit2 size={10.5} className="stroke-[2.5]" />
+                                     <Edit2 size={11} className="stroke-[2.5]" />
                                    </button>
                                  </div>
 
