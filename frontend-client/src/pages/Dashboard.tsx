@@ -6363,43 +6363,43 @@ echo $response;`;
                         return (
                           <div 
                             key={client.id}
-                            className={`p-4 rounded-3xl border flex items-center justify-between shadow-sm relative overflow-hidden transition-all duration-200 hover:scale-[1.01] hover:shadow-md ${
+                            className={`p-5 rounded-[24px] border flex items-center justify-between transition-all duration-300 group hover:-translate-y-0.5 ${
                               isToday 
-                                ? 'bg-pink-50/40 dark:bg-pink-950/10 border-pink-200 dark:border-pink-900/60 shadow-pink-500/5'
-                                : 'bg-white dark:bg-slate-900 border-slate-200/50 dark:border-slate-800/80'
+                                ? 'bg-gradient-to-br from-pink-50/60 to-rose-50/40 dark:from-pink-950/10 dark:to-rose-950/5 border-pink-200 dark:border-pink-900/60 shadow-premium-lg shadow-pink-500/5'
+                                : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800/80 shadow-sm hover:shadow-md hover:border-slate-200 dark:hover:border-slate-700/80'
                             }`}
                           >
-                            <div className="flex items-center gap-3.5 flex-1 min-w-0">
+                            <div className="flex items-center gap-4 flex-1 min-w-0">
                               {/* Left Date Badge */}
-                              <div className={`w-12 h-12 rounded-2xl flex flex-col items-center justify-center font-black flex-shrink-0 text-center select-none ${
+                              <div className={`w-12 h-12 rounded-[18px] flex flex-col items-center justify-center font-black flex-shrink-0 text-center select-none shadow-sm transition-transform duration-300 group-hover:scale-105 ${
                                 isToday 
-                                  ? 'bg-gradient-to-br from-pink-500 to-rose-500 text-white shadow-md shadow-pink-500/10'
-                                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-350'
+                                  ? 'bg-gradient-to-br from-pink-500 to-rose-500 text-white shadow-pink-500/20'
+                                  : 'bg-[#7c8ca0] dark:bg-slate-800 text-white dark:text-slate-200'
                               }`}>
-                                <span className="text-[13px] leading-none">{birthDay}</span>
-                                <span className="text-[8px] tracking-wider mt-0.5 opacity-80">{birthMonthAbbr}</span>
+                                <span className="text-[14px] leading-none">{birthDay}</span>
+                                <span className="text-[7.5px] font-black tracking-widest mt-0.5 opacity-90 uppercase">{birthMonthAbbr}</span>
                               </div>
 
                               {/* Details */}
-                              <div className="flex-1 min-w-0 space-y-0.5 text-left">
-                                <h5 className="text-[11.5px] font-black text-slate-850 dark:text-white uppercase truncate flex items-center gap-1.5">
+                              <div className="flex-1 min-w-0 space-y-1 text-left">
+                                <h5 className="text-[12px] font-black text-slate-800 dark:text-white uppercase truncate flex items-center gap-1.5 tracking-tight">
                                   <span>{client.name}</span>
                                   {isToday && (
-                                    <span className="px-1.5 py-0.5 bg-pink-100 dark:bg-pink-950/60 text-pink-700 dark:text-pink-400 text-[7.5px] font-black rounded uppercase tracking-wider">
+                                    <span className="px-1.5 py-0.5 bg-pink-500 text-white text-[7.5px] font-black rounded-lg uppercase tracking-wider shadow-sm shadow-pink-500/10">
                                       Hoy 🎁
                                     </span>
                                   )}
                                 </h5>
                                 
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded ${
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className={`px-2 py-0.5 text-[9.5px] font-black rounded-lg border ${
                                     isToday 
-                                      ? 'bg-pink-100/50 dark:bg-pink-950/30 text-pink-700 dark:text-pink-400'
-                                      : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                                      ? 'bg-pink-100/50 dark:bg-pink-950/30 border-pink-200/30 text-pink-600 dark:text-pink-400'
+                                      : 'bg-rose-50 dark:bg-rose-950/20 border-rose-100/50 dark:border-rose-900/10 text-rose-600 dark:text-rose-450'
                                   }`}>
                                     {age} años
                                   </span>
-                                  <span className={`text-[9.5px] font-bold ${
+                                  <span className={`text-[10px] font-bold ${
                                     isToday 
                                       ? 'text-pink-600 dark:text-pink-400'
                                       : 'text-slate-400 dark:text-slate-500'
@@ -6408,13 +6408,13 @@ echo $response;`;
                                   </span>
                                 </div>
 
-                                <div className="flex items-center gap-1 text-[9px] text-slate-400 dark:text-slate-500 font-bold">
-                                  <Phone size={9} />
+                                <div className="flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-slate-500 font-bold">
+                                  <Phone size={10} className="text-slate-400 dark:text-slate-500" />
                                   <span>{client.phone_number || 'Sin teléfono'}</span>
                                 </div>
 
                                 {isToday && (
-                                  <div className="flex items-center gap-1 text-[9px] text-pink-600 dark:text-pink-400 font-black mt-0.5">
+                                  <div className="flex items-center gap-1 text-[9.5px] text-pink-600 dark:text-pink-400 font-black mt-0.5 animate-pulse">
                                     <span>🎁 ¡Cumpleaños hoy!</span>
                                   </div>
                                 )}
@@ -6433,8 +6433,8 @@ echo $response;`;
                                   <Send size={13} className="ml-[1px] mt-[-0.5px]" />
                                 </button>
                               ) : (
-                                <div className="w-7 h-7 flex items-center justify-center text-slate-200 dark:text-slate-800/60 select-none">
-                                  <Sparkles size={13} />
+                                <div className="w-7 h-7 flex items-center justify-center text-rose-500 dark:text-rose-400 group-hover:scale-110 transition-transform duration-300 select-none">
+                                  <Sparkles size={14} className="animate-pulse" />
                                 </div>
                               )}
                             </div>
