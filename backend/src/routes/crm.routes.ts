@@ -654,7 +654,7 @@ router.post('/pipeline/move', async (req: AuthenticatedRequest, res: Response) =
 router.get('/contacts/tags-map', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const result = await pool.query(
-      'SELECT phone_number, tags FROM crm_contacts WHERE user_id = $1 AND is_active = true',
+      'SELECT phone_number, tags FROM crm_contacts WHERE user_id = $1',
       [req.userId]
     );
     const tagsMap: Record<string, string[]> = {};
