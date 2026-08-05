@@ -3089,7 +3089,7 @@ echo $response;`;
                                             else if (tag === 'Pendiente') colorClass = "bg-blue-500 text-white";
                                             else if (tag === 'Nuevo') colorClass = "bg-emerald-500 text-white";
                                             return (
-                                              <span key={tag} className={`px-1.5 py-0.5 text-[8px] font-extrabold rounded ${colorClass}`}>
+                                              <span key={tag} className={`px-1.5 py-0.5 text-[8px] font-extrabold rounded-full ${colorClass}`}>
                                                 {tag}
                                               </span>
                                             );
