@@ -2839,7 +2839,7 @@ echo $response;`;
 
       {/* Sidebar */}
       <aside 
-        className={`bg-[#0b2d33] dark:bg-surface-950 flex flex-col transition-all duration-300 shadow-premium z-50 fixed top-0 left-0 h-full ${
+        className={`bg-[#1E293B] dark:bg-surface-950 flex flex-col transition-all duration-300 shadow-premium z-50 fixed top-0 left-0 h-full ${
           sidebarOpen ? 'w-64 translate-x-0' : 'w-20 -translate-x-full lg:translate-x-0'
         }`}
       >
@@ -3012,7 +3012,7 @@ echo $response;`;
                   </button>
 
                   {showChatsInstanceMenu && (
-                    <div className="absolute top-[100%] right-0 mt-1.5 z-50 bg-[#0b2d33] dark:bg-slate-900 rounded-2xl shadow-premium-lg p-1.5 flex flex-col gap-1 min-w-[200px] border-0 text-left animate-fadeIn">
+                    <div className="absolute top-[100%] right-0 mt-1.5 z-50 bg-[#1E293B] dark:bg-slate-900 rounded-2xl shadow-premium-lg p-1.5 flex flex-col gap-1 min-w-[200px] border-0 text-left animate-fadeIn">
                       {instances.length === 0 ? (
                         <span className="p-3 text-[10px] text-surface-400 dark:text-surface-500 font-bold block text-center">No hay líneas creadas</span>
                       ) : (
@@ -3027,8 +3027,8 @@ echo $response;`;
                             }}
                             className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-3 cursor-pointer text-left \${
                               selectedInstanceForChats === inst.instance_name 
-                                ? 'bg-[#40916C] dark:bg-slate-800/60 text-white dark:text-white' 
-                                : 'text-slate-100 dark:text-surface-400 hover:bg-[#40916C]/40 dark:hover:bg-slate-800/40 hover:text-white dark:hover:text-white'
+                                ? 'bg-[#0D9488] dark:bg-slate-800/60 text-white dark:text-white' 
+                                : 'text-slate-100 dark:text-surface-400 hover:bg-[#0D9488]/40 dark:hover:bg-slate-800/40 hover:text-white dark:hover:text-white'
                             }`}
                           >
                             <span className="truncate">{inst.instance_name}</span>
@@ -3806,7 +3806,7 @@ echo $response;`;
                                 {showTagsDropdown && (
                                   <div 
                                     ref={tagsDropdownRef}
-                                    className="absolute left-0 mt-1.5 w-56 bg-[#0b2d33] dark:bg-slate-950 rounded-2xl shadow-premium-lg border-0 py-2.5 px-1 z-50 animate-fadeIn"
+                                    className="absolute left-0 mt-1.5 w-56 bg-[#1E293B] dark:bg-slate-950 rounded-2xl shadow-premium-lg border-0 py-2.5 px-1 z-50 animate-fadeIn"
                                   >
                                     <div className="px-3 py-1 text-[9px] font-bold text-slate-400 uppercase tracking-wider border-b border-white/5 mb-1.5">
                                       Etiquetas Inteligentes
@@ -3853,7 +3853,7 @@ echo $response;`;
                                 {showPipelineDropdown && (
                                   <div 
                                     ref={pipelineDropdownRef}
-                                    className="absolute left-0 mt-1.5 w-48 bg-[#0b2d33] dark:bg-slate-950 rounded-2xl shadow-premium-lg border-0 py-2 z-50 animate-fadeIn"
+                                    className="absolute left-0 mt-1.5 w-48 bg-[#1E293B] dark:bg-slate-950 rounded-2xl shadow-premium-lg border-0 py-2 z-50 animate-fadeIn"
                                   >
                                     <div className="px-3 py-1 text-[9px] font-bold text-slate-400 uppercase tracking-wider border-b border-white/5 mb-1">
                                       Etapa Comercial
@@ -3904,7 +3904,7 @@ echo $response;`;
                                 {showActionsDropdown && (
                                   <>
                                     <div className="fixed inset-0 z-30" onClick={() => setShowActionsDropdown(false)} />
-                                    <div className="absolute right-0 mt-1.5 w-52 bg-[#0b2d33] dark:bg-slate-950 rounded-2xl shadow-premium-lg border-0 py-2 z-40 animate-fadeIn text-left">
+                                    <div className="absolute right-0 mt-1.5 w-52 bg-[#1E293B] dark:bg-slate-950 rounded-2xl shadow-premium-lg border-0 py-2 z-40 animate-fadeIn text-left">
                                       <button
                                         type="button"
                                         onClick={() => {
@@ -4652,7 +4652,7 @@ echo $response;`;
                                             className="fixed inset-0 z-30" 
                                             onClick={() => setIsDocTypeDropdownOpen(false)} 
                                           />
-                                          <div className="absolute left-0 mt-1 w-24 bg-[#0b2d33] dark:bg-slate-950 rounded-xl border-0 shadow-premium-lg py-1 z-40 animate-fadeIn">
+                                          <div className="absolute left-0 mt-1 w-24 bg-[#1E293B] dark:bg-slate-950 rounded-xl border-0 shadow-premium-lg py-1 z-40 animate-fadeIn">
                                             <button
                                               type="button"
                                               onClick={() => {
@@ -4662,7 +4662,7 @@ echo $response;`;
                                                 setCrmAddress('');
                                                 setIsDocTypeDropdownOpen(false);
                                               }}
-                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-[#40916C]/40 hover:text-white transition-colors cursor-pointer \${crmDocType === 'DNI' ? 'text-white bg-[#40916C]' : 'text-slate-100 dark:text-slate-200'}`}
+                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-[#0D9488]/40 hover:text-white transition-colors cursor-pointer \${crmDocType === 'DNI' ? 'text-white bg-[#0D9488]' : 'text-slate-100 dark:text-slate-200'}`}
                                             >
                                               DNI
                                             </button>
@@ -4675,7 +4675,7 @@ echo $response;`;
                                                 setCrmAddress('');
                                                 setIsDocTypeDropdownOpen(false);
                                               }}
-                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-[#40916C]/40 hover:text-white transition-colors cursor-pointer \${crmDocType === 'RUC' ? 'text-white bg-[#40916C]' : 'text-slate-100 dark:text-slate-200'}`}
+                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-[#0D9488]/40 hover:text-white transition-colors cursor-pointer \${crmDocType === 'RUC' ? 'text-white bg-[#0D9488]' : 'text-slate-100 dark:text-slate-200'}`}
                                             >
                                               RUC
                                             </button>
@@ -4743,14 +4743,14 @@ echo $response;`;
                                             className="fixed inset-0 z-30" 
                                             onClick={() => setIsCategoryDropdownOpen(false)} 
                                           />
-                                          <div className="absolute left-0 right-0 mt-1 bg-[#0b2d33] dark:bg-slate-950 rounded-xl border-0 shadow-premium-lg py-1 z-40 max-h-40 overflow-y-auto animate-fadeIn">
+                                          <div className="absolute left-0 right-0 mt-1 bg-[#1E293B] dark:bg-slate-950 rounded-xl border-0 shadow-premium-lg py-1 z-40 max-h-40 overflow-y-auto animate-fadeIn">
                                             <button
                                               type="button"
                                               onClick={() => {
                                                 setCrmCategoryId('');
                                                 setIsCategoryDropdownOpen(false);
                                               }}
-                                              className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-[#40916C]/40 hover:text-white transition-colors cursor-pointer \${crmCategoryId === '' ? 'text-white bg-[#40916C]' : 'text-slate-100 dark:text-slate-200'}`}
+                                              className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-[#0D9488]/40 hover:text-white transition-colors cursor-pointer \${crmCategoryId === '' ? 'text-white bg-[#0D9488]' : 'text-slate-100 dark:text-slate-200'}`}
                                             >
                                               Sin Categoría
                                             </button>
@@ -4762,7 +4762,7 @@ echo $response;`;
                                                   setCrmCategoryId(cat.id.toString());
                                                   setIsCategoryDropdownOpen(false);
                                                 }}
-                                                className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-[#40916C]/40 hover:text-white transition-colors cursor-pointer \${crmCategoryId === cat.id.toString() ? 'text-white bg-[#40916C]' : 'text-slate-100 dark:text-slate-200'}`}
+                                                className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-[#0D9488]/40 hover:text-white transition-colors cursor-pointer \${crmCategoryId === cat.id.toString() ? 'text-white bg-[#0D9488]' : 'text-slate-100 dark:text-slate-200'}`}
                                               >
                                                 {cat.name}
                                               </button>
@@ -5371,7 +5371,7 @@ echo $response;`;
                                             </button>
 
                                             {openMoveDropdownJid === item.remoteJid && (
-                                                <div className={`absolute right-0 w-44 bg-[#0b2d33] dark:bg-slate-950 rounded-xl shadow-premium-lg border-0 py-1.5 z-40 animate-fadeIn ${
+                                                <div className={`absolute right-0 w-44 bg-[#1E293B] dark:bg-slate-950 rounded-xl shadow-premium-lg border-0 py-1.5 z-40 animate-fadeIn ${
                                                   index > 0 && index === items.length - 1
                                                     ? 'bottom-full mb-1 origin-bottom-right'
                                                     : 'top-full mt-1 origin-top-right'
@@ -5502,14 +5502,14 @@ echo $response;`;
                           {isClientDropdownOpen && (
                             <>
                               <div className="fixed inset-0 z-30" onClick={() => setIsClientDropdownOpen(false)} />
-                              <div className="absolute left-0 right-0 mt-1.5 bg-[#0b2d33] dark:bg-slate-950 rounded-xl border-0 shadow-premium-lg py-1 z-40 max-h-48 overflow-y-auto animate-fadeIn text-left">
+                              <div className="absolute left-0 right-0 mt-1.5 bg-[#1E293B] dark:bg-slate-950 rounded-xl border-0 shadow-premium-lg py-1 z-40 max-h-48 overflow-y-auto animate-fadeIn text-left">
                                 <button
                                   type="button"
                                   onClick={() => {
                                     setNewTaskClientId('');
                                     setIsClientDropdownOpen(false);
                                   }}
-                                  className="w-full text-left px-3.5 py-2 text-xs text-slate-350 dark:text-slate-450 hover:bg-[#40916C]/40 hover:text-white transition-colors cursor-pointer"
+                                  className="w-full text-left px-3.5 py-2 text-xs text-slate-350 dark:text-slate-450 hover:bg-[#0D9488]/40 hover:text-white transition-colors cursor-pointer"
                                 >
                                   -- Seleccionar Cliente --
                                 </button>
@@ -5521,9 +5521,9 @@ echo $response;`;
                                       setNewTaskClientId(c.id.toString());
                                       setIsClientDropdownOpen(false);
                                     }}
-                                    className={`w-full text-left px-3.5 py-2 text-xs hover:bg-[#40916C]/40 hover:text-white transition-colors cursor-pointer ${
+                                    className={`w-full text-left px-3.5 py-2 text-xs hover:bg-[#0D9488]/40 hover:text-white transition-colors cursor-pointer ${
                                       newTaskClientId === c.id.toString() 
-                                        ? 'text-white bg-[#40916C]' 
+                                        ? 'text-white bg-[#0D9488]' 
                                         : 'text-slate-100 dark:text-slate-200'
                                     }`}
                                   >
@@ -5571,7 +5571,7 @@ echo $response;`;
                           {showTaskFormDatePicker && (
                             <>
                               <div className="fixed inset-0 z-30" onClick={() => setShowTaskFormDatePicker(false)} />
-                              <div className="absolute left-0 top-full mt-1.5 w-60 bg-[#0b2d33] dark:bg-slate-950 border-0 rounded-2xl shadow-premium-lg p-3.5 z-40 animate-fadeIn font-sans">
+                              <div className="absolute left-0 top-full mt-1.5 w-60 bg-[#1E293B] dark:bg-slate-950 border-0 rounded-2xl shadow-premium-lg p-3.5 z-40 animate-fadeIn font-sans">
                                 <div className="flex items-center justify-between mb-2">
                                   <button
                                     type="button"

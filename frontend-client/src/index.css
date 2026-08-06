@@ -7,20 +7,20 @@
   --font-sans: 'Inter', 'Outfit', -apple-system, BlinkMacSystemFont, 'Noto Color Emoji', 'Segoe UI Emoji', 'Apple Color Emoji', 'Segoe UI', Roboto, sans-serif;
   
   /* Brand colors */
-  --color-brand-primary: #40916C; /* Olive */
-  --color-brand-secondary: #0b2d33; /* Green Forest */ /* Darker complement */
+  --color-brand-primary: #0D9488; /* Teal Vibrant */
+  --color-brand-secondary: #1E293B; /* Navy Slate */
   --color-brand-500: var(--color-brand-primary);
   --color-brand-800: var(--color-brand-secondary);
-  --color-brand-accent: #74C69D; /* Mint */
-  --color-brand-light: #D8F3DC; /* Beige-Green */
+  --color-brand-accent: #2DD4BF; /* Cyan-Teal Light */
+  --color-brand-light: #CCFBF1; /* Teal Wash */
   /* Surface colors (Solid Grays) */
   --color-surface-500: #969595; /* Medium Gray */
   --color-surface-600: #666264; /* Dark Gray */
   /* Pastel colors */
-  --color-pastel-100: #D8F3DC; /* Beige-Green */ /* Verde pálido */
-  --color-pastel-200: #f5e6ff; /* Lavanda suave */
-  --color-pastel-300: #ffd9e6; /* Rosa bebé */
-  --color-pastel-400: #ffe5b4; /* Durazno claro */
+  --color-pastel-100: #CCFBF1; /* Teal pálido */
+  --color-pastel-200: #EDE9FE; /* Lavanda suave */
+  --color-pastel-300: #FFE4E6; /* Rosa bebé */
+  --color-pastel-400: #FEF3C7; /* Ámbar claro */
   /* Soft shadows */
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
   --shadow-md: 0 4px 6px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.08);
@@ -50,8 +50,8 @@
   --shadow-glass-dark: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
   --shadow-premium: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 20px 25px -5px rgba(0, 0, 0, 0.03);
   --shadow-premium-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-  --shadow-glow-emerald: 0 0 15px rgba(37, 211, 102, 0.3), 0 0 45px rgba(37, 211, 102, 0.1);
-  --shadow-glow-blue: 0 0 15px rgba(59, 130, 246, 0.3), 0 0 45px rgba(59, 130, 246, 0.1);
+  --shadow-glow-emerald: 0 0 15px rgba(13, 148, 136, 0.3), 0 0 45px rgba(13, 148, 136, 0.1);
+  --shadow-glow-blue: 0 0 15px rgba(14, 165, 233, 0.3), 0 0 45px rgba(14, 165, 233, 0.1);
 }
 
 @layer base {
@@ -142,14 +142,14 @@
 
   /* Gradient text */
   .gradient-text-brand {
-    background: linear-gradient(135deg, #25D366, #128C7E);
+    background: linear-gradient(135deg, #0D9488, #0EA5E9);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .gradient-text-premium {
-    background: linear-gradient(135deg, #34d399, #06b6d4, #8b5cf6);
+    background: linear-gradient(135deg, #2DD4BF, #0EA5E9, #8B5CF6);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -177,9 +177,9 @@
 
   body.dark .mesh-gradient {
     background:
-      radial-gradient(at 0% 0%, rgba(92, 203, 95, 0.08) 0px, transparent 50%),
+      radial-gradient(at 0% 0%, rgba(13, 148, 136, 0.08) 0px, transparent 50%),
       radial-gradient(at 50% 0%, rgba(14, 165, 233, 0.06) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.06) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.06) 0px, transparent 50%),
       #030712;
   }
 
