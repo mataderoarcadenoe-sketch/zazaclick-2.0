@@ -4347,82 +4347,64 @@ echo $response;`;
                             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                             {!crmIsEditing && crmClient ? (
                               <div className="space-y-3.5 pb-6">
-                                {/* Clean Corporate Header Card */}
-                                 <div className="relative rounded-2xl p-4 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 shadow-sm text-left">
-                                   <div className="flex items-center gap-3.5">
-                                     {/* Simple Round Avatar */}
-                                     <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-sm font-bold text-slate-700 dark:text-slate-200 flex-shrink-0 uppercase">
-                                       {crmClient.name.split(' ').slice(0, 2).map((n: string) => n[0]).join('').toUpperCase() || 'C'}
-                                     </div>
-                                     
-                                     {/* Client Name & ID Info */}
-                                     <div className="flex-1 min-w-0 pr-6 space-y-1">
-                                       <h4 className="text-[13px] font-bold text-slate-800 dark:text-white tracking-wide uppercase truncate leading-tight" title={crmClient.name}>
-                                         {crmClient.name}
-                                       </h4>
-                                       
-                                       {/* Document details */}
-                                       {crmClient.doc_number && !crmClient.doc_number.startsWith('MANUAL-') && (
-                                         <p className="text-[10px] font-semibold text-slate-550 dark:text-slate-450 flex items-center gap-1.5">
-                                           <span className="px-1.5 py-0.2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-350 rounded text-[8px] font-bold uppercase">{crmClient.doc_type || 'DOC'}</span>
-                                           <span>{crmClient.doc_number}</span>
-                                         </p>
-                                       )}
-                                       
-                                       {/* Category Pill Badges */}
-                                       <div className="flex items-center gap-1.5 mt-1">
-                                         {(() => {
-                                           const cat = crmContact?.category_name || 'Cliente';
-                                           let badgeStyle = 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-450 border border-slate-200/50 dark:border-slate-700/50';
-                                           if (cat === 'VIP' || cat === 'Cliente frecuente') {
-                                             badgeStyle = 'bg-amber-50 text-amber-700 border-amber-200/60 dark:bg-amber-950/20 dark:text-amber-450 dark:border-amber-900/30';
-                                           } else if (cat === 'Moroso' || cat === 'Pendiente') {
-                                             badgeStyle = 'bg-rose-50 text-rose-700 border-rose-200/60 dark:bg-rose-950/20 dark:text-rose-450 dark:border-rose-900/30';
-                                           } else if (cat === 'Interesado' || cat === 'Prospecto') {
-                                             badgeStyle = 'bg-blue-50 text-blue-700 border-blue-200/60 dark:bg-blue-950/20 dark:text-blue-450 dark:border-blue-900/30';
-                                           } else if (cat === 'Pagó') {
-                                             badgeStyle = 'bg-emerald-50 text-emerald-700 border-emerald-200/60 dark:bg-emerald-950/20 dark:text-emerald-450 dark:border-emerald-900/30';
-                                           }
-                                           return (
-                                             <span className={`inline-block px-2 py-0.5 text-[8.5px] font-bold uppercase rounded-lg border ${badgeStyle}`}>
-                                               {cat}
-                                             </span>
-                                           );
-                                         })()}
-                                       </div>
-                                     </div>
-                                   </div>
-                                   
-                                   {/* Simple Edit Button */}
-                                   <button
-                                     type="button"
-                                     onClick={() => {
-                                       setCrmDocType(crmClient.doc_type === 'MANUAL' ? 'DNI' : crmClient.doc_type);
-                                       setCrmDocNumber(crmClient.doc_type === 'MANUAL' ? '' : crmClient.doc_number);
-                                       setCrmName(crmClient.name);
-                                       setCrmAddress(crmClient.address || '');
-                                       setCrmEmail(crmClient.email || '');
-                                       setCrmNotes(crmClient.notes || '');
-                                       setCrmLanguage(crmClient.language || 'Español');
-                                       setCrmBirthday(crmClient.birthday || '');
-                                       if (crmClient.category_id) {
-                                         setCrmCategoryId(crmClient.category_id.toString());
-                                       } else {
-                                         setCrmCategoryId('');
-                                       }
-                                       setCrmIsEditing(true);
-                                     }}
-                                     className="absolute top-3.5 right-3.5 p-1.5 text-slate-400 hover:text-slate-650 dark:hover:text-slate-250 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
-                                     title="Editar ficha"
-                                   >
-                                     <Edit2 size={11} className="stroke-[2.5]" />
-                                   </button>
-                                 </div>
-
+                                {/* Professional Header Card */}
+                                <div className="relative rounded-2xl p-4 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 shadow-sm text-left">
+                                  <div className="flex items-center gap-3.5">
+                                    <div className="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[13px] font-bold text-slate-600 dark:text-slate-300 flex-shrink-0 uppercase tracking-wide">
+                                      {crmClient.name.split(' ').slice(0, 2).map((n: string) => n[0]).join('').toUpperCase() || 'C'}
+                                    </div>
+                                    <div className="flex-1 min-w-0 pr-8 space-y-1.5">
+                                      <h4 className="text-[12.5px] font-extrabold text-slate-800 dark:text-white uppercase truncate leading-tight" title={crmClient.name}>
+                                        {crmClient.name}
+                                      </h4>
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        {crmClient.doc_number && !crmClient.doc_number.startsWith('MANUAL-') && (
+                                          <span className="text-[9.5px] font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                                            <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase">{crmClient.doc_type || 'DOC'}</span>
+                                            {crmClient.doc_number}
+                                          </span>
+                                        )}
+                                        {(() => {
+                                          const cat = crmContact?.category_name || 'Cliente';
+                                          let pillColor = 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400';
+                                          if (cat === 'VIP' || cat === 'Cliente frecuente') pillColor = 'bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400';
+                                          else if (cat === 'Moroso' || cat === 'Pendiente') pillColor = 'bg-rose-50 text-rose-600 dark:bg-rose-950/30 dark:text-rose-400';
+                                          else if (cat === 'Interesado' || cat === 'Prospecto') pillColor = 'bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400';
+                                          else if (cat === 'Pagó') pillColor = 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400';
+                                          return <span className={`px-2 py-0.5 text-[8px] font-bold uppercase rounded-md ${pillColor}`}>{cat}</span>;
+                                        })()}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setCrmDocType(crmClient.doc_type === 'MANUAL' ? 'DNI' : crmClient.doc_type);
+                                      setCrmDocNumber(crmClient.doc_type === 'MANUAL' ? '' : crmClient.doc_number);
+                                      setCrmName(crmClient.name);
+                                      setCrmAddress(crmClient.address || '');
+                                      setCrmEmail(crmClient.email || '');
+                                      setCrmNotes(crmClient.notes || '');
+                                      setCrmLanguage(crmClient.language || 'Español');
+                                      setCrmBirthday(crmClient.birthday || '');
+                                      if (crmClient.category_id) {
+                                        setCrmCategoryId(crmClient.category_id.toString());
+                                      } else {
+                                        setCrmCategoryId('');
+                                      }
+                                      setCrmIsEditing(true);
+                                    }}
+                                    className="absolute top-3.5 right-3.5 p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+                                    title="Editar ficha"
+                                  >
+                                    <Edit2 size={12} />
+                                  </button>
+                                </div>
+                              
                                 {/* Información del contacto */}
-                                <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/80 space-y-4 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.02)]">
+                                <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800 space-y-4">
                                   <div className="flex items-center justify-between">
-                                    <h5 className="text-[11px] font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">Información del contacto</h5>
+                                    <h5 className="text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Información del contacto</h5>
                                     <button
                                       type="button"
                                       onClick={() => {
@@ -4437,226 +4419,213 @@ echo $response;`;
                                         setCrmLanguage(crmClient.idioma || 'Español');
                                         setCrmIsEditing(true);
                                       }}
-                                      className="text-[10px] font-bold text-brand-primary hover:underline cursor-pointer"
+                                      className="text-[9.5px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer transition-colors"
                                     >
                                       Editar
                                     </button>
                                   </div>
-
-                                  {/* Grid 2x3 Layout matching mockup */}
-                                  <div className="grid grid-cols-2 gap-x-4 gap-y-3.5">
+                              
+                                  <div className="grid grid-cols-2 gap-x-4 gap-y-4">
                                     {/* Teléfono */}
-                                    <div className="flex gap-2.5 items-start text-left">
-                                      <div className="text-slate-400 bg-slate-50 dark:bg-slate-950 dark:text-slate-500 p-2 rounded-xl border border-slate-100 dark:border-slate-800 h-min flex-shrink-0">
-                                        <Smartphone size={13} />
-                                      </div>
-                                      <div className="min-w-0">
-                                        <span className="text-[8.5px] text-surface-400 font-bold block leading-none mb-1 uppercase tracking-wider">Teléfono</span>
-                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-extrabold break-words block leading-tight">
-                                          +{crmContact?.phone_number || selectedChat?.remoteJid?.split('@')[0]}
-                                        </span>
-                                      </div>
+                                    <div className="text-left space-y-1">
+                                      <span className="text-[8.5px] text-slate-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                                        <Smartphone size={10} className="text-slate-350" />
+                                        Teléfono
+                                      </span>
+                                      <span className="text-[10.5px] text-slate-800 dark:text-slate-200 font-semibold block leading-tight">
+                                        +{crmContact?.phone_number || selectedChat?.remoteJid?.split('@')[0]}
+                                      </span>
                                     </div>
-
+                              
                                     {/* Correo */}
-                                    <div className="flex gap-2.5 items-start text-left">
-                                      <div className="text-slate-400 bg-slate-50 dark:bg-slate-950 dark:text-slate-500 p-2 rounded-xl border border-slate-100 dark:border-slate-800 h-min flex-shrink-0">
-                                        <Mail size={13} />
-                                      </div>
-                                      <div className="min-w-0">
-                                        <span className="text-[8.5px] text-surface-400 font-bold block leading-none mb-1 uppercase tracking-wider">Correo</span>
-                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-extrabold break-words block leading-tight">
-                                          {crmClient.email || 'No registrado'}
-                                        </span>
-                                      </div>
+                                    <div className="text-left space-y-1">
+                                      <span className="text-[8.5px] text-slate-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                                        <Mail size={10} className="text-slate-350" />
+                                        Correo
+                                      </span>
+                                      <span className="text-[10.5px] text-slate-800 dark:text-slate-200 font-semibold block leading-tight">
+                                        {crmClient.email || 'No registrado'}
+                                      </span>
                                     </div>
-
+                              
                                     {/* Empresa */}
-                                    <div className="flex gap-2.5 items-start text-left">
-                                      <div className="text-slate-400 bg-slate-50 dark:bg-slate-950 dark:text-slate-500 p-2 rounded-xl border border-slate-100 dark:border-slate-800 h-min flex-shrink-0">
-                                        <Building size={13} />
-                                      </div>
-                                      <div className="min-w-0">
-                                        <span className="text-[8.5px] text-surface-400 font-bold block leading-none mb-1 uppercase tracking-wider">Empresa</span>
-                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-extrabold break-words block leading-tight">
-                                          {crmClient.doc_type === 'RUC' ? crmClient.name : 'No registrada'}
-                                        </span>
-                                      </div>
+                                    <div className="text-left space-y-1">
+                                      <span className="text-[8.5px] text-slate-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                                        <Building size={10} className="text-slate-350" />
+                                        Empresa
+                                      </span>
+                                      <span className="text-[10.5px] text-slate-800 dark:text-slate-200 font-semibold block leading-tight">
+                                        {crmClient.doc_type === 'RUC' ? crmClient.name : 'No registrada'}
+                                      </span>
                                     </div>
-
+                              
                                     {/* Ciudad */}
-                                    <div className="flex gap-2.5 items-start text-left">
-                                      <div className="text-slate-400 bg-slate-50 dark:bg-slate-950 dark:text-slate-500 p-2 rounded-xl border border-slate-100 dark:border-slate-800 h-min flex-shrink-0">
-                                        <MapPin size={13} />
-                                      </div>
-                                      <div className="min-w-0">
-                                        <span className="text-[8.5px] text-surface-400 font-bold block leading-none mb-1 uppercase tracking-wider">Ciudad</span>
-                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-extrabold break-words block leading-tight">
-                                          {crmClient.address || 'No registrado'}
-                                        </span>
-                                      </div>
+                                    <div className="text-left space-y-1">
+                                      <span className="text-[8.5px] text-slate-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                                        <MapPin size={10} className="text-slate-350" />
+                                        Ciudad
+                                      </span>
+                                      <span className="text-[10.5px] text-slate-800 dark:text-slate-200 font-semibold block leading-tight">
+                                        {crmClient.address || 'No registrado'}
+                                      </span>
                                     </div>
-
+                              
                                     {/* Idioma */}
-                                    <div className="flex gap-2.5 items-start text-left">
-                                      <div className="text-slate-400 bg-slate-50 dark:bg-slate-950 dark:text-slate-500 p-2 rounded-xl border border-slate-100 dark:border-slate-800 h-min flex-shrink-0">
-                                        <Calendar size={13} />
-                                      </div>
-                                      <div className="min-w-0">
-                                        <span className="text-[8.5px] text-surface-400 font-bold block leading-none mb-1 uppercase tracking-wider">Idioma</span>
-                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-extrabold break-words block leading-tight">
-                                          {crmClient.idioma || 'Español'}
-                                        </span>
-                                      </div>
+                                    <div className="text-left space-y-1">
+                                      <span className="text-[8.5px] text-slate-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                                        <Calendar size={10} className="text-slate-350" />
+                                        Idioma
+                                      </span>
+                                      <span className="text-[10.5px] text-slate-800 dark:text-slate-200 font-semibold block leading-tight">
+                                        {crmClient.idioma || 'Español'}
+                                      </span>
                                     </div>
-
+                              
                                     {/* Cumpleaños */}
-                                    <div className="flex gap-2.5 items-start text-left">
-                                      <div className="text-slate-400 bg-slate-50 dark:bg-slate-950 dark:text-slate-500 p-2 rounded-xl border border-slate-100 dark:border-slate-800 h-min flex-shrink-0">
-                                        <Gift size={13} />
-                                      </div>
-                                      <div className="min-w-0">
-                                        <span className="text-[8.5px] text-surface-400 font-bold block leading-none mb-1 uppercase tracking-wider">Cumpleaños</span>
-                                        <span className="text-[10px] text-slate-800 dark:text-slate-200 font-extrabold break-words block leading-tight">
-                                          {crmClient.birthday ? formatBirthdayString(crmClient.birthday) : 'No registrado'}
-                                        </span>
-                                      </div>
+                                    <div className="text-left space-y-1">
+                                      <span className="text-[8.5px] text-slate-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                                        <Gift size={10} className="text-slate-350" />
+                                        Cumpleaños
+                                      </span>
+                                      <span className="text-[10.5px] text-slate-800 dark:text-slate-200 font-semibold block leading-tight">
+                                        {crmClient.birthday ? formatBirthdayString(crmClient.birthday) : 'No registrado'}
+                                      </span>
                                     </div>
                                   </div>
-
-                                  {/* Collapsible More Fields Accordion */}
-                                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800/40">
+                              
+                                  {/* Collapsible More Fields */}
+                                  <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800/40">
                                     <button
                                       type="button"
                                       onClick={() => setShowMoreCrmFields(!showMoreCrmFields)}
-                                      className="w-full flex items-center justify-center gap-1 text-[9.5px] font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                                      className="w-full flex items-center justify-center gap-1 text-[9px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors cursor-pointer"
                                     >
                                       <span>{showMoreCrmFields ? 'Ocultar campos adicionales' : 'Ver más campos (6)'}</span>
-                                      <ChevronDown size={11} className={`transition-transform duration-200 \${showMoreCrmFields ? 'rotate-180' : ''}`} />
+                                      <ChevronDown size={10} className={`transition-transform duration-200 ${showMoreCrmFields ? 'rotate-180' : ''}`} />
                                     </button>
                                     
                                     {showMoreCrmFields && (
-                                      <div className="mt-3.5 space-y-2.5 animate-fadeIn">
-                                        <div className="flex justify-between items-center text-[10px]">
-                                          <span className="text-surface-400 font-medium">Tipo de documento:</span>
-                                          <span className="text-slate-700 dark:text-slate-300 font-bold">{crmClient.doc_type}</span>
+                                      <div className="mt-3 space-y-2 animate-fadeIn">
+                                        <div className="flex justify-between items-center text-[10px] py-1">
+                                          <span className="text-slate-400 font-medium">Tipo de documento</span>
+                                          <span className="text-slate-700 dark:text-slate-300 font-semibold">{crmClient.doc_type}</span>
                                         </div>
-                                        <div className="flex justify-between items-center text-[10px]">
-                                          <span className="text-surface-400 font-medium">Nro de documento:</span>
-                                          <span className="text-slate-700 dark:text-slate-300 font-bold">{crmClient.doc_number.startsWith('MANUAL-') ? 'No registrado' : crmClient.doc_number}</span>
+                                        <div className="flex justify-between items-center text-[10px] py-1 border-t border-slate-50 dark:border-slate-800/30">
+                                          <span className="text-slate-400 font-medium">Nro de documento</span>
+                                          <span className="text-slate-700 dark:text-slate-300 font-semibold">{crmClient.doc_number.startsWith('MANUAL-') ? 'No registrado' : crmClient.doc_number}</span>
                                         </div>
-                                        <div className="flex justify-between items-center text-[10px]">
-                                          <span className="text-surface-400 font-medium">Primer contacto:</span>
-                                          <span className="text-slate-700 dark:text-slate-300 font-bold">
+                                        <div className="flex justify-between items-center text-[10px] py-1 border-t border-slate-50 dark:border-slate-800/30">
+                                          <span className="text-slate-400 font-medium">Primer contacto</span>
+                                          <span className="text-slate-700 dark:text-slate-300 font-semibold">
                                             {crmClient.created_at ? new Date(crmClient.created_at).toLocaleDateString('es-ES') : 'No registrado'}
                                           </span>
                                         </div>
-                                        <div className="flex justify-between items-center text-[10px]">
-                                          <span className="text-surface-400 font-medium">Categoría:</span>
-                                          <span className="text-slate-700 dark:text-slate-300 font-bold">{crmContact?.category_name || 'Sin Categoría'}</span>
+                                        <div className="flex justify-between items-center text-[10px] py-1 border-t border-slate-50 dark:border-slate-800/30">
+                                          <span className="text-slate-400 font-medium">Categoría</span>
+                                          <span className="text-slate-700 dark:text-slate-300 font-semibold">{crmContact?.category_name || 'Sin Categoría'}</span>
                                         </div>
-                                        <div className="flex justify-between items-center text-[10px]">
-                                          <span className="text-surface-400 font-medium">Asesor Asignado:</span>
-                                          <span className="text-slate-700 dark:text-slate-300 font-bold">
+                                        <div className="flex justify-between items-center text-[10px] py-1 border-t border-slate-50 dark:border-slate-800/30">
+                                          <span className="text-slate-400 font-medium">Asesor Asignado</span>
+                                          <span className="text-slate-700 dark:text-slate-300 font-semibold">
                                             {crmContact?.assigned_agent_name || 'Sin Asignar'}
                                           </span>
                                         </div>
-                                        <div className="flex justify-between items-center text-[10px]">
-                                          <span className="text-surface-400 font-medium">ID Cliente:</span>
-                                          <span className="text-slate-700 dark:text-slate-300 font-bold">#{crmClient.id}</span>
+                                        <div className="flex justify-between items-center text-[10px] py-1 border-t border-slate-50 dark:border-slate-800/30">
+                                          <span className="text-slate-400 font-medium">ID Cliente</span>
+                                          <span className="text-slate-700 dark:text-slate-300 font-semibold">#{crmClient.id}</span>
                                         </div>
                                       </div>
                                     )}
                                   </div>
                                 </div>
-
+                              
                                 {/* Notas del contacto */}
-                                  <div className="bg-slate-50 dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/80 space-y-3.5">
-                                    <div className="flex items-center justify-between">
-                                      <h5 className="text-[11px] font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">Notas del contacto</h5>
-                                      <button 
-                                        type="button"
-                                        onClick={() => {
-                                          setNewNoteText('');
-                                          setShowNotesFloatingWindow(true);
-                                        }}
-                                        className="px-2.5 py-0.5 bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary text-[9px] font-bold rounded-full transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shadow-sm flex items-center gap-1"
-                                      >
-                                        {clientNotes.length > 0 ? (
-                                          <span>Ver notas ({clientNotes.length})</span>
-                                        ) : (
-                                          <>
-                                            <span className="font-extrabold">+</span>
-                                            <span>Agregar nota</span>
-                                          </>
-                                        )}
-                                      </button>
-                                    </div>
-                                    
-                                    {clientNotes.length > 0 ? (
-                                      <div className="bg-white dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm">
-                                        <p className="text-[10px] text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line font-medium pr-1">
-                                          {clientNotes[0].content}
-                                        </p>
-                                        <div className="text-[8px] text-slate-400 dark:text-slate-500 text-right mt-2.5 font-bold flex items-center justify-between">
-                                          <span className="flex items-center gap-1.5">
-                                            <span className="w-4 h-4 rounded-full bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[8px] font-extrabold flex items-center justify-center">
-                                              {clientNotes[0].agent_name?.charAt(0).toUpperCase() || 'A'}
-                                            </span>
-                                            <span>{clientNotes[0].agent_name || 'Asesor'}</span>
-                                          </span>
-                                          <span>{new Date(clientNotes[0].created_at).toLocaleDateString('es-ES')}</span>
-                                        </div>
-                                      </div>
-                                    ) : (
-                                      <p className="text-[10px] text-slate-400 dark:text-slate-500 text-center py-2 italic font-medium">
-                                        Sin notas registradas.
-                                      </p>
-                                    )}
-                                  </div>
-
-                                {/* Etiquetas */}
-                                <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/80 space-y-3">
+                                <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800 space-y-3">
                                   <div className="flex items-center justify-between">
-                                    <h5 className="text-[11px] font-bold text-slate-800 dark:text-white">Etiquetas</h5>
-                                    <button className="text-[10px] font-bold text-brand-primary hover:underline cursor-pointer">+ Agregar</button>
+                                    <h5 className="text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Notas del contacto</h5>
+                                    <button 
+                                      type="button"
+                                      onClick={() => {
+                                        setNewNoteText('');
+                                        setShowNotesFloatingWindow(true);
+                                      }}
+                                      className="text-[9.5px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer transition-colors flex items-center gap-1"
+                                    >
+                                      {clientNotes.length > 0 ? (
+                                        <span>Ver notas ({clientNotes.length})</span>
+                                      ) : (
+                                        <>
+                                          <Plus size={10} />
+                                          <span>Agregar nota</span>
+                                        </>
+                                      )}
+                                    </button>
                                   </div>
-                                  <div className="flex flex-wrap gap-1.5 items-center">
-                                    <span className="px-2.5 py-1 bg-brand-primary/10 text-brand-primary text-[9px] font-bold rounded-full border border-brand-primary/20 flex items-center gap-1.5">
-                                      <Tag size={10} />
+                                  
+                                  {clientNotes.length > 0 ? (
+                                    <div className="bg-slate-50 dark:bg-slate-800/40 p-3.5 rounded-xl">
+                                      <p className="text-[10px] text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line font-medium">
+                                        {clientNotes[0].content}
+                                      </p>
+                                      <div className="text-[8.5px] text-slate-400 mt-2.5 flex items-center justify-between">
+                                        <span className="flex items-center gap-1.5 font-medium">
+                                          <span className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-[7.5px] font-bold flex items-center justify-center">
+                                            {clientNotes[0].agent_name?.charAt(0).toUpperCase() || 'A'}
+                                          </span>
+                                          {clientNotes[0].agent_name || 'Asesor'}
+                                        </span>
+                                        <span className="font-medium">{new Date(clientNotes[0].created_at).toLocaleDateString('es-ES')}</span>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <p className="text-[10px] text-slate-400 text-center py-3 italic">Sin notas registradas.</p>
+                                  )}
+                                </div>
+                              
+                                {/* Etiquetas */}
+                                <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800 space-y-3">
+                                  <div className="flex items-center justify-between">
+                                    <h5 className="text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Etiquetas</h5>
+                                    <button className="text-[9.5px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer transition-colors flex items-center gap-0.5">
+                                      <Plus size={10} />
+                                      Agregar
+                                    </button>
+                                  </div>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    <span className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 text-[9px] font-semibold rounded-lg flex items-center gap-1">
+                                      <Tag size={9} />
                                       {crmContact?.category_name || 'Cliente'}
                                     </span>
-                                    {/* Mock additional tags based on image */}
-                                    <span className="px-2.5 py-1 bg-blue-100/50 text-blue-600 text-[9px] font-bold rounded-full border border-blue-100">
+                                    <span className="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 text-[9px] font-semibold rounded-lg">
                                       Interesado
                                     </span>
-                                    <span className="px-2.5 py-1 bg-blue-100/50 text-blue-600 text-[9px] font-bold rounded-full border border-blue-100">
+                                    <span className="px-2.5 py-1 bg-violet-50 dark:bg-violet-950/20 text-violet-600 dark:text-violet-400 text-[9px] font-semibold rounded-lg">
                                       Plan Trimestral
                                     </span>
-                                    <button className="w-6 h-6 rounded-full border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                    <button className="w-6 h-6 rounded-lg border border-dashed border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-350 hover:text-slate-500 hover:border-slate-300 dark:hover:border-slate-600 transition-colors cursor-pointer">
                                       <Plus size={10} />
                                     </button>
                                   </div>
                                 </div>
-
+                              
                                 {/* Historial de conversaciones */}
-                                <div className="bg-white dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800/80 space-y-3">
+                                <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800 space-y-3">
                                   <div className="flex items-center justify-between">
-                                    <h5 className="text-[11px] font-bold text-slate-800 dark:text-white">Historial de conversaciones</h5>
-                                    <button className="text-[10px] font-bold text-brand-primary hover:underline cursor-pointer">Ver todo</button>
+                                    <h5 className="text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Historial de conversaciones</h5>
+                                    <button className="text-[9.5px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer transition-colors">Ver todo</button>
                                   </div>
                                   <div className="grid grid-cols-3 gap-2">
-                                    <div className="bg-slate-50 dark:bg-slate-800/40 rounded-xl p-2.5 text-center border border-slate-100 dark:border-slate-800/50 flex flex-col justify-center">
-                                      <span className="text-brand-primary font-bold text-base leading-none">18</span>
-                                      <span className="text-[8px] text-surface-400 font-medium mt-1">Conversaciones</span>
+                                    <div className="bg-slate-50 dark:bg-slate-800/40 rounded-xl p-3 text-center">
+                                      <span className="text-slate-800 dark:text-slate-100 font-bold text-[15px] leading-none block">18</span>
+                                      <span className="text-[8px] text-slate-400 font-medium mt-1.5 block">Conversaciones</span>
                                     </div>
-                                    <div className="bg-slate-50 dark:bg-slate-800/40 rounded-xl p-2.5 text-center border border-slate-100 dark:border-slate-800/50 flex flex-col justify-center">
-                                      <span className="text-brand-primary font-bold text-base leading-none">2d 4h</span>
-                                      <span className="text-[8px] text-surface-400 font-medium mt-1">Tiempo promedio</span>
+                                    <div className="bg-slate-50 dark:bg-slate-800/40 rounded-xl p-3 text-center">
+                                      <span className="text-slate-800 dark:text-slate-100 font-bold text-[15px] leading-none block">2d 4h</span>
+                                      <span className="text-[8px] text-slate-400 font-medium mt-1.5 block">Tiempo promedio</span>
                                     </div>
-                                    <div className="bg-slate-50 dark:bg-slate-800/40 rounded-xl p-2.5 text-center border border-slate-100 dark:border-slate-800/50 flex flex-col justify-center">
-                                      <span className="text-brand-primary font-bold text-base leading-none">98%</span>
-                                      <span className="text-[8px] text-surface-400 font-medium mt-1">Respondidas</span>
+                                    <div className="bg-slate-50 dark:bg-slate-800/40 rounded-xl p-3 text-center">
+                                      <span className="text-emerald-600 dark:text-emerald-400 font-bold text-[15px] leading-none block">98%</span>
+                                      <span className="text-[8px] text-slate-400 font-medium mt-1.5 block">Respondidas</span>
                                     </div>
                                   </div>
                                 </div>
