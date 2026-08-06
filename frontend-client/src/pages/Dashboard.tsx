@@ -5118,31 +5118,31 @@ echo $response;`;
                         <div className="border-l border-slate-200/50 dark:border-slate-800/50 flex flex-col min-h-0 bg-slate-50/45 dark:bg-slate-950 text-left relative overflow-hidden">
                           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white dark:bg-slate-950/20">
                             <div className="space-y-4">
-                              {/* Integration Header Banner */}
-                              <div className="p-3 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl text-white relative overflow-hidden shadow-sm">
-                                <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-xl -mr-8 -mt-8"></div>
-                                <h5 className="text-[11px] font-extrabold uppercase tracking-wider relative z-10 flex items-center gap-1">
-                                  <span>🧾 Facturación API</span>
+                              {/* Integration Header */}
+                              <div className="pb-3.5 border-b border-slate-100 dark:border-slate-800/80 text-left">
+                                <h5 className="text-[12px] font-extrabold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                                  <FileText size={13} className="text-brand-primary" />
+                                  <span>Facturación API</span>
                                 </h5>
-                                <p className="text-[9px] text-white/90 mt-1 leading-relaxed relative z-10 font-medium">
-                                  Conectado a tu Facturador Electrónico. Selecciona un producto para enviar ficha o cotizar al cliente.
+                                <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1.5 leading-relaxed font-medium">
+                                  Catálogo integrado con tu Facturador Electrónico para enviar fichas de productos y cotizaciones.
                                 </p>
                               </div>
 
                               {/* Search & Category Tabs */}
-                              <div className="space-y-2">
+                              <div className="space-y-2.5">
                                 <div className="relative font-sans">
-                                  <Search size={12} className="absolute left-3 top-2.5 text-slate-400" />
+                                  <Search size={12} className="absolute left-3 top-2.5 text-slate-450" />
                                   <input 
                                     type="text"
                                     placeholder="Buscar producto..."
                                     value={billingSearchQuery}
                                     onChange={(e) => setBillingSearchQuery(e.target.value)}
-                                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-brand-primary"
+                                    className="w-full bg-slate-50/50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-brand-primary font-medium"
                                   />
                                 </div>
 
-                                <div className="flex bg-slate-50 dark:bg-slate-900 p-0.5 rounded-lg gap-0.5">
+                                <div className="flex bg-slate-100/60 dark:bg-slate-900 p-0.5 rounded-xl gap-0.5 border border-slate-200/20 dark:border-slate-800/50">
                                   {[
                                     { id: 'all', label: 'Todos' },
                                     { id: 'soft', label: 'Software' },
@@ -5152,10 +5152,10 @@ echo $response;`;
                                       key={cat.id}
                                       type="button"
                                       onClick={() => setBillingCategory(cat.id)}
-                                      className={`flex-1 py-1 text-[8.5px] font-black rounded transition-all cursor-pointer ${
+                                      className={`flex-1 py-1.5 text-[9px] font-black rounded-lg transition-all cursor-pointer ${
                                         billingCategory === cat.id
                                           ? 'bg-white dark:bg-slate-800 text-slate-800 dark:text-white shadow-sm'
-                                          : 'text-slate-450 hover:text-slate-700'
+                                          : 'text-slate-400 hover:text-slate-650 dark:text-slate-500 dark:hover:text-slate-350'
                                       }`}
                                     >
                                       {cat.label}
@@ -5215,30 +5215,30 @@ echo $response;`;
                                   }
 
                                   return filtered.map(prod => (
-                                    <div key={prod.id} className="bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl p-3.5 space-y-3 hover:-translate-y-0.5 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-200">
-                                      <div className="flex items-start gap-3.5">
+                                    <div key={prod.id} className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-xl p-3.5 space-y-3.5 hover:shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-200">
+                                      <div className="flex items-start gap-3.5 text-left">
                                         <img 
                                           src={prod.image} 
                                           alt={prod.name} 
                                           onError={(e) => {
                                             e.currentTarget.src = 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=100';
                                           }}
-                                          className="w-14 h-14 rounded-xl object-cover border border-slate-200/50 dark:border-slate-800 flex-shrink-0 shadow-sm"
+                                          className="w-14 h-14 rounded-lg object-cover border border-slate-200/40 dark:border-slate-800/60 flex-shrink-0 shadow-sm"
                                         />
-                                        <div className="flex-1 min-w-0 text-left">
-                                          <h6 className="text-[11.5px] font-black text-slate-800 dark:text-white truncate leading-tight tracking-wide">{prod.name}</h6>
-                                          <span className="inline-block mt-1 px-2.5 py-0.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 text-[9.5px] font-black rounded-lg border border-emerald-500/10">
+                                        <div className="flex-1 min-w-0 space-y-1">
+                                          <h6 className="text-[11.5px] font-bold text-slate-800 dark:text-white truncate leading-tight tracking-wide">{prod.name}</h6>
+                                          <span className="inline-block px-2 py-0.5 bg-teal-50 dark:bg-teal-950/20 text-teal-600 dark:text-teal-400 border border-teal-500/10 text-[9px] font-extrabold rounded-md">
                                             {prod.price}
                                           </span>
-                                          <p className="text-[9.5px] text-slate-400 dark:text-slate-500 mt-1.5 line-clamp-2 leading-relaxed pr-1 font-medium">{prod.description}</p>
+                                          <p className="text-[9.5px] text-slate-400 dark:text-slate-500 leading-normal line-clamp-2 pr-1 font-medium">{prod.description}</p>
                                         </div>
                                       </div>
 
-                                      <div className="flex gap-2 pt-2 border-t border-slate-100/65 dark:border-slate-800/50">
+                                      <div className="flex gap-2 pt-2.5 border-t border-slate-100/60 dark:border-slate-800/50">
                                         <button
                                           type="button"
                                           onClick={() => handleSendProductToChat(prod)}
-                                          className="flex-1 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black text-[9px] uppercase rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer shadow-sm shadow-emerald-500/10"
+                                          className="flex-1 py-1.5 bg-brand-500 hover:bg-brand-secondary text-white font-extrabold text-[9px] uppercase rounded-lg flex items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer shadow-sm shadow-brand-500/10"
                                         >
                                           <Send size={9} className="stroke-[2.5]" />
                                           <span>Enviar Ficha</span>
@@ -5246,7 +5246,7 @@ echo $response;`;
                                         <button
                                           type="button"
                                           onClick={() => handleSendQuoteToChat(prod)}
-                                          className="flex-1 py-2 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/20 dark:hover:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-200/20 dark:border-indigo-800/35 font-black text-[9px] uppercase rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
+                                          className="flex-1 py-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800/80 text-slate-600 dark:text-slate-350 border border-slate-200/45 dark:border-slate-800 font-extrabold text-[9px] uppercase rounded-lg flex items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer"
                                         >
                                           <FileText size={9} className="stroke-[2.5]" />
                                           <span>Cotizar</span>
