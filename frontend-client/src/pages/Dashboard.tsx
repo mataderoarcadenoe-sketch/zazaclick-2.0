@@ -517,7 +517,7 @@ export default function DashboardPage() {
   }, [instances]);
 
   // Fetch chats list
-  const fetchChats = async (silent = false) => {
+  const fetchChats = useCallback(async (silent = false) => {
     if (!selectedInstanceForChats) return;
     if (!silent) {
       setChatsLoading(true);
@@ -580,7 +580,7 @@ export default function DashboardPage() {
     } finally {
       if (!silent) setChatsLoading(false);
     }
-  };
+  }, [selectedInstanceForChats, selectedChat, setChats, setSelectedChat]);
 
   // Fetch messages for a chat (con protección contra race conditions)
   const fetchMessages = useCallback(async (silent = false, targetChat?: any, targetInstance?: string) => {

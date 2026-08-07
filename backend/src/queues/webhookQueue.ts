@@ -21,7 +21,7 @@ export const webhookQueue = new Queue('webhook-queue', {
 const worker = new Worker('webhook-queue', async (job: Job) => {
   const { event, instance, data } = job.data;
   const eventUpper = event.toUpperCase().replace('.', '_').replace('-', '_');
-  const roomName = `instance:${instance}`;
+  const roomName = `instance_${instance}`;
   const io = getIO();
 
   console.log(`默默 [QueueWorker] Procesando evento encolado: ${eventUpper} para ${instance}`);
