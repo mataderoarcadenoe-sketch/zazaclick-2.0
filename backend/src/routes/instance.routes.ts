@@ -515,6 +515,10 @@ router.post('/chats/:instanceName/media', authMiddleware, async (req: Authentica
     if (fs.existsSync(cacheFilePath)) {
       try {
         const cachedData = JSON.parse(fs.readFileSync(cacheFilePath, 'utf8'));
+        if (cachedData && cachedData.error) {
+          console.log(`💾 [MediaCache] Sirviendo error de descarga ${messageKey.id} desde caché local de disco.`);
+          return res.status(410).json({ success: false, error: cachedData.error, cached: true });
+        }
         console.log(`💾 [MediaCache] Sirviendo archivo ${messageKey.id} desde caché local de disco.`);
         return res.json({ success: true, data: cachedData });
       } catch (err: any) {
@@ -525,15 +529,24 @@ router.post('/chats/:instanceName/media', authMiddleware, async (req: Authentica
     // Si no está en caché, solicitar a Evolution API
     const mediaResult = await EvolutionService.getMediaMessageBase64(instanceName, messageKey, messageContent);
     if (!mediaResult.success) {
-      return res.status(500).json({ success: false, error: mediaResult.error || 'Error al obtener base64 del archivo' });
+      const errorMsg = mediaResult.error || 'Error al obtener base64 del archivo';
+      
+      // Guardar el fallo en caché de disco de forma asíncrona para no saturar a la API en el futuro
+      try {
+        await fs.promises.writeFile(cacheFilePath, JSON.stringify({ error: errorMsg }), 'utf8');
+        console.log(`💾 [MediaCache] Guardado error de descarga para ${messageKey.id} en caché local de disco.`);
+      } catch (writeErr: any) {
+        console.error(`[MediaCache] Error al guardar error en caché local ${messageKey.id}:`, writeErr.message);
+      }
+      
+      return res.status(410).json({ success: false, error: errorMsg });
     }
 
-    // Escribir en la caché de disco local de forma asíncrona
     // Guardar en caché de disco de forma asíncrona con manejo de errores
     try {
       await fs.promises.writeFile(cacheFilePath, JSON.stringify(mediaResult.data), 'utf8');
       console.log(`💾 [MediaCache] Guardado archivo ${messageKey.id} en caché local de disco.`);
-    } catch (err) {
+    } catch (err: any) {
       console.error(`[MediaCache] Error al guardar en caché local ${messageKey.id}:`, err.message);
     }
 
