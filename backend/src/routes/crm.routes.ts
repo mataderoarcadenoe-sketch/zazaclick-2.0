@@ -1147,6 +1147,27 @@ router.post('/contacts/assign', async (req: AuthenticatedRequest, res: Response)
 });
 
 /**
+ * GET /api/crm/tasks - Listar todas las tareas del CRM de los clientes del usuario
+ */
+router.get('/tasks', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const tasksRes = await pool.query(
+      `SELECT t.id, t.title, t.completed, t.due_date, t.client_id, c.name as client_name 
+       FROM crm_client_tasks t
+       JOIN crm_clients c ON t.client_id = c.id
+       WHERE c.user_id = $1
+       ORDER BY t.due_date ASC, t.id ASC`,
+      [req.userId]
+    );
+
+    return res.json({ success: true, data: tasksRes.rows });
+  } catch (error: any) {
+    console.error('[CRM Global Tasks] Error:', error.message);
+    return res.status(500).json({ success: false, error: 'Error al obtener las tareas globales.' });
+  }
+});
+
+/**
  * GET /api/crm/clients/:clientId/tasks - Listar o inicializar las tareas de un cliente
  */
 router.get('/clients/:clientId/tasks', async (req: AuthenticatedRequest, res: Response) => {
