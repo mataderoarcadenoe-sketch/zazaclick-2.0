@@ -478,10 +478,15 @@ router.post('/chats/:instanceName/media', authMiddleware, async (req: Authentica
       return res.status(403).json({ success: false, error: 'Acceso no autorizado.' });
     }
 
-    // Definir ruta y directorio de caché local
-    const cacheDir = path.join(__dirname, '../../media_cache');
+    // Definir ruta y directorio de caché local usando directorio de trabajo actual (writeable en Railway)
+    const cacheDir = path.resolve(process.cwd(), 'media_cache');
     if (!fs.existsSync(cacheDir)) {
-      fs.mkdirSync(cacheDir, { recursive: true });
+      try {
+        fs.mkdirSync(cacheDir, { recursive: true });
+        console.log(`💾 [MediaCache] Directorio creado en ${cacheDir}`);
+      } catch (err) {
+        console.error(`[MediaCache] Error creando directorio ${cacheDir}:`, err.message);
+      }
     }
     const cacheFilePath = path.join(cacheDir, `${messageKey.id}.json`);
 
@@ -503,13 +508,13 @@ router.post('/chats/:instanceName/media', authMiddleware, async (req: Authentica
     }
 
     // Escribir en la caché de disco local de forma asíncrona
-    fs.writeFile(cacheFilePath, JSON.stringify(mediaResult.data), 'utf8', (err) => {
-      if (err) {
-        console.error(`[MediaCache] Error al guardar en caché local ${messageKey.id}:`, err.message);
-      } else {
-        console.log(`💾 [MediaCache] Guardado archivo ${messageKey.id} en caché local de disco.`);
-      }
-    });
+    // Guardar en caché de disco de forma asíncrona con manejo de errores
+    try {
+      await fs.promises.writeFile(cacheFilePath, JSON.stringify(mediaResult.data), 'utf8');
+      console.log(`💾 [MediaCache] Guardado archivo ${messageKey.id} en caché local de disco.`);
+    } catch (err) {
+      console.error(`[MediaCache] Error al guardar en caché local ${messageKey.id}:`, err.message);
+    }
 
     res.json({ success: true, data: mediaResult.data });
   } catch (error: any) {
