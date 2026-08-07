@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 const evUrl = "https://evolution-api-production-8b953.up.railway.app";
-const evKey = "lwJAq9M4NwHmtM5bqk1k";
+const evKey = "4296088A962E3B1C5D4180A84D581F78";
 const instanceName = "ZAZA20";
 
 async function run() {
@@ -15,8 +15,8 @@ async function run() {
     console.error("Connection State Error:", err.response?.data || err.message);
   }
 
-  console.log("\n2. Finding a media message for ZAZA20...");
-  let mediaMsg = null;
+  console.log("\n2. Finding media messages for ZAZA20...");
+  let mediaMsgs = [];
   try {
     const resMsgs = await axios.post(`${evUrl}/chat/findMessages/${instanceName}`, { limit: 100 }, {
       headers: { apikey: evKey, 'Content-Type': 'application/json' }
@@ -27,39 +27,43 @@ async function run() {
     for (const msg of records) {
       const content = msg.message;
       if (content && (content.imageMessage || content.stickerMessage || content.audioMessage || content.videoMessage || content.documentMessage)) {
-        mediaMsg = msg;
-        break;
+        mediaMsgs.push(msg);
       }
     }
   } catch (err) {
     console.error("FindMessages Error:", err.response?.data || err.message);
   }
 
-  if (!mediaMsg) {
-    console.log("No media message found in the last 100 messages.");
+  if (mediaMsgs.length === 0) {
+    console.log("No media messages found in the last 100 messages.");
     return;
   }
 
-  console.log("\nFound Media Message:", JSON.stringify(mediaMsg, null, 2));
+  console.log(`\nFound ${mediaMsgs.length} media messages. Testing them...`);
 
-  console.log("\n3. Requesting getBase64FromMediaMessage...");
-  try {
-    const payload = {
-      message: {
-        key: mediaMsg.key,
-        message: mediaMsg.message
-      }
-    };
-    console.log("Sending Payload:", JSON.stringify(payload, null, 2));
+  for (let i = 0; i < mediaMsgs.length; i++) {
+    const mediaMsg = mediaMsgs[i];
+    const msgId = mediaMsg.key?.id;
+    const msgTime = new Date(mediaMsg.messageTimestamp * 1000).toLocaleString();
+    const msgType = mediaMsg.messageType || Object.keys(mediaMsg.message || {})[0];
     
-    const resBase64 = await axios.post(`${evUrl}/chat/getBase64FromMediaMessage/${instanceName}`, payload, {
-      headers: { apikey: evKey, 'Content-Type': 'application/json' }
-    });
-    console.log("Success status:", resBase64.status);
-    console.log("Success data preview (keys):", Object.keys(resBase64.data));
-  } catch (err) {
-    console.error("getBase64FromMediaMessage Error Detailed:");
-    console.log(JSON.stringify(err.response?.data || err.message, null, 2));
+    console.log(`\nTesting [${i+1}/${mediaMsgs.length}] ID: ${msgId} | Type: ${msgType} | Time: ${msgTime}`);
+    try {
+      const payload = {
+        message: {
+          key: mediaMsg.key,
+          message: mediaMsg.message
+        }
+      };
+      
+      const resBase64 = await axios.post(`${evUrl}/chat/getBase64FromMediaMessage/${instanceName}`, payload, {
+        headers: { apikey: evKey, 'Content-Type': 'application/json' }
+      });
+      console.log(`  ✅ Success! Status: ${resBase64.status}`);
+    } catch (err) {
+      const errMsg = err.response?.data?.response?.message || err.response?.data || err.message;
+      console.log(`  ❌ Failed:`, JSON.stringify(errMsg));
+    }
   }
 }
 

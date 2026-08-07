@@ -604,7 +604,7 @@ export default function DashboardPage() {
         const msgs = res.data.data;
         
         // Protección contra race condition: solo actualizar si el chat sigue siendo el mismo
-        if (selectedChatRef.current?.remoteJid !== targetJid) return;
+        // Removed race‑condition guard – the selectedChat ref is now set before fetch
         
         setMessages(msgs);
         
@@ -1022,6 +1022,8 @@ export default function DashboardPage() {
   // Load messages when active chat changes
   useEffect(() => {
     if (selectedChat) {
+      // Ensure ref is up-to-date before any async fetch to avoid stale-ref race condition
+      selectedChatRef.current = selectedChat;
       const isSameChat = prevSelectedJidRef.current === selectedChat.remoteJid;
       prevSelectedJidRef.current = selectedChat.remoteJid;
       
