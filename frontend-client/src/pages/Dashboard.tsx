@@ -691,8 +691,10 @@ export default function DashboardPage() {
         const dataUrl = `data:${mimetype};base64,${base64Data}`;
         setLoadedMedia(prev => ({ ...prev, [msgId]: dataUrl }));
       }
-    } catch (err) {
-      console.error('Error downloading media:', err);
+    } catch (err: any) {
+      const serverError = err.response?.data?.error || err.message;
+      console.error('❌ Error downloading media:', serverError, err.response?.data);
+      showNotification(`Error al descargar archivo: ${serverError}`, 'error');
     } finally {
       setMediaLoadingStates(prev => ({ ...prev, [msgId]: false }));
     }
