@@ -665,25 +665,27 @@ export class EvolutionService {
       }
 
       const readMessages: any[] = [];
-      for (const id of messageIds) {
-        readMessages.push({
-          remoteJid: remoteJid, // JID original (puede ser LID)
-          id,
-          fromMe: false
-        });
-        if (unifiedJid !== remoteJid) {
+      const seen = new Set<string>();
+
+      const addMessage = (rJid: string, msgId: string) => {
+        const key = `${rJid}_${msgId}`;
+        if (!seen.has(key)) {
+          seen.add(key);
           readMessages.push({
-            remoteJid: unifiedJid, // JID unificado (teléfono)
-            id,
+            remoteJid: rJid,
+            id: msgId,
             fromMe: false
           });
         }
+      };
+
+      for (const id of messageIds) {
+        addMessage(remoteJid, id);
+        if (unifiedJid !== remoteJid) {
+          addMessage(unifiedJid, id);
+        }
         if (phoneJid && phoneJid !== remoteJid && phoneJid !== unifiedJid) {
-          readMessages.push({
-            remoteJid: phoneJid,
-            id,
-            fromMe: false
-          });
+          addMessage(phoneJid, id);
         }
       }
       
