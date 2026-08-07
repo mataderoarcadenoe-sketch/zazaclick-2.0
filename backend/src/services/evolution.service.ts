@@ -105,7 +105,9 @@ export class EvolutionService {
             'MESSAGES_UPDATE',
             'CONTACTS_UPSERT',
             'CONTACTS_UPDATE',
-            'PRESENCE_UPDATE'
+            'PRESENCE_UPDATE',
+            'CONNECTION_UPDATE',
+            'QRCODE_UPDATED'
           ]
         },
         settings: {
@@ -195,12 +197,16 @@ export class EvolutionService {
    */
   public static async sendTextMessage(instanceName: string, number: string, text: string): Promise<any> {
     try {
-      let cleanNumber = number.replace(/\D/g, '');
-      if (cleanNumber.length === 9 && cleanNumber.startsWith('9')) {
-        cleanNumber = `51${cleanNumber}`;
+      let targetNumber = number;
+      if (!number.includes('@')) {
+        let cleanNumber = number.replace(/\D/g, '');
+        if (cleanNumber.length === 9 && cleanNumber.startsWith('9')) {
+          cleanNumber = `51${cleanNumber}`;
+        }
+        targetNumber = cleanNumber;
       }
       const response = await api.post(`/message/sendText/${instanceName}`, {
-        number: cleanNumber,
+        number: targetNumber,
         text: text,
       });
       return { success: response.status === 200 || response.status === 201 };
@@ -235,13 +241,20 @@ export class EvolutionService {
         }
         targetNumber = cleanNumber;
       }
-      
+
+      let finalMediatype = mediatype;
+      const isGif = mimetype === 'image/gif' || (fileName && fileName.toLowerCase().endsWith('.gif')) || (media && media.toLowerCase().includes('.gif'));
+
       const payload: any = {
         number: targetNumber,
-        mediatype,
+        mediatype: isGif ? 'video' : finalMediatype,
         mimetype,
         media,
       };
+
+      if (isGif) {
+        payload.gifPlayback = true;
+      }
 
       if (caption) {
         payload.caption = caption;
@@ -808,7 +821,9 @@ export class EvolutionService {
             'MESSAGES_UPDATE',
             'CONTACTS_UPSERT',
             'CONTACTS_UPDATE',
-            'PRESENCE_UPDATE'
+            'PRESENCE_UPDATE',
+            'CONNECTION_UPDATE',
+            'QRCODE_UPDATED'
           ]
         }
       });

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import redis from '../config/redis';
 import { getIO } from '../config/socket';
 import { EvolutionService } from '../services/evolution.service';
+import pool from '../config/database';
 
 const router = Router();
 
@@ -77,19 +78,74 @@ router.post(['/whatsapp', '/whatsapp/:event'], async (req, res) => {
         console.warn('⚠️ [Webhook] No se pudo extraer la propiedad "key" de data:', data);
       }
     } 
-    else if (eventUpper === 'CHATS_UPDATE' || eventUpper === 'MESSAGES_UPDATE') {
+    else if (eventUpper === 'CONNECTION_UPDATE') {
+      const connection = data.connection;
+      if (connection) {
+        const isConnected = connection === 'open';
+        const dbStatus = isConnected ? 'connected' : 'disconnected';
+        
+        console.log(`🔌 [Webhook] CONNECTION_UPDATE para "${instance}": ${connection} -> ${dbStatus}`);
+        
+        // Actualizar en la BD
+        pool.query(
+          'UPDATE instances SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE instance_name = $2',
+          [dbStatus, instance]
+        ).catch(err => {
+          console.error(`[Webhook] Error actualizando estado de conexión de ${instance}:`, err.message);
+        });
+        
+        // Emitir a la sala de Socket.io
+        io.to(roomName).emit('connection_status', {
+          instance: instance,
+          status: dbStatus,
+          connectionState: connection
+        });
+      }
+    }
+    else if (eventUpper === 'QRCODE_UPDATED') {
+      const qrcode = data.qrcode || data;
+      const base64 = qrcode.base64;
+      if (base64) {
+        console.log(`📷 [Webhook] QRCODE_UPDATED para la instancia "${instance}"`);
+        io.to(roomName).emit('qrcode_updated', {
+          instance: instance,
+          qrcode: base64
+        });
+      }
+    }
+    else if (eventUpper === 'CHATS_UPDATE') {
       const chatUpdates = Array.isArray(data) ? data : [data];
       for (const update of chatUpdates) {
         const remoteJid = update.id || update.remoteJid;
         if (remoteJid) {
           let cleanJid = remoteJid.replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net');
-
-          // Si el unreadCount viene en 0
-          if (update.unreadCount === 0 || update.unreadMessages === 0 || update.status === 'READ') {
+          if (update.unreadCount === 0 || update.unreadMessages === 0) {
             const redisKey = `unread:${instance}:${cleanJid}`;
             await redis.set(redisKey, 0);
 
-            console.log(`📉 [Webhook] Limpiado contador de no leídos para ${cleanJid} en ${instance}`);
+            console.log(`📉 [Webhook] CHATS_UPDATE: Limpiado no leídos para ${cleanJid} en ${instance}`);
+
+            io.to(roomName).emit('unread_update', {
+              remoteJid: cleanJid,
+              unreadCount: 0
+            });
+          }
+        }
+      }
+    }
+    else if (eventUpper === 'MESSAGES_UPDATE') {
+      const msgUpdates = Array.isArray(data) ? data : [data];
+      for (const update of msgUpdates) {
+        const remoteJid = update.key?.remoteJid || update.remoteJid;
+        if (remoteJid) {
+          let cleanJid = remoteJid.replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net');
+          // status === 3 significa READ (leído) en Baileys/WhatsApp
+          const isRead = update.update?.status === 3 || update.status === 'READ' || update.unreadCount === 0;
+          if (isRead) {
+            const redisKey = `unread:${instance}:${cleanJid}`;
+            await redis.set(redisKey, 0);
+
+            console.log(`📉 [Webhook] MESSAGES_UPDATE: Limpiado no leídos para ${cleanJid} en ${instance}`);
 
             io.to(roomName).emit('unread_update', {
               remoteJid: cleanJid,

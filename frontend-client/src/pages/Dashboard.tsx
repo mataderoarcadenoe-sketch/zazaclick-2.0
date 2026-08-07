@@ -959,6 +959,26 @@ export default function DashboardPage() {
       }
     });
 
+    socket.on('connection_status', ({ instance, status }: { instance: string, status: 'connected' | 'disconnected' }) => {
+      console.log(`🔌 [Socket.io] connection_status recibida: ${instance} -> ${status}`);
+      setInstances(prev => prev.map(inst => {
+        if (inst.instance_name === instance) {
+          return { ...inst, status };
+        }
+        return inst;
+      }));
+    });
+
+    socket.on('qrcode_updated', ({ instance, qrcode }: { instance: string, qrcode: string }) => {
+      console.log(`📷 [Socket.io] qrcode_updated recibida para ${instance}`);
+      setActiveQrInstance(current => {
+        if (current === instance) {
+          setQrBase64(qrcode);
+        }
+        return current;
+      });
+    });
+
     socket.on('disconnect', () => {
       console.log('❌ [Socket.io] Conexión perdida.');
     });

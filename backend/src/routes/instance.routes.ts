@@ -177,25 +177,9 @@ router.get('/list', authMiddleware, async (req: AuthenticatedRequest, res) => {
       [req.userId]
     );
 
-    const updatedInstances = [];
-
-    // Validar el estado de cada instancia con la API en vivo de Evolution
-    for (const inst of instancesRes.rows) {
-      const liveState = await EvolutionService.getConnectionState(inst.instance_name);
-      const isConnected = liveState === 'open' || liveState === 'connected';
-      const status = isConnected ? 'connected' : 'disconnected';
-
-      if (status !== inst.status) {
-        // Actualizar el estado en nuestra BD
-        await pool.query('UPDATE instances SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [status, inst.id]);
-        inst.status = status;
-      }
-      updatedInstances.push(inst);
-    }
-
     res.json({
       success: true,
-      data: updatedInstances
+      data: instancesRes.rows
     });
 
   } catch (error: any) {
