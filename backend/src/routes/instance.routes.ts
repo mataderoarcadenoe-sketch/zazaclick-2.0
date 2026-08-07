@@ -602,10 +602,14 @@ router.post('/chats/:instanceName/read', authMiddleware, async (req: Authenticat
       return res.status(403).json({ success: false, error: 'Acceso no autorizado.' });
     }
 
-    if (messageIds && Array.isArray(messageIds) && messageIds.length > 0) {
-      const markResult = await EvolutionService.markMessagesAsRead(instanceName, remoteJid, messageIds, phoneJid);
+    const cleanIds = messageIds && Array.isArray(messageIds)
+      ? messageIds.filter((id: string) => id && !id.startsWith('temp_'))
+      : [];
+
+    if (cleanIds.length > 0) {
+      const markResult = await EvolutionService.markMessagesAsRead(instanceName, remoteJid, cleanIds, phoneJid);
       if (!markResult.success) {
-        return res.status(500).json({ success: false, error: markResult.error || 'Error al marcar mensajes como leídos' });
+        console.warn(`⚠️ [ReadEndpoint] Error no crítico al marcar como leído en la API de Evolution:`, markResult.error);
       }
     } else {
       // Registrar de todos modos el timestamp en la caché local para forzar el contador a 0 en la UI

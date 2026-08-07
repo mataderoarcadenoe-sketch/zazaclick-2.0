@@ -642,6 +642,8 @@ export default function DashboardPage() {
           } else if (chat.lastMessage?.key?.id) {
             messageIds = [chat.lastMessage.key.id];
           }
+
+          const cleanIds = messageIds.filter((id: string) => id && !id.startsWith('temp_'));
           
           // Registrar inmediatamente como leído localmente
           readChatsRef.current.add(targetJid);
@@ -655,7 +657,7 @@ export default function DashboardPage() {
           api.post(`/instances/chats/${instance}/read`, {
             remoteJid: originalJid || remoteJid,
             phoneJid: targetJid, // Enviar JID unificado (teléfono) para limpiar Redis correctamente
-            messageIds
+            messageIds: cleanIds
           }).catch(err => {
             console.error('Error marking messages as read:', err);
           });
