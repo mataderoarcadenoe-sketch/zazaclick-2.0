@@ -1625,7 +1625,7 @@ export default function DashboardPage() {
   };
 
   const fetchCrmContactForChat = useCallback(async (chatJid: string) => {
-    if (!chatJid || chatJid.endsWith('@g.us')) {
+    if (!chatJid || !chatJid.endsWith || chatJid.endsWith('@g.us')) {
       setCrmClient(null);
       setCrmContact(null);
       setClientNotes([]);
@@ -1724,7 +1724,7 @@ export default function DashboardPage() {
 
   // Cargar datos CRM al cambiar de chat activo
   useEffect(() => {
-    if (selectedChat && !selectedChat.remoteJid.endsWith('@g.us')) {
+    if (selectedChat && selectedChat.remoteJid && selectedChat.remoteJid.endsWith && !selectedChat.remoteJid.endsWith('@g.us')) {
       fetchCrmContactForChat(selectedChat.remoteJid);
     }
   }, [selectedChat, fetchCrmContactForChat]);
@@ -2817,7 +2817,7 @@ echo $response;`;
 
     const crmPhones = new Set(pipelineData.map(p => p.phone_number.replace(/\D/g, '')));
     chats.forEach(chat => {
-      if (chat.remoteJid.endsWith('@g.us')) return;
+      if (!chat.remoteJid || !chat.remoteJid.endsWith || chat.remoteJid.endsWith('@g.us')) return;
       const phone = chat.remoteJid.split('@')[0].split(':')[0].replace(/\D/g, '');
       if (!crmPhones.has(phone)) {
         columns['Nuevo'].push({
@@ -3441,7 +3441,7 @@ echo $response;`;
                   <div className="flex-1 min-h-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md rounded-3xl overflow-hidden flex md:grid md:grid-cols-12 shadow-premium-lg text-left">
                     
                     {/* LEFT PANEL: Chats List */}
-                    <div className={`${selectedChat ? (!selectedChat.remoteJid.endsWith('@g.us') ? 'md:col-span-2' : 'md:col-span-3') : 'md:col-span-4'} bg-white dark:bg-slate-950 flex-col min-h-0 w-full md:w-auto ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
+                    <div className={`${selectedChat ? (selectedChat.remoteJid && selectedChat.remoteJid.endsWith && !selectedChat.remoteJid.endsWith('@g.us') ? 'md:col-span-2' : 'md:col-span-3') : 'md:col-span-4'} bg-white dark:bg-slate-950 flex-col min-h-0 w-full md:w-auto ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
                       {/* Search Bar */}
                       <div className="p-4 pb-2 relative">
                         <input
@@ -3619,7 +3619,7 @@ echo $response;`;
                     </div>
 
                     {/* RIGHT PANEL: Message Area */}
-                    <div className={`${selectedChat ? (!selectedChat.remoteJid.endsWith('@g.us') ? 'md:col-span-4' : 'md:col-span-9') : 'md:col-span-8'} flex-col min-h-0 bg-gradient-to-b from-slate-50/50 via-slate-100/20 to-indigo-50/15 dark:from-slate-950/65 dark:via-slate-900/40 dark:to-slate-950/55 w-full md:w-auto ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
+                    <div className={`${selectedChat ? (selectedChat.remoteJid && selectedChat.remoteJid.endsWith && !selectedChat.remoteJid.endsWith('@g.us') ? 'md:col-span-4' : 'md:col-span-9') : 'md:col-span-8'} flex-col min-h-0 bg-gradient-to-b from-slate-50/50 via-slate-100/20 to-indigo-50/15 dark:from-slate-950/65 dark:via-slate-900/40 dark:to-slate-950/55 w-full md:w-auto ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
                       {selectedChat ? (
                         <div className="flex-1 flex flex-col min-h-0">
                           
@@ -3683,7 +3683,7 @@ echo $response;`;
                                     })()}
                                   </div>
                                   
-                                  {!selectedChat.remoteJid.endsWith('@g.us') ? (
+                                  {selectedChat.remoteJid && selectedChat.remoteJid.endsWith && !selectedChat.remoteJid.endsWith('@g.us') ? (
                                     (() => {
                                       const presenceState = presences[selectedChat.remoteJid];
                                       let presenceDotClass = "";
@@ -4216,7 +4216,7 @@ echo $response;`;
                                       className={`flex flex-col max-w-[70%] ${fromMe ? 'self-end items-end' : 'self-start items-start'}`}
                                     >
                                       {/* Sender header for groups */}
-                                      {!fromMe && selectedChat.remoteJid.endsWith('@g.us') && msg.pushName && (
+                                      {!fromMe && selectedChat.remoteJid && selectedChat.remoteJid.endsWith && selectedChat.remoteJid.endsWith('@g.us') && msg.pushName && (
                                         <span className={`text-[9px] font-bold mb-0.5 ml-1.5 ${getSenderColor(msg.pushName)}`}>{msg.pushName}</span>
                                       )}
 
@@ -4370,7 +4370,7 @@ echo $response;`;
                     </div>
 
                     {/* CRM Sidebar Pane */}
-                    {selectedChat && !selectedChat.remoteJid.endsWith('@g.us') && (
+                    {selectedChat && selectedChat.remoteJid && selectedChat.remoteJid.endsWith && !selectedChat.remoteJid.endsWith('@g.us') && (
                       <div className="md:col-span-6 grid grid-cols-1 lg:grid-cols-2 min-h-0 relative">
                         {/* Column 1: CRM Details */}
                         <div className="flex flex-col min-h-0 bg-slate-50/45 dark:bg-slate-950 text-left relative overflow-hidden">
