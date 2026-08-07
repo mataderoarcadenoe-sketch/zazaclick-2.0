@@ -586,7 +586,7 @@ export default function DashboardPage() {
   const fetchMessages = useCallback(async (silent = false, targetChat?: any, targetInstance?: string) => {
     const chat = targetChat || selectedChatRef.current;
     const instance = targetInstance || selectedInstanceRef.current;
-    if (!instance || !chat) return;
+    if (!instance || !chat || !chat.remoteJid) return;
     
     // Capturar el JID objetivo para proteger contra race conditions
     const targetJid = chat.remoteJid;
@@ -826,7 +826,9 @@ export default function DashboardPage() {
     selectedInstanceRef.current = selectedInstanceForChats;
     // Limpiar el registro de chats leídos al cambiar de instancia
     readChatsRef.current.clear();
-  }, [selectedInstanceForChats]);
+    // Limpiar el chat seleccionado al cambiar de línea
+    setSelectedChat(null);
+  }, [selectedInstanceForChats, setSelectedChat]);
 
   // Load chats when tab becomes active or instance changes
   useEffect(() => {
