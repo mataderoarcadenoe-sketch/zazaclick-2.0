@@ -178,10 +178,31 @@ router.get('/list', authMiddleware, async (req: AuthenticatedRequest, res) => {
       'SELECT id, instance_name, phone, status, api_key, created_at FROM instances WHERE user_id = $1 ORDER BY created_at DESC',
       [req.userId]
     );
+    const dbInstances = instancesRes.rows;
+
+    // Auto-sincronizar el estado de conexión con Evolution API en segundo plano o paralelo rápido
+    const updatedInstances = await Promise.all(dbInstances.map(async (inst) => {
+      try {
+        const state = await EvolutionService.getConnectionState(inst.instance_name);
+        const actualStatus = state === 'open' ? 'connected' : 'disconnected';
+        
+        if (inst.status !== actualStatus) {
+          console.log(`🔄 [InstanceList] Sincronizando estado de "${inst.instance_name}": ${inst.status} -> ${actualStatus}`);
+          await pool.query(
+            'UPDATE instances SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+            [actualStatus, inst.id]
+          );
+          inst.status = actualStatus;
+        }
+      } catch (err: any) {
+        console.warn(`[InstanceList] No se pudo verificar estado de "${inst.instance_name}":`, err.message);
+      }
+      return inst;
+    }));
 
     res.json({
       success: true,
-      data: instancesRes.rows
+      data: updatedInstances
     });
 
   } catch (error: any) {
