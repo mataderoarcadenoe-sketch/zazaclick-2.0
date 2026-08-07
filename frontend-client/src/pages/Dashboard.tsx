@@ -4012,6 +4012,10 @@ echo $response;`;
                                       } else if (statuses.includes('DELIVERY_ACK')) {
                                         statusIcon = <span className="text-[9px] text-slate-500/80 dark:text-white/60 font-bold ml-1">✓✓</span>;
                                       } else if (statuses.includes('SERVER_ACK')) {
+                                        statusIcon = <span className="text-[9px] text-slate-500/80 dark:text-white/60 font-bold ml-1">✓</span>;
+                                      } else {
+                                        statusIcon = <span className="text-[9px] text-slate-500/80 dark:text-white/60 font-bold ml-1">✓</span>;
+                                      }
                                     } else {
                                       // Mensajes enviados sin MessageUpdate aún: mostrar ✓ por defecto
                                       statusIcon = <span className="text-[9px] text-slate-500/80 dark:text-white/60 font-bold ml-1">✓</span>;

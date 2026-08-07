@@ -505,7 +505,7 @@ router.post('/chats/:instanceName/media', authMiddleware, async (req: Authentica
       try {
         fs.mkdirSync(cacheDir, { recursive: true });
         console.log(`💾 [MediaCache] Directorio creado en ${cacheDir}`);
-      } catch (err) {
+      } catch (err: any) {
         console.error(`[MediaCache] Error creando directorio ${cacheDir}:`, err.message);
       }
     }
