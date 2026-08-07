@@ -71,7 +71,28 @@ router.get('/test-send/:instanceName', async (req, res) => {
   }
 });
 
-
+router.post('/test-media/:instanceName', async (req, res) => {
+  const { instanceName } = req.params;
+  const { messageKey, messageContent } = req.body;
+  try {
+    const result = await EvolutionService.getMediaMessageBase64(instanceName, messageKey, messageContent);
+    res.json({
+      success: result.success,
+      data: result.data || null,
+      error: result.error || null,
+      env: {
+        EVOLUTION_API_URL: process.env.EVOLUTION_API_URL,
+        EVOLUTION_API_KEY_EXISTS: !!process.env.EVOLUTION_API_KEY
+      }
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      error: err.message,
+      stack: err.stack
+    });
+  }
+});
 
 /**
  * Generar ID aleatorio
