@@ -1402,7 +1402,7 @@ export default function DashboardPage() {
   // Assign chat to Advisor
   const handleAssignAgent = async (agentId: string | null) => {
     if (!selectedChat) return;
-    const cleanJid = selectedChat.remoteJid.split('@')[0].split(':')[0].split(':')[0];
+    const cleanJid = selectedChat?.remoteJid?.split('@')[0]?.split(':')[0]?.split(':')[0] || '';
     try {
       const res = await api.post('/crm/contacts/assign', {
         phone_number: cleanJid,
@@ -1502,7 +1502,7 @@ export default function DashboardPage() {
     }
 
     try {
-      const cleanJid = selectedChat.remoteJid.split('@')[0].split(':')[0].split(':')[0];
+      const cleanJid = selectedChat?.remoteJid?.split('@')[0]?.split(':')[0]?.split(':')[0] || '';
       const res = await api.post('/crm/contacts/tags', {
         phone_number: cleanJid,
         tags: newTags
@@ -1838,7 +1838,7 @@ export default function DashboardPage() {
   // Link Client and WhatsApp Chat (with optional mergeAction)
   const handleSaveCrmContact = async (mergeAction?: string) => {
     if (!selectedChat) return;
-    const cleanJid = selectedChat.remoteJid.split('@')[0].split(':')[0];
+    const cleanJid = selectedChat?.remoteJid?.split('@')[0]?.split(':')[0] || '';
 
     // If manual name with no document number entered
     if (!crmDocNumber.trim()) {
@@ -2136,7 +2136,7 @@ export default function DashboardPage() {
   };
 
   const handleGoToChat = (phone: string, clientName: string) => {
-    const matchingChat = chats.find(c => c.remoteJid.split('@')[0].split(':')[0] === phone);
+    const matchingChat = chats.find(c => c && c.remoteJid && c.remoteJid.split('@')[0].split(':')[0] === phone);
     if (matchingChat) {
       setSelectedChat(matchingChat);
     } else {
@@ -3494,6 +3494,7 @@ echo $response;`;
                           <div className="p-4 text-center text-xs text-surface-400">No se encontraron conversaciones activas.</div>
                         ) : (
                           chats
+                            .filter(chat => chat && chat.remoteJid)
                             .filter(chat => {
                               const cleanRemoteJid = chat.remoteJid.split('@')[0].split(':')[0];
                               const contactName = (crmContactMap[cleanRemoteJid] || chat.pushName || cleanRemoteJid).toLowerCase();
@@ -3518,7 +3519,7 @@ echo $response;`;
                               const isActive = selectedChat?.remoteJid === chat.remoteJid;
                               const unreadCount = Number(chat.unreadCount) || 0;
                               const isUnread = unreadCount > 0;
-                              const cleanRemoteJid = chat.remoteJid.split('@')[0].split(':')[0].split(':')[0];
+                              const cleanRemoteJid = chat?.remoteJid?.split('@')[0]?.split(':')[0]?.split(':')[0] || '';
                               const contactName = crmContactMap[cleanRemoteJid] || chat.pushName || cleanRemoteJid;
                               
                               // Extract last message text
@@ -3642,14 +3643,14 @@ echo $response;`;
                                   {selectedChat.profilePicUrl ? (
                                     <img src={selectedChat.profilePicUrl} alt="" className="w-full h-full object-cover" />
                                   ) : (
-                                    <span className="uppercase tracking-wide">{String(crmContactMap[selectedChat.remoteJid.split('@')[0].split(':')[0]] || selectedChat.pushName || selectedChat.remoteJid).substring(0, 2)}</span>
+                                    <span className="uppercase tracking-wide">{String(crmContactMap[selectedChat?.remoteJid?.split('@')[0]?.split(':')[0] || ''] || selectedChat.pushName || selectedChat.remoteJid).substring(0, 2)}</span>
                                   )}
                                 </div>
                                 
                                 {/* Contact Info */}
                                 <div className="flex flex-col justify-center text-left">
                                   <h4 className="text-[13px] font-extrabold text-slate-800 dark:text-white uppercase tracking-tight">
-                                    {crmContactMap[selectedChat.remoteJid.split('@')[0].split(':')[0]] || selectedChat.pushName || selectedChat.remoteJid.split('@')[0].split(':')[0]}
+                                    {crmContactMap[selectedChat?.remoteJid?.split('@')[0]?.split(':')[0] || ''] || selectedChat.pushName || selectedChat?.remoteJid?.split('@')[0]?.split(':')[0] || ''}
                                   </h4>
                                   
                                   <div className="flex flex-wrap items-center gap-2 mt-1.5">
@@ -3671,7 +3672,7 @@ echo $response;`;
                                     
                                     {/* Assigned Advisor badge */}
                                     {(() => {
-                                      const cleanPhone = selectedChat.remoteJid.split('@')[0].split(':')[0].split(':')[0];
+                                      const cleanPhone = selectedChat?.remoteJid?.split('@')[0]?.split(':')[0]?.split(':')[0] || '';
                                       const assignedAgent = crmContactAgentsMap[cleanPhone];
                                       if (!assignedAgent) return null;
                                       return (
@@ -3726,7 +3727,7 @@ echo $response;`;
                                           <span className="text-slate-300 dark:text-slate-600 font-normal">|</span>
                                           <div className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
                                             <Phone size={11} className="text-slate-400" />
-                                            <span>+{selectedChat.remoteJid.split('@')[0].split(':')[0]}</span>
+                                            <span>+{selectedChat?.remoteJid?.split('@')[0]?.split(':')[0] || ''}</span>
                                           </div>
                                         </div>
                                       );
@@ -3794,7 +3795,7 @@ echo $response;`;
                                       <div className="px-3 py-2 text-[10px] text-surface-400 italic font-semibold">No hay colaboradores registrados.</div>
                                     ) : (
                                       teamMembers.map((agent: any) => {
-                                        const cleanPhone = selectedChat ? selectedChat.remoteJid.split('@')[0].split(':')[0].split(':')[0] : '';
+                                        const cleanPhone = selectedChat && selectedChat.remoteJid ? selectedChat.remoteJid.split('@')[0].split(':')[0].split(':')[0] : '';
                                         const currentAssigned = crmContactAgentsMap[cleanPhone]?.id === agent.id;
                                         return (
                                           <button
@@ -3899,7 +3900,7 @@ echo $response;`;
                                             movePipelineStage(
                                               selectedChat.remoteJid,
                                               stg,
-                                              selectedChat.pushName || selectedChat.remoteJid.split('@')[0].split(':')[0]
+                                              selectedChat.pushName || (selectedChat.remoteJid && selectedChat.remoteJid.split ? selectedChat.remoteJid.split('@')[0].split(':')[0] : '')
                                             );
                                             setShowPipelineDropdown(false);
                                           }}
