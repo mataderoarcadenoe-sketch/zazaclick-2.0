@@ -21,7 +21,8 @@
     "react-router-dom": "^7.18.2",
     "sirv-cli": "^3.0.1",
     "socket.io-client": "^4.8.3",
-    "tailwindcss": "^4.3.3"
+    "tailwindcss": "^4.3.3",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",

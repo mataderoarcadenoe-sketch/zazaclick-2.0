@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import EmojiPicker, { Theme, EmojiStyle, Emoji } from 'emoji-picker-react';
 import { parse } from '@twemoji/parser';
+import { useCrmStore } from '../store/crmStore';
 
 const SMART_TAGS = ['VIP', 'Moroso', 'Pendiente', 'Nuevo', 'Cliente frecuente', 'Prospecto', 'Empresa', 'Mayorista', 'Interesado', 'Pagó', 'Sin responder'];
 
@@ -122,7 +123,20 @@ const PIPELINE_STAGES = [
 
 export default function DashboardPage() {
   const { user, subscription, logout } = useAuth();
-  const [instances, setInstances] = useState<Instance[]>([]);
+  const {
+    instances, setInstances,
+    selectedInstanceForChats, setSelectedInstanceForChats,
+    activeQrInstance, setActiveQrInstance,
+    qrBase64, setQrBase64,
+    qrLoading, setQrLoading,
+    chats, setChats,
+    selectedChat, setSelectedChat,
+    messages, setMessages,
+    presences, setPresences,
+    loadedMedia, setLoadedMedia,
+    mediaLoadingStates, setMediaLoadingStates
+  } = useCrmStore();
+
   const [loading, setLoading] = useState(true);
   const [_error, setError] = useState<string | null>(null);
   
@@ -156,11 +170,6 @@ export default function DashboardPage() {
   const [createLoading, setCreateLoading] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
-  // QR Modal state
-  const [activeQrInstance, setActiveQrInstance] = useState<string | null>(null);
-  const [qrBase64, setQrBase64] = useState<string | null>(null);
-  const [qrLoading, setQrLoading] = useState(false);
-
   // Send Test Message State
   const [testInstance, setTestInstance] = useState<string>('');
   const [testNumber, setTestNumber] = useState('');
@@ -175,20 +184,12 @@ export default function DashboardPage() {
   const [docLang, setDocLang] = useState<'curl' | 'js' | 'python' | 'php'>('curl');
   const [docTab, setDocTab] = useState<'text' | 'media' | 'create-group' | 'participants-group' | 'invite-group'>('text');
 
-  // Chat States
-  const [selectedInstanceForChats, setSelectedInstanceForChats] = useState<string>('');
-  const [chats, setChats] = useState<any[]>([]);
   const [chatsLoading, setChatsLoading] = useState(false);
-  const [selectedChat, setSelectedChat] = useState<any | null>(null);
-  const [presences, setPresences] = useState<Record<string, string>>({});
-  const [messages, setMessages] = useState<any[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [newMessageText, setNewMessageText] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
   const [chatsSearchQuery, setChatsSearchQuery] = useState('');
   const [chatsError, setChatsError] = useState<string | null>(null);
-  const [mediaLoadingStates, setMediaLoadingStates] = useState<Record<string, boolean>>({});
-  const [loadedMedia, setLoadedMedia] = useState<Record<string, string>>({}); // Maps message ID to local media source (data URL)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [attachedFileBase64, setAttachedFileBase64] = useState<string | null>(null);
@@ -795,13 +796,18 @@ export default function DashboardPage() {
       } else {
         // Enviar mensaje de texto común
         const textToSend = newMessageText.trim();
+        
+        // Inyectar mensaje en la pantalla inmediatamente (Optimistic UI)
+        useCrmStore.getState().addOptimisticMessage(textToSend, selectedChat.remoteJid);
+        setNewMessageText('');
+        
         const res = await api.post(`/instances/chats/${selectedInstanceForChats}/send`, {
           remoteJid: selectedChat.remoteJid,
           text: textToSend
         });
-        if (res.data?.success) {
-          setNewMessageText('');
-          await fetchMessages(true);
+        
+        if (!res.data?.success) {
+          showNotification(res.data?.error || 'Error al enviar el mensaje', 'error');
         }
       }
     } catch (err: any) {
@@ -872,6 +878,9 @@ export default function DashboardPage() {
         setMessages(prev => {
           const exists = prev.some(m => m.key?.id === newMsg.key?.id);
           if (exists) return prev;
+          if (fromMe) {
+            return [newMsg, ...prev.filter(m => !m.key?.id.startsWith('temp_'))];
+          }
           return [newMsg, ...prev];
         });
 
@@ -2187,13 +2196,17 @@ export default function DashboardPage() {
 *Nota*: Esta cotización tiene una validez de 7 días hábiles. Si deseas proceder con la compra, confírmanos por este medio.`;
 
     try {
+      // Inyectar cotización en UI inmediatamente (Optimistic UI)
+      useCrmStore.getState().addOptimisticMessage(messageText, selectedChat.remoteJid);
+      
       const res = await api.post(`/instances/chats/${selectedInstanceForChats}/send`, {
         remoteJid: selectedChat.remoteJid,
         text: messageText
       });
       if (res.data?.success) {
         showNotification('Cotización formal enviada al chat.', 'success');
-        await fetchMessages(true);
+      } else {
+        showNotification('Error al enviar la cotización.', 'error');
       }
     } catch (err: any) {
       showNotification('Error al enviar la cotización.', 'error');
