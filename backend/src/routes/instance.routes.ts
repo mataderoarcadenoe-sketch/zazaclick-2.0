@@ -4,6 +4,8 @@ import { authMiddleware, AuthenticatedRequest } from '../middleware/auth.middlew
 import { EvolutionService } from '../services/evolution.service';
 import { GoogleContactsService } from '../services/google-contacts.service';
 import redis from '../config/redis';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const router = Router();
 
@@ -261,6 +263,20 @@ router.delete('/delete/:instanceName', authMiddleware, async (req: Authenticated
     // 2. Eliminar de la base de datos de Zaza
     await pool.query('DELETE FROM instances WHERE instance_name = $1', [instanceName]);
 
+    // 3. Limpiar claves de Redis asociadas (contactos y contadores de no leídos)
+    try {
+      const contactKeys = await redis.keys(`contact:${instanceName}:*`);
+      const unreadKeys = await redis.keys(`unread:${instanceName}:*`);
+      const allKeys = [...(contactKeys || []), ...(unreadKeys || [])];
+      
+      if (allKeys.length > 0) {
+        await redis.del(...allKeys);
+        console.log(`🧹 [Redis] Limpiadas ${allKeys.length} llaves huérfanas al eliminar instancia ${instanceName}`);
+      }
+    } catch (redisErr: any) {
+      console.warn(`[Redis] Error al limpiar llaves huérfanas de ${instanceName}:`, redisErr.message);
+    }
+
     res.json({
       success: true,
       message: 'Instancia eliminada correctamente tanto en el servidor como en la base de datos.'
@@ -430,7 +446,7 @@ router.post('/chats/:instanceName/media', authMiddleware, async (req: Authentica
   const { instanceName } = req.params;
   const { messageKey, messageContent } = req.body;
 
-  if (!messageKey || !messageContent) {
+  if (!messageKey || !messageContent || !messageKey.id) {
     return res.status(400).json({ success: false, error: 'Faltan parámetros requeridos (messageKey, messageContent)' });
   }
 
@@ -441,10 +457,38 @@ router.post('/chats/:instanceName/media', authMiddleware, async (req: Authentica
       return res.status(403).json({ success: false, error: 'Acceso no autorizado.' });
     }
 
+    // Definir ruta y directorio de caché local
+    const cacheDir = path.join(__dirname, '../../media_cache');
+    if (!fs.existsSync(cacheDir)) {
+      fs.mkdirSync(cacheDir, { recursive: true });
+    }
+    const cacheFilePath = path.join(cacheDir, `${messageKey.id}.json`);
+
+    // Intentar leer de la caché de disco local
+    if (fs.existsSync(cacheFilePath)) {
+      try {
+        const cachedData = JSON.parse(fs.readFileSync(cacheFilePath, 'utf8'));
+        console.log(`💾 [MediaCache] Sirviendo archivo ${messageKey.id} desde caché local de disco.`);
+        return res.json({ success: true, data: cachedData });
+      } catch (err: any) {
+        console.warn(`[MediaCache] Fallo al leer archivo de caché de disco, consultando Evolution API:`, err.message);
+      }
+    }
+
+    // Si no está en caché, solicitar a Evolution API
     const mediaResult = await EvolutionService.getMediaMessageBase64(instanceName, messageKey, messageContent);
     if (!mediaResult.success) {
       return res.status(500).json({ success: false, error: mediaResult.error || 'Error al obtener base64 del archivo' });
     }
+
+    // Escribir en la caché de disco local de forma asíncrona
+    fs.writeFile(cacheFilePath, JSON.stringify(mediaResult.data), 'utf8', (err) => {
+      if (err) {
+        console.error(`[MediaCache] Error al guardar en caché local ${messageKey.id}:`, err.message);
+      } else {
+        console.log(`💾 [MediaCache] Guardado archivo ${messageKey.id} en caché local de disco.`);
+      }
+    });
 
     res.json({ success: true, data: mediaResult.data });
   } catch (error: any) {
