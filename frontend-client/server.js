@@ -33,7 +33,16 @@ const server = http.createServer((req, res) => {
   try {
     const content = fs.readFileSync(filePath);
     const mime = MIME[path.extname(filePath)] || 'application/octet-stream';
-    res.writeHead(200, { 'Content-Type': mime });
+    
+    // Configurar cabeceras de control de caché de raíz
+    const headers = { 'Content-Type': mime };
+    if (filePath.endsWith('index.html')) {
+      headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0';
+    } else {
+      headers['Cache-Control'] = 'public, max-age=31536000, immutable';
+    }
+
+    res.writeHead(200, headers);
     res.end(content);
   } catch (err) {
     res.writeHead(500);
