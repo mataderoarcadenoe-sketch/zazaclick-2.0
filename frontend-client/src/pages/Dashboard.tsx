@@ -3151,6 +3151,35 @@ echo $response;`;
           </div>
         </header>
 
+        {/* Banner de Diagnóstico de Error Global */}
+        {globalError && (
+          <div className="bg-rose-500/10 dark:bg-rose-950/20 border-b border-rose-500/20 px-6 py-3.5 flex items-center justify-between gap-3 text-rose-600 dark:text-rose-400 text-xs font-bold animate-fadeIn z-55 relative">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse shrink-0" />
+              <span className="font-mono truncate select-all" title={globalError}>{globalError}</span>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button 
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(globalError);
+                  showNotification('Mensaje de error copiado al portapapeles', 'success');
+                }}
+                className="px-3 py-1.5 bg-rose-500/15 hover:bg-rose-500/25 active:scale-95 text-rose-600 dark:text-rose-450 rounded-xl transition-all cursor-pointer text-[10px]"
+              >
+                Copiar Error
+              </button>
+              <button 
+                type="button"
+                onClick={() => setGlobalError(null)}
+                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 active:scale-95 rounded-xl transition-all cursor-pointer text-slate-700 dark:text-slate-300 text-[10px]"
+              >
+                Ignorar
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Interactive Content Container */}
         <main className={`flex-1 bg-transparent relative ${activeTab === 'chats' ? 'overflow-hidden p-3.5 md:p-4 pb-4' : 'p-4 sm:p-6 lg:p-6 overflow-y-auto'}`}>
           
