@@ -406,6 +406,7 @@ export default function DashboardPage() {
   const [billingToken, setBillingToken] = useState('');
   const [billingTestLoading, setBillingTestLoading] = useState(false);
   const [billingSaveLoading, setBillingSaveLoading] = useState(false);
+  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
 
   const [globalTasks, setGlobalTasks] = useState<any[]>([]);
   const [globalTasksLoading, setGlobalTasksLoading] = useState(false);
@@ -904,9 +905,6 @@ export default function DashboardPage() {
   };
 
   const handleDisconnectBilling = async () => {
-    if (!window.confirm('¿Estás seguro de que deseas desconectar el Facturador Electrónico? Esto desactivará el catálogo y eliminará el token guardado.')) {
-      return;
-    }
     try {
       const res = await api.delete('/crm/billing/config');
       if (res.data?.success) {
@@ -916,10 +914,12 @@ export default function DashboardPage() {
         setBillingToken('');
         setBillingProducts([]);
         setShowBillingConfigModal(false);
+        setShowDisconnectConfirm(false);
       }
     } catch (err: any) {
       console.error('Error disconnecting billing:', err.message);
       showNotification('No se pudo desconectar el facturador.', 'error');
+      setShowDisconnectConfirm(false);
     }
   };
 
@@ -8861,7 +8861,7 @@ echo $response;`;
                 <div className="pt-1.5">
                   <button
                     type="button"
-                    onClick={handleDisconnectBilling}
+                    onClick={() => setShowDisconnectConfirm(true)}
                     disabled={billingTestLoading || billingSaveLoading}
                     className="w-full py-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 dark:hover:bg-red-950/30 text-red-600 dark:text-red-400 text-[11px] font-bold rounded-2xl transition-all cursor-pointer border border-red-250 dark:border-red-900/30 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-1.5"
                   >
@@ -8869,6 +8869,59 @@ echo $response;`;
                   </button>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmación de Desconexión - Premium */}
+      {showDisconnectConfirm && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl shadow-red-500/10 max-w-sm w-full mx-4 overflow-hidden border border-red-200/30 dark:border-red-900/30">
+            {/* Header con icono de advertencia */}
+            <div className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/30 dark:to-orange-950/20 px-6 pt-7 pb-5 text-center">
+              <div className="w-14 h-14 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm shadow-red-200/30">
+                <svg className="w-7 h-7 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+              </div>
+              <h3 className="text-[15px] font-extrabold text-slate-800 dark:text-white">
+                Desconectar Facturador
+              </h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 leading-relaxed font-medium">
+                Esta acción eliminará la conexión con tu Facturador Electrónico, incluyendo el token de acceso y el caché de productos.
+              </p>
+            </div>
+
+            {/* Detalles */}
+            <div className="px-6 py-4">
+              <div className="bg-amber-50/70 dark:bg-amber-950/15 border border-amber-200/50 dark:border-amber-800/25 rounded-xl p-3.5 space-y-1.5">
+                <p className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">¿Qué sucederá?</p>
+                <ul className="text-[11px] text-amber-600 dark:text-amber-300/80 space-y-1 font-medium">
+                  <li className="flex items-start gap-1.5">• El catálogo de productos dejará de mostrarse.</li>
+                  <li className="flex items-start gap-1.5">• Se eliminará el token cifrado de la base de datos.</li>
+                  <li className="flex items-start gap-1.5">• Se limpiará el caché de Redis.</li>
+                  <li className="flex items-start gap-1.5">• Podrás reconectar en cualquier momento.</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Botones */}
+            <div className="px-6 pb-6 flex gap-2.5">
+              <button
+                type="button"
+                onClick={() => setShowDisconnectConfirm(false)}
+                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs text-slate-700 dark:text-slate-300 font-bold rounded-2xl transition-all cursor-pointer active:scale-95"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleDisconnectBilling}
+                className="flex-1 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white text-xs font-bold rounded-2xl shadow-lg shadow-red-500/20 transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
+              >
+                Sí, Desconectar
+              </button>
             </div>
           </div>
         </div>
