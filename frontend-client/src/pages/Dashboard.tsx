@@ -139,6 +139,7 @@ export default function DashboardPage() {
 
   const [loading, setLoading] = useState(true);
   const [_error, setError] = useState<string | null>(null);
+  const [globalError, setGlobalError] = useState<string | null>(null);
   
   // Theme Toggle
   const { isDark, toggle: toggleDark } = useDarkMode();
@@ -151,6 +152,35 @@ export default function DashboardPage() {
 
   // Active Tab/Section State
   const [activeTab, setActiveTab] = useState<string>('overview');
+
+  // Captura global de excepciones y rechazos para depuración visual
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      console.error('Captured global error:', event.error);
+      setGlobalError(`[Error de Ejecución] ${event.message || event.error?.message || 'Error desconocido'}`);
+    };
+    const handleRejection = (event: PromiseRejectionEvent) => {
+      console.error('Captured promise rejection:', event.reason);
+      setGlobalError(`[Rechazo de Promesa] ${event.reason?.message || event.reason || 'Error en proceso asíncrono'}`);
+    };
+
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleRejection);
+
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleRejection);
+    };
+  }, []);
+
+  // Logger de cambios de estado críticos para ver en consola F12
+  useEffect(() => {
+    console.log('🔍 [Debug State] selectedChat ha cambiado a:', selectedChat);
+  }, [selectedChat]);
+
+  useEffect(() => {
+    console.log('🔍 [Debug State] selectedInstance ha cambiado a:', selectedInstanceForChats);
+  }, [selectedInstanceForChats]);
 
   useEffect(() => {
     if (user) {
