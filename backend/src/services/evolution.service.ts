@@ -245,11 +245,31 @@ export class EvolutionService {
       let finalMediatype = mediatype;
       const isGif = mimetype === 'image/gif' || (fileName && fileName.toLowerCase().endsWith('.gif')) || (media && media.toLowerCase().includes('.gif'));
 
+      let finalMedia = media;
+      // Si media es una URL, descargarla y convertirla a base64 para evitar bloqueos de Cloudflare
+      if (media.startsWith('http')) {
+        try {
+          console.log(`[EvolutionService] Descargando media desde URL para enviar como Base64: ${media}`);
+          const downloadRes = await axios.get(media, {
+            responseType: 'arraybuffer',
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            },
+            timeout: 10000
+          });
+          const base64Data = Buffer.from(downloadRes.data, 'binary').toString('base64');
+          finalMedia = `data:${mimetype};base64,${base64Data}`;
+        } catch (downloadErr: any) {
+          console.warn(`[EvolutionService] No se pudo descargar la media en el backend, enviando URL original:`, downloadErr.message);
+          finalMedia = media;
+        }
+      }
+
       const payload: any = {
         number: targetNumber,
         mediatype: isGif ? 'video' : finalMediatype,
         mimetype,
-        media,
+        media: finalMedia,
       };
 
       if (isGif) {
