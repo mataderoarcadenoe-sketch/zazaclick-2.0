@@ -39,7 +39,7 @@ interface CrmStore {
   setQrLoading: (loading: boolean) => void;
   
   setChats: (chats: any[] | ((prev: any[]) => any[])) => void;
-  setSelectedChat: (chat: any | null) => void;
+  setSelectedChat: (chat: any | null | ((prev: any | null) => any | null)) => void;
   setMessages: (messages: any[] | ((prev: any[]) => any[])) => void;
   setPresences: (presences: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => void;
   
@@ -88,7 +88,9 @@ export const useCrmStore = create<CrmStore>((set) => ({
     chats: typeof val === 'function' ? val(state.chats) : val
   })),
   
-  setSelectedChat: (val) => set({ selectedChat: val }),
+  setSelectedChat: (val) => set((state) => ({
+    selectedChat: typeof val === 'function' ? val(state.selectedChat) : val
+  })),
   
   setMessages: (val) => set((state) => ({
     messages: typeof val === 'function' ? val(state.messages) : val
