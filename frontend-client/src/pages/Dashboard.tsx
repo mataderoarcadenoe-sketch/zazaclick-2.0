@@ -398,6 +398,14 @@ export default function DashboardPage() {
   // CRM Sidebar Tab Integration (Billing / Catalog)
   const [billingSearchQuery, setBillingSearchQuery] = useState('');
   const [billingCategory, setBillingCategory] = useState<string>('all');
+  const [billingProducts, setBillingProducts] = useState<any[]>([]);
+  const [billingLoading, setBillingLoading] = useState(false);
+  const [billingConfigured, setBillingConfigured] = useState(false);
+  const [showBillingConfigModal, setShowBillingConfigModal] = useState(false);
+  const [billingSubdomain, setBillingSubdomain] = useState('');
+  const [billingToken, setBillingToken] = useState('');
+  const [billingTestLoading, setBillingTestLoading] = useState(false);
+  const [billingSaveLoading, setBillingSaveLoading] = useState(false);
 
   const [globalTasks, setGlobalTasks] = useState<any[]>([]);
   const [globalTasksLoading, setGlobalTasksLoading] = useState(false);
@@ -804,6 +812,97 @@ export default function DashboardPage() {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  };
+
+  // Cargar productos del facturador
+  const fetchBillingProducts = useCallback(async (searchQuery = '') => {
+    try {
+      setBillingLoading(true);
+      const res = await api.get('/crm/billing/products', {
+        params: { search: searchQuery }
+      });
+      if (res.data?.success) {
+        setBillingConfigured(!!res.data.configured);
+        setBillingProducts(res.data.data || []);
+      }
+    } catch (err: any) {
+      console.error('Error fetching billing products:', err.message);
+      showNotification('No se pudo conectar con el facturador.', 'error');
+    } finally {
+      setBillingLoading(false);
+    }
+  }, []);
+
+  // Cargar configuración de facturación activa
+  const fetchBillingConfig = async () => {
+    try {
+      const res = await api.get('/crm/billing/config');
+      if (res.data?.success) {
+        setBillingConfigured(!!res.data.configured);
+        if (res.data.configured) {
+          setBillingSubdomain(res.data.subdomain || '');
+          setBillingToken(res.data.token || '');
+        }
+      }
+    } catch (err: any) {
+      console.error('Error fetching billing config:', err.message);
+    }
+  };
+
+  const handleSaveBillingConfig = async () => {
+    if (!billingSubdomain.trim() || !billingToken.trim()) {
+      showNotification('Por favor, completa todos los campos de configuración.', 'error');
+      return;
+    }
+    setBillingSaveLoading(true);
+    try {
+      const res = await api.post('/crm/billing/config', {
+        subdomain: billingSubdomain,
+        token: billingToken
+      });
+      if (res.data?.success) {
+        showNotification('Configuración de facturación guardada con éxito.', 'success');
+        setBillingConfigured(true);
+        setShowBillingConfigModal(false);
+        fetchBillingProducts(); // Recargar productos inmediatamente
+      } else {
+        showNotification(res.data.error || 'Error al guardar configuración.', 'error');
+      }
+    } catch (err: any) {
+      console.error('Error saving billing config:', err.message);
+      showNotification('Fallo al conectar con el servidor para guardar.', 'error');
+    } finally {
+      setBillingSaveLoading(false);
+    }
+  };
+
+  const handleTestBillingConfig = async () => {
+    if (!billingSubdomain.trim() || !billingToken.trim()) {
+      showNotification('Por favor, ingresa el subdominio y el token para probar.', 'error');
+      return;
+    }
+    setBillingTestLoading(true);
+    try {
+      const res = await api.post('/crm/billing/test', {
+        subdomain: billingSubdomain,
+        token: billingToken
+      });
+      if (res.data?.success) {
+        showNotification(res.data.message || '¡Conexión de prueba exitosa!', 'success');
+      } else {
+        showNotification(res.data.error || 'Fallo en la prueba de conexión.', 'error');
+      }
+    } catch (err: any) {
+      const errMsg = err.response?.data?.error || err.message;
+      showNotification(errMsg || 'Error de conexión durante la prueba.', 'error');
+    } finally {
+      setBillingTestLoading(false);
+    }
+  };
+
+  const handleOpenBillingConfigModal = () => {
+    fetchBillingConfig(); // Asegurar datos frescos de base de datos
+    setShowBillingConfigModal(true);
   };
 
   // Send chat message (handles both text and media)
@@ -1784,13 +1883,24 @@ export default function DashboardPage() {
   useEffect(() => {
     if (selectedChat && selectedChat.remoteJid && selectedChat.remoteJid.endsWith && !selectedChat.remoteJid.endsWith('@g.us')) {
       fetchCrmContactForChat(selectedChat.remoteJid);
+      fetchBillingProducts(); // Cargar catálogo de facturación
     } else {
       setCrmClient(null);
       setCrmContact(null);
       setClientNotes([]);
       setShowNotesFloatingWindow(false);
     }
-  }, [selectedChat, fetchCrmContactForChat]);
+  }, [selectedChat, fetchCrmContactForChat, fetchBillingProducts]);
+
+  // Buscar productos del facturador al escribir con debounce de 500ms
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      if (selectedChat && selectedChat.remoteJid && !selectedChat.remoteJid.endsWith('@g.us')) {
+        fetchBillingProducts(billingSearchQuery);
+      }
+    }, 500);
+    return () => clearTimeout(delayDebounce);
+  }, [billingSearchQuery, selectedChat, fetchBillingProducts]);
 
   // Consult DNI/RUC from APIPeru
   const handleValidateCrmDoc = async (overrideDocNum?: any) => {
@@ -5317,9 +5427,19 @@ echo $response;`;
                             <div className="space-y-4">
                               {/* Integration Header */}
                               <div className="pb-3.5 border-b border-slate-100 dark:border-slate-800/80 text-left">
-                                <h5 className="text-[12px] font-extrabold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                                  <FileText size={13} className="text-brand-primary" />
-                                  <span>Facturación API</span>
+                                <h5 className="text-[12px] font-extrabold text-slate-800 dark:text-white uppercase tracking-wider flex items-center justify-between">
+                                  <div className="flex items-center gap-1.5">
+                                    <FileText size={13} className="text-brand-primary" />
+                                    <span>Facturación API</span>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={handleOpenBillingConfigModal}
+                                    className="p-1 hover:bg-slate-150 dark:hover:bg-slate-850 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-350 transition-colors cursor-pointer"
+                                    title="Configurar Conexión al Facturador"
+                                  >
+                                    <Settings size={13} />
+                                  </button>
                                 </h5>
                                 <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1.5 leading-relaxed font-medium">
                                   Catálogo integrado con tu Facturador Electrónico para enviar fichas de productos y cotizaciones.
@@ -5363,52 +5483,34 @@ echo $response;`;
 
                               {/* Products List */}
                               <div className="space-y-3">
-                                {(() => {
-                                  const products = [
-                                    {
-                                      id: 1,
-                                      name: 'Facturación Electrónica Pro',
-                                      price: 'S/ 150.00',
-                                      category: 'soft',
-                                      description: 'Sistema ERP completo de facturación electrónica. Emite boletas, facturas y notas de crédito homologado por la SUNAT.',
-                                      image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=120&auto=format&fit=crop&q=60',
-                                      originalImage: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c'
-                                    },
-                                    {
-                                      id: 2,
-                                      name: 'Ticketera Térmica Bluetooth 58mm',
-                                      price: 'S/ 120.00',
-                                      category: 'hard',
-                                      description: 'Impresora térmica de tickets de alta velocidad. Conectividad Bluetooth y USB, ideal para emitir boletas de venta rápidas.',
-                                      image: 'https://images.unsplash.com/photo-1616083778396-75a4a90d05ee?w=120&auto=format&fit=crop&q=60',
-                                      originalImage: 'https://images.unsplash.com/photo-1616083778396-75a4a90d05ee'
-                                    },
-                                    {
-                                      id: 3,
-                                      name: 'Lector de Código de Barras Láser',
-                                      price: 'S/ 180.00',
-                                      category: 'hard',
-                                      description: 'Escáner de mano ergonómico con conexión USB plug & play. Lectura rápida y precisa de códigos UPC, EAN y 1D.',
-                                      image: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=120&auto=format&fit=crop&q=60',
-                                      originalImage: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7'
-                                    },
-                                    {
-                                      id: 4,
-                                      name: 'Kit Comercial Facturación',
-                                      price: 'S/ 450.00',
-                                      category: 'hard',
-                                      description: 'Combo premium: Ticketera térmica + Lector láser + Licencia de Facturación Electrónica por 6 meses.',
-                                      image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=120&auto=format&fit=crop&q=60',
-                                      originalImage: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d'
-                                    }
-                                  ];
-
-                                  const filtered = products
-                                    .filter(p => billingCategory === 'all' || p.category === billingCategory)
-                                    .filter(p => !billingSearchQuery.trim() || p.name.toLowerCase().includes(billingSearchQuery.toLowerCase()));
+                                {billingLoading ? (
+                                  <div className="flex flex-col items-center justify-center py-12 space-y-2">
+                                    <div className="w-5 h-5 border-2 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
+                                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Buscando productos...</p>
+                                  </div>
+                                ) : !billingConfigured ? (
+                                  <div className="text-center py-10 bg-slate-50/50 dark:bg-slate-900/30 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-3">
+                                    <p className="text-[11px] text-slate-450 dark:text-slate-500 leading-normal font-medium">
+                                      No has conectado la API de tu Facturador Electrónico. Vincula tu cuenta para ver tus productos en tiempo real.
+                                    </p>
+                                    <button
+                                      type="button"
+                                      onClick={handleOpenBillingConfigModal}
+                                      className="px-3 py-1.5 bg-brand-primary hover:bg-brand-secondary text-white text-[10px] font-black uppercase rounded-lg active:scale-95 transition-all cursor-pointer shadow-sm shadow-brand-500/10"
+                                    >
+                                      Conectar Facturador
+                                    </button>
+                                  </div>
+                                ) : (() => {
+                                  const filtered = billingProducts
+                                    .filter(p => billingCategory === 'all' || p.category === billingCategory);
 
                                   if (filtered.length === 0) {
-                                    return <div className="text-center py-8 text-xs text-slate-400 italic">No se encontraron productos.</div>;
+                                    return (
+                                      <div className="text-center py-10 text-xs text-slate-400 dark:text-slate-500 italic font-medium bg-slate-50/20 dark:bg-slate-900/10 border border-dashed border-slate-200/50 dark:border-slate-800/50 rounded-xl p-4">
+                                        No se encontraron productos en el facturador.
+                                      </div>
+                                    );
                                   }
 
                                   return filtered.map(prod => (
@@ -5424,9 +5526,20 @@ echo $response;`;
                                         />
                                         <div className="flex-1 min-w-0 space-y-1">
                                           <h6 className="text-[11.5px] font-bold text-slate-800 dark:text-white truncate leading-tight tracking-wide">{prod.name}</h6>
-                                          <span className="inline-block px-2 py-0.5 bg-teal-50 dark:bg-teal-950/20 text-teal-600 dark:text-teal-400 border border-teal-500/10 text-[9px] font-extrabold rounded-md">
-                                            {prod.price}
-                                          </span>
+                                          <div className="flex items-center gap-1.5 flex-wrap">
+                                            <span className="inline-block px-2 py-0.5 bg-teal-50 dark:bg-teal-950/20 text-teal-600 dark:text-teal-400 border border-teal-500/10 text-[9px] font-extrabold rounded-md">
+                                              {prod.price}
+                                            </span>
+                                            {prod.stock !== null && (
+                                              <span className={`inline-block px-1.5 py-0.5 text-[8px] font-extrabold rounded-md border ${
+                                                prod.stock > 0 
+                                                  ? 'bg-emerald-50 dark:bg-emerald-950/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/10' 
+                                                  : 'bg-rose-50 dark:bg-rose-950/10 text-rose-600 dark:text-rose-400 border-rose-500/10'
+                                              }`}>
+                                                Stock: {prod.stock}
+                                              </span>
+                                            )}
+                                          </div>
                                           <p className="text-[9.5px] text-slate-400 dark:text-slate-500 leading-normal line-clamp-2 pr-1 font-medium">{prod.description}</p>
                                         </div>
                                       </div>
@@ -8630,6 +8743,84 @@ echo $response;`;
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Configuración de Facturación (SaaS Inquilino) */}
+      {showBillingConfigModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 w-full max-w-md p-6 sm:p-7 rounded-3xl space-y-4 shadow-premium-lg relative animate-fadeIn text-left">
+            
+            <button
+              onClick={() => setShowBillingConfigModal(false)}
+              className="absolute top-5 right-5 text-surface-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="space-y-1.5">
+              <h3 className="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                <FileText size={18} className="text-brand-primary" />
+                <span>Configurar Facturador Electrónico</span>
+              </h3>
+              <p className="text-xs text-surface-400">
+                Vincula tu cuenta del facturador del ecosistema digital para cargar tus productos y enviarlos de inmediato por WhatsApp.
+              </p>
+            </div>
+
+            <div className="space-y-4 pt-2">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-widest block">Subdominio de la Empresa</label>
+                <div className="flex items-center bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden px-4">
+                  <input
+                    type="text"
+                    value={billingSubdomain}
+                    onChange={(e) => setBillingSubdomain(e.target.value)}
+                    placeholder="ej: restauranteestrellamarina"
+                    className="w-full py-3 bg-transparent text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none font-medium"
+                  />
+                  <span className="text-[11px] font-semibold text-slate-450 dark:text-slate-550 border-l border-slate-200 dark:border-slate-800 pl-3 py-1 flex-shrink-0 select-none">
+                    .syscomecosistemadigital.com
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-widest block">Token de la API (Api Token)</label>
+                <input
+                  type="text"
+                  value={billingToken}
+                  onChange={(e) => setBillingToken(e.target.value)}
+                  placeholder="Pega el Api Token de tu panel"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none font-medium"
+                />
+              </div>
+
+              <div className="flex gap-2.5 pt-4">
+                <button
+                  type="button"
+                  onClick={handleTestBillingConfig}
+                  disabled={billingTestLoading || billingSaveLoading}
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-950 dark:hover:bg-slate-800 text-xs text-slate-700 dark:text-slate-350 font-bold rounded-2xl transition-all cursor-pointer border border-slate-200/20 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-1.5"
+                >
+                  {billingTestLoading ? (
+                    <span className="w-3.5 h-3.5 border-2 border-slate-500 border-t-transparent rounded-full animate-spin" />
+                  ) : 'Probar Conexión'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSaveBillingConfig}
+                  disabled={billingTestLoading || billingSaveLoading}
+                  className="flex-1 py-3 bg-brand-500 hover:bg-brand-secondary active:scale-[0.99] disabled:opacity-40 text-xs text-white font-bold rounded-2xl shadow-lg shadow-brand-500/10 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  {billingSaveLoading ? (
+                    <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : 'Guardar Conexión'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

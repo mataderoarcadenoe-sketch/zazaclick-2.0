@@ -217,6 +217,17 @@ export async function initDatabase() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    // 12. Tabla de Configuración del Facturador (SaaS Integración)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS billing_configs (
+        user_id VARCHAR(255) PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        billing_subdomain VARCHAR(255) NOT NULL,
+        billing_token TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
     // Asegurar columnas de cumpleaños e idioma en crm_clients
     await pool.query(`
       ALTER TABLE crm_clients ADD COLUMN IF NOT EXISTS birthday DATE;

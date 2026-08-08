@@ -3,6 +3,7 @@ import { authMiddleware, AuthenticatedRequest } from '../middleware/auth.middlew
 import pool from '../config/database';
 import axios from 'axios';
 import * as bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 const router = Router();
 router.use(authMiddleware);
@@ -1332,6 +1333,275 @@ router.delete('/tasks/:taskId', async (req: AuthenticatedRequest, res: Response)
   } catch (error: any) {
     console.error('[CRM Delete Task] Error:', error.message);
     return res.status(500).json({ success: false, error: 'Error al eliminar la tarea.' });
+  }
+});
+
+// ==========================================
+// INTEGRACIÓN DE FACTURACIÓN ELECTRÓNICA (MULTI-TENANT)
+// ==========================================
+
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'zazaclick-encryption-key-32-chars-!';
+const ALGORITHM = 'aes-256-cbc';
+const IV_LENGTH = 16;
+
+function encryptToken(text: string): string {
+  const key = crypto.createHash('sha256').update(ENCRYPTION_KEY).digest();
+  const iv = crypto.randomBytes(IV_LENGTH);
+  const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
+  let encrypted = cipher.update(text);
+  encrypted = Buffer.concat([encrypted, cipher.final()]);
+  return iv.toString('hex') + ':' + encrypted.toString('hex');
+}
+
+function decryptToken(text: string): string {
+  try {
+    const textParts = text.split(':');
+    const iv = Buffer.from(textParts.shift()!, 'hex');
+    const encryptedText = Buffer.from(textParts.join(':'), 'hex');
+    const key = crypto.createHash('sha256').update(ENCRYPTION_KEY).digest();
+    const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
+    let decrypted = decipher.update(encryptedText);
+    decrypted = Buffer.concat([decrypted, decipher.final()]);
+    return decrypted.toString();
+  } catch (err) {
+    console.error('Error decrypting token:', err);
+    return '';
+  }
+}
+
+/**
+ * GET /api/crm/billing/config - Obtener la configuración del facturador de la empresa
+ */
+router.get('/billing/config', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const result = await pool.query(
+      'SELECT billing_subdomain, billing_token FROM billing_configs WHERE user_id = $1',
+      [req.userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.json({ success: true, configured: false });
+    }
+
+    const { billing_subdomain, billing_token } = result.rows[0];
+    const decrypted = decryptToken(billing_token);
+    
+    // Enmascarar el token para no exponerlo en el frontend
+    const maskedToken = decrypted 
+      ? decrypted.substring(0, 4) + '••••••••' + decrypted.substring(decrypted.length - 4)
+      : '';
+
+    return res.json({
+      success: true,
+      configured: true,
+      subdomain: billing_subdomain,
+      token: maskedToken
+    });
+  } catch (error: any) {
+    console.error('[CRM Billing Config GET] Error:', error.message);
+    return res.status(500).json({ success: false, error: 'Error al obtener la configuración de facturación.' });
+  }
+});
+
+/**
+ * POST /api/crm/billing/config - Crear o actualizar la configuración del facturador
+ */
+router.post('/billing/config', async (req: AuthenticatedRequest, res: Response) => {
+  const { subdomain, token } = req.body;
+
+  if (!subdomain || !token) {
+    return res.status(400).json({ success: false, error: 'Faltan parámetros requeridos (subdomain, token).' });
+  }
+
+  // Limpiar el subdominio de URLs o caracteres raros (solo el slug)
+  const cleanSubdomain = subdomain
+    .replace(/https?:\/\//i, '')
+    .split('.')[0]
+    .trim()
+    .toLowerCase();
+
+  try {
+    // Si envían un token enmascarado (ej. que ya estaba guardado), no lo sobreescribimos
+    let finalToken = token;
+    if (token.includes('••••')) {
+      const existingRes = await pool.query('SELECT billing_token FROM billing_configs WHERE user_id = $1', [req.userId]);
+      if (existingRes.rows.length > 0) {
+        finalToken = decryptToken(existingRes.rows[0].billing_token);
+      } else {
+        return res.status(400).json({ success: false, error: 'Token inválido.' });
+      }
+    }
+
+    const encryptedToken = encryptToken(finalToken);
+
+    // Insertar o actualizar usando UPSERT (ON CONFLICT)
+    await pool.query(
+      `INSERT INTO billing_configs (user_id, billing_subdomain, billing_token, updated_at)
+       VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+       ON CONFLICT (user_id)
+       DO UPDATE SET billing_subdomain = EXCLUDED.billing_subdomain, 
+                     billing_token = EXCLUDED.billing_token, 
+                     updated_at = CURRENT_TIMESTAMP`,
+      [req.userId, cleanSubdomain, encryptedToken]
+    );
+
+    return res.json({ success: true, message: 'Configuración de facturación guardada exitosamente.' });
+  } catch (error: any) {
+    console.error('[CRM Billing Config POST] Error:', error.message);
+    return res.status(500).json({ success: false, error: 'Error al guardar la configuración de facturación.' });
+  }
+});
+
+/**
+ * POST /api/crm/billing/test - Probar conexión con el facturador en vivo
+ */
+router.post('/billing/test', async (req: AuthenticatedRequest, res: Response) => {
+  const { subdomain, token } = req.body;
+
+  if (!subdomain || !token) {
+    return res.status(400).json({ success: false, error: 'Faltan parámetros requeridos (subdomain, token).' });
+  }
+
+  const cleanSubdomain = subdomain
+    .replace(/https?:\/\//i, '')
+    .split('.')[0]
+    .trim()
+    .toLowerCase();
+
+  let finalToken = token;
+  // Si viene enmascarado, descifrar el existente de la base de datos
+  if (token.includes('••••')) {
+    try {
+      const existingRes = await pool.query('SELECT billing_token FROM billing_configs WHERE user_id = $1', [req.userId]);
+      if (existingRes.rows.length > 0) {
+        finalToken = decryptToken(existingRes.rows[0].billing_token);
+      } else {
+        return res.status(400).json({ success: false, error: 'Token inválido para prueba.' });
+      }
+    } catch (err) {
+      return res.status(500).json({ success: false, error: 'Error al verificar token existente.' });
+    }
+  }
+
+  const targetUrl = `https://${cleanSubdomain}.syscomecosistemadigital.com/api/document/search-items`;
+
+  try {
+    const response = await axios.get(targetUrl, {
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${finalToken}`
+      },
+      timeout: 10000 // 10 segundos timeout
+    });
+
+    if (response.data && response.data.success !== undefined) {
+      return res.json({ 
+        success: true, 
+        message: '¡Conexión exitosa! El facturador respondió correctamente.',
+        productsCount: response.data.data ? response.data.data.length : 0
+      });
+    }
+
+    return res.status(400).json({ success: false, error: 'El facturador respondió pero el formato de respuesta es inválido.' });
+  } catch (error: any) {
+    console.warn('[CRM Billing Test] Connection failed:', error.message);
+    const statusCode = error.response?.status;
+    const errMessage = error.response?.data?.message || error.message;
+
+    if (statusCode === 401) {
+      return res.status(401).json({ success: false, error: 'Error de autenticación (401): El token provisto es inválido.' });
+    }
+    if (statusCode === 404) {
+      return res.status(404).json({ success: false, error: 'Subdominio no encontrado (404): Verifica que el subdominio sea correcto.' });
+    }
+    return res.status(500).json({ success: false, error: `Error de conexión: ${errMessage}` });
+  }
+});
+
+/**
+ * GET /api/crm/billing/products - Listar/Buscar productos desde el facturador en vivo
+ */
+router.get('/billing/products', async (req: AuthenticatedRequest, res: Response) => {
+  const { search } = req.query;
+
+  try {
+    // 1. Obtener la configuración del facturador de la empresa
+    const configRes = await pool.query(
+      'SELECT billing_subdomain, billing_token FROM billing_configs WHERE user_id = $1',
+      [req.userId]
+    );
+
+    if (configRes.rows.length === 0) {
+      return res.json({ 
+        success: true, 
+        configured: false, 
+        data: [] 
+      });
+    }
+
+    const { billing_subdomain, billing_token } = configRes.rows[0];
+    const decryptedToken = decryptToken(billing_token);
+
+    if (!decryptedToken) {
+      return res.status(500).json({ success: false, error: 'Error de desencripción del token del facturador.' });
+    }
+
+    // 2. Realizar la llamada HTTP al facturador correspondiente de la empresa
+    const targetUrl = `https://${billing_subdomain}.syscomecosistemadigital.com/api/document/search-items`;
+
+    const response = await axios.get(targetUrl, {
+      params: search ? { input: search } : {},
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${decryptedToken}`
+      },
+      timeout: 8000 // 8 segundos timeout
+    });
+
+    if (response.data && response.data.success) {
+      // 3. Mapear y estandarizar los productos para el frontend
+      const freshProducts = response.data.data.map((item: any) => {
+        // En Facturador Pro, a veces la imagen viene como "image_url" o como "image"
+        // Si viene como "image", construimos la URL absoluta al almacenamiento del cliente
+        let imageUrl = item.image_url || null;
+        if (!imageUrl && item.image) {
+          imageUrl = `https://${billing_subdomain}.syscomecosistemadigital.com/storage/uploads/items/${item.image}`;
+        }
+
+        return {
+          id: item.id || item.internal_id || Math.random().toString(),
+          name: item.description || item.name || 'Producto sin nombre',
+          price: `S/ ${(Number(item.sale_unit_price) || 0).toFixed(2)}`,
+          originalPrice: Number(item.sale_unit_price) || 0,
+          category: item.unit_type_id === 'ZZ' ? 'soft' : 'hard', // Determinar tipo (ZZ = Servicio, otros = Equipos/Físico)
+          description: item.name || item.description || '',
+          image: imageUrl || 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=120&auto=format&fit=crop&q=60', // Fallback premium
+          originalImage: imageUrl || 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c',
+          stock: item.stock !== undefined ? Number(item.stock) : null
+        };
+      });
+
+      return res.json({ 
+        success: true, 
+        configured: true, 
+        data: freshProducts 
+      });
+    }
+
+    return res.json({ 
+      success: true, 
+      configured: true, 
+      data: [] 
+    });
+  } catch (error: any) {
+    console.warn(`[CRM Billing Products] Fallo al consultar catálogo de la empresa ${req.userId}:`, error.message);
+    // Retornamos éxito vacío en vez de romper la UI en caso de problemas del facturador del cliente
+    return res.json({ 
+      success: true, 
+      configured: true, 
+      error: 'No se pudo conectar con el facturador de la empresa en este momento.',
+      data: [] 
+    });
   }
 });
 
