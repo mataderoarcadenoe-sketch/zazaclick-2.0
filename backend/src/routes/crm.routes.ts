@@ -1489,16 +1489,21 @@ router.post('/billing/test', async (req: AuthenticatedRequest, res: Response) =>
     const response = await axios.get(targetUrl, {
       headers: {
         'Accept': 'application/json',
-        'Authorization': `Bearer ${finalToken}`
+        'Authorization': `Bearer ${finalToken}`,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       },
       timeout: 10000 // 10 segundos timeout
     });
 
-    if (response.data && response.data.success !== undefined) {
+    if (response.data && response.data.success) {
+      const itemsArray = Array.isArray(response.data.data) 
+        ? response.data.data 
+        : (response.data.data?.items || []);
+
       return res.json({ 
         success: true, 
         message: '¡Conexión exitosa! El facturador respondió correctamente.',
-        productsCount: response.data.data ? response.data.data.length : 0
+        productsCount: itemsArray.length
       });
     }
 
@@ -1509,12 +1514,12 @@ router.post('/billing/test', async (req: AuthenticatedRequest, res: Response) =>
     const errMessage = error.response?.data?.message || error.message;
 
     if (statusCode === 401) {
-      return res.status(401).json({ success: false, error: 'Error de autenticación (401): El token provisto es inválido.' });
+      return res.status(401).json({ success: false, error: 'Error de autenticación (401): El token provisto es inválido o expiró.' });
     }
     if (statusCode === 404) {
       return res.status(404).json({ success: false, error: 'Subdominio no encontrado (404): Verifica que el subdominio sea correcto.' });
     }
-    return res.status(500).json({ success: false, error: `Error de conexión: ${errMessage}` });
+    return res.status(400).json({ success: false, error: `Error de conexión con el facturador: ${errMessage}` });
   }
 });
 
@@ -1553,23 +1558,32 @@ router.get('/billing/products', async (req: AuthenticatedRequest, res: Response)
       params: search ? { input: search } : {},
       headers: {
         'Accept': 'application/json',
-        'Authorization': `Bearer ${decryptedToken}`
+        'Authorization': `Bearer ${decryptedToken}`,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       },
       timeout: 8000 // 8 segundos timeout
     });
 
     if (response.data && response.data.success) {
       // 3. Mapear y estandarizar los productos para el frontend
-      const freshProducts = response.data.data.map((item: any) => {
+      const itemsArray = Array.isArray(response.data.data) 
+        ? response.data.data 
+        : (response.data.data?.items || []);
+
+      const freshProducts = itemsArray.map((item: any) => {
         // En Facturador Pro, a veces la imagen viene como "image_url" o como "image"
         // Si viene como "image", construimos la URL absoluta al almacenamiento del cliente
         let imageUrl = item.image_url || null;
         if (!imageUrl && item.image) {
-          imageUrl = `https://${billing_subdomain}.syscomecosistemadigital.com/storage/uploads/items/${item.image}`;
+          if (item.image.startsWith('http')) {
+            imageUrl = item.image;
+          } else {
+            imageUrl = `https://${billing_subdomain}.syscomecosistemadigital.com/storage/uploads/items/${item.image}`;
+          }
         }
 
         return {
-          id: item.id || item.internal_id || Math.random().toString(),
+          id: item.id || item.item_id || item.internal_id || Math.random().toString(),
           name: item.description || item.name || 'Producto sin nombre',
           price: `S/ ${(Number(item.sale_unit_price) || 0).toFixed(2)}`,
           originalPrice: Number(item.sale_unit_price) || 0,
