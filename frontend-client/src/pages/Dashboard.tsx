@@ -580,7 +580,7 @@ export default function DashboardPage() {
     } finally {
       if (!silent) setChatsLoading(false);
     }
-  }, [selectedInstanceForChats, selectedChat, setChats, setSelectedChat]);
+  }, [selectedInstanceForChats, setChats, setSelectedChat]);
 
   // Fetch messages for a chat (con protección contra race conditions)
   const fetchMessages = useCallback(async (silent = false, targetChat?: any, targetInstance?: string) => {
@@ -652,7 +652,11 @@ export default function DashboardPage() {
           setChats(prevChats => prevChats.map(c => 
             (c.remoteJid === targetJid) ? { ...c, unreadCount: 0 } : c
           ));
-          setSelectedChat((prev: any) => prev ? { ...prev, unreadCount: 0 } : prev);
+          setSelectedChat((prev: any) => {
+            if (!prev) return prev;
+            if (prev.unreadCount === 0) return prev;
+            return { ...prev, unreadCount: 0 };
+          });
           
           api.post(`/instances/chats/${instance}/read`, {
             remoteJid: originalJid || remoteJid,
@@ -1750,6 +1754,11 @@ export default function DashboardPage() {
   useEffect(() => {
     if (selectedChat && selectedChat.remoteJid && selectedChat.remoteJid.endsWith && !selectedChat.remoteJid.endsWith('@g.us')) {
       fetchCrmContactForChat(selectedChat.remoteJid);
+    } else {
+      setCrmClient(null);
+      setCrmContact(null);
+      setClientNotes([]);
+      setShowNotesFloatingWindow(false);
     }
   }, [selectedChat, fetchCrmContactForChat]);
 
@@ -3462,7 +3471,7 @@ echo $response;`;
                   </div>
                 ) : (
                   /* Connected Chat Interface */
-                  <div className="flex-1 min-h-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md rounded-3xl overflow-hidden flex md:grid md:grid-cols-12 shadow-premium-lg text-left">
+                   <div className="flex-1 min-h-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md rounded-3xl overflow-hidden grid grid-cols-1 md:grid-cols-12 shadow-premium-lg text-left">
                     
                     {/* LEFT PANEL: Chats List */}
                     <div className={`${selectedChat ? (selectedChat.remoteJid && selectedChat.remoteJid.endsWith && !selectedChat.remoteJid.endsWith('@g.us') ? 'md:col-span-2' : 'md:col-span-3') : 'md:col-span-4'} bg-white dark:bg-slate-950 flex-col min-h-0 w-full md:w-auto ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
@@ -3667,14 +3676,26 @@ echo $response;`;
                                   {selectedChat.profilePicUrl ? (
                                     <img src={selectedChat.profilePicUrl} alt="" className="w-full h-full object-cover" />
                                   ) : (
-                                    <span className="uppercase tracking-wide">{String(crmContactMap[selectedChat?.remoteJid?.split('@')[0]?.split(':')[0] || ''] || selectedChat.pushName || selectedChat.remoteJid).substring(0, 2)}</span>
+                                    <span className="uppercase tracking-wide">
+                                      {String(
+                                        (selectedChat.remoteJid && crmContactMap[selectedChat.remoteJid.split('@')[0]?.split(':')[0] || '']) || 
+                                        selectedChat.pushName || 
+                                        selectedChat.name || 
+                                        selectedChat.remoteJid || 
+                                        'Conversación'
+                                      ).substring(0, 2)}
+                                    </span>
                                   )}
                                 </div>
                                 
                                 {/* Contact Info */}
                                 <div className="flex flex-col justify-center text-left">
                                   <h4 className="text-[13px] font-extrabold text-slate-800 dark:text-white uppercase tracking-tight">
-                                    {crmContactMap[selectedChat?.remoteJid?.split('@')[0]?.split(':')[0] || ''] || selectedChat.pushName || selectedChat?.remoteJid?.split('@')[0]?.split(':')[0] || ''}
+                                    {(selectedChat.remoteJid && crmContactMap[selectedChat.remoteJid.split('@')[0]?.split(':')[0] || '']) || 
+                                     selectedChat.pushName || 
+                                     selectedChat.name || 
+                                     (selectedChat.remoteJid ? selectedChat.remoteJid.split('@')[0] : '') || 
+                                     'Conversación'}
                                   </h4>
                                   
                                   <div className="flex flex-wrap items-center gap-2 mt-1.5">
@@ -4455,7 +4476,7 @@ echo $response;`;
 
                     {/* CRM Sidebar Pane */}
                     {selectedChat && selectedChat.remoteJid && selectedChat.remoteJid.endsWith && !selectedChat.remoteJid.endsWith('@g.us') && (
-                      <div className="md:col-span-6 grid grid-cols-1 lg:grid-cols-2 min-h-0 relative">
+                      <div className="hidden md:grid md:col-span-6 grid-cols-1 lg:grid-cols-2 min-h-0 relative">
                         {/* Column 1: CRM Details */}
                         <div className="flex flex-col min-h-0 bg-slate-50/45 dark:bg-slate-950 text-left relative overflow-hidden">
                           {crmLoading ? (
