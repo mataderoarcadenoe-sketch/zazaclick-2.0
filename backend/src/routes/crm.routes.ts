@@ -4,6 +4,7 @@ import pool from '../config/database';
 import axios from 'axios';
 import * as bcrypt from 'bcryptjs';
 import crypto from 'crypto';
+import redis from '../config/redis';
 
 const router = Router();
 router.use(authMiddleware);
@@ -1527,10 +1528,28 @@ router.post('/billing/test', async (req: AuthenticatedRequest, res: Response) =>
  * GET /api/crm/billing/products - Listar/Buscar productos desde el facturador en vivo
  */
 router.get('/billing/products', async (req: AuthenticatedRequest, res: Response) => {
-  const { search } = req.query;
+  const { search, refresh } = req.query;
 
   try {
-    // 1. Obtener la configuración del facturador de la empresa
+    // 1. Verificar si tenemos caché en Redis (a menos que se pida forzar la recarga)
+    const redisKey = `billing:products:${req.userId}:${search || ''}`;
+    if (refresh !== 'true') {
+      try {
+        const cached = await redis.get(redisKey);
+        if (cached) {
+          return res.json({ 
+            success: true, 
+            configured: true, 
+            data: JSON.parse(cached),
+            cached: true
+          });
+        }
+      } catch (redisErr: any) {
+        console.warn('[CRM Billing Products] Fallo al leer de Redis:', redisErr.message);
+      }
+    }
+
+    // 2. Obtener la configuración del facturador de la empresa
     const configRes = await pool.query(
       'SELECT billing_subdomain, billing_token FROM billing_configs WHERE user_id = $1',
       [req.userId]
@@ -1551,7 +1570,7 @@ router.get('/billing/products', async (req: AuthenticatedRequest, res: Response)
       return res.status(500).json({ success: false, error: 'Error de desencripción del token del facturador.' });
     }
 
-    // 2. Realizar la llamada HTTP al facturador correspondiente de la empresa
+    // 3. Realizar la llamada HTTP al facturador correspondiente de la empresa
     const targetUrl = `https://${billing_subdomain}.syscomecosistemadigital.com/api/document/search-items`;
 
     const response = await axios.get(targetUrl, {
@@ -1565,7 +1584,7 @@ router.get('/billing/products', async (req: AuthenticatedRequest, res: Response)
     });
 
     if (response.data && response.data.success) {
-      // 3. Mapear y estandarizar los productos para el frontend
+      // 4. Mapear y estandarizar los productos para el frontend
       const itemsArray = Array.isArray(response.data.data) 
         ? response.data.data 
         : (response.data.data?.items || []);
@@ -1595,6 +1614,13 @@ router.get('/billing/products', async (req: AuthenticatedRequest, res: Response)
         };
       });
 
+      // 5. Guardar en Redis con un TTL de 5 minutos (300 segundos)
+      try {
+        await redis.setex(redisKey, 300, JSON.stringify(freshProducts));
+      } catch (redisSetErr: any) {
+        console.warn('[CRM Billing Products] Fallo al escribir en Redis:', redisSetErr.message);
+      }
+
       return res.json({ 
         success: true, 
         configured: true, 
@@ -1609,6 +1635,22 @@ router.get('/billing/products', async (req: AuthenticatedRequest, res: Response)
     });
   } catch (error: any) {
     console.warn(`[CRM Billing Products] Fallo al consultar catálogo de la empresa ${req.userId}:`, error.message);
+    
+    // Si la llamada falla pero tenemos algo en el caché (aunque hayamos pedido refresh), intentar devolverlo como fallback
+    try {
+      const redisKey = `billing:products:${req.userId}:${search || ''}`;
+      const cached = await redis.get(redisKey);
+      if (cached) {
+        return res.json({ 
+          success: true, 
+          configured: true, 
+          data: JSON.parse(cached),
+          cached: true,
+          warning: 'Mostrando datos del caché debido a problemas de conexión con el facturador.'
+        });
+      }
+    } catch (e) {}
+
     // Retornamos éxito vacío en vez de romper la UI en caso de problemas del facturador del cliente
     return res.json({ 
       success: true, 

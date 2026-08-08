@@ -815,11 +815,14 @@ export default function DashboardPage() {
   };
 
   // Cargar productos del facturador
-  const fetchBillingProducts = useCallback(async (searchQuery = '') => {
+  const fetchBillingProducts = useCallback(async (searchQuery = '', forceRefresh = false) => {
     try {
       setBillingLoading(true);
       const res = await api.get('/crm/billing/products', {
-        params: { search: searchQuery }
+        params: { 
+          search: searchQuery,
+          refresh: forceRefresh ? 'true' : 'false'
+        }
       });
       if (res.data?.success) {
         setBillingConfigured(!!res.data.configured);
@@ -5432,14 +5435,27 @@ echo $response;`;
                                     <FileText size={13} className="text-brand-primary" />
                                     <span>Facturación API</span>
                                   </div>
-                                  <button
-                                    type="button"
-                                    onClick={handleOpenBillingConfigModal}
-                                    className="p-1 hover:bg-slate-150 dark:hover:bg-slate-850 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-350 transition-colors cursor-pointer"
-                                    title="Configurar Conexión al Facturador"
-                                  >
-                                    <Settings size={13} />
-                                  </button>
+                                  <div className="flex items-center gap-1">
+                                    {billingConfigured && (
+                                      <button
+                                        type="button"
+                                        onClick={() => fetchBillingProducts(billingSearchQuery, true)}
+                                        disabled={billingLoading}
+                                        className="p-1 hover:bg-slate-150 dark:hover:bg-slate-850 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-350 transition-colors cursor-pointer disabled:opacity-50"
+                                        title="Sincronizar Catálogo (Vaciar Caché)"
+                                      >
+                                        <RefreshCw size={13} className={billingLoading ? 'animate-spin' : ''} />
+                                      </button>
+                                    )}
+                                    <button
+                                      type="button"
+                                      onClick={handleOpenBillingConfigModal}
+                                      className="p-1 hover:bg-slate-150 dark:hover:bg-slate-850 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-350 transition-colors cursor-pointer"
+                                      title="Configurar Conexión al Facturador"
+                                    >
+                                      <Settings size={13} />
+                                    </button>
+                                  </div>
                                 </h5>
                                 <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1.5 leading-relaxed font-medium">
                                   Catálogo integrado con tu Facturador Electrónico para enviar fichas de productos y cotizaciones.
