@@ -903,6 +903,26 @@ export default function DashboardPage() {
     }
   };
 
+  const handleDisconnectBilling = async () => {
+    if (!window.confirm('¿Estás seguro de que deseas desconectar el Facturador Electrónico? Esto desactivará el catálogo y eliminará el token guardado.')) {
+      return;
+    }
+    try {
+      const res = await api.delete('/crm/billing/config');
+      if (res.data?.success) {
+        showNotification('Facturador electrónico desconectado exitosamente.', 'success');
+        setBillingConfigured(false);
+        setBillingSubdomain('');
+        setBillingToken('');
+        setBillingProducts([]);
+        setShowBillingConfigModal(false);
+      }
+    } catch (err: any) {
+      console.error('Error disconnecting billing:', err.message);
+      showNotification('No se pudo desconectar el facturador.', 'error');
+    }
+  };
+
   const handleOpenBillingConfigModal = () => {
     fetchBillingConfig(); // Asegurar datos frescos de base de datos
     setShowBillingConfigModal(true);
@@ -8836,6 +8856,19 @@ echo $response;`;
                   ) : 'Guardar Conexión'}
                 </button>
               </div>
+
+              {billingConfigured && (
+                <div className="pt-1.5">
+                  <button
+                    type="button"
+                    onClick={handleDisconnectBilling}
+                    disabled={billingTestLoading || billingSaveLoading}
+                    className="w-full py-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 dark:hover:bg-red-950/30 text-red-600 dark:text-red-400 text-[11px] font-bold rounded-2xl transition-all cursor-pointer border border-red-250 dark:border-red-900/30 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-1.5"
+                  >
+                    Desconectar Facturador
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

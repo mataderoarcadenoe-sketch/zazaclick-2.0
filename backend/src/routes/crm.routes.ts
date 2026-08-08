@@ -1454,6 +1454,26 @@ router.post('/billing/config', async (req: AuthenticatedRequest, res: Response) 
 });
 
 /**
+ * DELETE /api/crm/billing/config - Eliminar/Desconectar la configuración de facturación
+ */
+router.delete('/billing/config', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    await pool.query('DELETE FROM billing_configs WHERE user_id = $1', [req.userId]);
+    
+    // Limpiar las claves de caché de Redis para esta empresa
+    const cacheKeys = await redis.keys(`billing:products:${req.userId}:*`);
+    if (cacheKeys.length > 0) {
+      await redis.del(cacheKeys);
+    }
+    
+    return res.json({ success: true, message: 'Facturador electrónico desconectado exitosamente.' });
+  } catch (error: any) {
+    console.error('[CRM Billing Config DELETE] Error:', error.message);
+    return res.status(500).json({ success: false, error: 'Error al desconectar la configuración de facturación.' });
+  }
+});
+
+/**
  * POST /api/crm/billing/test - Probar conexión con el facturador en vivo
  */
 router.post('/billing/test', async (req: AuthenticatedRequest, res: Response) => {
