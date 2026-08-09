@@ -4040,7 +4040,13 @@ echo $response;`;
                               <div className="flex items-center gap-2 hidden sm:flex">
                                 <button
                                   type="button"
-                                  onClick={() => setShowCrmDetails(!showCrmDetails)}
+                                  onClick={() => {
+                                    const nextVal = !showCrmDetails;
+                                    setShowCrmDetails(nextVal);
+                                    if (nextVal) {
+                                      setShowNotesFloatingWindow(false);
+                                    }
+                                  }}
                                   className={`w-8 h-8 flex items-center justify-center rounded-xl border transition-all cursor-pointer ${
                                     showCrmDetails
                                       ? 'bg-brand-primary/10 border-brand-primary/30 text-brand-primary'
@@ -4058,7 +4064,11 @@ echo $response;`;
                                        return;
                                      }
                                      setNewNoteText('');
-                                     setShowNotesFloatingWindow(!showNotesFloatingWindow);
+                                     const nextVal = !showNotesFloatingWindow;
+                                     setShowNotesFloatingWindow(nextVal);
+                                     if (nextVal) {
+                                       setShowCrmDetails(false);
+                                     }
                                    }}
                                    className={`w-8 h-8 flex items-center justify-center rounded-xl border transition-all cursor-pointer ${
                                      showNotesFloatingWindow
