@@ -3836,7 +3836,7 @@ echo $response;`;
                                             </span>
                                           )}
                                         </div>
-                                        <span className={`text-[10px] font-medium ${isUnread ? 'text-brand-primary font-bold' : 'text-surface-400'} flex-shrink-0`}>
+                                        <span className={`text-[10px] font-medium ${isUnread ? 'text-green-600 dark:text-green-400 font-bold' : 'text-surface-400'} flex-shrink-0`}>
                                           {formatTimeLocal(chat.lastMessage?.messageTimestamp)}
                                         </span>
                                       </div>
@@ -3865,7 +3865,7 @@ echo $response;`;
                                           <span className="flex-1 block truncate"><AppleEmojiText text={lastMsgText} size={13} /></span>
                                         </p>
                                         {isUnread && (
-                                          <div className="bg-brand-primary text-white text-[10px] font-bold px-1.5 min-w-[1.25rem] h-5 rounded-full flex items-center justify-center flex-shrink-0 ml-2">
+                                          <div className="bg-green-500 text-white text-[10px] font-bold px-1.5 min-w-[1.25rem] h-5 rounded-full flex items-center justify-center flex-shrink-0 ml-2">
                                             {unreadCount}
                                           </div>
                                         )}
