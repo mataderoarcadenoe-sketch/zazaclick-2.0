@@ -424,6 +424,9 @@ export default function DashboardPage() {
   const [quotesSearch, setQuotesSearch] = useState('');
   const [quotesStatusFilter, setQuotesStatusFilter] = useState('all');
   const [expandedAllQuotes, setExpandedAllQuotes] = useState<{[key: number]: boolean}>({});
+  const [visibleStages, setVisibleStages] = useState<string[]>(PIPELINE_STAGES);
+  const [showColumnFilterDropdown, setShowColumnFilterDropdown] = useState(false);
+  const columnFilterDropdownRef = useRef<HTMLDivElement>(null);
 
   // Client Tasks States
   const [showActionsDropdown, setShowActionsDropdown] = useState(false);
@@ -2714,6 +2717,17 @@ useEffect(() => {
       fetchPipelineData();
     }
   }, [activeTab, fetchPipelineData]);
+
+  // Click outside for Pipeline Column filter dropdown
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (columnFilterDropdownRef.current && !columnFilterDropdownRef.current.contains(e.target as Node)) {
+        setShowColumnFilterDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Check URL parameters for Google Contacts connection status
   useEffect(() => {
@@ -6429,7 +6443,7 @@ echo $response;`;
                   <>
                     {/* Kanban Filters Bar */}
                     <div className="flex items-center gap-2.5 px-1 pb-1 flex-wrap">
-                      <div className="relative flex-1 min-w-[160px]">
+<div className="relative flex-1 min-w-[160px]">
                         <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                         <input
                           type="text"
@@ -6450,6 +6464,73 @@ echo $response;`;
                           <option key={u.id} value={String(u.id)}>{u.name}</option>
                         ))}
                       </select>
+
+                      {/* Column Visibility Filter Dropdown */}
+                      <div className="relative font-sans" ref={columnFilterDropdownRef}>
+                        <button
+                          type="button"
+                          onClick={() => setShowColumnFilterDropdown(!showColumnFilterDropdown)}
+                          className="px-3.5 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[10px] font-bold text-slate-700 dark:text-slate-200 cursor-pointer flex items-center gap-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all focus:outline-none"
+                        >
+                          <LayoutGrid size={12} className="text-slate-400" />
+                          <span>Columnas ({visibleStages.length})</span>
+                          <ChevronDown size={10} className={`text-slate-400 transition-transform ${showColumnFilterDropdown ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        {showColumnFilterDropdown && (
+                          <div className="absolute right-0 mt-1.5 w-60 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-premium-lg z-50 p-2.5 space-y-2 animate-fadeIn text-left">
+                            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/60 pb-2">
+                              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">Filtrar Columnas</span>
+                              <div className="flex gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => setVisibleStages(PIPELINE_STAGES)}
+                                  className="text-[8.5px] font-bold text-indigo-500 hover:underline cursor-pointer"
+                                >
+                                  Todos
+                                </button>
+                                <span className="text-[8px] text-slate-300 dark:text-slate-700">|</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setVisibleStages(['Cliente'])}
+                                  className="text-[8.5px] font-bold text-slate-400 hover:text-slate-650 cursor-pointer"
+                                >
+                                  Ninguno
+                                </button>
+                              </div>
+                            </div>
+                            <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                              {PIPELINE_STAGES.map((stage) => {
+                                const isChecked = visibleStages.includes(stage);
+                                return (
+                                  <label
+                                    key={stage}
+                                    className="flex items-center gap-2 px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-900 rounded-lg cursor-pointer text-[10.5px] font-semibold text-slate-700 dark:text-slate-300 select-none"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      onChange={() => {
+                                        if (isChecked) {
+                                          if (visibleStages.length > 1) {
+                                            setVisibleStages(visibleStages.filter((s) => s !== stage));
+                                          } else {
+                                            showNotification('Debes mantener al menos una columna visible.', 'error');
+                                          }
+                                        } else {
+                                          setVisibleStages([...visibleStages, stage]);
+                                        }
+                                      }}
+                                      className="rounded border-slate-300 dark:border-slate-700 text-indigo-600 focus:ring-indigo-500/20"
+                                    />
+                                    <span>{stage}</span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     {pipelineLoading && pipelineData.length === 0 ? (
@@ -6474,7 +6555,7 @@ echo $response;`;
                         };
                         return (
                           <div className="flex-1 overflow-x-auto pb-4 flex gap-4.5 items-start min-h-0 hide-scrollbar select-none">
-                            {PIPELINE_STAGES.map((columnName) => {
+                            {PIPELINE_STAGES.filter(stage => visibleStages.includes(stage)).map((columnName) => {
                               const rawItems = columns[columnName] || [];
                               const items = rawItems.filter((item: any) => {
                                 const matchSearch = !kanbanSearch.trim() || item.name.toLowerCase().includes(kanbanSearch.toLowerCase()) || item.phone.includes(kanbanSearch);
