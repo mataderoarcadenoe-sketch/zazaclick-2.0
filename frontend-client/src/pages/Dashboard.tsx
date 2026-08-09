@@ -2416,7 +2416,7 @@ export default function DashboardPage() {
     const quoteId = Math.floor(100000 + Math.random() * 900000);
     const messageText = `🧾 *COTIZACIÓN PRELIMINAR #${quoteId}*
 ---------------------------------------
-👤 *Cliente*: ${crmClient?.name || selectedChat.pushName || 'Contacto'}
+👤 *Cliente*: ${crmClient?.name || getChatDisplayName(selectedChat) || 'Contacto'}
 📦 *Producto*: ${product.name}
 💵 *Subtotal*: ${product.price}
 📊 *IGV (18%)*: Incluido
