@@ -9579,9 +9579,10 @@ echo $response;`;
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-slate-100 dark:border-slate-800/80">
-                    <th className="py-2 text-[10.5px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider w-[28%]">Precio</th>
-                    <th className="py-2 text-[10.5px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider w-[28%]">Unidad</th>
+                    <th className="py-2 text-[10.5px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider w-[22%]">Precio</th>
+                    <th className="py-2 text-[10.5px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider w-[18%]">Unidad</th>
                     <th className="py-2 text-[10.5px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">Descripción</th>
+                    <th className="py-2 text-[10.5px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right w-[20%]">Usar</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50 dark:divide-slate-800/40">
@@ -9596,6 +9597,40 @@ echo $response;`;
                     <td className="py-2.5 text-[10.5px] font-medium text-slate-450 dark:text-slate-500 leading-snug">
                       Precio de venta principal (Base)
                     </td>
+                    <td className="py-2.5">
+                      <div className="flex items-center gap-1.5 justify-end">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleSendProductToChat({
+                              ...selectedProductForPrices,
+                              price: selectedProductForPrices.price,
+                              unit_type_id: selectedProductForPrices.unit_type_id || 'NIU'
+                            });
+                            setSelectedProductForPrices(null);
+                          }}
+                          className="p-1.5 bg-slate-100 hover:bg-slate-950 hover:text-white dark:bg-slate-800 dark:hover:bg-slate-100 dark:hover:text-slate-950 text-slate-700 dark:text-slate-350 rounded-xl transition-all cursor-pointer"
+                          title="Enviar Ficha con este precio"
+                        >
+                          <Send size={10} className="stroke-[2.5]" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleSendQuoteToChat({
+                              ...selectedProductForPrices,
+                              price: selectedProductForPrices.price,
+                              unit_type_id: selectedProductForPrices.unit_type_id || 'NIU'
+                            });
+                            setSelectedProductForPrices(null);
+                          }}
+                          className="p-1.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl transition-all cursor-pointer"
+                          title="Cotizar con este precio"
+                        >
+                          <FileText size={10} className="stroke-[2.5]" />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
 
                   {/* Filas de precios y unidades adicionales */}
@@ -9607,6 +9642,7 @@ echo $response;`;
                     else if (ut.price_default === '3' && ut.price3) priceVal = ut.price3;
 
                     const formattedPrice = `S/ ${(Number(priceVal) || 0).toFixed(2)}`;
+                    const unitVal = ut.unit_type_id;
 
                     return (
                       <tr key={ut.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/20 transition-colors">
@@ -9614,10 +9650,44 @@ echo $response;`;
                           {formattedPrice}
                         </td>
                         <td className="py-2.5 text-[11px] font-bold text-indigo-600 dark:text-indigo-400">
-                          {ut.unit_type_id}
+                          {unitVal}
                         </td>
                         <td className="py-2.5 text-[10.5px] font-medium text-slate-450 dark:text-slate-500 leading-snug">
                           {ut.description || 'Presentación adicional'}
+                        </td>
+                        <td className="py-2.5">
+                          <div className="flex items-center gap-1.5 justify-end">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleSendProductToChat({
+                                  ...selectedProductForPrices,
+                                  price: formattedPrice,
+                                  unit_type_id: unitVal
+                                });
+                                setSelectedProductForPrices(null);
+                              }}
+                              className="p-1.5 bg-slate-100 hover:bg-slate-950 hover:text-white dark:bg-slate-800 dark:hover:bg-slate-100 dark:hover:text-slate-950 text-slate-700 dark:text-slate-350 rounded-xl transition-all cursor-pointer"
+                              title="Enviar Ficha con este precio"
+                            >
+                              <Send size={10} className="stroke-[2.5]" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleSendQuoteToChat({
+                                  ...selectedProductForPrices,
+                                  price: formattedPrice,
+                                  unit_type_id: unitVal
+                                });
+                                setSelectedProductForPrices(null);
+                              }}
+                              className="p-1.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl transition-all cursor-pointer"
+                              title="Cotizar con este precio"
+                            >
+                              <FileText size={10} className="stroke-[2.5]" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
