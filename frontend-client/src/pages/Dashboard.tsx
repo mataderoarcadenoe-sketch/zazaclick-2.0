@@ -4823,6 +4823,41 @@ echo $response;`;
                                   </div>
                               
                                   <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+                                    {/* Asesor Asignado */}
+                                    <div className="text-left space-y-1">
+                                      <span className="text-[8.5px] text-slate-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                                        <User size={10} className="text-slate-350" />
+                                        Asesor Asignado
+                                      </span>
+                                      <span className="text-[10.5px] text-slate-800 dark:text-slate-200 font-semibold block leading-tight">
+                                        {crmContact?.assigned_agent_name || 'Sin Asignar'}
+                                      </span>
+                                    </div>
+                                    
+                                    {/* Categoría */}
+                                    <div className="text-left space-y-1">
+                                      <span className="text-[8.5px] text-slate-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                                        <Tag size={10} className="text-slate-350" />
+                                        Categoría
+                                      </span>
+                                      <span className="text-[10.5px] text-slate-800 dark:text-slate-200 font-semibold block leading-tight">
+                                        {crmContact?.category_name || 'Sin Categoría'}
+                                      </span>
+                                    </div>
+
+                                    {/* Documento (Tipo + Número) */}
+                                    <div className="text-left space-y-1">
+                                      <span className="text-[8.5px] text-slate-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                                        <FileText size={10} className="text-slate-350" />
+                                        Documento
+                                      </span>
+                                      <span className="text-[10.5px] text-slate-800 dark:text-slate-200 font-semibold block leading-tight">
+                                        {crmClient.doc_number && !crmClient.doc_number.startsWith('MANUAL-') 
+                                          ? `${crmClient.doc_type || 'DOC'}: ${crmClient.doc_number}` 
+                                          : 'No registrado'}
+                                      </span>
+                                    </div>
+
                                     {/* Teléfono */}
                                     <div className="text-left space-y-1">
                                       <span className="text-[8.5px] text-slate-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">
@@ -4833,18 +4868,18 @@ echo $response;`;
                                         +{crmContact?.phone_number || selectedChat?.remoteJid?.split('@')[0]}
                                       </span>
                                     </div>
-                              
+
                                     {/* Correo */}
                                     <div className="text-left space-y-1">
                                       <span className="text-[8.5px] text-slate-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">
                                         <Mail size={10} className="text-slate-350" />
                                         Correo
                                       </span>
-                                      <span className="text-[10.5px] text-slate-800 dark:text-slate-200 font-semibold block leading-tight">
+                                      <span className="text-[10.5px] text-slate-800 dark:text-slate-200 font-semibold block leading-tight font-sans truncate" title={crmClient.email || ''}>
                                         {crmClient.email || 'No registrado'}
                                       </span>
                                     </div>
-                              
+
                                     {/* Empresa */}
                                     <div className="text-left space-y-1">
                                       <span className="text-[8.5px] text-slate-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">
@@ -4853,39 +4888,6 @@ echo $response;`;
                                       </span>
                                       <span className="text-[10.5px] text-slate-800 dark:text-slate-200 font-semibold block leading-tight">
                                         {crmClient.doc_type === 'RUC' ? crmClient.name : 'No registrada'}
-                                      </span>
-                                    </div>
-                              
-                                    {/* Ciudad */}
-                                    <div className="text-left space-y-1">
-                                      <span className="text-[8.5px] text-slate-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">
-                                        <MapPin size={10} className="text-slate-350" />
-                                        Ciudad
-                                      </span>
-                                      <span className="text-[10.5px] text-slate-800 dark:text-slate-200 font-semibold block leading-tight">
-                                        {crmClient.address || 'No registrado'}
-                                      </span>
-                                    </div>
-                              
-                                    {/* Idioma */}
-                                    <div className="text-left space-y-1">
-                                      <span className="text-[8.5px] text-slate-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">
-                                        <Calendar size={10} className="text-slate-350" />
-                                        Idioma
-                                      </span>
-                                      <span className="text-[10.5px] text-slate-800 dark:text-slate-200 font-semibold block leading-tight">
-                                        {crmClient.idioma || 'Español'}
-                                      </span>
-                                    </div>
-                              
-                                    {/* Cumpleaños */}
-                                    <div className="text-left space-y-1">
-                                      <span className="text-[8.5px] text-slate-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">
-                                        <Gift size={10} className="text-slate-350" />
-                                        Cumpleaños
-                                      </span>
-                                      <span className="text-[10.5px] text-slate-800 dark:text-slate-200 font-semibold block leading-tight">
-                                        {crmClient.birthday ? formatBirthdayString(crmClient.birthday) : 'No registrado'}
                                       </span>
                                     </div>
                                   </div>
@@ -4897,34 +4899,32 @@ echo $response;`;
                                       onClick={() => setShowMoreCrmFields(!showMoreCrmFields)}
                                       className="w-full flex items-center justify-center gap-1 text-[9px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors cursor-pointer"
                                     >
-                                      <span>{showMoreCrmFields ? 'Ocultar campos adicionales' : 'Ver más campos (6)'}</span>
+                                      <span>{showMoreCrmFields ? 'Ocultar campos adicionales' : 'Ver más campos (5)'}</span>
                                       <ChevronDown size={10} className={`transition-transform duration-200 ${showMoreCrmFields ? 'rotate-180' : ''}`} />
                                     </button>
                                     
                                     {showMoreCrmFields && (
                                       <div className="mt-3 space-y-2 animate-fadeIn">
                                         <div className="flex justify-between items-center text-[10px] py-1">
-                                          <span className="text-slate-400 font-medium">Tipo de documento</span>
-                                          <span className="text-slate-700 dark:text-slate-300 font-semibold">{crmClient.doc_type}</span>
+                                          <span className="text-slate-400 font-medium">Ciudad / Dirección</span>
+                                          <span className="text-slate-700 dark:text-slate-300 font-semibold truncate max-w-[150px]" title={crmClient.address || ''}>
+                                            {crmClient.address || 'No registrado'}
+                                          </span>
                                         </div>
                                         <div className="flex justify-between items-center text-[10px] py-1 border-t border-slate-50 dark:border-slate-800/30">
-                                          <span className="text-slate-400 font-medium">Nro de documento</span>
-                                          <span className="text-slate-700 dark:text-slate-300 font-semibold">{crmClient.doc_number.startsWith('MANUAL-') ? 'No registrado' : crmClient.doc_number}</span>
+                                          <span className="text-slate-400 font-medium">Idioma</span>
+                                          <span className="text-slate-700 dark:text-slate-300 font-semibold">{crmClient.idioma || 'Español'}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-[10px] py-1 border-t border-slate-50 dark:border-slate-800/30">
+                                          <span className="text-slate-400 font-medium">Cumpleaños</span>
+                                          <span className="text-slate-700 dark:text-slate-300 font-semibold">
+                                            {crmClient.birthday ? formatBirthdayString(crmClient.birthday) : 'No registrado'}
+                                          </span>
                                         </div>
                                         <div className="flex justify-between items-center text-[10px] py-1 border-t border-slate-50 dark:border-slate-800/30">
                                           <span className="text-slate-400 font-medium">Primer contacto</span>
                                           <span className="text-slate-700 dark:text-slate-300 font-semibold">
                                             {crmClient.created_at ? new Date(crmClient.created_at).toLocaleDateString('es-ES') : 'No registrado'}
-                                          </span>
-                                        </div>
-                                        <div className="flex justify-between items-center text-[10px] py-1 border-t border-slate-50 dark:border-slate-800/30">
-                                          <span className="text-slate-400 font-medium">Categoría</span>
-                                          <span className="text-slate-700 dark:text-slate-300 font-semibold">{crmContact?.category_name || 'Sin Categoría'}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center text-[10px] py-1 border-t border-slate-50 dark:border-slate-800/30">
-                                          <span className="text-slate-400 font-medium">Asesor Asignado</span>
-                                          <span className="text-slate-700 dark:text-slate-300 font-semibold">
-                                            {crmContact?.assigned_agent_name || 'Sin Asignar'}
                                           </span>
                                         </div>
                                         <div className="flex justify-between items-center text-[10px] py-1 border-t border-slate-50 dark:border-slate-800/30">
