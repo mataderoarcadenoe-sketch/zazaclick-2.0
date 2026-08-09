@@ -483,7 +483,7 @@ if (contactRes.rows.length === 0) {
  * POST /api/crm/link-doc - Crear o asociar un cliente (DNI/RUC) a un chat de WhatsApp con lógica de fusión
  */
 router.post('/link-doc', async (req: AuthenticatedRequest, res: Response) => {
-  const { phone_number, doc_type, doc_number, name, address, email, notes, categoryId, mergeAction, birthday, idioma, empresa } = req.body;
+  const { phone_number, doc_type, doc_number, name, address, email, notes, categoryId, mergeAction, birthday, idioma, empresa, departamento, provincia, distrito } = req.body;
 
   if (!phone_number || !doc_type || !doc_number || !name) {
     return res.status(400).json({ success: false, error: 'Faltan parámetros requeridos (phone_number, doc_type, doc_number, name).' });
@@ -507,9 +507,9 @@ router.post('/link-doc', async (req: AuthenticatedRequest, res: Response) => {
       // Actualizar datos del cliente (dirección, notas, email opcionales)
       await pool.query(
         `UPDATE crm_clients 
-         SET name = $1, address = COALESCE($2, address), email = COALESCE($3, email), notes = COALESCE($4, notes), birthday = COALESCE($5, birthday), idioma = COALESCE($6, idioma), empresa = COALESCE($7, empresa), updated_at = CURRENT_TIMESTAMP
-         WHERE id = $8`,
-        [name, address || null, email || null, notes || null, birthday || null, idioma || null, empresa || null, clientId]
+         SET name = $1, address = COALESCE($2, address), email = COALESCE($3, email), notes = COALESCE($4, notes), birthday = COALESCE($5, birthday), idioma = COALESCE($6, idioma), empresa = COALESCE($7, empresa), departamento = COALESCE($8, departamento), provincia = COALESCE($9, provincia), distrito = COALESCE($10, distrito), updated_at = CURRENT_TIMESTAMP
+         WHERE id = $11`,
+        [name, address || null, email || null, notes || null, birthday || null, idioma || null, empresa || null, departamento || null, provincia || null, distrito || null, clientId]
       );
 
       // Aplicar acción de fusión si hay conflicto de número
@@ -578,9 +578,9 @@ router.post('/link-doc', async (req: AuthenticatedRequest, res: Response) => {
     } else {
       // 2. Si no existe, creamos el cliente
       const clientRes = await pool.query(
-        `INSERT INTO crm_clients (user_id, doc_type, doc_number, name, address, email, notes, birthday, idioma, empresa) 
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`,
-        [req.userId, doc_type, doc_number, name, address || null, email || null, notes || null, birthday || null, idioma || 'Español', empresa || null]
+        `INSERT INTO crm_clients (user_id, doc_type, doc_number, name, address, email, notes, birthday, idioma, empresa, departamento, provincia, distrito) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`,
+        [req.userId, doc_type, doc_number, name, address || null, email || null, notes || null, birthday || null, idioma || 'Español', empresa || null, departamento || null, provincia || null, distrito || null]
       );
       clientId = clientRes.rows[0].id;
 
@@ -635,7 +635,7 @@ router.post('/link-doc', async (req: AuthenticatedRequest, res: Response) => {
  * POST /api/crm/link-manual - Crear o asociar un cliente escribiendo el nombre manualmente (sin DNI/RUC obligatorio de inicio)
  */
 router.post('/link-manual', async (req: AuthenticatedRequest, res: Response) => {
-  const { phone_number, name, email, notes, categoryId, birthday, idioma, empresa } = req.body;
+  const { phone_number, name, email, notes, categoryId, birthday, idioma, empresa, address, departamento, provincia, distrito } = req.body;
 
   if (!phone_number || !name || !name.trim()) {
     return res.status(400).json({ success: false, error: 'Faltan parámetros requeridos (phone_number, name).' });
@@ -654,9 +654,9 @@ router.post('/link-manual', async (req: AuthenticatedRequest, res: Response) => 
       clientId = contactCheck.rows[0].client_id;
       await pool.query(
         `UPDATE crm_clients 
-         SET name = $1, email = COALESCE($2, email), notes = COALESCE($3, notes), birthday = COALESCE($4, birthday), idioma = COALESCE($5, idioma), empresa = COALESCE($6, empresa), updated_at = CURRENT_TIMESTAMP 
-         WHERE id = $7`,
-        [name.trim(), email || null, notes || null, birthday || null, idioma || null, empresa || null, clientId]
+         SET name = $1, address = COALESCE($2, address), email = COALESCE($3, email), notes = COALESCE($4, notes), birthday = COALESCE($5, birthday), idioma = COALESCE($6, idioma), empresa = COALESCE($7, empresa), departamento = COALESCE($8, departamento), provincia = COALESCE($9, provincia), distrito = COALESCE($10, distrito), updated_at = CURRENT_TIMESTAMP 
+         WHERE id = $11`,
+        [name.trim(), address || null, email || null, notes || null, birthday || null, idioma || null, empresa || null, departamento || null, provincia || null, distrito || null, clientId]
       );
 
       if (categoryId) {
@@ -668,9 +668,9 @@ router.post('/link-manual', async (req: AuthenticatedRequest, res: Response) => 
     } else {
       const docNum = `MANUAL-${Date.now()}`;
       const clientRes = await pool.query(
-        `INSERT INTO crm_clients (user_id, doc_type, doc_number, name, email, notes, birthday, idioma, empresa) 
-         VALUES ($1, 'MANUAL', $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
-        [req.userId, docNum, name.trim(), email || null, notes || null, birthday || null, idioma || 'Español', empresa || null]
+        `INSERT INTO crm_clients (user_id, doc_type, doc_number, name, address, email, notes, birthday, idioma, empresa, departamento, provincia, distrito) 
+         VALUES ($1, 'MANUAL', $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`,
+        [req.userId, docNum, name.trim(), address || null, email || null, notes || null, birthday || null, idioma || 'Español', empresa || null, departamento || null, provincia || null, distrito || null]
       );
       clientId = clientRes.rows[0].id;
 

@@ -392,6 +392,9 @@ export default function DashboardPage() {
   const [crmCompany, setCrmCompany] = useState('');
   const [crmAssignedAgentId, setCrmAssignedAgentId] = useState<string>('');
   const [selectedProductForPrices, setSelectedProductForPrices] = useState<any | null>(null);
+  const [crmDepartamento, setCrmDepartamento] = useState('');
+  const [crmProvincia, setCrmProvincia] = useState('');
+  const [crmDistrito, setCrmDistrito] = useState('');
 
   // Client Tasks States
   const [showActionsDropdown, setShowActionsDropdown] = useState(false);
@@ -2117,7 +2120,12 @@ export default function DashboardPage() {
           notes: crmNotes.trim(),
           categoryId: crmCategoryId ? parseInt(crmCategoryId, 10) : null,
           birthday: crmBirthday || null,
-          idioma: crmLanguage || 'Español'
+          idioma: crmLanguage || 'Español',
+          empresa: crmCompany.trim(),
+          address: crmAddress.trim(),
+          departamento: crmDepartamento.trim(),
+          provincia: crmProvincia.trim(),
+          distrito: crmDistrito.trim()
         });
         if (res.data?.success) {
           setCrmClient(res.data.client);
@@ -2168,7 +2176,13 @@ export default function DashboardPage() {
                 address: crmAddress.trim(),
                 email: crmEmail.trim(),
                 notes: crmNotes.trim(),
-                categoryId: crmCategoryId
+                categoryId: crmCategoryId,
+                birthday: crmBirthday || null,
+                idioma: crmLanguage,
+                empresa: crmCompany.trim(),
+                departamento: crmDepartamento.trim(),
+                provincia: crmProvincia.trim(),
+                distrito: crmDistrito.trim()
               }
             });
             return;
@@ -2193,7 +2207,11 @@ export default function DashboardPage() {
         categoryId: crmCategoryId ? parseInt(crmCategoryId, 10) : null,
         mergeAction,
         birthday: crmBirthday || null,
-        idioma: crmLanguage || 'Español'
+        idioma: crmLanguage || 'Español',
+        empresa: crmCompany.trim(),
+        departamento: crmDepartamento.trim(),
+        provincia: crmProvincia.trim(),
+        distrito: crmDistrito.trim()
       });
 
       if (res.data?.success) {
@@ -4911,14 +4929,22 @@ echo $response;`;
                                       onClick={() => setShowMoreCrmFields(!showMoreCrmFields)}
                                       className="w-full flex items-center justify-center gap-1 text-[9px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors cursor-pointer"
                                     >
-                                      <span>{showMoreCrmFields ? 'Ocultar campos adicionales' : 'Ver más campos (5)'}</span>
+                                      <span>{showMoreCrmFields ? 'Ocultar campos adicionales' : 'Ver más campos (6)'}</span>
                                       <ChevronDown size={10} className={`transition-transform duration-200 ${showMoreCrmFields ? 'rotate-180' : ''}`} />
                                     </button>
                                     
                                     {showMoreCrmFields && (
                                       <div className="mt-3 space-y-2 animate-fadeIn">
                                         <div className="flex justify-between items-center text-[10px] py-1">
-                                          <span className="text-slate-400 font-medium">Ciudad / Dirección</span>
+                                          <span className="text-slate-400 font-medium">Ubicación (Dpto/Prov/Dist)</span>
+                                          <span className="text-slate-700 dark:text-slate-300 font-semibold truncate max-w-[150px]" title={`${crmClient.departamento || ''} / ${crmClient.provincia || ''} / ${crmClient.distrito || ''}`}>
+                                            {crmClient.departamento || crmClient.provincia || crmClient.distrito ? (
+                                              `${crmClient.departamento || '-'} / ${crmClient.provincia || '-'} / ${crmClient.distrito || '-'}`
+                                            ) : 'No registrado'}
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-[10px] py-1 border-t border-slate-50 dark:border-slate-800/30">
+                                          <span className="text-slate-400 font-medium">Dirección física</span>
                                           <span className="text-slate-700 dark:text-slate-300 font-semibold truncate max-w-[150px]" title={crmClient.address || ''}>
                                             {crmClient.address || 'No registrado'}
                                           </span>
@@ -5265,16 +5291,49 @@ echo $response;`;
                                   </div>
                                 </div>
 
-                                <div className="space-y-1 text-left">
-                                  <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Dirección / Ciudad</label>
-                                  <textarea
-                                    placeholder="Dirección o ciudad de residencia"
-                                    rows={2}
-                                    value={crmAddress}
-                                    onChange={(e) => setCrmAddress(e.target.value)}
-                                    className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 resize-none font-medium transition-all"
-                                  />
-                                </div>
+                                 <div className="grid grid-cols-3 gap-2 text-left">
+                                   <div className="space-y-1">
+                                     <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Departamento</label>
+                                     <input
+                                       type="text"
+                                       placeholder="Ej: Lima"
+                                       value={crmDepartamento}
+                                       onChange={(e) => setCrmDepartamento(e.target.value)}
+                                       className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
+                                     />
+                                   </div>
+                                   <div className="space-y-1">
+                                     <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Provincia</label>
+                                     <input
+                                       type="text"
+                                       placeholder="Ej: Lima"
+                                       value={crmProvincia}
+                                       onChange={(e) => setCrmProvincia(e.target.value)}
+                                       className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
+                                     />
+                                   </div>
+                                   <div className="space-y-1">
+                                     <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Distrito</label>
+                                     <input
+                                       type="text"
+                                       placeholder="Ej: Miraflores"
+                                       value={crmDistrito}
+                                       onChange={(e) => setCrmDistrito(e.target.value)}
+                                       className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
+                                     />
+                                   </div>
+                                 </div>
+
+                                 <div className="space-y-1 text-left">
+                                   <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Dirección Física Detallada</label>
+                                   <textarea
+                                     placeholder="Calle, avenida, número, manzana o lote"
+                                     rows={1}
+                                     value={crmAddress}
+                                     onChange={(e) => setCrmAddress(e.target.value)}
+                                     className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 resize-none font-medium transition-all"
+                                   />
+                                 </div>
 
                                 <div className="space-y-1 text-left">
                                   <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Email</label>
