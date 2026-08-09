@@ -427,6 +427,8 @@ export default function DashboardPage() {
   const [visibleStages, setVisibleStages] = useState<string[]>(PIPELINE_STAGES);
   const [showColumnFilterDropdown, setShowColumnFilterDropdown] = useState(false);
   const columnFilterDropdownRef = useRef<HTMLDivElement>(null);
+  const [showBirthdayMonthDropdown, setShowBirthdayMonthDropdown] = useState(false);
+  const birthdayMonthDropdownRef = useRef<HTMLDivElement>(null);
 
   // Client Tasks States
   const [showActionsDropdown, setShowActionsDropdown] = useState(false);
@@ -2723,6 +2725,17 @@ useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (columnFilterDropdownRef.current && !columnFilterDropdownRef.current.contains(e.target as Node)) {
         setShowColumnFilterDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Click outside for Birthday Month dropdown
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (birthdayMonthDropdownRef.current && !birthdayMonthDropdownRef.current.contains(e.target as Node)) {
+        setShowBirthdayMonthDropdown(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -8518,19 +8531,37 @@ echo $response;`;
 
                   {/* Filtros y Contadores */}
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3.5 bg-slate-50 dark:bg-slate-900/60 p-4 rounded-3xl border border-slate-200/50 dark:border-slate-800/80">
-                    <div className="relative">
-                      <select
-                        value={selectedBirthdayMonth}
-                        onChange={(e) => setSelectedBirthdayMonth(parseInt(e.target.value))}
-                        className="appearance-none bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-4 py-2 pr-9 rounded-2xl text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-brand-primary cursor-pointer w-44"
+                    <div className="relative font-sans" ref={birthdayMonthDropdownRef}>
+                      <button
+                        type="button"
+                        onClick={() => setShowBirthdayMonthDropdown(!showBirthdayMonthDropdown)}
+                        className="w-44 flex items-center justify-between bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-4 py-2 rounded-2xl text-xs font-bold text-slate-800 dark:text-white focus:outline-none hover:bg-slate-50 dark:hover:bg-slate-900 transition-all cursor-pointer"
                       >
-                        {['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'].map((m, idx) => (
-                          <option key={m} value={idx}>{m}</option>
-                        ))}
-                      </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
-                        <ChevronDown size={14} />
-                      </div>
+                        <span>{['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][selectedBirthdayMonth]}</span>
+                        <ChevronDown size={14} className={`text-slate-400 transition-transform duration-200 ${showBirthdayMonthDropdown ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      {showBirthdayMonthDropdown && (
+                        <div className="absolute left-0 mt-1.5 w-44 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-premium-lg z-50 p-1.5 space-y-0.5 max-h-60 overflow-y-auto animate-fadeIn text-left">
+                          {['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'].map((m, idx) => (
+                            <button
+                              key={m}
+                              type="button"
+                              onClick={() => {
+                                setSelectedBirthdayMonth(idx);
+                                setShowBirthdayMonthDropdown(false);
+                              }}
+                              className={`w-full px-3 py-2 text-left text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                                selectedBirthdayMonth === idx
+                                  ? 'bg-indigo-650 text-white shadow-sm'
+                                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/60'
+                              }`}
+                            >
+                              {m}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <span className="text-xs font-extrabold text-slate-500 dark:text-slate-400">
                       {countForMonth} {countForMonth === 1 ? 'cumpleaños' : 'cumpleaños'} en {['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][selectedBirthdayMonth]}
