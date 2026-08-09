@@ -906,14 +906,20 @@ router.get('/clients/:clientId/contacts', async (req: AuthenticatedRequest, res:
 router.get('/pipeline', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.userId;
-    // Listar todos los contactos de este usuario con su información de cliente y categoría
+    // Listar todos los contactos de este usuario con su información de cliente, categoría, asesor asignado y montos de cotización
     const contacts = await pool.query(
       `SELECT c.id as contact_id, c.phone_number, c.pipeline_stage, c.is_active, c.tags,
               cl.id as client_id, cl.name as client_name, cl.doc_type, cl.doc_number, cl.email, cl.notes,
-              cat.name as category_name
+              cat.name as category_name,
+              c.assigned_agent_id, ap.name as assigned_agent_name,
+              COALESCE(
+                (SELECT SUM(total_amount) FROM crm_orders WHERE contact_id = c.id AND status = 'PENDIENTE'),
+                0
+              )::numeric as active_quote_amount
        FROM crm_contacts c
        JOIN crm_clients cl ON c.client_id = cl.id
        LEFT JOIN crm_contact_categories cat ON c.category_id = cat.id
+       LEFT JOIN agent_profiles ap ON c.assigned_agent_id = ap.user_id
        WHERE c.user_id = $1`,
       [userId]
     );
@@ -1761,6 +1767,199 @@ router.get('/billing/products', async (req: AuthenticatedRequest, res: Response)
       error: 'No se pudo conectar con el facturador de la empresa en este momento.',
       data: [] 
     });
+  }
+});
+
+/**
+ * POST /api/crm/orders - Crear un pedido/cotización
+ */
+router.post('/orders', async (req: AuthenticatedRequest, res: Response) => {
+  const { phone_number, quote_id, total_amount, items, pushName } = req.body;
+  if (!phone_number || !quote_id || total_amount === undefined || !Array.isArray(items)) {
+    return res.status(400).json({ success: false, error: 'Parámetros obligatorios faltantes o incorrectos.' });
+  }
+
+  const userId = req.userId;
+  const cleanPhone = phone_number.replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net').split('@')[0];
+  
+  const client = await pool.connect();
+  try {
+    const resolvedPhone = await getRealPhoneIfNeeded(userId, cleanPhone);
+    await client.query('BEGIN');
+
+    // 1. Obtener o crear contact_id
+    const contactCheck = await client.query(
+      'SELECT id, pipeline_stage FROM crm_contacts WHERE user_id = $1 AND phone_number = $2',
+      [userId, resolvedPhone]
+    );
+
+    let contactId: number;
+    let currentStage = 'Nuevo';
+
+    if (contactCheck.rows.length > 0) {
+      contactId = contactCheck.rows[0].id;
+      currentStage = contactCheck.rows[0].pipeline_stage || 'Nuevo';
+    } else {
+      const clientName = pushName || `Contacto ${resolvedPhone}`;
+      const clientResult = await client.query(
+        `INSERT INTO crm_clients (user_id, doc_type, doc_number, name, notes)
+         VALUES ($1, 'MANUAL', $2, $3, 'Creado automáticamente al registrar cotización')
+         RETURNING id`,
+        [userId, resolvedPhone, clientName]
+      );
+      const clientId = clientResult.rows[0].id;
+
+      const contactResult = await client.query(
+        `INSERT INTO crm_contacts (client_id, user_id, phone_number, pipeline_stage)
+         VALUES ($1, $2, $3, 'Cotización enviada')
+         RETURNING id`,
+        [clientId, userId, resolvedPhone]
+      );
+      contactId = contactResult.rows[0].id;
+      currentStage = 'Cotización enviada';
+    }
+
+    // 2. Crear la orden
+    const orderResult = await client.query(
+      `INSERT INTO crm_orders (quote_id, contact_id, user_id, phone_number, total_amount, status)
+       VALUES ($1, $2, $3, $4, $5, 'PENDIENTE')
+       RETURNING id`,
+      [quote_id, contactId, userId, resolvedPhone, total_amount]
+    );
+    const orderId = orderResult.rows[0].id;
+
+    // 3. Crear los ítems de la orden
+    for (const item of items) {
+      await client.query(
+        `INSERT INTO crm_order_items (order_id, product_id, product_name, quantity, price, unit_type, price_description)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          orderId,
+          item.product_id || '',
+          item.product_name || '',
+          item.quantity || 1,
+          item.price || 0,
+          item.unit_type || 'NIU',
+          item.price_description || null
+        ]
+      );
+    }
+
+    // 4. Actualizar etapa del pipeline si es 'Nuevo' o 'Contactado' o 'Interesado'
+    if (currentStage === 'Nuevo' || currentStage === 'Contactado' || currentStage === 'Interesado') {
+      await client.query(
+        `UPDATE crm_contacts 
+         SET pipeline_stage = 'Cotización enviada', updated_at = CURRENT_TIMESTAMP 
+         WHERE id = $1`,
+        [contactId]
+      );
+    }
+
+    await client.query('COMMIT');
+    return res.json({ success: true, order_id: orderId });
+  } catch (err: any) {
+    await client.query('ROLLBACK');
+    console.error('[CRM Orders POST] Error:', err.message);
+    return res.status(500).json({ success: false, error: 'Error al registrar el pedido.' });
+  } finally {
+    client.release();
+  }
+});
+
+/**
+ * GET /api/crm/orders - Listar pedidos/cotizaciones de un contacto
+ */
+router.get('/orders', async (req: AuthenticatedRequest, res: Response) => {
+  const { phone_number } = req.query;
+  if (!phone_number) {
+    return res.status(400).json({ success: false, error: 'phone_number es obligatorio.' });
+  }
+
+  const userId = req.userId;
+  const cleanPhone = (phone_number as string).replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net').split('@')[0];
+
+  try {
+    const resolvedPhone = await getRealPhoneIfNeeded(userId, cleanPhone);
+
+    // 1. Obtener órdenes
+    const ordersResult = await pool.query(
+      `SELECT o.id, o.quote_id, o.total_amount, o.status, o.created_at, o.updated_at
+       FROM crm_orders o
+       WHERE o.user_id = $1 AND o.phone_number = $2
+       ORDER BY o.created_at DESC`,
+      [userId, resolvedPhone]
+    );
+
+    const orders = ordersResult.rows;
+
+    // 2. Obtener ítems para cada orden
+    for (const order of orders) {
+      const itemsResult = await pool.query(
+        `SELECT id, product_id, product_name, quantity, price, unit_type, price_description
+         FROM crm_order_items
+         WHERE order_id = $1`,
+        [order.id]
+      );
+      order.items = itemsResult.rows;
+    }
+
+    return res.json({ success: true, data: orders });
+  } catch (err: any) {
+    console.error('[CRM Orders GET] Error:', err.message);
+    return res.status(500).json({ success: false, error: 'Error al obtener historial de pedidos.' });
+  }
+});
+
+/**
+ * POST /api/crm/orders/:id/status - Cambiar estado de pedido
+ */
+router.post('/orders/:id/status', async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  if (!status) {
+    return res.status(400).json({ success: false, error: 'El estado es obligatorio.' });
+  }
+
+  const userId = req.userId;
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // 1. Actualizar el estado de la orden
+    const updateResult = await client.query(
+      `UPDATE crm_orders 
+       SET status = $1, updated_at = CURRENT_TIMESTAMP 
+       WHERE id = $2 AND user_id = $3
+       RETURNING contact_id`,
+      [status, id, userId]
+    );
+
+    if (updateResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ success: false, error: 'Pedido no encontrado o no autorizado.' });
+    }
+
+    const contactId = updateResult.rows[0].contact_id;
+
+    // 2. Si el pedido es confirmado, mover el contacto a 'Cliente' en el pipeline
+    if (status === 'CONFIRMADO') {
+      await client.query(
+        `UPDATE crm_contacts 
+         SET pipeline_stage = 'Cliente', updated_at = CURRENT_TIMESTAMP 
+         WHERE id = $1`,
+        [contactId]
+      );
+    }
+
+    await client.query('COMMIT');
+    return res.json({ success: true, message: 'Estado del pedido actualizado.' });
+  } catch (err: any) {
+    await client.query('ROLLBACK');
+    console.error('[CRM Orders Status POST] Error:', err.message);
+    return res.status(500).json({ success: false, error: 'Error al cambiar el estado del pedido.' });
+  } finally {
+    client.release();
   }
 });
 

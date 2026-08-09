@@ -238,6 +238,35 @@ export async function initDatabase() {
       ALTER TABLE crm_clients ADD COLUMN IF NOT EXISTS distrito VARCHAR(100);
     `);
 
+    // 13. Tabla de Pedidos/Cotizaciones del CRM
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS crm_orders (
+        id SERIAL PRIMARY KEY,
+        quote_id VARCHAR(50) UNIQUE NOT NULL,
+        contact_id INTEGER NOT NULL REFERENCES crm_contacts(id) ON DELETE CASCADE,
+        user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        phone_number VARCHAR(50) NOT NULL,
+        total_amount NUMERIC(10,2) NOT NULL,
+        status VARCHAR(50) DEFAULT 'PENDIENTE',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // 14. Tabla de Líneas de Detalle de los Pedidos/Cotizaciones
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS crm_order_items (
+        id SERIAL PRIMARY KEY,
+        order_id INTEGER NOT NULL REFERENCES crm_orders(id) ON DELETE CASCADE,
+        product_id VARCHAR(50) NOT NULL,
+        product_name VARCHAR(255) NOT NULL,
+        quantity INTEGER NOT NULL,
+        price NUMERIC(10,2) NOT NULL,
+        unit_type VARCHAR(50),
+        price_description VARCHAR(100)
+      );
+    `);
+
     // 6. Asegurar rol Administrador para tu correo principal
     await pool.query(`
       UPDATE users 
