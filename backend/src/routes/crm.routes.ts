@@ -1699,7 +1699,9 @@ router.get('/billing/products', async (req: AuthenticatedRequest, res: Response)
             description: item.name || item.description || '',
             image: imageUrl || 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=120&auto=format&fit=crop&q=60',
             originalImage: imageUrl || 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c',
-            stock: item.stock !== undefined ? Number(item.stock) : null
+            stock: item.stock !== undefined ? Number(item.stock) : null,
+            unit_type_id: item.unit_type_id || 'NIU',
+            item_unit_types: item.item_unit_types || []
           };
         });
 

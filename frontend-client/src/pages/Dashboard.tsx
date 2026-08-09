@@ -391,6 +391,7 @@ export default function DashboardPage() {
   const [crmLanguage, setCrmLanguage] = useState('Español');
   const [crmCompany, setCrmCompany] = useState('');
   const [crmAssignedAgentId, setCrmAssignedAgentId] = useState<string>('');
+  const [selectedProductForPrices, setSelectedProductForPrices] = useState<any | null>(null);
 
   // Client Tasks States
   const [showActionsDropdown, setShowActionsDropdown] = useState(false);
@@ -5804,11 +5805,20 @@ echo $response;`;
                                               {prod.name}
                                             </h6>
 
-                                            {/* Price Tag */}
-                                            <div>
+                                            {/* Price Tag & Alternates trigger */}
+                                            <div className="flex items-center gap-1.5 flex-wrap">
                                               <span className="inline-flex px-2.5 py-1 bg-slate-50 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 text-[10.5px] font-extrabold rounded-xl border border-slate-100/50 dark:border-slate-800/60 leading-none">
                                                 {prod.price}
                                               </span>
+                                              <button
+                                                type="button"
+                                                onClick={() => setSelectedProductForPrices(prod)}
+                                                className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-indigo-500/10 hover:bg-indigo-500 text-indigo-600 hover:text-white dark:text-indigo-400 dark:hover:text-white text-[9.5px] font-bold rounded-xl border border-indigo-500/10 cursor-pointer active:scale-95 transition-all"
+                                                title="Ver precios y presentaciones disponibles"
+                                              >
+                                                <Tag size={10} className="stroke-[2.5]" />
+                                                <span>Precios</span>
+                                              </button>
                                             </div>
                                             
                                             {/* Description */}
@@ -9161,6 +9171,124 @@ echo $response;`;
                 className="flex-1 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white text-xs font-bold rounded-2xl shadow-lg shadow-red-500/20 transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
               >
                 Sí, Desconectar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Precios Alternativos (Syscom Facturador) */}
+      {selectedProductForPrices && (
+        <div className="fixed inset-0 z-[9999] bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 w-full max-w-lg p-6 sm:p-7 rounded-3xl space-y-4 shadow-2xl relative animate-fadeIn text-left">
+            
+            <button
+              onClick={() => setSelectedProductForPrices(null)}
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer transition-colors"
+            >
+              <X size={18} />
+            </button>
+
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="space-y-1">
+                <h3 className="text-sm font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
+                  <Tag size={16} className="text-indigo-500" />
+                  <span>Precios</span>
+                </h3>
+                <p className="text-[10px] font-bold text-slate-450 dark:text-slate-500 max-w-sm truncate">
+                  {selectedProductForPrices.name}
+                </p>
+              </div>
+
+              {/* Status Badge */}
+              <div className="flex-shrink-0">
+                {selectedProductForPrices.item_unit_types && selectedProductForPrices.item_unit_types.length > 0 ? (
+                  <span className="px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[8px] font-extrabold border border-indigo-500/10 uppercase tracking-wider">
+                    {selectedProductForPrices.item_unit_types.length} Presentaciones
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[8.5px] font-extrabold border border-blue-500/10 uppercase tracking-wider">
+                    Sin Registros
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Content Table */}
+            <div className="pt-1.5 overflow-hidden">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-100 dark:border-slate-800/80">
+                    <th className="py-2 text-[10.5px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider w-[28%]">Precio</th>
+                    <th className="py-2 text-[10.5px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider w-[28%]">Unidad</th>
+                    <th className="py-2 text-[10.5px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">Descripción</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50 dark:divide-slate-800/40">
+                  {/* Fila del precio principal base */}
+                  <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-850/20 transition-colors">
+                    <td className="py-2.5 text-[11.5px] font-black text-slate-900 dark:text-white">
+                      {selectedProductForPrices.price}
+                    </td>
+                    <td className="py-2.5 text-[11px] font-bold text-indigo-600 dark:text-indigo-400">
+                      {selectedProductForPrices.unit_type_id || 'NIU'}
+                    </td>
+                    <td className="py-2.5 text-[10.5px] font-medium text-slate-450 dark:text-slate-500 leading-snug">
+                      Precio de venta principal (Base)
+                    </td>
+                  </tr>
+
+                  {/* Filas de precios y unidades adicionales */}
+                  {selectedProductForPrices.item_unit_types && selectedProductForPrices.item_unit_types.map((ut: any) => {
+                    // En Facturador Pro6, las unidades alternativas guardan price1, price2, price3 y price_default
+                    // Determinamos cuál precio mostrar según price_default
+                    let priceVal = ut.price1;
+                    if (ut.price_default === '2' && ut.price2) priceVal = ut.price2;
+                    else if (ut.price_default === '3' && ut.price3) priceVal = ut.price3;
+
+                    const formattedPrice = `S/ ${(Number(priceVal) || 0).toFixed(2)}`;
+
+                    return (
+                      <tr key={ut.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/20 transition-colors">
+                        <td className="py-2.5 text-[11.5px] font-black text-slate-900 dark:text-white">
+                          {formattedPrice}
+                        </td>
+                        <td className="py-2.5 text-[11px] font-bold text-indigo-600 dark:text-indigo-400">
+                          {ut.unit_type_id}
+                        </td>
+                        <td className="py-2.5 text-[10.5px] font-medium text-slate-450 dark:text-slate-500 leading-snug">
+                          {ut.description || 'Presentación adicional'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+
+              {/* Si no hay precios adicionales alternativos */}
+              {(!selectedProductForPrices.item_unit_types || selectedProductForPrices.item_unit_types.length === 0) && (
+                <div className="py-10 text-center flex flex-col items-center justify-center space-y-3.5 bg-slate-50/50 dark:bg-slate-950/20 rounded-2xl border border-dashed border-slate-200/50 dark:border-slate-800/40 mt-3 animate-fadeIn">
+                  <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-900/60 flex items-center justify-center text-slate-400 dark:text-slate-600">
+                    <svg className="w-6 h-6 stroke-[1.5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+                    </svg>
+                  </div>
+                  <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                    Aún no hay precios disponibles para este artículo.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer buttons */}
+            <div className="pt-2 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedProductForPrices(null)}
+                className="px-5 py-2.5 bg-slate-950 dark:bg-slate-100 hover:bg-black dark:hover:bg-white text-white dark:text-slate-900 text-xs font-bold rounded-2xl active:scale-[0.98] transition-all cursor-pointer shadow-sm"
+              >
+                Cerrar
               </button>
             </div>
           </div>
