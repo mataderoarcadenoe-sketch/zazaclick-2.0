@@ -359,9 +359,12 @@ export default function DashboardPage() {
   const [adminNewDuration, setAdminNewDuration] = useState('1');
   const [adminSubLoading, setAdminSubLoading] = useState(false);
   const [showTagsDropdown, setShowTagsDropdown] = useState(false);
+  const [showSidebarTagsDropdown, setShowSidebarTagsDropdown] = useState(false);
   const [selectedFilterTag, setSelectedFilterTag] = useState<string | null>(null);
   const tagsDropdownRef = useRef<HTMLDivElement>(null);
   const tagsButtonRef = useRef<HTMLButtonElement>(null);
+  const sidebarTagsDropdownRef = useRef<HTMLDivElement>(null);
+  const sidebarTagsButtonRef = useRef<HTMLButtonElement>(null);
   const [showAssignDropdown, setShowAssignDropdown] = useState(false);
   const assignDropdownRef = useRef<HTMLDivElement>(null);
   const assignButtonRef = useRef<HTMLButtonElement>(null);
@@ -1350,6 +1353,21 @@ export default function DashboardPage() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showTagsDropdown]);
+
+  // Cerrar select de etiquetas del sidebar al hacer clic fuera
+  useEffect(() => {
+    if (!showSidebarTagsDropdown) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        sidebarTagsDropdownRef.current && !sidebarTagsDropdownRef.current.contains(e.target as Node) &&
+        sidebarTagsButtonRef.current && !sidebarTagsButtonRef.current.contains(e.target as Node)
+      ) {
+        setShowSidebarTagsDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showSidebarTagsDropdown]);
 
   // Cerrar select de asignación al hacer clic fuera
   useEffect(() => {
@@ -4958,30 +4976,92 @@ echo $response;`;
                                 </div>
                               
                                 {/* Etiquetas */}
-                                <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800 space-y-3">
-                                  <div className="flex items-center justify-between">
-                                    <h5 className="text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Etiquetas</h5>
-                                    <button className="text-[9.5px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer transition-colors flex items-center gap-0.5">
-                                      <Plus size={10} />
-                                      Agregar
-                                    </button>
-                                  </div>
-                                  <div className="flex flex-wrap gap-1.5">
-                                    <span className="px-2.5 py-1 bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400 text-[9px] font-semibold rounded-lg flex items-center gap-1">
-                                      <Tag size={9} />
-                                      {crmContact?.category_name || 'Cliente'}
-                                    </span>
-                                    <span className="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 text-[9px] font-semibold rounded-lg">
-                                      Interesado
-                                    </span>
-                                    <span className="px-2.5 py-1 bg-violet-50 dark:bg-violet-950/20 text-violet-600 dark:text-violet-400 text-[9px] font-semibold rounded-lg">
-                                      Plan Trimestral
-                                    </span>
-                                    <button className="w-6 h-6 rounded-lg border border-dashed border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-350 hover:text-slate-500 hover:border-slate-300 dark:hover:border-slate-600 transition-colors cursor-pointer">
-                                      <Plus size={10} />
-                                    </button>
-                                  </div>
-                                </div>
+                                 <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800 space-y-3 relative">
+                                   <div className="flex items-center justify-between">
+                                     <h5 className="text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Etiquetas</h5>
+                                     <button 
+                                       ref={sidebarTagsButtonRef}
+                                       onClick={() => {
+                                         if (!crmClient) {
+                                           showNotification('Este contacto no está registrado en el CRM.', 'error');
+                                           return;
+                                         }
+                                         setShowSidebarTagsDropdown(!showSidebarTagsDropdown);
+                                       }}
+                                       className="text-[9.5px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer transition-colors flex items-center gap-0.5"
+                                     >
+                                       <Plus size={10} />
+                                       Agregar
+                                     </button>
+                                   </div>
+                                   <div className="flex flex-wrap gap-1.5">
+                                     <span className="px-2.5 py-1 bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400 text-[9px] font-semibold rounded-lg flex items-center gap-1 border border-green-550/10">
+                                       <Tag size={9} />
+                                       {crmContact?.category_name || 'Cliente'}
+                                     </span>
+                                     
+                                     {crmContact?.tags && crmContact.tags.map((tag: string) => {
+                                       let colorClass = 'bg-slate-50 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 border border-slate-200/10';
+                                       if (tag === 'VIP') colorClass = 'bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border border-amber-500/10';
+                                       else if (tag === 'Moroso') colorClass = 'bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border border-rose-500/10';
+                                       else if (tag === 'Pendiente') colorClass = 'bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 border border-blue-500/10';
+                                       else if (tag === 'Nuevo' || tag === 'Pagó') colorClass = 'bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400 border border-green-500/10';
+                                       else if (tag === 'Interesado') colorClass = 'bg-purple-50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400 border border-purple-500/10';
+                                       
+                                       return (
+                                         <span key={tag} className={`px-2.5 py-1 text-[9px] font-semibold rounded-lg ${colorClass}`}>
+                                           {tag}
+                                         </span>
+                                       );
+                                     })}
+                                     
+                                     <button 
+                                       onClick={() => {
+                                         if (!crmClient) {
+                                           showNotification('Este contacto no está registrado en el CRM.', 'error');
+                                           return;
+                                         }
+                                         setShowSidebarTagsDropdown(!showSidebarTagsDropdown);
+                                       }}
+                                       className="w-6 h-6 rounded-lg border border-dashed border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-350 hover:text-slate-500 hover:border-slate-300 dark:hover:border-slate-600 transition-colors cursor-pointer"
+                                     >
+                                       <Plus size={10} />
+                                     </button>
+                                   </div>
+
+                                   {/* Sidebar Local Tags Dropdown */}
+                                   {showSidebarTagsDropdown && (
+                                     <div 
+                                       ref={sidebarTagsDropdownRef}
+                                       className="absolute right-4 top-11 w-56 bg-slate-900 dark:bg-slate-950 rounded-2xl shadow-premium-lg border border-slate-800 py-2.5 px-1 z-50 animate-fadeIn"
+                                     >
+                                       <div className="px-3 py-1 text-[9px] font-bold text-slate-400 uppercase tracking-wider border-b border-white/5 mb-1.5">
+                                         Etiquetas Inteligentes
+                                       </div>
+                                       <div className="max-h-60 overflow-y-auto space-y-0.5 px-2">
+                                         {SMART_TAGS.map((tag) => {
+                                           const hasTag = (crmContact?.tags || []).includes(tag);
+                                           return (
+                                             <button
+                                               key={tag}
+                                               onClick={() => toggleTag(tag)}
+                                               className="w-full px-2.5 py-1.5 rounded-lg text-left text-xs font-semibold flex items-center justify-between hover:bg-white/10 text-white transition-colors cursor-pointer"
+                                             >
+                                               <span>{tag}</span>
+                                               <div className={`w-3.5 h-3.5 rounded-md border flex items-center justify-center transition-all ${
+                                                 hasTag 
+                                                   ? 'bg-green-500 border-green-500 text-white' 
+                                                   : 'border-white/20 bg-transparent'
+                                               }`}>
+                                                 {hasTag && <Check size={10} strokeWidth={3} />}
+                                               </div>
+                                             </button>
+                                           );
+                                         })}
+                                       </div>
+                                     </div>
+                                   )}
+                                 </div>
                               
                                 {/* Historial de conversaciones */}
                                 <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800 space-y-3">
