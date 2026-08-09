@@ -5716,7 +5716,7 @@ echo $response;`;
 
                               {/* Products List Scroll Container */}
                               <div className="flex-1 overflow-y-auto pr-1 -mr-1 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800 scrollbar-track-transparent">
-                                <div className={`grid gap-3 pb-2 ${showCrmDetails ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'}`}>
+                                <div className={`grid gap-3 pb-2 ${(showCrmDetails || showNotesFloatingWindow) ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'}`}>
                                   {billingLoading ? (
                                     <div className="col-span-full flex flex-col items-center justify-center py-12 space-y-2">
                                       <div className="w-5 h-5 border-2 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
