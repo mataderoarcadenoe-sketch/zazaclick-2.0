@@ -5237,18 +5237,16 @@ echo $response;`;
                                   </div>
                                 </div>
 
-                                {crmDocType === 'RUC' && (
-                                  <div className="space-y-1 text-left">
-                                    <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Dirección Fiscal</label>
-                                    <textarea
-                                      placeholder="Dirección fiscal SUNAT"
-                                      rows={2}
-                                      value={crmAddress}
-                                      onChange={(e) => setCrmAddress(e.target.value)}
-                                      className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 resize-none font-medium transition-all"
-                                    />
-                                  </div>
-                                )}
+                                <div className="space-y-1 text-left">
+                                  <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Dirección / Ciudad</label>
+                                  <textarea
+                                    placeholder="Dirección o ciudad de residencia"
+                                    rows={2}
+                                    value={crmAddress}
+                                    onChange={(e) => setCrmAddress(e.target.value)}
+                                    className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 resize-none font-medium transition-all"
+                                  />
+                                </div>
 
                                 <div className="space-y-1 text-left">
                                   <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Email</label>
