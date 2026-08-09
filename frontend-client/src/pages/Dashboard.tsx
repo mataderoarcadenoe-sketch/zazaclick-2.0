@@ -402,6 +402,7 @@ export default function DashboardPage() {
   const [isOpenDeptMenu, setIsOpenDeptMenu] = useState(false);
   const [isOpenProvMenu, setIsOpenProvMenu] = useState(false);
   const [isOpenDistMenu, setIsOpenDistMenu] = useState(false);
+  const [isOpenAgentMenu, setIsOpenAgentMenu] = useState(false);
 
   // Client Tasks States
   const [showActionsDropdown, setShowActionsDropdown] = useState(false);
@@ -5806,21 +5807,65 @@ echo $response;`;
                                   />
                                 </div>
 
-                                <div className="space-y-1 text-left">
-                                  <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Asesor Asignado</label>
-                                  <select
-                                    value={crmAssignedAgentId}
-                                    onChange={(e) => setCrmAssignedAgentId(e.target.value)}
-                                    className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-bold transition-all cursor-pointer"
-                                  >
-                                    <option value="" className="bg-white dark:bg-slate-900 text-slate-850 dark:text-slate-200 font-bold">Sin Asignar</option>
-                                    {teamMembers.map((agent: any) => (
-                                      <option key={agent.id} value={agent.id} className="bg-white dark:bg-slate-900 text-slate-850 dark:text-slate-200 font-bold">
-                                        {agent.name}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
+                                 <div className="space-y-1 text-left">
+                                   <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Asesor Asignado</label>
+                                   <div className="relative font-sans">
+                                     <button
+                                       type="button"
+                                       onClick={() => {
+                                         setIsOpenAgentMenu(!isOpenAgentMenu);
+                                         setIsOpenDeptMenu(false);
+                                         setIsOpenProvMenu(false);
+                                         setIsOpenDistMenu(false);
+                                       }}
+                                       className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border border-slate-200/45 dark:border-slate-800/45 rounded-xl text-[11px] text-slate-800 dark:text-white font-bold transition-all flex items-center justify-between cursor-pointer focus:outline-none select-none text-left"
+                                     >
+                                       <span className="truncate pr-1">
+                                         {teamMembers.find((agent: any) => agent.id.toString() === crmAssignedAgentId.toString())?.name || 'Sin Asignar'}
+                                       </span>
+                                       <ChevronDown size={11} className={`text-slate-400 transition-transform duration-200 flex-shrink-0 ${isOpenAgentMenu ? 'rotate-180' : ''}`} />
+                                     </button>
+                                     
+                                     {isOpenAgentMenu && (
+                                       <>
+                                         <div className="fixed inset-0 z-40" onClick={() => setIsOpenAgentMenu(false)} />
+                                         <div className="absolute top-[100%] left-0 right-0 mt-1 z-50 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl shadow-xl max-h-48 overflow-y-auto p-1 space-y-0.5 scrollbar-thin text-left animate-fadeIn">
+                                           <button
+                                             type="button"
+                                             onClick={() => {
+                                               setCrmAssignedAgentId('');
+                                               setIsOpenAgentMenu(false);
+                                             }}
+                                             className={`w-full px-2.5 py-1.5 rounded-lg text-[10.5px] font-bold text-left cursor-pointer transition-all ${
+                                               crmAssignedAgentId === '' 
+                                                 ? 'bg-slate-100 dark:bg-slate-850 text-slate-950 dark:text-white' 
+                                                 : 'text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                                             }`}
+                                           >
+                                             Sin Asignar
+                                           </button>
+                                           {teamMembers.map((agent: any) => (
+                                             <button
+                                               key={agent.id}
+                                               type="button"
+                                               onClick={() => {
+                                                 setCrmAssignedAgentId(agent.id.toString());
+                                                 setIsOpenAgentMenu(false);
+                                               }}
+                                               className={`w-full px-2.5 py-1.5 rounded-lg text-[10.5px] font-bold text-left cursor-pointer transition-all ${
+                                                 crmAssignedAgentId.toString() === agent.id.toString() 
+                                                   ? 'bg-brand-primary text-white' 
+                                                   : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                                               }`}
+                                             >
+                                               {agent.name}
+                                             </button>
+                                           ))}
+                                         </div>
+                                       </>
+                                     )}
+                                   </div>
+                                 </div>
 
                               </div>
 
