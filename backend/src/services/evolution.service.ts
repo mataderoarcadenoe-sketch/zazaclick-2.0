@@ -255,10 +255,11 @@ export class EvolutionService {
             headers: {
               'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             },
-            timeout: 10000
+            timeout: 10000,
+            httpsAgent: new https.Agent({ rejectUnauthorized: false }) // Evitar problemas con certificados SSL auto-firmados
           });
           const base64Data = Buffer.from(downloadRes.data, 'binary').toString('base64');
-          finalMedia = `data:${mimetype};base64,${base64Data}`;
+          finalMedia = base64Data; // Evolution API requiere el base64 puro (sin el prefijo 'data:...;base64,')
         } catch (downloadErr: any) {
           console.warn(`[EvolutionService] No se pudo descargar la media en el backend, enviando URL original:`, downloadErr.message);
           finalMedia = media;
