@@ -1691,7 +1691,7 @@ router.get('/billing/products', async (req: AuthenticatedRequest, res: Response)
             name: item.description || item.name || 'Producto sin nombre',
             price: `S/ ${(Number(item.sale_unit_price) || 0).toFixed(2)}`,
             originalPrice: Number(item.sale_unit_price) || 0,
-            category: item.unit_type_id === 'ZZ' ? 'soft' : 'hard', // ZZ = Servicio, otros = Equipos/Físico
+            category: item.category || 'General',
             description: item.name || item.description || '',
             image: imageUrl || 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=120&auto=format&fit=crop&q=60',
             originalImage: imageUrl || 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c',

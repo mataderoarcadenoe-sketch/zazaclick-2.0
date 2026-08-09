@@ -5498,25 +5498,32 @@ echo $response;`;
                                   />
                                 </div>
 
-                                <div className="flex bg-slate-100/60 dark:bg-slate-900 p-0.5 rounded-xl gap-0.5 border border-slate-200/20 dark:border-slate-800/50">
-                                  {[
-                                    { id: 'all', label: 'Todos' },
-                                    { id: 'soft', label: 'Software' },
-                                    { id: 'hard', label: 'Equipos' }
-                                  ].map(cat => (
-                                    <button
-                                      key={cat.id}
-                                      type="button"
-                                      onClick={() => setBillingCategory(cat.id)}
-                                      className={`flex-1 py-1.5 text-[9px] font-black rounded-lg transition-all cursor-pointer ${
-                                        billingCategory === cat.id
-                                          ? 'bg-white dark:bg-slate-800 text-slate-800 dark:text-white shadow-sm'
-                                          : 'text-slate-400 hover:text-slate-650 dark:text-slate-500 dark:hover:text-slate-350'
-                                      }`}
-                                    >
-                                      {cat.label}
-                                    </button>
-                                  ))}
+                                <div className="flex bg-slate-100/60 dark:bg-slate-900 p-0.5 rounded-xl gap-0.5 border border-slate-200/20 dark:border-slate-800/50 overflow-x-auto scrollbar-none">
+                                  {(() => {
+                                    const uniqueCats = new Set<string>();
+                                    billingProducts.forEach(p => {
+                                      if (p.category) uniqueCats.add(p.category);
+                                    });
+                                    const categoryTabs = [
+                                      { id: 'all', label: 'Todos' },
+                                      ...Array.from(uniqueCats).map(catName => ({ id: catName, label: catName }))
+                                    ];
+
+                                    return categoryTabs.map(cat => (
+                                      <button
+                                        key={cat.id}
+                                        type="button"
+                                        onClick={() => setBillingCategory(cat.id)}
+                                        className={`flex-shrink-0 px-3 py-1.5 text-[9px] font-black rounded-lg transition-all cursor-pointer ${
+                                          billingCategory === cat.id
+                                            ? 'bg-white dark:bg-slate-800 text-slate-800 dark:text-white shadow-sm'
+                                            : 'text-slate-400 hover:text-slate-650 dark:text-slate-500 dark:hover:text-slate-350'
+                                        }`}
+                                      >
+                                        {cat.label}
+                                      </button>
+                                    ));
+                                  })()}
                                 </div>
                               </div>
 
@@ -5547,8 +5554,12 @@ echo $response;`;
                                     <p className="text-[9.5px] leading-relaxed font-medium">Escribe el nombre o detalles de un producto en el buscador superior para buscar en el catálogo.</p>
                                   </div>
                                 ) : (() => {
+                                  const uniqueCats = new Set(billingProducts.map(p => p.category).filter(Boolean));
+                                  const currentCategoryValid = billingCategory === 'all' || uniqueCats.has(billingCategory);
+                                  const activeCategory = currentCategoryValid ? billingCategory : 'all';
+
                                   const filtered = billingProducts
-                                    .filter(p => billingCategory === 'all' || p.category === billingCategory);
+                                    .filter(p => activeCategory === 'all' || p.category === activeCategory);
 
                                   if (filtered.length === 0) {
                                     return (
