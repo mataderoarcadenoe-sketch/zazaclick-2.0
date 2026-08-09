@@ -5616,7 +5616,7 @@ echo $response;`;
                                         <button
                                           type="button"
                                           onClick={() => handleSendProductToChat(prod)}
-                                          className="flex-1 py-2 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white font-extrabold text-[9px] uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 active:scale-[0.97] transition-all cursor-pointer shadow-sm shadow-brand-500/10"
+                                          className="flex-1 py-2 bg-brand-500 hover:bg-brand-secondary text-white font-extrabold text-[9px] uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 active:scale-[0.97] transition-all cursor-pointer shadow-sm shadow-brand-500/10"
                                         >
                                           <Send size={9.5} className="stroke-[2.5]" />
                                           <span>Enviar Ficha</span>
