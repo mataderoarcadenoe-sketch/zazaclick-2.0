@@ -1906,17 +1906,20 @@ export default function DashboardPage() {
   useEffect(() => {
     if (selectedChat && selectedChat.remoteJid && selectedChat.remoteJid.endsWith && !selectedChat.remoteJid.endsWith('@g.us')) {
       fetchCrmContactForChat(selectedChat.remoteJid);
-      fetchBillingProducts(); // Cargar catálogo de facturación
     } else {
       setCrmClient(null);
       setCrmContact(null);
       setClientNotes([]);
       setShowNotesFloatingWindow(false);
     }
-  }, [selectedChat, fetchCrmContactForChat, fetchBillingProducts]);
+  }, [selectedChat, fetchCrmContactForChat]);
 
   // Buscar productos del facturador al escribir con debounce de 500ms
   useEffect(() => {
+    if (!billingSearchQuery.trim()) {
+      setBillingProducts([]);
+      return;
+    }
     const delayDebounce = setTimeout(() => {
       if (selectedChat && selectedChat.remoteJid && !selectedChat.remoteJid.endsWith('@g.us')) {
         fetchBillingProducts(billingSearchQuery);
