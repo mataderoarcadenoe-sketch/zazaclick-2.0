@@ -5708,7 +5708,7 @@ echo $response;`;
                                             />
                                           </div>
                                           <div className="flex-1 min-w-0 space-y-1 text-left">
-                                            <h6 className="text-[12px] font-bold text-slate-800 dark:text-slate-150 group-hover:text-brand-500 dark:group-hover:text-brand-400 transition-colors duration-250 truncate leading-tight tracking-wide">
+                                            <h6 className="text-[12px] font-bold text-slate-800 dark:text-slate-100 group-hover:text-brand-500 dark:group-hover:text-brand-400 transition-colors duration-250 truncate leading-tight tracking-wide">
                                               {prod.name}
                                             </h6>
                                             
