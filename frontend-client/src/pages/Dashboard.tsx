@@ -5546,7 +5546,7 @@ echo $response;`;
                               </div>
 
                               {/* Products List */}
-                              <div className={`grid gap-3 ${showCrmDetails ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
+                              <div className={`grid gap-3 ${showCrmDetails ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'}`}>
                                 {billingLoading ? (
                                   <div className="col-span-full flex flex-col items-center justify-center py-12 space-y-2">
                                     <div className="w-5 h-5 border-2 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
