@@ -6556,72 +6556,78 @@ echo $response;`;
                     ) : (
                       (() => {
                         const columns = getPipelineColumns();
-                        const stageThemes: Record<string, { headerBg: string, columnBg: string, border: string, badgeBg: string, titleText: string, totalText: string }> = {
+                        const stageThemes: Record<string, { headerBg: string, columnBg: string, border: string, badgeBg: string, titleText: string, totalText: string, totalAmount: string }> = {
                           'Nuevo': {
-                            headerBg: 'bg-slate-600 dark:bg-slate-800',
-                            columnBg: 'bg-slate-50/60 dark:bg-slate-900/10',
-                            border: 'border-slate-200 dark:border-slate-800/80',
-                            badgeBg: 'bg-slate-700/80 dark:bg-slate-900 text-white',
-                            titleText: 'text-white font-black',
-                            totalText: 'text-slate-200'
+                            headerBg: 'bg-slate-100 dark:bg-slate-800/80',
+                            columnBg: 'bg-slate-50/50 dark:bg-slate-900/10',
+                            border: 'border-slate-200 dark:border-slate-850',
+                            badgeBg: 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-350',
+                            titleText: 'text-slate-700 dark:text-slate-200 font-extrabold',
+                            totalText: 'text-slate-500 dark:text-slate-400',
+                            totalAmount: 'text-slate-700 dark:text-slate-200'
                           },
                           'Contactado': {
-                            headerBg: 'bg-blue-500 dark:bg-blue-650', // Tailwind fallback is bg-blue-600 if bg-blue-500 is used
-                            headerBg: 'bg-blue-500 dark:bg-blue-700',
-                            columnBg: 'bg-blue-50/30 dark:bg-blue-950/10',
-                            border: 'border-blue-200/40 dark:border-blue-900/30',
-                            badgeBg: 'bg-blue-600/80 dark:bg-blue-900 text-white',
-                            titleText: 'text-white font-black',
-                            totalText: 'text-blue-100'
+                            headerBg: 'bg-blue-50 dark:bg-blue-950/30',
+                            columnBg: 'bg-blue-50/20 dark:bg-blue-950/5',
+                            border: 'border-blue-100 dark:border-blue-900/20',
+                            badgeBg: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-350',
+                            titleText: 'text-blue-700 dark:text-blue-400 font-extrabold',
+                            totalText: 'text-blue-600/70 dark:text-blue-400/60',
+                            totalAmount: 'text-blue-700 dark:text-blue-300'
                           },
                           'Interesado': {
-                            headerBg: 'bg-purple-500 dark:bg-purple-700',
-                            columnBg: 'bg-purple-50/30 dark:bg-purple-950/10',
-                            border: 'border-purple-200/40 dark:border-purple-900/30',
-                            badgeBg: 'bg-purple-600/80 dark:bg-purple-900 text-white',
-                            titleText: 'text-white font-black',
-                            totalText: 'text-purple-100'
+                            headerBg: 'bg-purple-50 dark:bg-purple-950/30',
+                            columnBg: 'bg-purple-50/20 dark:bg-purple-950/5',
+                            border: 'border-purple-100 dark:border-purple-900/20',
+                            badgeBg: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-350',
+                            titleText: 'text-purple-700 dark:text-purple-400 font-extrabold',
+                            totalText: 'text-purple-600/70 dark:text-purple-400/60',
+                            totalAmount: 'text-purple-700 dark:text-purple-300'
                           },
                           'Cotización enviada': {
-                            headerBg: 'bg-amber-500 dark:bg-amber-600',
-                            columnBg: 'bg-amber-50/30 dark:bg-amber-950/10',
-                            border: 'border-amber-200/40 dark:border-amber-900/30',
-                            badgeBg: 'bg-amber-600 dark:bg-amber-700 text-white',
-                            titleText: 'text-white font-black',
-                            totalText: 'text-amber-100'
+                            headerBg: 'bg-amber-50 dark:bg-amber-950/30',
+                            columnBg: 'bg-amber-50/20 dark:bg-amber-950/5',
+                            border: 'border-amber-100 dark:border-amber-900/20',
+                            badgeBg: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-350',
+                            titleText: 'text-amber-700 dark:text-amber-400 font-extrabold',
+                            totalText: 'text-amber-600/70 dark:text-amber-400/60',
+                            totalAmount: 'text-amber-700 dark:text-amber-300'
                           },
                           'Negociación': {
-                            headerBg: 'bg-indigo-500 dark:bg-indigo-700',
-                            columnBg: 'bg-indigo-50/30 dark:bg-indigo-950/10',
-                            border: 'border-indigo-200/40 dark:border-indigo-900/30',
-                            badgeBg: 'bg-indigo-650/80 dark:bg-indigo-900 text-white',
-                            badgeBg: 'bg-indigo-600 dark:bg-indigo-900 text-white',
-                            titleText: 'text-white font-black',
-                            totalText: 'text-indigo-100'
+                            headerBg: 'bg-indigo-50 dark:bg-indigo-950/30',
+                            columnBg: 'bg-indigo-50/20 dark:bg-indigo-950/5',
+                            border: 'border-indigo-100 dark:border-indigo-900/20',
+                            badgeBg: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-350',
+                            titleText: 'text-indigo-700 dark:text-indigo-400 font-extrabold',
+                            totalText: 'text-indigo-650/75 dark:text-indigo-400/60',
+                            totalAmount: 'text-indigo-700 dark:text-indigo-300'
                           },
                           'Pago pendiente': {
-                            headerBg: 'bg-rose-500 dark:bg-rose-700',
-                            columnBg: 'bg-rose-50/30 dark:bg-rose-950/10',
-                            border: 'border-rose-200/40 dark:border-rose-900/30',
-                            badgeBg: 'bg-rose-600 dark:bg-rose-900 text-white',
-                            titleText: 'text-white font-black',
-                            totalText: 'text-rose-100'
+                            headerBg: 'bg-rose-50 dark:bg-rose-950/30',
+                            columnBg: 'bg-rose-50/20 dark:bg-rose-950/5',
+                            border: 'border-rose-100 dark:border-rose-900/20',
+                            badgeBg: 'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-350',
+                            titleText: 'text-rose-750 dark:text-rose-400 font-extrabold',
+                            totalText: 'text-rose-600/70 dark:text-rose-400/60',
+                            totalAmount: 'text-rose-700 dark:text-rose-300'
                           },
                           'Cliente': {
-                            headerBg: 'bg-emerald-500 dark:bg-emerald-700',
-                            columnBg: 'bg-emerald-50/30 dark:bg-emerald-950/10',
-                            border: 'border-emerald-200/40 dark:border-emerald-900/30',
-                            badgeBg: 'bg-emerald-600 dark:bg-emerald-900 text-white',
-                            titleText: 'text-white font-black',
-                            totalText: 'text-emerald-100'
+                            headerBg: 'bg-emerald-50 dark:bg-emerald-950/30',
+                            columnBg: 'bg-emerald-50/20 dark:bg-emerald-950/5',
+                            border: 'border-emerald-100 dark:border-emerald-900/20',
+                            badgeBg: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-350',
+                            titleText: 'text-emerald-750 dark:text-emerald-400 font-extrabold',
+                            totalText: 'text-emerald-600/70 dark:text-emerald-400/60',
+                            totalAmount: 'text-emerald-700 dark:text-emerald-300'
                           },
                           'Postventa': {
-                            headerBg: 'bg-violet-500 dark:bg-violet-700',
-                            columnBg: 'bg-violet-50/30 dark:bg-violet-950/10',
-                            border: 'border-violet-200/40 dark:border-violet-900/30',
-                            badgeBg: 'bg-violet-600 dark:bg-violet-900 text-white',
-                            titleText: 'text-white font-black',
-                            totalText: 'text-violet-100'
+                            headerBg: 'bg-violet-50 dark:bg-violet-950/30',
+                            columnBg: 'bg-violet-50/20 dark:bg-violet-950/5',
+                            border: 'border-violet-100 dark:border-violet-900/20',
+                            badgeBg: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-350',
+                            titleText: 'text-violet-750 dark:text-violet-400 font-extrabold',
+                            totalText: 'text-violet-600/70 dark:text-violet-400/60',
+                            totalAmount: 'text-violet-700 dark:text-violet-300'
                           }
                         };
                         return (
@@ -6668,9 +6674,9 @@ echo $response;`;
                                       </span>
                                     </div>
                                     {totalCol > 0 && (
-                                      <div className={`flex items-center justify-between text-[9px] font-bold border-t border-white/20 pt-1 mt-0.5 ${theme.totalText}`}>
+                                      <div className={`flex items-center justify-between text-[9px] font-bold border-t border-dashed border-slate-200/50 dark:border-slate-800/40 pt-1 mt-0.5 ${theme.totalText}`}>
                                         <span>Total Cotizado:</span>
-                                        <span className="font-black text-white">S/. {totalCol.toFixed(2)}</span>
+                                        <span className={`font-black ${theme.totalAmount}`}>S/. {totalCol.toFixed(2)}</span>
                                       </div>
                                     )}
                                   </div>
