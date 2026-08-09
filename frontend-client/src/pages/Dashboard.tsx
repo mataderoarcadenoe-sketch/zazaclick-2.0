@@ -5604,7 +5604,7 @@ echo $response;`;
                                       className="group bg-slate-50/30 dark:bg-slate-900/40 hover:bg-white dark:hover:bg-slate-900 border border-slate-200/50 dark:border-slate-800/60 hover:border-brand-500/30 dark:hover:border-brand-500/20 rounded-2xl p-3.5 space-y-3.5 hover:shadow-md hover:shadow-brand-500/5 transition-all duration-300 text-left"
                                     >
                                       <div className="flex items-start gap-3.5">
-                                        <div className="relative w-14 h-14 rounded-xl overflow-hidden border border-slate-200/60 dark:border-slate-800/80 flex-shrink-0 bg-slate-100 dark:bg-slate-950 shadow-inner">
+                                        <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-slate-200/60 dark:border-slate-800/80 flex-shrink-0 bg-slate-100 dark:bg-slate-950 shadow-inner">
                                           <img 
                                             src={prod.image} 
                                             alt={prod.name} 
