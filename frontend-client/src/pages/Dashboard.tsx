@@ -6803,9 +6803,9 @@ echo $response;`;
                         });
 
                         return (
-                          <div className="flex-1 overflow-y-auto min-h-0 pr-1 space-y-3">
+                          <div className="flex-1 overflow-y-auto min-h-0 pr-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start content-start">
                             {filteredQuotes.length === 0 ? (
-                              <div className="text-center py-12 text-[10px] text-slate-400">Ninguna cotización coincide con los filtros.</div>
+                              <div className="text-center py-12 text-[10px] text-slate-400 col-span-full">Ninguna cotización coincide con los filtros.</div>
                             ) : (
                               filteredQuotes.map((quote: any) => {
                                 const isExpanded = expandedAllQuotes[quote.id];
@@ -6815,71 +6815,75 @@ echo $response;`;
                                   'CANCELADO': 'bg-red-500/10 text-red-500 dark:text-red-400 border-red-500/20'
                                 };
                                 return (
-                                  <div key={quote.id} className="bg-slate-50/50 dark:bg-slate-900/30 rounded-2xl border border-slate-200/40 dark:border-slate-800/50 overflow-hidden shadow-sm hover:border-slate-200 dark:hover:border-slate-700 transition-all">
-                                    <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
-                                      <div className="space-y-1 min-w-0">
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                          <span className="text-[11px] font-black text-slate-800 dark:text-white">Cotización #{quote.quote_id}</span>
-                                          <span className={`px-1.5 py-0.5 text-[8px] font-black rounded-md border uppercase tracking-wider ${statusColors[quote.status] || statusColors['PENDIENTE']}`}>{quote.status}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2 text-[9.5px] text-slate-500 dark:text-slate-400 flex-wrap">
-                                          <span className="font-extrabold uppercase text-indigo-600 dark:text-indigo-400">{quote.client_name || 'Desconocido'}</span>
-                                          <span>·</span>
-                                          <span className="font-semibold">+{quote.client_phone || quote.phone_number}</span>
-                                          <span>·</span>
-                                          <span>{new Date(quote.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                                        </div>
-                                      </div>
-                                      <div className="flex items-center gap-3.5 self-end sm:self-center">
-                                        <div className="text-right">
-                                          <span className="text-[8.5px] text-slate-400 font-bold block uppercase tracking-wider">Total Cotizado</span>
-                                          <span className="text-[13px] font-black text-indigo-600 dark:text-indigo-400">S/. {Number(quote.total_amount).toFixed(2)}</span>
-                                        </div>
-                                        <div className="flex items-center gap-1.5">
-                                          <button
-                                            type="button"
-                                            onClick={() => handleGoToChat(quote.client_phone || quote.phone_number, quote.client_name)}
-                                            className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-indigo-500 hover:border-indigo-200 rounded-xl transition-all cursor-pointer shadow-sm"
-                                            title="Ir al chat"
-                                          >
-                                            <MessageCircle size={13} className="stroke-[2.5]" />
-                                          </button>
-                                          <button
-                                            type="button"
-                                            onClick={() => setExpandedAllQuotes({ ...expandedAllQuotes, [quote.id]: !isExpanded })}
-                                            className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-white rounded-xl transition-all cursor-pointer shadow-sm"
-                                            title="Ver detalles"
-                                          >
-                                            <ChevronDown size={13} className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
-                                          </button>
-                                        </div>
+                                  <div key={quote.id} className="bg-slate-50/50 dark:bg-slate-900/30 rounded-2xl border border-slate-200/40 dark:border-slate-800/50 overflow-hidden shadow-sm hover:border-slate-200 dark:hover:border-slate-700 transition-all flex flex-col justify-between p-4.5 space-y-3.5 text-left h-fit">
+                                    {/* Cabecera de Tarjeta: ID y Estado */}
+                                    <div className="flex items-center justify-between gap-2 border-b border-slate-150 dark:border-slate-800/60 pb-2">
+                                      <span className="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Cotización #{quote.quote_id}</span>
+                                      <span className={`px-1.5 py-0.5 text-[8.5px] font-black rounded-md border uppercase tracking-wider ${statusColors[quote.status] || statusColors['PENDIENTE']}`}>{quote.status}</span>
+                                    </div>
+
+                                    {/* Información del Cliente */}
+                                    <div className="space-y-1">
+                                      <h5 className="text-[11.5px] font-black uppercase text-indigo-600 dark:text-indigo-400 truncate" title={quote.client_name}>
+                                        {quote.client_name || 'Desconocido'}
+                                      </h5>
+                                      <div className="flex flex-col gap-0.5 text-[9.5px] text-slate-500 dark:text-slate-400 font-semibold">
+                                        <span>📞 +{quote.client_phone || quote.phone_number}</span>
+                                        <span className="text-[8.5px] text-slate-400 font-medium">📅 {new Date(quote.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                                       </div>
                                     </div>
-                                    
+
+                                    {/* Monto y Botones de Acción */}
+                                    <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800/60 pt-3">
+                                      <div>
+                                        <span className="text-[8.5px] text-slate-400 font-bold block uppercase tracking-wider">Total</span>
+                                        <span className="text-[13px] font-black text-indigo-600 dark:text-indigo-455">S/. {Number(quote.total_amount).toFixed(2)}</span>
+                                      </div>
+                                      <div className="flex items-center gap-1.5">
+                                        <button
+                                          type="button"
+                                          onClick={() => handleGoToChat(quote.client_phone || quote.phone_number, quote.client_name)}
+                                          className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-indigo-500 hover:border-indigo-200 rounded-xl transition-all cursor-pointer shadow-sm"
+                                          title="Ir al chat"
+                                        >
+                                          <MessageCircle size={13} className="stroke-[2.5]" />
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => setExpandedAllQuotes({ ...expandedAllQuotes, [quote.id]: !isExpanded })}
+                                          className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white rounded-xl transition-all cursor-pointer shadow-sm"
+                                          title="Ver detalles"
+                                        >
+                                          <ChevronDown size={13} className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                                        </button>
+                                      </div>
+                                    </div>
+
+                                    {/* Detalles Expandidos */}
                                     {isExpanded && (
-                                      <div className="px-4 pb-4 border-t border-slate-100 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 p-3.5 space-y-3.5">
+                                      <div className="border-t border-slate-100 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 p-3 rounded-xl mt-2.5 space-y-3">
                                         <div className="space-y-1.5">
-                                          <div className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-2">Detalle de Productos:</div>
+                                          <div className="text-[8.5px] font-black text-slate-400 uppercase tracking-wider">Productos:</div>
                                           {quote.items && quote.items.map((it: any, idx: number) => (
-                                            <div key={idx} className="flex items-center justify-between text-[10px] py-1 border-b border-dashed border-slate-100 dark:border-slate-800 last:border-b-0">
-                                              <span className="text-slate-700 dark:text-slate-300 font-semibold truncate flex-1 mr-3">{it.product_name}</span>
-                                              <span className="text-slate-500 dark:text-slate-400 font-bold whitespace-nowrap">x{it.quantity} · S/. {Number(it.price).toFixed(2)} ({it.unit_type})</span>
+                                            <div key={idx} className="flex items-start justify-between text-[9.5px] py-1 border-b border-dashed border-slate-150 dark:border-slate-800/80 last:border-b-0">
+                                              <span className="text-slate-700 dark:text-slate-300 font-semibold truncate mr-2 flex-1">{it.product_name}</span>
+                                              <span className="text-slate-500 dark:text-slate-400 font-bold whitespace-nowrap text-right">x{it.quantity}</span>
                                             </div>
                                           ))}
                                         </div>
                                         {quote.status === 'PENDIENTE' && (
-                                          <div className="flex gap-2.5 pt-1 max-w-xs">
+                                          <div className="flex gap-2 pt-2 border-t border-slate-150 dark:border-slate-800/50">
                                             <button
                                               onClick={() => handleUpdateOrderStatus(quote.id, 'CONFIRMADO')}
-                                              className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[9.5px] font-black rounded-xl cursor-pointer transition-all uppercase tracking-wider"
+                                              className="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-black rounded-lg cursor-pointer transition-all uppercase tracking-wider"
                                             >
-                                              Confirmar Venta
+                                              Aprobar
                                             </button>
                                             <button
                                               onClick={() => handleUpdateOrderStatus(quote.id, 'CANCELADO')}
-                                              className="flex-1 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-[9.5px] font-black rounded-xl cursor-pointer transition-all uppercase tracking-wider"
+                                              className="flex-1 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-[9px] font-black rounded-lg cursor-pointer transition-all uppercase tracking-wider"
                                             >
-                                              Cancelar
+                                              Rechazar
                                             </button>
                                           </div>
                                         )}
