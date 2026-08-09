@@ -4032,9 +4032,25 @@ echo $response;`;
                                 >
                                   <User size={14} className={showCrmDetails ? "stroke-[2.5]" : ""} />
                                 </button>
-                                <button className="w-8 h-8 flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all cursor-pointer">
-                                  <Tag size={14} />
-                                </button>
+                                <button
+                                   type="button"
+                                   onClick={() => {
+                                     if (!crmClient) {
+                                       showNotification('Este contacto no está registrado en el CRM.', 'error');
+                                       return;
+                                     }
+                                     setNewNoteText('');
+                                     setShowNotesFloatingWindow(!showNotesFloatingWindow);
+                                   }}
+                                   className={`w-8 h-8 flex items-center justify-center rounded-xl border transition-all cursor-pointer ${
+                                     showNotesFloatingWindow
+                                       ? 'bg-brand-primary/10 border-brand-primary/30 text-brand-primary'
+                                       : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300'
+                                   }`}
+                                   title={showNotesFloatingWindow ? "Ocultar Notas Internas" : "Mostrar Notas Internas"}
+                                 >
+                                   <FileText size={14} className={showNotesFloatingWindow ? "stroke-[2.5]" : ""} />
+                                 </button>
                                 <button className="w-8 h-8 flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all cursor-pointer">
                                   <MoreVertical size={14} />
                                 </button>
