@@ -6,18 +6,31 @@
 @theme {
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   
-  /* Brand colors (WhatsApp green/teal) */
-  --color-brand-50: #ecfdf5;
-  --color-brand-100: #d1fae5;
-  --color-brand-200: #a7f3d0;
-  --color-brand-300: #6ee7b7;
-  --color-brand-400: #34d399;
-  --color-brand-500: #25D366;
-  --color-brand-600: #20ba5a;
-  --color-brand-700: #128C7E;
-  --color-brand-800: #0e6b5e;
-  --color-brand-900: #064e3b;
-  --color-brand-950: #022c22;
+  /* Brand colors (WhatsApp green/teal) converted to Premium Black and elegant grays */
+  --color-brand-50: #fafafa;
+  --color-brand-100: #f4f4f5;
+  --color-brand-200: #e4e4e7;
+  --color-brand-300: #d4d4d8;
+  --color-brand-400: #a1a1aa;
+  --color-brand-500: #18181b; /* Negro Premium */
+  --color-brand-600: #09090b; /* Negro Premium Más Oscuro */
+  --color-brand-700: #040405;
+  --color-brand-800: #020202;
+  --color-brand-900: #000000;
+  --color-brand-950: #000000;
+
+  /* Overwrite Emerald with Premium Black and sophisticated grays */
+  --color-emerald-50: #fafafa;
+  --color-emerald-100: #f4f4f5;
+  --color-emerald-200: #e4e4e7;
+  --color-emerald-300: #d4d4d8;
+  --color-emerald-400: #a1a1aa;
+  --color-emerald-500: #18181b; /* Negro Premium */
+  --color-emerald-600: #09090b; /* Negro Premium Más Oscuro */
+  --color-emerald-700: #040405;
+  --color-emerald-800: #020202;
+  --color-emerald-900: #000000;
+  --color-emerald-950: #000000;
 
   /* Surface colors (Slate gray) */
   --color-surface-50: #ffffff;
@@ -44,7 +57,7 @@
   --shadow-glass-dark: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
   --shadow-premium: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 20px 25px -5px rgba(0, 0, 0, 0.03);
   --shadow-premium-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-  --shadow-glow-emerald: 0 0 15px rgba(37, 211, 102, 0.3), 0 0 45px rgba(37, 211, 102, 0.1);
+  --shadow-glow-emerald: 0 0 15px rgba(24, 24, 27, 0.25), 0 0 45px rgba(24, 24, 27, 0.08);
   --shadow-glow-blue: 0 0 15px rgba(59, 130, 246, 0.3), 0 0 45px rgba(59, 130, 246, 0.1);
 }
 

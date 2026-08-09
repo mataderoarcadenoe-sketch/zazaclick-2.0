@@ -938,35 +938,36 @@ router.post('/pipeline/move', async (req: AuthenticatedRequest, res: Response) =
   const phoneNumber = remoteJid.replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net').split('@')[0];
 
   try {
+    const resolvedPhone = await getRealPhoneIfNeeded(userId, phoneNumber);
     // 1. Buscar si el contacto ya existe
     const contactCheck = await pool.query(
       'SELECT id, client_id FROM crm_contacts WHERE user_id = $1 AND phone_number = $2',
-      [userId, phoneNumber]
+      [userId, resolvedPhone]
     );
 
     if (contactCheck.rows.length > 0) {
       // Ya existe, actualizamos su pipeline_stage
       await pool.query(
         'UPDATE crm_contacts SET pipeline_stage = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2 AND phone_number = $3',
-        [stage, userId, phoneNumber]
+        [stage, userId, resolvedPhone]
       );
       return res.json({ success: true, message: 'Etapa del pipeline actualizada exitosamente.' });
     } else {
       // No existe, creamos el cliente y contacto automáticamente
-      const clientName = pushName || `Contacto ${phoneNumber}`;
+      const clientName = pushName || `Contacto ${resolvedPhone}`;
       
       const clientResult = await pool.query(
         `INSERT INTO crm_clients (user_id, doc_type, doc_number, name, notes)
          VALUES ($1, 'MANUAL', $2, $3, 'Creado automáticamente desde el Pipeline Comercial')
          RETURNING id`,
-        [userId, phoneNumber, clientName]
+        [userId, resolvedPhone, clientName]
       );
       const clientId = clientResult.rows[0].id;
 
       await pool.query(
         `INSERT INTO crm_contacts (client_id, user_id, phone_number, pipeline_stage)
          VALUES ($1, $2, $3, $4)`,
-        [clientId, userId, phoneNumber, stage]
+        [clientId, userId, resolvedPhone, stage]
       );
 
       return res.json({ success: true, message: 'Contacto registrado y asignado al pipeline exitosamente.' });
@@ -987,9 +988,10 @@ router.post('/contacts/tags', async (req: AuthenticatedRequest, res: Response) =
   }
   const cleanPhone = phone_number.split(':')[0];
   try {
+    const resolvedPhone = await getRealPhoneIfNeeded(req.userId, cleanPhone);
     const contactCheck = await pool.query(
       'SELECT id FROM crm_contacts WHERE user_id = $1 AND phone_number = $2',
-      [req.userId, cleanPhone]
+      [req.userId, resolvedPhone]
     );
 
     if (contactCheck.rows.length === 0) {
@@ -1013,12 +1015,12 @@ router.post('/contacts/tags', async (req: AuthenticatedRequest, res: Response) =
       await pool.query(
         `INSERT INTO crm_contacts (client_id, user_id, phone_number, tags) 
          VALUES ($1, $2, $3, $4)`,
-        [clientId, req.userId, cleanPhone, JSON.stringify(tags)]
+        [clientId, req.userId, resolvedPhone, JSON.stringify(tags)]
       );
     } else {
       await pool.query(
         'UPDATE crm_contacts SET tags = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2 AND phone_number = $3',
-        [JSON.stringify(tags), req.userId, cleanPhone]
+        [JSON.stringify(tags), req.userId, resolvedPhone]
       );
     }
 
@@ -1169,6 +1171,7 @@ router.post('/contacts/assign', async (req: AuthenticatedRequest, res: Response)
   const cleanPhone = phone_number.split('@')[0].split(':')[0];
 
   try {
+    const resolvedPhone = await getRealPhoneIfNeeded(req.userId, cleanPhone);
     if (agent_id) {
       const agentCheck = await pool.query('SELECT id FROM users WHERE id = $1 AND parent_id = $2', [agent_id, req.userId]);
       if (agentCheck.rows.length === 0) {
@@ -1178,7 +1181,7 @@ router.post('/contacts/assign', async (req: AuthenticatedRequest, res: Response)
 
     const contactCheck = await pool.query(
       'SELECT id FROM crm_contacts WHERE user_id = $1 AND phone_number = $2',
-      [req.userId, cleanPhone]
+      [req.userId, resolvedPhone]
     );
 
     if (contactCheck.rows.length === 0) {
@@ -1202,7 +1205,7 @@ router.post('/contacts/assign', async (req: AuthenticatedRequest, res: Response)
       await pool.query(
         `INSERT INTO crm_contacts (client_id, user_id, phone_number, assigned_agent_id) 
          VALUES ($1, $2, $3, $4)`,
-        [clientId, req.userId, cleanPhone, agent_id]
+        [clientId, req.userId, resolvedPhone, agent_id]
       );
     } else {
       const contactId = contactCheck.rows[0].id;

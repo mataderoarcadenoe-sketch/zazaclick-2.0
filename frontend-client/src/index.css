@@ -7,23 +7,36 @@
   --font-sans: 'Inter', 'Outfit', -apple-system, BlinkMacSystemFont, 'Noto Color Emoji', 'Segoe UI Emoji', 'Apple Color Emoji', 'Segoe UI', Roboto, sans-serif;
   
   /* Brand colors */
-  --color-brand-primary: #0D9488; /* Teal Vibrant */
+  --color-brand-primary: #09090B; /* Premium Black */
   --color-brand-secondary: #1E293B; /* Navy Slate */
   --color-brand-500: var(--color-brand-primary);
   --color-brand-800: var(--color-brand-secondary);
-  --color-brand-accent: #2DD4BF; /* Cyan-Teal Light */
-  --color-brand-light: #CCFBF1; /* Teal Wash */
+  --color-brand-accent: #27272A; /* Dark Premium Gray */
+  --color-brand-light: #F4F4F5; /* Light Premium Gray */
   /* Surface colors (Solid Grays) */
   --color-surface-500: #969595; /* Medium Gray */
   --color-surface-600: #666264; /* Dark Gray */
   /* Pastel colors */
-  --color-pastel-100: #CCFBF1; /* Teal pálido */
+  --color-pastel-100: #F4F4F5; /* Light Gray Pastel */
   --color-pastel-200: #EDE9FE; /* Lavanda suave */
   --color-pastel-300: #FFE4E6; /* Rosa bebé */
   --color-pastel-400: #FEF3C7; /* Ámbar claro */
   /* Soft shadows */
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
   --shadow-md: 0 4px 6px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.08);
+
+  /* Overwrite Emerald with Premium Black and sophisticated grays */
+  --color-emerald-50: #fafafa;
+  --color-emerald-100: #f4f4f5;
+  --color-emerald-200: #e4e4e7;
+  --color-emerald-300: #d4d4d8;
+  --color-emerald-400: #a1a1aa;
+  --color-emerald-500: #18181b; /* Negro Premium */
+  --color-emerald-600: #09090b; /* Negro Premium Más Oscuro */
+  --color-emerald-700: #040405;
+  --color-emerald-800: #020202;
+  --color-emerald-900: #000000;
+  --color-emerald-950: #000000;
 
   /* Surface colors (Solid Grays) */
   --color-surface-50: #ffffff;
@@ -50,7 +63,7 @@
   --shadow-glass-dark: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
   --shadow-premium: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 20px 25px -5px rgba(0, 0, 0, 0.03);
   --shadow-premium-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-  --shadow-glow-emerald: 0 0 15px rgba(13, 148, 136, 0.3), 0 0 45px rgba(13, 148, 136, 0.1);
+  --shadow-glow-emerald: 0 0 15px rgba(24, 24, 27, 0.25), 0 0 45px rgba(24, 24, 27, 0.08);
   --shadow-glow-blue: 0 0 15px rgba(14, 165, 233, 0.3), 0 0 45px rgba(14, 165, 233, 0.1);
 }
 

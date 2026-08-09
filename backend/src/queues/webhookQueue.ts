@@ -48,9 +48,9 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
       if (remoteJid) {
         let cleanJid = remoteJid.replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net');
         
-        // Caching automático del nombre si viene en pushName / notify
+        // Caching automático del nombre si viene en pushName / notify y NO es un mensaje saliente
         const pushName = data.pushName || data.key?.pushName;
-        if (pushName) {
+        if (pushName && !data.key?.fromMe) {
           await EvolutionService.saveContactName(instance, cleanJid, undefined, pushName);
         }
 
