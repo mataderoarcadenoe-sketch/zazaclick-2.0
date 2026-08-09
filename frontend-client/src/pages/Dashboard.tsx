@@ -5546,14 +5546,14 @@ echo $response;`;
                               </div>
 
                               {/* Products List */}
-                              <div className="space-y-3">
+                              <div className={`grid gap-3 ${showCrmDetails ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
                                 {billingLoading ? (
-                                  <div className="flex flex-col items-center justify-center py-12 space-y-2">
+                                  <div className="col-span-full flex flex-col items-center justify-center py-12 space-y-2">
                                     <div className="w-5 h-5 border-2 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
                                     <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Buscando productos...</p>
                                   </div>
                                 ) : !billingConfigured ? (
-                                  <div className="text-center py-10 bg-slate-50/50 dark:bg-slate-900/30 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-3">
+                                  <div className="col-span-full text-center py-10 bg-slate-50/50 dark:bg-slate-900/30 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-3">
                                     <p className="text-[11px] text-slate-450 dark:text-slate-500 leading-normal font-medium">
                                       No has conectado la API de tu Facturador Electrónico. Vincula tu cuenta para ver tus productos en tiempo real.
                                     </p>
@@ -5566,7 +5566,7 @@ echo $response;`;
                                     </button>
                                   </div>
                                 ) : !billingSearchQuery.trim() ? (
-                                  <div className="text-center py-12 text-slate-450 dark:text-slate-500 bg-slate-50/30 dark:bg-slate-900/40 border border-dashed border-slate-200/50 dark:border-slate-800/50 rounded-2xl p-6 space-y-2.5">
+                                  <div className="col-span-full text-center py-12 text-slate-450 dark:text-slate-500 bg-slate-50/30 dark:bg-slate-900/40 border border-dashed border-slate-200/50 dark:border-slate-800/50 rounded-2xl p-6 space-y-2.5">
                                     <Search className="w-8 h-8 text-slate-350 dark:text-slate-650 mx-auto mb-1 stroke-[1.5]" />
                                     <p className="text-[11.5px] font-bold text-slate-750 dark:text-slate-300">Buscador del Catálogo</p>
                                     <p className="text-[9.5px] leading-relaxed font-medium">Escribe el nombre o detalles de un producto en el buscador superior para buscar en el catálogo.</p>
@@ -5581,7 +5581,7 @@ echo $response;`;
 
                                   if (filtered.length === 0) {
                                     return (
-                                      <div className="text-center py-10 text-xs text-slate-400 dark:text-slate-500 italic font-medium bg-slate-50/20 dark:bg-slate-900/10 border border-dashed border-slate-200/50 dark:border-slate-800/50 rounded-xl p-4">
+                                      <div className="col-span-full text-center py-10 text-xs text-slate-400 dark:text-slate-500 italic font-medium bg-slate-50/20 dark:bg-slate-900/10 border border-dashed border-slate-200/50 dark:border-slate-800/50 rounded-xl p-4">
                                         No se encontraron productos en el facturador.
                                       </div>
                                     );
