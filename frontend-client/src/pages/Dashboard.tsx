@@ -6556,15 +6556,71 @@ echo $response;`;
                     ) : (
                       (() => {
                         const columns = getPipelineColumns();
-                        const stageColors: Record<string, string> = {
-                          'Nuevo': 'border-t-slate-500',
-                          'Contactado': 'border-t-blue-500',
-                          'Interesado': 'border-t-purple-500',
-                          'Cotización enviada': 'border-t-amber-500',
-                          'Negociación': 'border-t-indigo-500',
-                          'Pago pendiente': 'border-t-rose-500',
-                          'Cliente': 'border-t-emerald-500',
-                          'Postventa': 'border-t-violet-500'
+                        const stageThemes: Record<string, { headerBg: string, columnBg: string, border: string, badgeBg: string, titleText: string, totalText: string }> = {
+                          'Nuevo': {
+                            headerBg: 'bg-slate-500 dark:bg-slate-800',
+                            columnBg: 'bg-slate-50/60 dark:bg-slate-900/10',
+                            border: 'border-slate-200 dark:border-slate-800/80',
+                            badgeBg: 'bg-slate-600/90 text-white',
+                            titleText: 'text-white font-black',
+                            totalText: 'text-slate-200'
+                          },
+                          'Contactado': {
+                            headerBg: 'bg-blue-650 dark:bg-blue-800',
+                            columnBg: 'bg-blue-50/30 dark:bg-blue-950/10',
+                            border: 'border-blue-200 dark:border-blue-900/30',
+                            badgeBg: 'bg-blue-700/80 text-white',
+                            titleText: 'text-white font-black',
+                            totalText: 'text-blue-100'
+                          },
+                          'Interesado': {
+                            headerBg: 'bg-purple-600 dark:bg-purple-800',
+                            columnBg: 'bg-purple-50/30 dark:bg-purple-950/10',
+                            border: 'border-purple-200 dark:border-purple-900/30',
+                            badgeBg: 'bg-purple-700/80 text-white',
+                            titleText: 'text-white font-black',
+                            totalText: 'text-purple-100'
+                          },
+                          'Cotización enviada': {
+                            headerBg: 'bg-amber-500 dark:bg-amber-600',
+                            columnBg: 'bg-amber-50/30 dark:bg-amber-950/10',
+                            border: 'border-amber-200 dark:border-amber-900/30',
+                            badgeBg: 'bg-amber-600 text-white',
+                            titleText: 'text-white font-black',
+                            totalText: 'text-amber-100'
+                          },
+                          'Negociación': {
+                            headerBg: 'bg-indigo-600 dark:bg-indigo-800',
+                            columnBg: 'bg-indigo-50/30 dark:bg-indigo-950/10',
+                            border: 'border-indigo-200 dark:border-indigo-900/30',
+                            badgeBg: 'bg-indigo-700/80 text-white',
+                            titleText: 'text-white font-black',
+                            totalText: 'text-indigo-100'
+                          },
+                          'Pago pendiente': {
+                            headerBg: 'bg-rose-600 dark:bg-rose-800',
+                            columnBg: 'bg-rose-50/30 dark:bg-rose-950/10',
+                            border: 'border-rose-200 dark:border-rose-900/30',
+                            badgeBg: 'bg-rose-700/80 text-white',
+                            titleText: 'text-white font-black',
+                            totalText: 'text-rose-100'
+                          },
+                          'Cliente': {
+                            headerBg: 'bg-emerald-600 dark:bg-emerald-800',
+                            columnBg: 'bg-emerald-50/30 dark:bg-emerald-950/10',
+                            border: 'border-emerald-200 dark:border-emerald-900/30',
+                            badgeBg: 'bg-emerald-700/80 text-white',
+                            titleText: 'text-white font-black',
+                            totalText: 'text-emerald-100'
+                          },
+                          'Postventa': {
+                            headerBg: 'bg-violet-600 dark:bg-violet-800',
+                            columnBg: 'bg-violet-50/30 dark:bg-violet-950/10',
+                            border: 'border-violet-200 dark:border-violet-900/30',
+                            badgeBg: 'bg-violet-700/80 text-white',
+                            titleText: 'text-white font-black',
+                            totalText: 'text-violet-100'
+                          }
                         };
                         return (
                           <div className="flex-1 overflow-x-auto pb-4 flex gap-4.5 items-start min-h-0 hide-scrollbar select-none">
@@ -6578,7 +6634,7 @@ echo $response;`;
                                 return matchSearch && matchAgent;
                               });
                               const totalCol = items.reduce((s: number, i: any) => s + (Number(i.active_quote_amount) || 0), 0);
-                              const borderColor = stageColors[columnName] || 'border-t-slate-400';
+                              const theme = stageThemes[columnName] || stageThemes['Nuevo'];
                               const isOver = activeDragStage === columnName;
                               return (
                                 <div
@@ -6595,24 +6651,24 @@ echo $response;`;
                                     setDraggedCardJid(null);
                                     setActiveDragStage(null);
                                   }}
-                                  className={`w-72 shrink-0 bg-slate-50/50 dark:bg-slate-900/20 border-t-4 ${borderColor} border-x border-b border-slate-200/50 dark:border-slate-800/85 rounded-b-2xl rounded-t-lg flex flex-col max-h-[72vh] transition-all duration-200 ${
+                                  className={`w-72 shrink-0 ${theme.columnBg} border ${theme.border} rounded-2xl flex flex-col max-h-[72vh] overflow-hidden transition-all duration-200 ${
                                     isOver ? 'bg-indigo-500/5 dark:bg-indigo-500/10 ring-2 ring-indigo-500/20 scale-[1.01]' : ''
                                   }`}
                                 >
                                   {/* Column Header */}
-                                  <div className="p-3.5 flex flex-col gap-1.5 border-b border-slate-200/50 dark:border-slate-800/80 bg-white/40 dark:bg-slate-900/40">
+                                  <div className={`p-3.5 flex flex-col gap-1.5 ${theme.headerBg} border-b ${theme.border}`}>
                                     <div className="flex items-center justify-between">
-                                      <h4 className="text-[10.5px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider truncate mr-2">
+                                      <h4 className={`text-[10.5px] uppercase tracking-wider truncate mr-2 ${theme.titleText}`}>
                                         {columnName}
                                       </h4>
-                                      <span className="bg-slate-200/85 dark:bg-slate-800/85 text-slate-700 dark:text-slate-300 text-[9.5px] font-black px-2 py-0.5 rounded-full">
+                                      <span className={`text-[9.5px] font-black px-2 py-0.5 rounded-full ${theme.badgeBg}`}>
                                         {items.length}
                                       </span>
                                     </div>
                                     {totalCol > 0 && (
-                                      <div className="flex items-center justify-between text-[9px] font-bold text-slate-500 dark:text-slate-500 border-t border-dashed border-slate-200 dark:border-slate-800 pt-1">
+                                      <div className={`flex items-center justify-between text-[9px] font-bold border-t border-white/20 pt-1 mt-0.5 ${theme.totalText}`}>
                                         <span>Total Cotizado:</span>
-                                        <span className="text-indigo-600 dark:text-indigo-400">S/. {totalCol.toFixed(2)}</span>
+                                        <span className="font-black text-white">S/. {totalCol.toFixed(2)}</span>
                                       </div>
                                     )}
                                   </div>
