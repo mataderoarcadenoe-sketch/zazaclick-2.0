@@ -9,7 +9,7 @@ import {
   Moon, Sun, Menu, X, Check, Play, ExternalLink, Sparkles, BookOpen, Clock,
   MessageSquare, Search, MessageCircle, Smile, ArrowLeft,
   Paperclip, FileText, Image, Video, Download, ChevronDown, ChevronLeft, ChevronRight, Users, Users2, Settings,
-  Edit2, Phone, User, UserMinus, Tag, MoreVertical, Mail, MapPin, Building, Calendar,
+  Phone, User, UserMinus, Tag, MoreVertical, Mail, MapPin, Building, Calendar,
   GitBranch, Grip, Gift, ListTodo
 } from 'lucide-react';
 import EmojiPicker, { Theme, EmojiStyle, Emoji } from 'emoji-picker-react';
@@ -4773,29 +4773,7 @@ echo $response;`;
                                       </div>
                                     </div>
                                   </div>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setCrmDocType(crmClient.doc_type === 'MANUAL' ? 'DNI' : crmClient.doc_type);
-                                      setCrmDocNumber(crmClient.doc_type === 'MANUAL' ? '' : crmClient.doc_number);
-                                      setCrmName(crmClient.name);
-                                      setCrmAddress(crmClient.address || '');
-                                      setCrmEmail(crmClient.email || '');
-                                      setCrmNotes(crmClient.notes || '');
-                                      setCrmLanguage(crmClient.language || 'Español');
-                                      setCrmBirthday(crmClient.birthday || '');
-                                      if (crmClient.category_id) {
-                                        setCrmCategoryId(crmClient.category_id.toString());
-                                      } else {
-                                        setCrmCategoryId('');
-                                      }
-                                      setCrmIsEditing(true);
-                                    }}
-                                    className="absolute top-3.5 right-3.5 p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
-                                    title="Editar ficha"
-                                  >
-                                    <Edit2 size={12} />
-                                  </button>
+
                                 </div>
                               
                                 {/* Información del contacto */}
