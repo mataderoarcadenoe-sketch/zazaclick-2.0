@@ -487,6 +487,37 @@ export class EvolutionService {
   public static async mergeChats(instanceName: string, chats: any[], dbUnreadCounts?: Map<string, number>): Promise<any[]> {
     const mergedMap = new Map<string, any>();
 
+    // 1. Identificar LIDs únicos que necesitan resolución en esta petición
+    const lidsToResolve = new Set<string>();
+    for (const chat of chats) {
+      if (chat && chat.remoteJid && chat.remoteJid.endsWith('@lid')) {
+        const hasAlt = (chat.remoteJidAlt && chat.remoteJidAlt.endsWith('@s.whatsapp.net')) || 
+                       (chat.jidAlt && chat.jidAlt.endsWith('@s.whatsapp.net')) ||
+                       (chat.lastMessage?.key?.remoteJidAlt && chat.lastMessage.key.remoteJidAlt.endsWith('@s.whatsapp.net')) ||
+                       (chat.lastMessage?.remoteJidAlt && chat.lastMessage.remoteJidAlt.endsWith('@s.whatsapp.net')) ||
+                       (chat.contact?.remoteJidAlt && chat.contact.remoteJidAlt.endsWith('@s.whatsapp.net')) ||
+                       (chat.contact?.jidAlt && chat.contact.jidAlt.endsWith('@s.whatsapp.net')) ||
+                       (chat.contact?.id && chat.contact.id.endsWith('@s.whatsapp.net')) ||
+                       (chat.contact?.remoteJid && chat.contact.remoteJid.endsWith('@s.whatsapp.net'));
+        
+        if (!hasAlt && !this.lidCache.has(chat.remoteJid)) {
+          lidsToResolve.add(chat.remoteJid);
+        }
+      }
+    }
+
+    // 2. Resolver todos los LIDs detectados en paralelo para evitar retrasar el hilo
+    if (lidsToResolve.size > 0) {
+      console.log(`[EvolutionService] Resolviendo ${lidsToResolve.size} LIDs en paralelo para carga inicial...`);
+      await Promise.all(
+        Array.from(lidsToResolve).map(lid => 
+          this.resolveLidToPhone(instanceName, lid).catch(err => 
+            console.warn(`[EvolutionService] Error resolviendo LID ${lid} en paralelo:`, err.message)
+          )
+        )
+      );
+    }
+
     for (const chat of chats) {
       if (!chat || !chat.remoteJid) continue;
       if (chat.remoteJid === 'status@broadcast') continue;
