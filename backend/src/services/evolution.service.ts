@@ -462,7 +462,7 @@ export class EvolutionService {
         number: lid
       });
 
-      const resolvedJid = response.data?.jid || response.data?.remoteJid || response.data?.id;
+      const resolvedJid = response.data?.wuid || response.data?.jid || response.data?.remoteJid || response.data?.id;
       if (resolvedJid && resolvedJid.endsWith('@s.whatsapp.net')) {
         this.lidCache.set(lid, resolvedJid);
         console.log(`[EvolutionService] LID ${lid} resuelto exitosamente a ${resolvedJid}`);
@@ -479,6 +479,83 @@ export class EvolutionService {
       return lid;
     }
   }
+
+  /**
+   * Escanea y resuelve los contactos LID existentes en la base de datos a sus números reales
+   */
+  public static async resolveDatabaseLids(): Promise<void> {
+    try {
+      console.log('🔄 [EvolutionService] Iniciando escaneo de contactos LID en la base de datos...');
+      const pool = require('../config/database').default;
+      
+      // Obtener contactos que parecen tener un LID como número de teléfono (más de 13 dígitos o empieza por 1 y 13 dígitos)
+      const result = await pool.query(`
+        SELECT c.id as contact_id, c.phone_number, c.user_id, cl.id as client_id, cl.name as client_name
+        FROM crm_contacts c
+        JOIN crm_clients cl ON c.client_id = cl.id
+        WHERE LENGTH(c.phone_number) >= 14 OR (c.phone_number LIKE '1%' AND LENGTH(c.phone_number) >= 13)
+      `);
+      
+      const lidContacts = result.rows;
+      if (lidContacts.length === 0) {
+        console.log('✅ [EvolutionService] No se encontraron contactos LID pendientes de resolución.');
+        return;
+      }
+      
+      console.log(`[EvolutionService] Se encontraron ${lidContacts.length} contactos LID. Intentando resolver...`);
+      
+      // Obtener las instancias configuradas para resolver los LIDs
+      const instResult = await pool.query("SELECT instance_name, user_id FROM instances WHERE status = 'connected'");
+      const instances = instResult.rows;
+      if (instances.length === 0) {
+        console.log('⚠️ [EvolutionService] No hay instancias conectadas para resolver los LIDs en este momento.');
+        return;
+      }
+      
+      for (const contact of lidContacts) {
+        const cleanLid = contact.phone_number;
+        
+        // Buscar la instancia asociada a este usuario o la primera disponible
+        const userCheck = await pool.query("SELECT parent_id FROM users WHERE id = $1", [contact.user_id]);
+        const parentId = userCheck.rows[0]?.parent_id || contact.user_id;
+        const matchingInst = instances.find((i: any) => i.user_id === parentId) || instances[0];
+        
+        if (!matchingInst) continue;
+        
+        const instanceName = matchingInst.instance_name;
+        
+        // Intentar resolver
+        const resolvedJid = await this.resolveLidToPhone(instanceName, cleanLid + '@lid');
+        if (resolvedJid && resolvedJid.endsWith('@s.whatsapp.net')) {
+          const resolvedPhone = resolvedJid.split('@')[0];
+          console.log(`[EvolutionService] Resolviendo contacto LID base de datos: ${cleanLid} -> ${resolvedPhone}`);
+          
+          // Actualizar el teléfono del contacto
+          await pool.query(
+            'UPDATE crm_contacts SET phone_number = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+            [resolvedPhone, contact.contact_id]
+          );
+          
+          // Si el nombre del cliente es genérico ("Contacto 1712..."), también actualizarlo
+          if (contact.client_name === `Contacto ${cleanLid}` || contact.client_name.startsWith('Contacto ')) {
+            const cacheKey = `contact:${instanceName}:${resolvedJid}`;
+            const redis = require('../config/redis').default;
+            const cachedName = await redis.get(cacheKey);
+            const newName = cachedName || `Contacto ${resolvedPhone}`;
+            
+            await pool.query(
+              'UPDATE crm_clients SET name = $1, doc_number = $2 WHERE id = $3',
+              [newName, resolvedPhone, contact.client_id]
+            );
+          }
+        }
+      }
+      console.log('✅ [EvolutionService] Escaneo y resolución de contactos LID completado.');
+    } catch (err: any) {
+      console.error('❌ [EvolutionService] Error en resolveDatabaseLids:', err.message);
+    }
+  }
+
 
 
   /**

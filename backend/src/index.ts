@@ -81,6 +81,8 @@ async function startServer() {
       console.log(`🚀 Servidor Express + Socket.io ejecutándose exitosamente en http://0.0.0.0:${PORT}`);
       // Configurar automáticamente los webhooks para todas las instancias existentes
       configureAllWebhooks();
+      // Ejecutar la migración y resolución de contactos LID existentes en base de datos
+      EvolutionService.resolveDatabaseLids();
     });
   } catch (error) {
     console.error('❌ Error fatal al iniciar el servidor:', error);
