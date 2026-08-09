@@ -293,6 +293,27 @@ export default function DashboardPage() {
   const [crmContact, setCrmContact] = useState<any | null>(null);
   const [crmContactMap, setCrmContactMap] = useState<Record<string, string>>({});
   const [crmContactTagsMap, setCrmContactTagsMap] = useState<Record<string, string[]>>({});
+
+  const getChatDisplayName = useCallback((chat: any) => {
+    if (!chat || !chat.remoteJid) return 'Conversación';
+    const cleanRemoteJid = chat.remoteJid.split('@')[0].split(':')[0];
+    
+    // 1. WhatsApp Identity
+    const username = chat.username || chat.contact?.username;
+    const waName = username 
+      ? (username.startsWith('@') ? username : `@${username}`) 
+      : (chat.pushName || chat.name);
+    
+    const primaryName = waName || `+${cleanRemoteJid}`;
+    
+    // 2. CRM Registered Name
+    const registeredName = crmContactMap[cleanRemoteJid];
+    if (registeredName) {
+      return `${primaryName} (${registeredName})`;
+    }
+    
+    return primaryName;
+  }, [crmContactMap]);
   
   // Colaboradores (Equipo) States
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
@@ -2386,7 +2407,7 @@ export default function DashboardPage() {
     const quoteId = Math.floor(100000 + Math.random() * 900000);
     const messageText = `🧾 *COTIZACIÓN PRELIMINAR #${quoteId}*
 ---------------------------------------
-👤 *Cliente*: ${selectedChat.pushName || 'Contacto'}
+👤 *Cliente*: ${crmClient?.name || selectedChat.pushName || 'Contacto'}
 📦 *Producto*: ${product.name}
 💵 *Subtotal*: ${product.price}
 📊 *IGV (18%)*: Incluido
@@ -3726,7 +3747,7 @@ echo $response;`;
                             .filter(chat => chat && chat.remoteJid)
                             .filter(chat => {
                               const cleanRemoteJid = chat.remoteJid.split('@')[0].split(':')[0];
-                              const contactName = (crmContactMap[cleanRemoteJid] || chat.pushName || cleanRemoteJid).toLowerCase();
+                              const contactName = getChatDisplayName(chat).toLowerCase();
                               const searchLower = chatsSearchQuery.toLowerCase();
                               const tags = crmContactTagsMap[cleanRemoteJid] || [];
 
@@ -3749,7 +3770,7 @@ echo $response;`;
                               const unreadCount = Number(chat.unreadCount) || 0;
                               const isUnread = unreadCount > 0;
                               const cleanRemoteJid = chat?.remoteJid?.split('@')[0]?.split(':')[0]?.split(':')[0] || '';
-                              const contactName = crmContactMap[cleanRemoteJid] || chat.pushName || cleanRemoteJid;
+                              const contactName = getChatDisplayName(chat);
                               
                               // Extract last message text
                               const content = chat.lastMessage?.message;
@@ -3879,13 +3900,7 @@ echo $response;`;
                                     <img src={selectedChat.profilePicUrl} alt="" className="w-full h-full object-cover" />
                                   ) : (
                                     <span className="uppercase tracking-wide">
-                                      {String(
-                                        (selectedChat.remoteJid && crmContactMap[selectedChat.remoteJid.split('@')[0]?.split(':')[0] || '']) || 
-                                        selectedChat.pushName || 
-                                        selectedChat.name || 
-                                        selectedChat.remoteJid || 
-                                        'Conversación'
-                                      ).substring(0, 2)}
+                                      {getChatDisplayName(selectedChat).substring(0, 2)}
                                     </span>
                                   )}
                                 </div>
@@ -3893,11 +3908,7 @@ echo $response;`;
                                 {/* Contact Info */}
                                 <div className="flex flex-col justify-center text-left">
                                   <h4 className="text-[13px] font-extrabold text-slate-800 dark:text-white uppercase tracking-tight">
-                                    {(selectedChat.remoteJid && crmContactMap[selectedChat.remoteJid.split('@')[0]?.split(':')[0] || '']) || 
-                                     selectedChat.pushName || 
-                                     selectedChat.name || 
-                                     (selectedChat.remoteJid ? selectedChat.remoteJid.split('@')[0] : '') || 
-                                     'Conversación'}
+                                    {getChatDisplayName(selectedChat)}
                                   </h4>
                                   
                                   <div className="flex flex-wrap items-center gap-2 mt-1.5">
