@@ -15,6 +15,7 @@ import {
 import EmojiPicker, { Theme, EmojiStyle, Emoji } from 'emoji-picker-react';
 import { parse } from '@twemoji/parser';
 import { useCrmStore } from '../store/crmStore';
+import { DEPARTAMENTOS_PERU, UBIGEO_DATA } from '../assets/ubigeos';
 
 const SMART_TAGS = ['VIP', 'Moroso', 'Pendiente', 'Nuevo', 'Cliente frecuente', 'Prospecto', 'Empresa', 'Mayorista', 'Interesado', 'Pagó', 'Sin responder'];
 
@@ -395,6 +396,9 @@ export default function DashboardPage() {
   const [crmDepartamento, setCrmDepartamento] = useState('');
   const [crmProvincia, setCrmProvincia] = useState('');
   const [crmDistrito, setCrmDistrito] = useState('');
+  const [isManualDepartamento, setIsManualDepartamento] = useState(false);
+  const [isManualProvincia, setIsManualProvincia] = useState(false);
+  const [isManualDistrito, setIsManualDistrito] = useState(false);
 
   // Client Tasks States
   const [showActionsDropdown, setShowActionsDropdown] = useState(false);
@@ -4844,6 +4848,25 @@ echo $response;`;
                                         setCrmLanguage(crmClient.idioma || 'Español');
                                         setCrmCompany(crmClient.empresa || '');
                                         setCrmAssignedAgentId(crmContact?.assigned_agent_id || '');
+                                        
+                                        const dept = crmClient.departamento || '';
+                                        const prov = crmClient.provincia || '';
+                                        const dist = crmClient.distrito || '';
+                                        setCrmDepartamento(dept);
+                                        setCrmProvincia(prov);
+                                        setCrmDistrito(dist);
+
+                                        const isKnownDept = DEPARTAMENTOS_PERU.includes(dept);
+                                        setIsManualDepartamento(!isKnownDept && dept.trim() !== '');
+
+                                        const provinces = UBIGEO_DATA[dept] ? Object.keys(UBIGEO_DATA[dept]) : [];
+                                        const isKnownProv = provinces.includes(prov);
+                                        setIsManualProvincia(!isKnownProv && prov.trim() !== '');
+
+                                        const districts = UBIGEO_DATA[dept]?.[prov] || [];
+                                        const isKnownDist = districts.includes(dist);
+                                        setIsManualDistrito(!isKnownDist && dist.trim() !== '');
+
                                         setCrmIsEditing(true);
                                       }}
                                       className="text-[9.5px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer transition-colors"
@@ -5292,35 +5315,136 @@ echo $response;`;
                                 </div>
 
                                  <div className="grid grid-cols-3 gap-2 text-left">
+                                   {/* Departamento */}
                                    <div className="space-y-1">
-                                     <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Departamento</label>
-                                     <input
-                                       type="text"
-                                       placeholder="Ej: Lima"
-                                       value={crmDepartamento}
-                                       onChange={(e) => setCrmDepartamento(e.target.value)}
-                                       className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
-                                     />
+                                     <div className="flex items-center justify-between">
+                                       <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Dpto</label>
+                                       <button
+                                         type="button"
+                                         onClick={() => {
+                                           setIsManualDepartamento(!isManualDepartamento);
+                                           setCrmDepartamento('');
+                                           setCrmProvincia('');
+                                           setCrmDistrito('');
+                                         }}
+                                         className="text-[7.5px] text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                                       >
+                                         {isManualDepartamento ? 'Lista' : 'Escribir'}
+                                       </button>
+                                     </div>
+                                     {isManualDepartamento ? (
+                                       <input
+                                         type="text"
+                                         placeholder="Ej: Lima"
+                                         value={crmDepartamento}
+                                         onChange={(e) => {
+                                           setCrmDepartamento(e.target.value);
+                                           setCrmProvincia('');
+                                           setCrmDistrito('');
+                                         }}
+                                         className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
+                                       />
+                                     ) : (
+                                       <select
+                                         value={crmDepartamento}
+                                         onChange={(e) => {
+                                           setCrmDepartamento(e.target.value);
+                                           setCrmProvincia('');
+                                           setCrmDistrito('');
+                                         }}
+                                         className="w-full px-2 py-1.5 bg-slate-100/70 dark:bg-slate-950 border border-slate-200/40 dark:border-slate-800/40 rounded-xl text-[11px] text-slate-800 dark:text-white focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-bold transition-all cursor-pointer"
+                                       >
+                                         <option value="">Seleccionar...</option>
+                                         {DEPARTAMENTOS_PERU.map(d => (
+                                           <option key={d} value={d}>{d}</option>
+                                         ))}
+                                       </select>
+                                     )}
                                    </div>
+
+                                   {/* Provincia */}
                                    <div className="space-y-1">
-                                     <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Provincia</label>
-                                     <input
-                                       type="text"
-                                       placeholder="Ej: Lima"
-                                       value={crmProvincia}
-                                       onChange={(e) => setCrmProvincia(e.target.value)}
-                                       className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
-                                     />
+                                     <div className="flex items-center justify-between">
+                                       <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Provincia</label>
+                                       <button
+                                         type="button"
+                                         onClick={() => {
+                                           setIsManualProvincia(!isManualProvincia);
+                                           setCrmProvincia('');
+                                           setCrmDistrito('');
+                                         }}
+                                         className="text-[7.5px] text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                                       >
+                                         {isManualProvincia ? 'Lista' : 'Escribir'}
+                                       </button>
+                                     </div>
+                                     {isManualProvincia || isManualDepartamento || !crmDepartamento || !UBIGEO_DATA[crmDepartamento] ? (
+                                       <input
+                                         type="text"
+                                         placeholder="Ej: Lima"
+                                         disabled={!crmDepartamento}
+                                         value={crmProvincia}
+                                         onChange={(e) => {
+                                           setCrmProvincia(e.target.value);
+                                           setCrmDistrito('');
+                                         }}
+                                         className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all disabled:opacity-50"
+                                       />
+                                     ) : (
+                                       <select
+                                         value={crmProvincia}
+                                         disabled={!crmDepartamento}
+                                         onChange={(e) => {
+                                           setCrmProvincia(e.target.value);
+                                           setCrmDistrito('');
+                                         }}
+                                         className="w-full px-2 py-1.5 bg-slate-100/70 dark:bg-slate-950 border border-slate-200/40 dark:border-slate-800/40 rounded-xl text-[11px] text-slate-800 dark:text-white focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-bold transition-all cursor-pointer disabled:opacity-50"
+                                       >
+                                         <option value="">Seleccionar...</option>
+                                         {Object.keys(UBIGEO_DATA[crmDepartamento] || {}).map(p => (
+                                           <option key={p} value={p}>{p}</option>
+                                         ))}
+                                       </select>
+                                     )}
                                    </div>
+
+                                   {/* Distrito */}
                                    <div className="space-y-1">
-                                     <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Distrito</label>
-                                     <input
-                                       type="text"
-                                       placeholder="Ej: Miraflores"
-                                       value={crmDistrito}
-                                       onChange={(e) => setCrmDistrito(e.target.value)}
-                                       className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
-                                     />
+                                     <div className="flex items-center justify-between">
+                                       <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Distrito</label>
+                                       <button
+                                         type="button"
+                                         onClick={() => {
+                                           setIsManualDistrito(!isManualDistrito);
+                                           setCrmDistrito('');
+                                         }}
+                                         className="text-[7.5px] text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                                       >
+                                         {isManualDistrito ? 'Lista' : 'Escribir'}
+                                       </button>
+                                     </div>
+                                     {isManualDistrito || isManualProvincia || isManualDepartamento || !crmProvincia || !UBIGEO_DATA[crmDepartamento]?.[crmProvincia] ? (
+                                       <input
+                                         type="text"
+                                         placeholder="Ej: Miraflores"
+                                         disabled={!crmProvincia}
+                                         value={crmDistrito}
+                                         onChange={(e) => setCrmDistrito(e.target.value)}
+                                         className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all disabled:opacity-50"
+                                       />
+                                     ) : (
+                                       <select
+                                         value={crmDistrito}
+                                         disabled={!crmProvincia}
+                                         onChange={(e) => setCrmDistrito(e.target.value)}
+                                         className="w-full px-2 py-1.5 bg-slate-100/70 dark:bg-slate-950 border border-slate-200/40 dark:border-slate-800/40 rounded-xl text-[11px] text-slate-800 dark:text-white focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-bold transition-all cursor-pointer disabled:opacity-50"
+                                       >
+                                         <option value="">Seleccionar...</option>
+                                         {(UBIGEO_DATA[crmDepartamento]?.[crmProvincia] || []).map(dist => (
+                                           <option key={dist} value={dist}>{dist}</option>
+                                         ))}
+                                       </select>
+                                     )}
                                    </div>
                                  </div>
 
