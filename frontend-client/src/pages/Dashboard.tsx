@@ -5570,10 +5570,10 @@ echo $response;`;
 
                         {/* Column 2: Facturación / Catálogo */}
                         <div className={`flex flex-col min-h-0 bg-slate-50/45 dark:bg-slate-950 text-left relative overflow-hidden ${showCrmDetails ? 'border-l border-slate-200/50 dark:border-slate-800/50' : 'border-l-0'}`}>
-                          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white dark:bg-slate-950/20">
-                            <div className="space-y-4">
+                          <div className="flex-1 flex flex-col min-h-0 p-4 bg-white dark:bg-slate-950/20">
+                            <div className="space-y-4 flex flex-col h-full min-h-0">
                               {/* Integration Header */}
-                              <div className="pb-3.5 border-b border-slate-100 dark:border-slate-800/80 text-left">
+                              <div className="pb-3 border-b border-slate-100 dark:border-slate-800/60 text-left flex-shrink-0">
                                 <h5 className="text-[12px] font-extrabold text-slate-800 dark:text-white uppercase tracking-wider flex items-center justify-between">
                                   <div className="flex items-center gap-1.5">
                                     <FileText size={13} className="text-brand-primary" />
@@ -5607,7 +5607,7 @@ echo $response;`;
                               </div>
 
                               {/* Search & Category Tabs */}
-                              <div className="space-y-2.5">
+                              <div className="space-y-2 flex-shrink-0">
                                 <div className="relative font-sans">
                                   <Search size={12} className="absolute left-3 top-2.5 text-slate-450" />
                                   <input 
@@ -5648,112 +5648,114 @@ echo $response;`;
                                 </div>
                               </div>
 
-                              {/* Products List */}
-                              <div className={`grid gap-3 ${showCrmDetails ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'}`}>
-                                {billingLoading ? (
-                                  <div className="col-span-full flex flex-col items-center justify-center py-12 space-y-2">
-                                    <div className="w-5 h-5 border-2 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
-                                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Buscando productos...</p>
-                                  </div>
-                                ) : !billingConfigured ? (
-                                  <div className="col-span-full text-center py-10 bg-slate-50/50 dark:bg-slate-900/30 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-3">
-                                    <p className="text-[11px] text-slate-450 dark:text-slate-500 leading-normal font-medium">
-                                      No has conectado la API de tu Facturador Electrónico. Vincula tu cuenta para ver tus productos en tiempo real.
-                                    </p>
-                                    <button
-                                      type="button"
-                                      onClick={handleOpenBillingConfigModal}
-                                      className="px-3 py-1.5 bg-brand-primary hover:bg-brand-secondary text-white text-[10px] font-black uppercase rounded-lg active:scale-95 transition-all cursor-pointer shadow-sm shadow-brand-500/10"
-                                    >
-                                      Conectar Facturador
-                                    </button>
-                                  </div>
-                                ) : !billingSearchQuery.trim() ? (
-                                  <div className="col-span-full text-center py-12 text-slate-450 dark:text-slate-500 bg-slate-50/30 dark:bg-slate-900/40 border border-dashed border-slate-200/50 dark:border-slate-800/50 rounded-2xl p-6 space-y-2.5">
-                                    <Search className="w-8 h-8 text-slate-350 dark:text-slate-650 mx-auto mb-1 stroke-[1.5]" />
-                                    <p className="text-[11.5px] font-bold text-slate-750 dark:text-slate-300">Buscador del Catálogo</p>
-                                    <p className="text-[9.5px] leading-relaxed font-medium">Escribe el nombre o detalles de un producto en el buscador superior para buscar en el catálogo.</p>
-                                  </div>
-                                ) : (() => {
-                                  const uniqueCats = new Set(billingProducts.map(p => p.category).filter(Boolean));
-                                  const currentCategoryValid = billingCategory === 'all' || uniqueCats.has(billingCategory);
-                                  const activeCategory = currentCategoryValid ? billingCategory : 'all';
-
-                                  const filtered = billingProducts
-                                    .filter(p => activeCategory === 'all' || p.category === activeCategory);
-
-                                  if (filtered.length === 0) {
-                                    return (
-                                      <div className="col-span-full text-center py-10 text-xs text-slate-400 dark:text-slate-500 italic font-medium bg-slate-50/20 dark:bg-slate-900/10 border border-dashed border-slate-200/50 dark:border-slate-800/50 rounded-xl p-4">
-                                        No se encontraron productos en el facturador.
-                                      </div>
-                                    );
-                                  }
-
-                                  return filtered.map(prod => (
-                                    <div 
-                                      key={prod.id} 
-                                      className="group bg-slate-50/30 dark:bg-slate-900/40 hover:bg-white dark:hover:bg-slate-900 border border-slate-200/50 dark:border-slate-800/60 hover:border-brand-500/30 dark:hover:border-brand-500/20 rounded-2xl p-3.5 space-y-3.5 hover:shadow-md hover:shadow-brand-500/5 transition-all duration-300 text-left"
-                                    >
-                                      <div className="flex items-start gap-3.5">
-                                        <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-slate-200/60 dark:border-slate-800/80 flex-shrink-0 bg-slate-100 dark:bg-slate-950 shadow-inner">
-                                          <img 
-                                            src={prod.image} 
-                                            alt={prod.name} 
-                                            onError={(e) => {
-                                              e.currentTarget.src = 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=100';
-                                            }}
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                          />
-                                        </div>
-                                        <div className="flex-1 min-w-0 space-y-1 text-left">
-                                          <h6 className="text-[12px] font-bold text-slate-800 dark:text-slate-150 group-hover:text-brand-500 dark:group-hover:text-brand-400 transition-colors duration-250 truncate leading-tight tracking-wide">
-                                            {prod.name}
-                                          </h6>
-                                          
-                                          <div className="flex items-center gap-1.5 flex-wrap">
-                                            <span className="inline-flex px-2 py-0.5 bg-brand-50 dark:bg-brand-950/20 text-brand-600 dark:text-brand-400 border border-brand-500/10 text-[9.5px] font-black rounded-lg">
-                                              {prod.price}
-                                            </span>
-                                            {prod.stock !== null && (
-                                              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 text-[8.5px] font-black rounded-lg border ${
-                                                prod.stock > 0 
-                                                  ? 'bg-green-50 dark:bg-green-950/10 text-green-600 dark:text-green-400 border-green-500/10' 
-                                                  : 'bg-rose-50 dark:bg-rose-950/10 text-rose-600 dark:text-rose-400 border-rose-500/10'
-                                              }`}>
-                                                <span className={`w-1 h-1 rounded-full ${prod.stock > 0 ? 'bg-green-500 animate-pulse' : 'bg-rose-500'}`} />
-                                                Stock: {prod.stock}
-                                              </span>
-                                            )}
-                                          </div>
-                                          
-                                          <p className="text-[9.5px] text-slate-400 dark:text-slate-500 leading-normal line-clamp-2 pr-1 font-medium pt-0.5">
-                                            {prod.description}
-                                          </p>
-                                        </div>
-                                      </div>
-
-                                      <div className="flex gap-2 pt-3 border-t border-slate-200/30 dark:border-slate-800/40">
-                                        <button
-                                          type="button"
-                                          onClick={() => handleSendProductToChat(prod)}
-                                          className="flex-1 py-2 bg-brand-500 hover:bg-brand-secondary text-white font-extrabold text-[9px] uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 active:scale-[0.97] transition-all cursor-pointer shadow-sm shadow-brand-500/10"
-                                        >
-                                          <Send size={9.5} className="stroke-[2.5]" />
-                                          <span>Enviar Ficha</span>
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={() => handleSendQuoteToChat(prod)}
-                                          className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200/10 active:scale-[0.97] font-extrabold text-[9px] uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-                                        >
-                                          <FileText size={9.5} className="stroke-[2.5]" />
-                                          <span>Cotizar</span>
-                                        </button>
-                                      </div>
+                              {/* Products List Scroll Container */}
+                              <div className="flex-1 overflow-y-auto pr-1 -mr-1 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800 scrollbar-track-transparent">
+                                <div className={`grid gap-3 pb-2 ${showCrmDetails ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'}`}>
+                                  {billingLoading ? (
+                                    <div className="col-span-full flex flex-col items-center justify-center py-12 space-y-2">
+                                      <div className="w-5 h-5 border-2 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
+                                      <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Buscando productos...</p>
                                     </div>
-                                  ));
-                                })()}
+                                  ) : !billingConfigured ? (
+                                    <div className="col-span-full text-center py-10 bg-slate-50/50 dark:bg-slate-900/30 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-3">
+                                      <p className="text-[11px] text-slate-450 dark:text-slate-500 leading-normal font-medium">
+                                        No has conectado la API de tu Facturador Electrónico. Vincula tu cuenta para ver tus productos en tiempo real.
+                                      </p>
+                                      <button
+                                        type="button"
+                                        onClick={handleOpenBillingConfigModal}
+                                        className="px-3 py-1.5 bg-brand-primary hover:bg-brand-secondary text-white text-[10px] font-black uppercase rounded-lg active:scale-95 transition-all cursor-pointer shadow-sm shadow-brand-500/10"
+                                      >
+                                        Conectar Facturador
+                                      </button>
+                                    </div>
+                                  ) : !billingSearchQuery.trim() ? (
+                                    <div className="col-span-full text-center py-12 text-slate-450 dark:text-slate-500 bg-slate-50/30 dark:bg-slate-900/40 border border-dashed border-slate-200/50 dark:border-slate-800/50 rounded-2xl p-6 space-y-2.5">
+                                      <Search className="w-8 h-8 text-slate-350 dark:text-slate-650 mx-auto mb-1 stroke-[1.5]" />
+                                      <p className="text-[11.5px] font-bold text-slate-750 dark:text-slate-300">Buscador del Catálogo</p>
+                                      <p className="text-[9.5px] leading-relaxed font-medium">Escribe el nombre o detalles de un producto en el buscador superior para buscar en el catálogo.</p>
+                                    </div>
+                                  ) : (() => {
+                                    const uniqueCats = new Set(billingProducts.map(p => p.category).filter(Boolean));
+                                    const currentCategoryValid = billingCategory === 'all' || uniqueCats.has(billingCategory);
+                                    const activeCategory = currentCategoryValid ? billingCategory : 'all';
+
+                                    const filtered = billingProducts
+                                      .filter(p => activeCategory === 'all' || p.category === activeCategory);
+
+                                    if (filtered.length === 0) {
+                                      return (
+                                        <div className="col-span-full text-center py-10 text-xs text-slate-400 dark:text-slate-500 italic font-medium bg-slate-50/20 dark:bg-slate-900/10 border border-dashed border-slate-200/50 dark:border-slate-800/50 rounded-xl p-4">
+                                          No se encontraron productos en el facturador.
+                                        </div>
+                                      );
+                                    }
+
+                                    return filtered.map(prod => (
+                                      <div 
+                                        key={prod.id} 
+                                        className="group bg-slate-50/30 dark:bg-slate-900/40 hover:bg-white dark:hover:bg-slate-900 border border-slate-200/50 dark:border-slate-800/60 hover:border-brand-500/30 dark:hover:border-brand-500/20 rounded-2xl p-3.5 space-y-3.5 hover:shadow-md hover:shadow-brand-500/5 transition-all duration-300 text-left"
+                                      >
+                                        <div className="flex items-start gap-3.5">
+                                          <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-slate-200/60 dark:border-slate-800/80 flex-shrink-0 bg-slate-100 dark:bg-slate-950 shadow-inner">
+                                            <img 
+                                              src={prod.image} 
+                                              alt={prod.name} 
+                                              onError={(e) => {
+                                                e.currentTarget.src = 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=100';
+                                              }}
+                                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                            />
+                                          </div>
+                                          <div className="flex-1 min-w-0 space-y-1 text-left">
+                                            <h6 className="text-[12px] font-bold text-slate-800 dark:text-slate-150 group-hover:text-brand-500 dark:group-hover:text-brand-400 transition-colors duration-250 truncate leading-tight tracking-wide">
+                                              {prod.name}
+                                            </h6>
+                                            
+                                            <div className="flex items-center gap-1.5 flex-wrap">
+                                              <span className="inline-flex px-2 py-0.5 bg-brand-50 dark:bg-brand-950/20 text-brand-600 dark:text-brand-400 border border-brand-500/10 text-[9.5px] font-black rounded-lg">
+                                                {prod.price}
+                                              </span>
+                                              {prod.stock !== null && (
+                                                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 text-[8.5px] font-black rounded-lg border ${
+                                                  prod.stock > 0 
+                                                    ? 'bg-green-50 dark:bg-green-950/10 text-green-600 dark:text-green-400 border-green-500/10' 
+                                                    : 'bg-rose-50 dark:bg-rose-950/10 text-rose-600 dark:text-rose-400 border-rose-500/10'
+                                                }`}>
+                                                  <span className={`w-1 h-1 rounded-full ${prod.stock > 0 ? 'bg-green-500 animate-pulse' : 'bg-rose-500'}`} />
+                                                  Stock: {prod.stock}
+                                                </span>
+                                              )}
+                                            </div>
+                                            
+                                            <p className="text-[9.5px] text-slate-400 dark:text-slate-500 leading-normal line-clamp-2 pr-1 font-medium pt-0.5">
+                                              {prod.description}
+                                            </p>
+                                          </div>
+                                        </div>
+
+                                        <div className="flex gap-2 pt-3 border-t border-slate-200/30 dark:border-slate-800/40">
+                                          <button
+                                            type="button"
+                                            onClick={() => handleSendProductToChat(prod)}
+                                            className="flex-1 py-2 bg-brand-500 hover:bg-brand-secondary text-white font-extrabold text-[9px] uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 active:scale-[0.97] transition-all cursor-pointer shadow-sm shadow-brand-500/10"
+                                          >
+                                            <Send size={9.5} className="stroke-[2.5]" />
+                                            <span>Enviar Ficha</span>
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleSendQuoteToChat(prod)}
+                                            className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200/10 active:scale-[0.97] font-extrabold text-[9px] uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                                          >
+                                            <FileText size={9.5} className="stroke-[2.5]" />
+                                            <span>Cotizar</span>
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ));
+                                  })()}
+                                </div>
                               </div>
                             </div>
                           </div>
