@@ -297,16 +297,9 @@ export default function DashboardPage() {
   const getChatDisplayName = useCallback((chat: any) => {
     if (!chat || !chat.remoteJid) return 'Conversación';
     const cleanRemoteJid = chat.remoteJid.split('@')[0].split(':')[0];
+    const phoneFallback = `+${cleanRemoteJid}`;
     
-    // 1. WhatsApp Identity
-    const username = chat.username || chat.contact?.username;
-    const waName = username 
-      ? (username.startsWith('@') ? username : `@${username}`) 
-      : (chat.pushName || chat.name);
-    
-    const primaryName = waName || `+${cleanRemoteJid}`;
-    
-    // 2. CRM Registered Name (Check clean key, checked + key, or check active client state)
+    // 1. CRM Registered Name (Check clean key, checked + key, or check active client state)
     let registeredName = crmContactMap[cleanRemoteJid] || crmContactMap[`+${cleanRemoteJid}`];
     
     if (!registeredName && selectedChat && selectedChat.remoteJid === chat.remoteJid) {
@@ -317,11 +310,29 @@ export default function DashboardPage() {
       }
     }
     
-    if (registeredName) {
-      return `${primaryName} (${registeredName})`;
+    // Si tenemos un nombre agendado en el CRM, es el que se muestra con máxima prioridad
+    if (registeredName && registeredName.trim() !== '') {
+      return registeredName;
     }
     
-    return primaryName;
+    // 2. Si no está agendado, buscar el nombre de perfil de WhatsApp (pushName / notify)
+    const username = chat.username || chat.contact?.username;
+    const waName = chat.pushName || chat.name || username;
+    
+    // Función para detectar si un string es básicamente un número telefónico
+    const isPhoneNumber = (str: string) => {
+      if (!str) return false;
+      const clean = str.replace(/[\s\+\-\(\)]/g, '');
+      return /^\d+$/.test(clean) && clean.length > 6;
+    };
+    
+    if (waName && waName.trim() !== '' && !isPhoneNumber(waName)) {
+      const trimmed = waName.trim();
+      return trimmed.startsWith('@') ? trimmed : `@${trimmed}`;
+    }
+    
+    // 3. Fallback: número de celular
+    return phoneFallback;
   }, [crmContactMap, selectedChat, crmClient, crmContact]);
   
   // Colaboradores (Equipo) States
