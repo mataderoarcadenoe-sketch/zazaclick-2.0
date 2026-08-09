@@ -5694,63 +5694,82 @@ echo $response;`;
                                     return filtered.map(prod => (
                                       <div 
                                         key={prod.id} 
-                                        className="group bg-slate-50/30 dark:bg-slate-900/40 hover:bg-white dark:hover:bg-slate-900 border border-slate-200/50 dark:border-slate-800/60 hover:border-brand-500/30 dark:hover:border-brand-500/20 rounded-2xl p-3.5 space-y-3.5 hover:shadow-md hover:shadow-brand-500/5 transition-all duration-300 text-left"
+                                        className="group bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-3xl p-4 hover:shadow-xl hover:shadow-slate-200/20 dark:hover:shadow-none hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-300 text-left flex flex-col md:flex-row gap-4 items-stretch relative overflow-hidden"
                                       >
-                                        <div className="flex items-start gap-3.5">
-                                          <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-slate-200/60 dark:border-slate-800/80 flex-shrink-0 bg-slate-100 dark:bg-slate-950 shadow-inner">
-                                            <img 
-                                              src={prod.image} 
-                                              alt={prod.name} 
-                                              onError={(e) => {
-                                                e.currentTarget.src = 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=100';
-                                              }}
-                                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                            />
-                                          </div>
-                                          <div className="flex-1 min-w-0 space-y-1 text-left">
-                                            <h6 className="text-[12px] font-bold text-slate-800 dark:text-slate-100 group-hover:text-brand-500 dark:group-hover:text-brand-400 transition-colors duration-250 truncate leading-tight tracking-wide">
-                                              {prod.name}
-                                            </h6>
-                                            
-                                            <div className="flex items-center gap-1.5 flex-wrap">
-                                              <span className="inline-flex px-2 py-0.5 bg-brand-50 dark:bg-brand-950/20 text-brand-600 dark:text-brand-400 border border-brand-500/10 text-[9.5px] font-black rounded-lg">
-                                                {prod.price}
-                                              </span>
-                                              {prod.stock !== null && (
-                                                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 text-[8.5px] font-black rounded-lg border ${
-                                                  prod.stock > 0 
-                                                    ? 'bg-green-50 dark:bg-green-950/10 text-green-600 dark:text-green-400 border-green-500/10' 
-                                                    : 'bg-rose-50 dark:bg-rose-950/10 text-rose-600 dark:text-rose-400 border-rose-500/10'
-                                                }`}>
-                                                  <span className={`w-1 h-1 rounded-full ${prod.stock > 0 ? 'bg-green-500 animate-pulse' : 'bg-rose-500'}`} />
-                                                  Stock: {prod.stock}
-                                                </span>
-                                              )}
-                                            </div>
-                                            
-                                            <p className="text-[9.5px] text-slate-400 dark:text-slate-500 leading-normal line-clamp-2 pr-1 font-medium pt-0.5">
-                                              {prod.description}
-                                            </p>
-                                          </div>
+                                        {/* Left Column: Image */}
+                                        <div className="relative w-full md:w-[150px] lg:w-[180px] h-[140px] md:h-auto min-h-[140px] rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800/80 flex-shrink-0 bg-slate-50 dark:bg-slate-950 shadow-sm">
+                                          <img 
+                                            src={prod.image} 
+                                            alt={prod.name} 
+                                            onError={(e) => {
+                                              e.currentTarget.src = 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=100';
+                                            }}
+                                            className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                                          />
                                         </div>
 
-                                        <div className="flex gap-2 pt-3 border-t border-slate-200/30 dark:border-slate-800/40">
-                                          <button
-                                            type="button"
-                                            onClick={() => handleSendProductToChat(prod)}
-                                            className="flex-1 py-2 bg-brand-500 hover:bg-brand-secondary text-white font-extrabold text-[9px] uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 active:scale-[0.97] transition-all cursor-pointer shadow-sm shadow-brand-500/10"
-                                          >
-                                            <Send size={9.5} className="stroke-[2.5]" />
-                                            <span>Enviar Ficha</span>
-                                          </button>
-                                          <button
-                                            type="button"
-                                            onClick={() => handleSendQuoteToChat(prod)}
-                                            className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200/10 active:scale-[0.97] font-extrabold text-[9px] uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-                                          >
-                                            <FileText size={9.5} className="stroke-[2.5]" />
-                                            <span>Cotizar</span>
-                                          </button>
+                                        {/* Right Column: Info & Actions */}
+                                        <div className="flex-1 flex flex-col justify-between min-w-0 space-y-3.5 relative">
+                                          
+                                          {/* Top Row: Stock & Title */}
+                                          <div className="space-y-2">
+                                            <div className="flex items-center justify-between gap-2">
+                                              {/* Stock badge top-right */}
+                                              <div className="ml-auto flex-shrink-0">
+                                                {prod.stock !== null ? (
+                                                  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-[9px] font-extrabold rounded-full border ${
+                                                    prod.stock > 0 
+                                                      ? 'bg-green-50/60 dark:bg-green-950/20 text-green-600 dark:text-green-400 border-green-500/10' 
+                                                      : 'bg-rose-50/60 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border-rose-500/10'
+                                                  }`}>
+                                                    <span className={`w-1 h-1 rounded-full ${prod.stock > 0 ? 'bg-green-500 animate-pulse' : 'bg-rose-500'}`} />
+                                                    Stock: {prod.stock}
+                                                  </span>
+                                                ) : (
+                                                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[9px] font-extrabold rounded-full border bg-slate-50 dark:bg-slate-800 text-slate-400 border-slate-200/50 dark:border-slate-800">
+                                                    Sin Control
+                                                  </span>
+                                                )}
+                                              </div>
+                                            </div>
+
+                                            <h6 className="text-[13px] md:text-[14px] font-black text-slate-900 dark:text-slate-100 leading-snug tracking-tight whitespace-normal break-words pr-1">
+                                              {prod.name}
+                                            </h6>
+                                          </div>
+
+                                          {/* Middle Row: Price & Description */}
+                                          <div className="space-y-2">
+                                            <div>
+                                              <span className="inline-flex px-3 py-1.5 bg-slate-50 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 text-[11px] font-extrabold rounded-2xl border border-slate-100/50 dark:border-slate-800/60 leading-none">
+                                                {prod.price}
+                                              </span>
+                                            </div>
+                                            
+                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium line-clamp-3 pr-1">
+                                              {prod.description || 'Sin descripción disponible para este producto.'}
+                                            </p>
+                                          </div>
+
+                                          {/* Bottom Row: Actions (Vertical Stack) */}
+                                          <div className="flex flex-col gap-2 pt-2.5 w-full">
+                                            <button
+                                              type="button"
+                                              onClick={() => handleSendProductToChat(prod)}
+                                              className="w-full py-2 bg-slate-950 dark:bg-slate-100 hover:bg-black dark:hover:bg-white text-white dark:text-slate-900 font-extrabold text-[9px] uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all cursor-pointer shadow-sm"
+                                            >
+                                              <Send size={10} className="stroke-[2.5]" />
+                                              <span>Enviar Ficha</span>
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => handleSendQuoteToChat(prod)}
+                                              className="w-full py-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800/60 active:scale-[0.98] font-extrabold text-[9px] uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                                            >
+                                              <FileText size={10} className="stroke-[2.5]" />
+                                              <span>Cotizar</span>
+                                            </button>
+                                          </div>
                                         </div>
                                       </div>
                                     ));
