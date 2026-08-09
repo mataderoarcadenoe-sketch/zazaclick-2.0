@@ -4752,11 +4752,11 @@ echo $response;`;
 
                     {/* CRM Sidebar Pane */}
                     {selectedChat && selectedChat.remoteJid && selectedChat.remoteJid.endsWith && !selectedChat.remoteJid.endsWith('@g.us') && (
-                      <div className={`hidden md:grid md:col-span-6 min-h-0 relative ${showCrmDetails ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
+                      <div className={`hidden md:grid md:col-span-6 min-h-0 relative ${showCrmDetails || showNotesFloatingWindow ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
                         {/* Column 1: CRM Details */}
-                        {showCrmDetails && (
+                        {(showCrmDetails || showNotesFloatingWindow) && (
                           <div className="flex flex-col min-h-0 bg-slate-50/45 dark:bg-slate-950 text-left relative overflow-hidden">
-                          {crmLoading ? (
+                          {showCrmDetails ? (crmLoading ? (
                             <div className="flex-1 flex items-center justify-center py-8 text-center text-[11px] text-surface-400 animate-pulse p-4">Cargando datos CRM...</div>
                           ) : (
                             <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -5465,7 +5465,7 @@ echo $response;`;
                               </div>
                             )}
                           </div>
-                          )}
+                          )) : null}
                           
                           {/* Floating Notes Panel (No Bloqueante) */}
                                                   {showNotesFloatingWindow && crmClient && (
