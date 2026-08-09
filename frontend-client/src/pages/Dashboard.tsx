@@ -10,7 +10,7 @@ import {
   MessageSquare, Search, MessageCircle, Smile, ArrowLeft,
   Paperclip, FileText, Image, Video, Download, ChevronDown, ChevronLeft, ChevronRight, Users, Users2, Settings,
   Edit2, Phone, User, UserMinus, Tag, MoreVertical, Mail, MapPin, Building, Calendar,
-  Star, GitBranch, Grip, Gift, ListTodo
+  GitBranch, Grip, Gift, ListTodo
 } from 'lucide-react';
 import EmojiPicker, { Theme, EmojiStyle, Emoji } from 'emoji-picker-react';
 import { parse } from '@twemoji/parser';
@@ -357,6 +357,7 @@ export default function DashboardPage() {
   const [datePickerMonthTask, setDatePickerMonthTask] = useState(new Date().getMonth());
   const [selectedBirthdayMonth, setSelectedBirthdayMonth] = useState(new Date().getMonth());
   const [showMoreCrmFields, setShowMoreCrmFields] = useState(false);
+  const [showCrmDetails, setShowCrmDetails] = useState(true);
   
   // CRM Form States
   const [crmDocType, setCrmDocType] = useState<'DNI' | 'RUC'>('DNI');
@@ -3848,7 +3849,13 @@ echo $response;`;
                     </div>
 
                     {/* RIGHT PANEL: Message Area */}
-                    <div className={`${selectedChat ? (selectedChat.remoteJid && selectedChat.remoteJid.endsWith && !selectedChat.remoteJid.endsWith('@g.us') ? 'md:col-span-4' : 'md:col-span-9') : 'md:col-span-8'} flex-col min-h-0 bg-gradient-to-b from-slate-50/50 via-slate-100/20 to-indigo-50/15 dark:from-slate-950/65 dark:via-slate-900/40 dark:to-slate-950/55 w-full md:w-auto ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
+                    <div className={`${
+                      selectedChat 
+                        ? (selectedChat.remoteJid && selectedChat.remoteJid.endsWith && !selectedChat.remoteJid.endsWith('@g.us') 
+                            ? (showCrmDetails ? 'md:col-span-4' : 'md:col-span-7') 
+                            : 'md:col-span-9') 
+                        : 'md:col-span-8'
+                    } flex-col min-h-0 bg-gradient-to-b from-slate-50/50 via-slate-100/20 to-indigo-50/15 dark:from-slate-950/65 dark:via-slate-900/40 dark:to-slate-950/55 w-full md:w-auto ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
                       {selectedChat ? (
                         <div className="flex-1 flex flex-col min-h-0">
                           
@@ -3982,8 +3989,17 @@ echo $response;`;
                               
                               {/* Right Icons (Top Row) */}
                               <div className="flex items-center gap-2 hidden sm:flex">
-                                <button className="w-8 h-8 flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all cursor-pointer">
-                                  <Star size={14} />
+                                <button
+                                  type="button"
+                                  onClick={() => setShowCrmDetails(!showCrmDetails)}
+                                  className={`w-8 h-8 flex items-center justify-center rounded-xl border transition-all cursor-pointer ${
+                                    showCrmDetails
+                                      ? 'bg-brand-primary/10 border-brand-primary/30 text-brand-primary'
+                                      : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300'
+                                  }`}
+                                  title={showCrmDetails ? "Ocultar Ficha de Cliente" : "Mostrar Ficha de Cliente"}
+                                >
+                                  <User size={14} className={showCrmDetails ? "stroke-[2.5]" : ""} />
                                 </button>
                                 <button className="w-8 h-8 flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all cursor-pointer">
                                   <Tag size={14} />
@@ -4671,9 +4687,10 @@ echo $response;`;
 
                     {/* CRM Sidebar Pane */}
                     {selectedChat && selectedChat.remoteJid && selectedChat.remoteJid.endsWith && !selectedChat.remoteJid.endsWith('@g.us') && (
-                      <div className="hidden md:grid md:col-span-6 grid-cols-1 lg:grid-cols-2 min-h-0 relative">
+                      <div className={`hidden md:grid min-h-0 relative ${showCrmDetails ? 'md:col-span-6 grid-cols-1 lg:grid-cols-2' : 'md:col-span-3 grid-cols-1'}`}>
                         {/* Column 1: CRM Details */}
-                        <div className="flex flex-col min-h-0 bg-slate-50/45 dark:bg-slate-950 text-left relative overflow-hidden">
+                        {showCrmDetails && (
+                          <div className="flex flex-col min-h-0 bg-slate-50/45 dark:bg-slate-950 text-left relative overflow-hidden">
                           {crmLoading ? (
                             <div className="flex-1 flex items-center justify-center py-8 text-center text-[11px] text-surface-400 animate-pulse p-4">Cargando datos CRM...</div>
                           ) : (
@@ -5445,10 +5462,11 @@ echo $response;`;
                                                       </div>
                                                     </div>
                                                   )}
-                        </div>
+                          </div>
+                        )}
 
                         {/* Column 2: Facturación / Catálogo */}
-                        <div className="border-l border-slate-200/50 dark:border-slate-800/50 flex flex-col min-h-0 bg-slate-50/45 dark:bg-slate-950 text-left relative overflow-hidden">
+                        <div className={`flex flex-col min-h-0 bg-slate-50/45 dark:bg-slate-950 text-left relative overflow-hidden ${showCrmDetails ? 'border-l border-slate-200/50 dark:border-slate-800/50' : 'border-l-0'}`}>
                           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white dark:bg-slate-950/20">
                             <div className="space-y-4">
                               {/* Integration Header */}
