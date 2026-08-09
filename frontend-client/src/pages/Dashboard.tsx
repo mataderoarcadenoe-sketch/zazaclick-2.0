@@ -399,6 +399,9 @@ export default function DashboardPage() {
   const [isManualDepartamento, setIsManualDepartamento] = useState(false);
   const [isManualProvincia, setIsManualProvincia] = useState(false);
   const [isManualDistrito, setIsManualDistrito] = useState(false);
+  const [isOpenDeptMenu, setIsOpenDeptMenu] = useState(false);
+  const [isOpenProvMenu, setIsOpenProvMenu] = useState(false);
+  const [isOpenDistMenu, setIsOpenDistMenu] = useState(false);
 
   // Client Tasks States
   const [showActionsDropdown, setShowActionsDropdown] = useState(false);
@@ -5345,20 +5348,63 @@ echo $response;`;
                                          className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
                                        />
                                      ) : (
-                                       <select
-                                         value={crmDepartamento}
-                                         onChange={(e) => {
-                                           setCrmDepartamento(e.target.value);
-                                           setCrmProvincia('');
-                                           setCrmDistrito('');
-                                         }}
-                                         className="w-full px-2 py-1.5 bg-slate-100/70 dark:bg-slate-950 border border-slate-200/40 dark:border-slate-800/40 rounded-xl text-[11px] text-slate-800 dark:text-white focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-bold transition-all cursor-pointer"
-                                       >
-                                         <option value="">Seleccionar...</option>
-                                         {DEPARTAMENTOS_PERU.map(d => (
-                                           <option key={d} value={d}>{d}</option>
-                                         ))}
-                                       </select>
+                                       <div className="relative font-sans">
+                                         <button
+                                           type="button"
+                                           onClick={() => {
+                                             setIsOpenDeptMenu(!isOpenDeptMenu);
+                                             setIsOpenProvMenu(false);
+                                             setIsOpenDistMenu(false);
+                                           }}
+                                           className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border border-slate-200/45 dark:border-slate-800/45 rounded-xl text-[11px] text-slate-800 dark:text-white font-bold transition-all flex items-center justify-between cursor-pointer focus:outline-none select-none text-left"
+                                         >
+                                           <span className="truncate pr-1">{crmDepartamento || 'Seleccionar...'}</span>
+                                           <ChevronDown size={11} className={`text-slate-400 transition-transform duration-200 flex-shrink-0 ${isOpenDeptMenu ? 'rotate-180' : ''}`} />
+                                         </button>
+                                         
+                                         {isOpenDeptMenu && (
+                                           <>
+                                             <div className="fixed inset-0 z-40" onClick={() => setIsOpenDeptMenu(false)} />
+                                             <div className="absolute top-[100%] left-0 right-0 mt-1 z-50 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl shadow-xl max-h-48 overflow-y-auto p-1 space-y-0.5 scrollbar-thin text-left animate-fadeIn">
+                                               <button
+                                                 type="button"
+                                                 onClick={() => {
+                                                   setCrmDepartamento('');
+                                                   setCrmProvincia('');
+                                                   setCrmDistrito('');
+                                                   setIsOpenDeptMenu(false);
+                                                 }}
+                                                 className={`w-full px-2.5 py-1.5 rounded-lg text-[10.5px] font-bold text-left cursor-pointer transition-all ${
+                                                   crmDepartamento === '' 
+                                                     ? 'bg-slate-100 dark:bg-slate-850 text-slate-950 dark:text-white' 
+                                                     : 'text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                                                 }`}
+                                               >
+                                                 Seleccionar...
+                                               </button>
+                                               {DEPARTAMENTOS_PERU.map(d => (
+                                                 <button
+                                                   key={d}
+                                                   type="button"
+                                                   onClick={() => {
+                                                     setCrmDepartamento(d);
+                                                     setCrmProvincia('');
+                                                     setCrmDistrito('');
+                                                     setIsOpenDeptMenu(false);
+                                                   }}
+                                                   className={`w-full px-2.5 py-1.5 rounded-lg text-[10.5px] font-bold text-left cursor-pointer transition-all ${
+                                                     crmDepartamento === d 
+                                                       ? 'bg-brand-primary text-white' 
+                                                       : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                                                   }`}
+                                                 >
+                                                   {d}
+                                                 </button>
+                                               ))}
+                                             </div>
+                                           </>
+                                         )}
+                                       </div>
                                      )}
                                    </div>
 
@@ -5391,20 +5437,62 @@ echo $response;`;
                                          className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all disabled:opacity-50"
                                        />
                                      ) : (
-                                       <select
-                                         value={crmProvincia}
-                                         disabled={!crmDepartamento}
-                                         onChange={(e) => {
-                                           setCrmProvincia(e.target.value);
-                                           setCrmDistrito('');
-                                         }}
-                                         className="w-full px-2 py-1.5 bg-slate-100/70 dark:bg-slate-950 border border-slate-200/40 dark:border-slate-800/40 rounded-xl text-[11px] text-slate-800 dark:text-white focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-bold transition-all cursor-pointer disabled:opacity-50"
-                                       >
-                                         <option value="">Seleccionar...</option>
-                                         {Object.keys(UBIGEO_DATA[crmDepartamento] || {}).map(p => (
-                                           <option key={p} value={p}>{p}</option>
-                                         ))}
-                                       </select>
+                                       <div className="relative font-sans">
+                                         <button
+                                           type="button"
+                                           disabled={!crmDepartamento}
+                                           onClick={() => {
+                                             setIsOpenProvMenu(!isOpenProvMenu);
+                                             setIsOpenDeptMenu(false);
+                                             setIsOpenDistMenu(false);
+                                           }}
+                                           className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border border-slate-200/45 dark:border-slate-800/45 rounded-xl text-[11px] text-slate-800 dark:text-white font-bold transition-all flex items-center justify-between cursor-pointer focus:outline-none select-none text-left disabled:opacity-50"
+                                         >
+                                           <span className="truncate pr-1">{crmProvincia || 'Seleccionar...'}</span>
+                                           <ChevronDown size={11} className={`text-slate-400 transition-transform duration-200 flex-shrink-0 ${isOpenProvMenu ? 'rotate-180' : ''}`} />
+                                         </button>
+                                         
+                                         {isOpenProvMenu && (
+                                           <>
+                                             <div className="fixed inset-0 z-40" onClick={() => setIsOpenProvMenu(false)} />
+                                             <div className="absolute top-[100%] left-0 right-0 mt-1 z-50 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl shadow-xl max-h-48 overflow-y-auto p-1 space-y-0.5 scrollbar-thin text-left animate-fadeIn">
+                                               <button
+                                                 type="button"
+                                                 onClick={() => {
+                                                   setCrmProvincia('');
+                                                   setCrmDistrito('');
+                                                   setIsOpenProvMenu(false);
+                                                 }}
+                                                 className={`w-full px-2.5 py-1.5 rounded-lg text-[10.5px] font-bold text-left cursor-pointer transition-all ${
+                                                   crmProvincia === '' 
+                                                     ? 'bg-slate-100 dark:bg-slate-850 text-slate-950 dark:text-white' 
+                                                     : 'text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                                                 }`}
+                                               >
+                                                 Seleccionar...
+                                               </button>
+                                               {Object.keys(UBIGEO_DATA[crmDepartamento] || {}).map(p => (
+                                                 <button
+                                                   key={p}
+                                                   type="button"
+                                                   onClick={() => {
+                                                     setCrmProvincia(p);
+                                                     setCrmDistrito('');
+                                                     setIsOpenProvMenu(false);
+                                                   }}
+                                                   className={`w-full px-2.5 py-1.5 rounded-lg text-[10.5px] font-bold text-left cursor-pointer transition-all ${
+                                                     crmProvincia === p 
+                                                       ? 'bg-brand-primary text-white' 
+                                                       : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                                                   }`}
+                                                 >
+                                                   {p}
+                                                 </button>
+                                               ))}
+                                             </div>
+                                           </>
+                                         )}
+                                       </div>
                                      )}
                                    </div>
 
@@ -5433,17 +5521,60 @@ echo $response;`;
                                          className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all disabled:opacity-50"
                                        />
                                      ) : (
-                                       <select
-                                         value={crmDistrito}
-                                         disabled={!crmProvincia}
-                                         onChange={(e) => setCrmDistrito(e.target.value)}
-                                         className="w-full px-2 py-1.5 bg-slate-100/70 dark:bg-slate-950 border border-slate-200/40 dark:border-slate-800/40 rounded-xl text-[11px] text-slate-800 dark:text-white focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-bold transition-all cursor-pointer disabled:opacity-50"
-                                       >
-                                         <option value="">Seleccionar...</option>
-                                         {(UBIGEO_DATA[crmDepartamento]?.[crmProvincia] || []).map(dist => (
-                                           <option key={dist} value={dist}>{dist}</option>
-                                         ))}
-                                       </select>
+                                       <div className="relative font-sans">
+                                         <button
+                                           type="button"
+                                           disabled={!crmProvincia}
+                                           onClick={() => {
+                                             setIsOpenDistMenu(!isOpenDistMenu);
+                                             setIsOpenDeptMenu(false);
+                                             setIsOpenProvMenu(false);
+                                           }}
+                                           className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border border-slate-200/45 dark:border-slate-800/45 rounded-xl text-[11px] text-slate-800 dark:text-white font-bold transition-all flex items-center justify-between cursor-pointer focus:outline-none select-none text-left disabled:opacity-50"
+                                         >
+                                           <span className="truncate pr-1">{crmDistrito || 'Seleccionar...'}</span>
+                                           <ChevronDown size={11} className={`text-slate-400 transition-transform duration-200 flex-shrink-0 ${isOpenDistMenu ? 'rotate-180' : ''}`} />
+                                         </button>
+                                         
+                                         {isOpenDistMenu && (
+                                           <>
+                                             <div className="fixed inset-0 z-40" onClick={() => setIsOpenDistMenu(false)} />
+                                             <div className="absolute top-[100%] left-0 right-0 mt-1 z-50 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl shadow-xl max-h-48 overflow-y-auto p-1 space-y-0.5 scrollbar-thin text-left animate-fadeIn">
+                                               <button
+                                                 type="button"
+                                                 onClick={() => {
+                                                   setCrmDistrito('');
+                                                   setIsOpenDistMenu(false);
+                                                 }}
+                                                 className={`w-full px-2.5 py-1.5 rounded-lg text-[10.5px] font-bold text-left cursor-pointer transition-all ${
+                                                   crmDistrito === '' 
+                                                     ? 'bg-slate-100 dark:bg-slate-850 text-slate-950 dark:text-white' 
+                                                     : 'text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                                                 }`}
+                                               >
+                                                 Seleccionar...
+                                               </button>
+                                               {(UBIGEO_DATA[crmDepartamento]?.[crmProvincia] || []).map(dist => (
+                                                 <button
+                                                   key={dist}
+                                                   type="button"
+                                                   onClick={() => {
+                                                     setCrmDistrito(dist);
+                                                     setIsOpenDistMenu(false);
+                                                   }}
+                                                   className={`w-full px-2.5 py-1.5 rounded-lg text-[10.5px] font-bold text-left cursor-pointer transition-all ${
+                                                     crmDistrito === dist 
+                                                       ? 'bg-brand-primary text-white' 
+                                                       : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                                                   }`}
+                                                 >
+                                                   {dist}
+                                                 </button>
+                                               ))}
+                                             </div>
+                                           </>
+                                         )}
+                                       </div>
                                      )}
                                    </div>
                                  </div>
