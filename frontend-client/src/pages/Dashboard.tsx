@@ -3800,7 +3800,8 @@ echo $response;`;
                               if (searchLower) {
                                 const nameMatch = contactName.includes(searchLower);
                                 const tagMatch = tags.some(t => t.toLowerCase().includes(searchLower));
-                                return nameMatch || tagMatch;
+                                const phoneMatch = cleanRemoteJid.includes(searchLower);
+                                return nameMatch || tagMatch || phoneMatch;
                               }
 
                               return true;
