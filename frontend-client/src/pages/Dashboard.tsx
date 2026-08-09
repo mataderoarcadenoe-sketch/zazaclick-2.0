@@ -418,6 +418,12 @@ export default function DashboardPage() {
   const [kanbanAgentFilter, setKanbanAgentFilter] = useState<string>('all');
   const [draggedCardJid, setDraggedCardJid] = useState<string | null>(null);
   const [activeDragStage, setActiveDragStage] = useState<string | null>(null);
+  const [pipelineSubTab, setPipelineSubTab] = useState<'kanban' | 'quotes'>('kanban');
+  const [allQuotes, setAllQuotes] = useState<any[]>([]);
+  const [allQuotesLoading, setAllQuotesLoading] = useState(false);
+  const [quotesSearch, setQuotesSearch] = useState('');
+  const [quotesStatusFilter, setQuotesStatusFilter] = useState('all');
+  const [expandedAllQuotes, setExpandedAllQuotes] = useState<{[key: number]: boolean}>({});
 
   // Client Tasks States
   const [showActionsDropdown, setShowActionsDropdown] = useState(false);
@@ -2500,6 +2506,26 @@ export default function DashboardPage() {
     if (selectedChat) { fetchClientOrders(); } else { setClientOrders([]); }
   }, [selectedChat, fetchClientOrders]);
 
+  const fetchAllQuotes = useCallback(async () => {
+    setAllQuotesLoading(true);
+    try {
+      const res = await api.get('/crm/orders');
+      if (res.data?.success) {
+        setAllQuotes(res.data.data || []);
+      }
+    } catch (err: any) {
+      console.error('Error fetching all quotes:', err.message);
+    } finally {
+      setAllQuotesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'pipeline') {
+      fetchAllQuotes();
+    }
+  }, [activeTab, fetchAllQuotes]);
+
   const handleSendBulkQuoteToChat = async () => {
     if (!selectedChat) { showNotification('Selecciona una conversación.', 'error'); return; }
     const items = quoteCarts[selectedChat.remoteJid] || [];
@@ -2523,7 +2549,14 @@ export default function DashboardPage() {
       if (!dbRes.data?.success) { showNotification('Error al registrar pedido.', 'error'); return; }
       useCrmStore.getState().addOptimisticMessage(messageText, selectedChat.remoteJid);
       const wsRes = await api.post(`/instances/chats/${selectedInstanceForChats}/send`, { remoteJid: selectedChat.remoteJid, text: messageText });
-      if (wsRes.data?.success) { showNotification('Cotización enviada.', 'success'); clearCart(); setIsCartOpen(false); fetchClientOrders(); fetchPipelineData(); }
+      if (wsRes.data?.success) {
+        showNotification('Cotización enviada.', 'success');
+        clearCart();
+        setIsCartOpen(false);
+        fetchClientOrders();
+        fetchPipelineData();
+        fetchAllQuotes();
+      }
       else { showNotification('Error al enviar WhatsApp.', 'error'); }
     } catch (err: any) { showNotification('Error al enviar la cotización.', 'error'); }
   };
@@ -2531,7 +2564,12 @@ export default function DashboardPage() {
   const handleUpdateOrderStatus = async (orderId: number, status: 'CONFIRMADO' | 'CANCELADO') => {
     try {
       const res = await api.post(`/crm/orders/${orderId}/status`, { status });
-      if (res.data?.success) { showNotification(status === 'CONFIRMADO' ? '¡Venta confirmada!' : 'Pedido cancelado.', 'success'); fetchClientOrders(); fetchPipelineData(); }
+      if (res.data?.success) {
+        showNotification(status === 'CONFIRMADO' ? '¡Venta confirmada!' : 'Pedido cancelado.', 'success');
+        fetchClientOrders();
+        fetchPipelineData();
+        fetchAllQuotes();
+      }
       else { showNotification('Error al cambiar estado.', 'error'); }
     } catch (err: any) { showNotification('Error al actualizar pedido.', 'error'); }
   };
@@ -6345,164 +6383,359 @@ echo $response;`;
             )}
 
 
-            {/* PIPELINE COMERCIAL (KANBAN BOARD) */}
+            {/* PIPELINE COMERCIAL (KANBAN BOARD / LISTADO COTIZACIONES) */}
             {activeTab === 'pipeline' && (
               <div className="space-y-5 animate-fadeIn h-full flex flex-col min-h-0 text-left">
-                <div className="flex items-center justify-end gap-3 flex-shrink-0">
-                  
+                {/* Tab Selector & Filter Bar */}
+                <div className="flex items-center justify-between flex-wrap gap-3.5 border-b border-slate-200/50 dark:border-slate-800/80 pb-3.5 flex-shrink-0">
+                  <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/60 rounded-xl">
+                    <button
+                      type="button"
+                      onClick={() => setPipelineSubTab('kanban')}
+                      className={`px-4 py-2 rounded-lg text-[10.5px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                        pipelineSubTab === 'kanban'
+                          ? 'bg-white dark:bg-slate-900 text-slate-800 dark:text-white shadow-sm'
+                          : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                      }`}
+                    >
+                      📊 Tablero Kanban
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setPipelineSubTab('quotes'); fetchAllQuotes(); }}
+                      className={`px-4 py-2 rounded-lg text-[10.5px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                        pipelineSubTab === 'quotes'
+                          ? 'bg-white dark:bg-slate-900 text-slate-800 dark:text-white shadow-sm'
+                          : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                      }`}
+                    >
+                      🧾 Lista de Cotizaciones
+                    </button>
+                  </div>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => fetchPipelineData()}
-                      disabled={pipelineLoading}
+                      onClick={() => { if (pipelineSubTab === 'kanban') { fetchPipelineData(); } else { fetchAllQuotes(); } }}
+                      disabled={pipelineLoading || allQuotesLoading}
                       className="p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-surface-600 dark:text-slate-300 rounded-xl transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5 text-xs font-bold"
                     >
-                      <RefreshCw size={13} className={pipelineLoading ? 'animate-spin' : ''} />
-                      <span>Actualizar Tablero</span>
+                      <RefreshCw size={13} className={pipelineLoading || allQuotesLoading ? 'animate-spin' : ''} />
+                      <span>Actualizar Datos</span>
                     </button>
                   </div>
                 </div>
 
-                {pipelineLoading && pipelineData.length === 0 ? (
-                  <div className="flex-1 flex items-center justify-center">
-                    <div className="text-center space-y-2.5">
-                      <RefreshCw size={24} className="animate-spin text-brand-primary mx-auto" />
-                      <p className="text-xs text-surface-400 font-bold">Cargando tablero comercial...</p>
+                {pipelineSubTab === 'kanban' ? (
+                  <>
+                    {/* Kanban Filters Bar */}
+                    <div className="flex items-center gap-2.5 px-1 pb-1 flex-wrap">
+                      <div className="relative flex-1 min-w-[160px]">
+                        <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                          type="text"
+                          value={kanbanSearch}
+                          onChange={(e) => setKanbanSearch(e.target.value)}
+                          placeholder="Buscar prospecto..."
+                          className="w-full pl-8 pr-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[10px] font-medium text-slate-700 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
+                        />
+                      </div>
+                      <select
+                        value={kanbanAgentFilter}
+                        onChange={(e) => setKanbanAgentFilter(e.target.value)}
+                        className="px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[10px] font-bold text-slate-700 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
+                      >
+                        <option value="all">Todos los Asesores</option>
+                        <option value="unassigned">Sin Asignar</option>
+                        {users.map((u: any) => (
+                          <option key={u.id} value={String(u.id)}>{u.name}</option>
+                        ))}
+                      </select>
                     </div>
-                  </div>
-                ) : (
-                  (() => {
-                    const columns = getPipelineColumns();
-                    return (
-                      <div className="flex-1 overflow-x-auto pb-4 flex gap-4.5 items-start min-h-0 hide-scrollbar select-none">
-                        {PIPELINE_STAGES.map((columnName) => {
-                          const items = columns[columnName] || [];
-                          return (
-                            <div 
-                              key={columnName} 
-                              className="w-72 shrink-0 bg-slate-50/50 dark:bg-slate-900/20 border border-slate-200/50 dark:border-slate-800/80 rounded-2xl flex flex-col max-h-[72vh]"
-                            >
-                              {/* Column Header */}
-                              <div className="p-3.5 flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800/80 bg-white/40 dark:bg-slate-900/40 rounded-t-2xl">
-                                <h4 className="text-[11px] font-extrabold text-slate-800 dark:text-white uppercase tracking-wider truncate mr-2">
-                                  {columnName}
-                                </h4>
-                                <span className="bg-slate-200/80 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                                  {items.length}
-                                </span>
-                              </div>
 
-                              {/* Column Body / Cards List */}
-                              <div className="flex-1 overflow-y-auto p-3 pb-24 space-y-2.5 min-h-[200px]">
-                                {items.length === 0 ? (
-                                  <div className="h-28 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex items-center justify-center text-[10px] text-slate-400 font-medium">
-                                    Sin contactos
+                    {pipelineLoading && pipelineData.length === 0 ? (
+                      <div className="flex-1 flex items-center justify-center">
+                        <div className="text-center space-y-2.5">
+                          <RefreshCw size={24} className="animate-spin text-brand-primary mx-auto" />
+                          <p className="text-xs text-surface-400 font-bold">Cargando tablero comercial...</p>
+                        </div>
+                      </div>
+                    ) : (
+                      (() => {
+                        const columns = getPipelineColumns();
+                        const stageColors: Record<string, string> = {
+                          'Nuevo': 'border-t-slate-500',
+                          'Contactado': 'border-t-blue-500',
+                          'Interesado': 'border-t-purple-500',
+                          'Cotización enviada': 'border-t-amber-500',
+                          'Negociación': 'border-t-indigo-500',
+                          'Pago pendiente': 'border-t-rose-500',
+                          'Cliente': 'border-t-emerald-500',
+                          'Postventa': 'border-t-violet-500'
+                        };
+                        return (
+                          <div className="flex-1 overflow-x-auto pb-4 flex gap-4.5 items-start min-h-0 hide-scrollbar select-none">
+                            {PIPELINE_STAGES.map((columnName) => {
+                              const rawItems = columns[columnName] || [];
+                              const items = rawItems.filter((item: any) => {
+                                const matchSearch = !kanbanSearch.trim() || item.name.toLowerCase().includes(kanbanSearch.toLowerCase()) || item.phone.includes(kanbanSearch);
+                                let matchAgent = true;
+                                if (kanbanAgentFilter === 'unassigned') matchAgent = !item.assigned_agent_id;
+                                else if (kanbanAgentFilter !== 'all') matchAgent = String(item.assigned_agent_id) === kanbanAgentFilter;
+                                return matchSearch && matchAgent;
+                              });
+                              const totalCol = items.reduce((s: number, i: any) => s + (Number(i.active_quote_amount) || 0), 0);
+                              const borderColor = stageColors[columnName] || 'border-t-slate-400';
+                              const isOver = activeDragStage === columnName;
+                              return (
+                                <div
+                                  key={columnName}
+                                  onDragOver={(e) => { e.preventDefault(); if (activeDragStage !== columnName) setActiveDragStage(columnName); }}
+                                  onDragLeave={() => { if (activeDragStage === columnName) setActiveDragStage(null); }}
+                                  onDrop={(e) => {
+                                    e.preventDefault();
+                                    const jid = e.dataTransfer.getData('text/plain') || draggedCardJid;
+                                    if (jid) {
+                                      const found = pipelineData.find((p: any) => p.remoteJid === jid);
+                                      movePipelineStage(jid, columnName, found?.name || '');
+                                    }
+                                    setDraggedCardJid(null);
+                                    setActiveDragStage(null);
+                                  }}
+                                  className={`w-72 shrink-0 bg-slate-50/50 dark:bg-slate-900/20 border-t-4 ${borderColor} border-x border-b border-slate-200/50 dark:border-slate-800/85 rounded-b-2xl rounded-t-lg flex flex-col max-h-[72vh] transition-all duration-200 ${
+                                    isOver ? 'bg-indigo-500/5 dark:bg-indigo-500/10 ring-2 ring-indigo-500/20 scale-[1.01]' : ''
+                                  }`}
+                                >
+                                  {/* Column Header */}
+                                  <div className="p-3.5 flex flex-col gap-1.5 border-b border-slate-200/50 dark:border-slate-800/80 bg-white/40 dark:bg-slate-900/40">
+                                    <div className="flex items-center justify-between">
+                                      <h4 className="text-[10.5px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider truncate mr-2">
+                                        {columnName}
+                                      </h4>
+                                      <span className="bg-slate-200/85 dark:bg-slate-800/85 text-slate-700 dark:text-slate-300 text-[9.5px] font-black px-2 py-0.5 rounded-full">
+                                        {items.length}
+                                      </span>
+                                    </div>
+                                    {totalCol > 0 && (
+                                      <div className="flex items-center justify-between text-[9px] font-bold text-slate-500 dark:text-slate-500 border-t border-dashed border-slate-200 dark:border-slate-800 pt-1">
+                                        <span>Total Cotizado:</span>
+                                        <span className="text-indigo-600 dark:text-indigo-400">S/. {totalCol.toFixed(2)}</span>
+                                      </div>
+                                    )}
                                   </div>
-                                ) : (
-                                  items.map((item, index) => {
-                                    const initials = item.name.substring(0, 2).toUpperCase();
-                                    const isCrm = item.type === 'crm';
-                                    return (
-                                      <div 
-                                        key={item.remoteJid}
-                                        className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-xl p-3 flex flex-col gap-2 hover:border-slate-300 dark:hover:border-slate-700 transition-all text-left relative group cursor-pointer"
-                                        onClick={() => {
-                                          const matchingChat = chats.find(c => c.remoteJid === item.remoteJid);
-                                          if (matchingChat) {
-                                            setSelectedChat(matchingChat);
-                                          } else {
-                                            setSelectedChat({
-                                              remoteJid: item.remoteJid,
-                                              pushName: item.name,
-                                              unreadCount: 0
-                                            });
-                                          }
-                                          setActiveTab('chats');
-                                        }}
-                                      >
-                                        <div className="flex items-start justify-between gap-2.5">
-                                          <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-xs shrink-0">
-                                              {initials}
-                                            </div>
-                                            <div className="truncate text-left">
-                                              <h5 className="text-[11px] font-extrabold text-slate-800 dark:text-white truncate uppercase tracking-tight font-sans">
-                                                {item.name}
-                                              </h5>
-                                              <span className="text-[9px] text-surface-400 font-medium block mt-0.5">
-                                                +{item.phone}
-                                              </span>
-                                            </div>
-                                          </div>
-                                          
-                                          {/* Dropdown de cambio rápido de etapa */}
-                                          <div 
-                                            className="relative flex-shrink-0"
-                                            onClick={(e) => e.stopPropagation()}
+
+                                  {/* Column Body */}
+                                  <div className="flex-1 overflow-y-auto p-3 pb-24 space-y-2.5 min-h-[200px]">
+                                    {items.length === 0 ? (
+                                      <div className="h-24 border border-dashed border-slate-200/50 dark:border-slate-800 rounded-2xl flex items-center justify-center text-[9px] text-slate-400 font-medium">Sin prospectos</div>
+                                    ) : (
+                                      items.map((item: any, index: number) => {
+                                        const initials = item.name.substring(0, 2).toUpperCase();
+                                        const isCrm = item.type === 'crm';
+                                        const isDragged = draggedCardJid === item.remoteJid;
+                                        return (
+                                          <div
+                                            key={item.remoteJid}
+                                            draggable={true}
+                                            onDragStart={(e) => { setDraggedCardJid(item.remoteJid); e.dataTransfer.setData('text/plain', item.remoteJid); }}
+                                            onDragEnd={() => { setDraggedCardJid(null); setActiveDragStage(null); }}
+                                            className={`bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/75 rounded-2xl p-3.5 flex flex-col gap-2.5 hover:border-slate-300 dark:hover:border-slate-700 shadow-sm transition-all text-left relative group cursor-pointer ${
+                                              isDragged ? 'opacity-40 border-dashed border-indigo-500' : ''
+                                            }`}
+                                            onClick={() => {
+                                              const mc = chats.find((c: any) => c && c.remoteJid === item.remoteJid);
+                                              if (mc) setSelectedChat(mc);
+                                              else setSelectedChat({ remoteJid: item.remoteJid, pushName: item.name, unreadCount: 0 });
+                                              setActiveTab('chats');
+                                            }}
                                           >
-                                            <button 
-                                              onClick={() => setOpenMoveDropdownJid(openMoveDropdownJid === item.remoteJid ? null : item.remoteJid)}
-                                              className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all cursor-pointer"
-                                              title="Mover de etapa"
-                                            >
-                                              <ChevronDown size={14} />
-                                            </button>
-
-                                            {openMoveDropdownJid === item.remoteJid && (
-                                                <div className={`absolute right-0 w-44 bg-[#1E293B] dark:bg-slate-950 rounded-xl shadow-premium-lg border-0 py-1.5 z-40 animate-fadeIn ${
-                                                  index > 0 && index === items.length - 1
-                                                    ? 'bottom-full mb-1 origin-bottom-right'
-                                                    : 'top-full mt-1 origin-top-right'
-                                                }`}>
-                                                <div className="px-2.5 py-0.5 text-[8px] font-bold text-slate-400 uppercase tracking-wider border-b border-white/5 mb-1">
-                                                  Cambiar a etapa:
+                                            <div className="flex items-start justify-between gap-2">
+                                              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                                <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center font-black text-[10px] shrink-0 uppercase">{initials}</div>
+                                                <div className="truncate text-left flex-1 min-w-0">
+                                                  <h5 className="text-[11px] font-black text-slate-800 dark:text-white truncate uppercase tracking-tight">{item.name}</h5>
+                                                  <span className="text-[9px] text-slate-400 font-bold block mt-0.5">+{item.phone}</span>
                                                 </div>
-                                                {PIPELINE_STAGES.map((stg) => (
-                                                  <button
-                                                    key={stg}
-                                                    onClick={() => {
-                                                      movePipelineStage(item.remoteJid, stg, item.name);
-                                                      setOpenMoveDropdownJid(null);
-                                                    }}
-                                                    className={`w-full px-2.5 py-1.5 text-left text-[10px] font-semibold flex items-center justify-between hover:bg-white/10 transition-colors cursor-pointer ${
-                                                      columnName === stg ? 'text-brand-primary bg-white/5' : 'text-white'
-                                                    }`}
-                                                  >
-                                                    <span>{stg}</span>
-                                                    {columnName === stg && (
-                                                      <div className="w-1 h-1 rounded-full bg-brand-primary" />
-                                                    )}
-                                                  </button>
-                                                ))}
                                               </div>
-                                            )}
+                                              <div className="relative flex-shrink-0 flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                                                <button onClick={() => { const mc = chats.find((c: any) => c && c.remoteJid === item.remoteJid); if (mc) setSelectedChat(mc); else setSelectedChat({ remoteJid: item.remoteJid, pushName: item.name, unreadCount: 0 }); setActiveTab('chats'); }} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 opacity-0 group-hover:opacity-100 transition-all cursor-pointer" title="Ir al chat"><MessageCircle size={13} className="stroke-[2.5]" /></button>
+                                                <button onClick={() => setOpenMoveDropdownJid(openMoveDropdownJid === item.remoteJid ? null : item.remoteJid)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all cursor-pointer" title="Mover de etapa"><ChevronDown size={13} /></button>
+                                                {openMoveDropdownJid === item.remoteJid && (
+                                                  <div className={`absolute right-0 w-44 bg-[#1E293B] dark:bg-slate-950 rounded-xl shadow-premium-lg border-0 py-1.5 z-40 animate-fadeIn ${index > 0 && index === items.length - 1 ? 'bottom-full mb-1 origin-bottom-right' : 'top-full mt-1 origin-top-right'}`}>
+                                                    <div className="px-2.5 py-0.5 text-[8px] font-bold text-slate-400 uppercase tracking-wider border-b border-white/5 mb-1">Cambiar a etapa:</div>
+                                                    {PIPELINE_STAGES.map((stg) => (
+                                                      <button key={stg} onClick={() => { movePipelineStage(item.remoteJid, stg, item.name); setOpenMoveDropdownJid(null); }} className={`w-full px-2.5 py-1.5 text-left text-[10px] font-semibold flex items-center justify-between hover:bg-white/10 transition-colors cursor-pointer ${columnName === stg ? 'text-indigo-400 bg-white/5' : 'text-white'}`}>
+                                                        <span>{stg}</span>
+                                                        {columnName === stg && <div className="w-1 h-1 rounded-full bg-indigo-500" />}
+                                                      </button>
+                                                    ))}
+                                                  </div>
+                                                )}
+                                              </div>
+                                            </div>
+                                            {/* Rich Card Badges */}
+                                            <div className="flex flex-wrap items-center gap-1.5 border-t border-slate-100/50 dark:border-slate-800/40 pt-2">
+                                              {Number(item.active_quote_amount) > 0 && (
+                                                <span className="px-1.5 py-0.5 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[8.5px] font-extrabold rounded-md border border-indigo-500/10 uppercase tracking-wide">S/. {Number(item.active_quote_amount).toFixed(2)}</span>
+                                              )}
+                                              {isCrm && item.category && (
+                                                <span className="px-1.5 py-0.5 bg-slate-100 text-slate-600 dark:bg-slate-800/80 dark:text-slate-400 text-[8px] font-extrabold rounded-md uppercase tracking-wider">{item.category}</span>
+                                              )}
+                                              {item.assigned_agent_name && (
+                                                <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 text-[8.5px] font-bold rounded-md ml-auto">👤 {item.assigned_agent_name.split(' ')[0]}</span>
+                                              )}
+                                            </div>
                                           </div>
-                                        </div>
+                                        );
+                                      })
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()
+                    )}
+                  </>
+                ) : (
+                  /* GENERAL QUOTES / ORDERS LIST (VISTA AMPLIA) */
+                  <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 rounded-3xl p-5 shadow-premium-sm space-y-4">
+                    {/* Filters Bar */}
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <div className="relative flex-1 min-w-[200px]">
+                        <Search size={13} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                          type="text"
+                          value={quotesSearch}
+                          onChange={(e) => setQuotesSearch(e.target.value)}
+                          placeholder="Buscar por cliente o cotización #..."
+                          className="w-full pl-8.5 pr-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-[10.5px] font-medium text-slate-700 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
+                        />
+                      </div>
+                      <select
+                        value={quotesStatusFilter}
+                        onChange={(e) => setQuotesStatusFilter(e.target.value)}
+                        className="px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-[10.5px] font-bold text-slate-700 dark:text-slate-200 cursor-pointer focus:outline-none"
+                      >
+                        <option value="all">Todos los Estados</option>
+                        <option value="PENDIENTE">Pendientes</option>
+                        <option value="CONFIRMADO">Confirmados</option>
+                        <option value="CANCELADO">Cancelados</option>
+                      </select>
+                    </div>
 
-                                        {isCrm && item.category && (
-                                          <div className="flex mt-1">
-                                            <span className="px-1.5 py-0.5 bg-pastel-100/50 dark:bg-brand-primary/10 text-brand-secondary dark:text-brand-primary text-[8.5px] font-bold rounded-md">
-                                              {item.category}
-                                            </span>
+                    {allQuotesLoading && allQuotes.length === 0 ? (
+                      <div className="flex-1 flex items-center justify-center py-12">
+                        <RefreshCw size={20} className="animate-spin text-indigo-500" />
+                      </div>
+                    ) : allQuotes.length === 0 ? (
+                      <div className="flex-1 flex items-center justify-center py-16 text-[11px] text-slate-400 font-medium">
+                        No hay cotizaciones registradas en el sistema.
+                      </div>
+                    ) : (
+                      (() => {
+                        const filteredQuotes = allQuotes.filter((q: any) => {
+                          const query = quotesSearch.toLowerCase().trim();
+                          const matchSearch = !query || 
+                            q.quote_id.toLowerCase().includes(query) || 
+                            (q.client_name && q.client_name.toLowerCase().includes(query)) ||
+                            (q.client_phone && q.client_phone.includes(query));
+                          const matchStatus = quotesStatusFilter === 'all' || q.status === quotesStatusFilter;
+                          return matchSearch && matchStatus;
+                        });
+
+                        return (
+                          <div className="flex-1 overflow-y-auto min-h-0 pr-1 space-y-3">
+                            {filteredQuotes.length === 0 ? (
+                              <div className="text-center py-12 text-[10px] text-slate-400">Ninguna cotización coincide con los filtros.</div>
+                            ) : (
+                              filteredQuotes.map((quote: any) => {
+                                const isExpanded = expandedAllQuotes[quote.id];
+                                const statusColors: Record<string, string> = {
+                                  'PENDIENTE': 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+                                  'CONFIRMADO': 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+                                  'CANCELADO': 'bg-red-500/10 text-red-500 dark:text-red-400 border-red-500/20'
+                                };
+                                return (
+                                  <div key={quote.id} className="bg-slate-50/50 dark:bg-slate-900/30 rounded-2xl border border-slate-200/40 dark:border-slate-800/50 overflow-hidden shadow-sm hover:border-slate-200 dark:hover:border-slate-700 transition-all">
+                                    <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
+                                      <div className="space-y-1 min-w-0">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <span className="text-[11px] font-black text-slate-800 dark:text-white">Cotización #{quote.quote_id}</span>
+                                          <span className={`px-1.5 py-0.5 text-[8px] font-black rounded-md border uppercase tracking-wider ${statusColors[quote.status] || statusColors['PENDIENTE']}`}>{quote.status}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-[9.5px] text-slate-500 dark:text-slate-400 flex-wrap">
+                                          <span className="font-extrabold uppercase text-indigo-600 dark:text-indigo-400">{quote.client_name || 'Desconocido'}</span>
+                                          <span>·</span>
+                                          <span className="font-semibold">+{quote.client_phone || quote.phone_number}</span>
+                                          <span>·</span>
+                                          <span>{new Date(quote.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-3.5 self-end sm:self-center">
+                                        <div className="text-right">
+                                          <span className="text-[8.5px] text-slate-400 font-bold block uppercase tracking-wider">Total Cotizado</span>
+                                          <span className="text-[13px] font-black text-indigo-600 dark:text-indigo-400">S/. {Number(quote.total_amount).toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                          <button
+                                            type="button"
+                                            onClick={() => handleGoToChat(quote.client_phone || quote.phone_number, quote.client_name)}
+                                            className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-indigo-500 hover:border-indigo-200 rounded-xl transition-all cursor-pointer shadow-sm"
+                                            title="Ir al chat"
+                                          >
+                                            <MessageCircle size={13} className="stroke-[2.5]" />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => setExpandedAllQuotes({ ...expandedAllQuotes, [quote.id]: !isExpanded })}
+                                            className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-white rounded-xl transition-all cursor-pointer shadow-sm"
+                                            title="Ver detalles"
+                                          >
+                                            <ChevronDown size={13} className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    
+                                    {isExpanded && (
+                                      <div className="px-4 pb-4 border-t border-slate-100 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 p-3.5 space-y-3.5">
+                                        <div className="space-y-1.5">
+                                          <div className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-2">Detalle de Productos:</div>
+                                          {quote.items && quote.items.map((it: any, idx: number) => (
+                                            <div key={idx} className="flex items-center justify-between text-[10px] py-1 border-b border-dashed border-slate-100 dark:border-slate-800 last:border-b-0">
+                                              <span className="text-slate-700 dark:text-slate-300 font-semibold truncate flex-1 mr-3">{it.product_name}</span>
+                                              <span className="text-slate-500 dark:text-slate-400 font-bold whitespace-nowrap">x{it.quantity} · S/. {Number(it.price).toFixed(2)} ({it.unit_type})</span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                        {quote.status === 'PENDIENTE' && (
+                                          <div className="flex gap-2.5 pt-1 max-w-xs">
+                                            <button
+                                              onClick={() => handleUpdateOrderStatus(quote.id, 'CONFIRMADO')}
+                                              className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[9.5px] font-black rounded-xl cursor-pointer transition-all uppercase tracking-wider"
+                                            >
+                                              Confirmar Venta
+                                            </button>
+                                            <button
+                                              onClick={() => handleUpdateOrderStatus(quote.id, 'CANCELADO')}
+                                              className="flex-1 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-[9.5px] font-black rounded-xl cursor-pointer transition-all uppercase tracking-wider"
+                                            >
+                                              Cancelar
+                                            </button>
                                           </div>
-                                        )}
-                                        
-                                        {!isCrm && item.lastMsg && (
-                                          <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-1 leading-normal italic font-sans">
-                                            {item.lastMsg}
-                                          </p>
                                         )}
                                       </div>
-                                    );
-                                  })
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })()
+                                    )}
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
+                        );
+                      })()
+                    )}
+                  </div>
                 )}
               </div>
             )}

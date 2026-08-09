@@ -1871,26 +1871,38 @@ router.post('/orders', async (req: AuthenticatedRequest, res: Response) => {
  */
 router.get('/orders', async (req: AuthenticatedRequest, res: Response) => {
   const { phone_number } = req.query;
-  if (!phone_number) {
-    return res.status(400).json({ success: false, error: 'phone_number es obligatorio.' });
-  }
-
   const userId = req.userId;
-  const cleanPhone = (phone_number as string).replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net').split('@')[0];
 
   try {
-    const resolvedPhone = await getRealPhoneIfNeeded(userId, cleanPhone);
+    let orders: any[] = [];
 
-    // 1. Obtener órdenes
-    const ordersResult = await pool.query(
-      `SELECT o.id, o.quote_id, o.total_amount, o.status, o.created_at, o.updated_at
-       FROM crm_orders o
-       WHERE o.user_id = $1 AND o.phone_number = $2
-       ORDER BY o.created_at DESC`,
-      [userId, resolvedPhone]
-    );
+    if (phone_number) {
+      const cleanPhone = (phone_number as string).replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net').split('@')[0];
+      const resolvedPhone = await getRealPhoneIfNeeded(userId, cleanPhone);
 
-    const orders = ordersResult.rows;
+      // 1. Obtener órdenes de un contacto
+      const ordersResult = await pool.query(
+        `SELECT o.id, o.quote_id, o.total_amount, o.status, o.created_at, o.updated_at
+         FROM crm_orders o
+         WHERE o.user_id = $1 AND o.phone_number = $2
+         ORDER BY o.created_at DESC`,
+        [userId, resolvedPhone]
+      );
+      orders = ordersResult.rows;
+    } else {
+      // 1. Obtener todas las órdenes con detalles del cliente/contacto
+      const ordersResult = await pool.query(
+        `SELECT o.id, o.quote_id, o.total_amount, o.status, o.created_at, o.updated_at,
+                cl.name AS client_name, co.phone_number AS client_phone
+         FROM crm_orders o
+         JOIN crm_contacts co ON o.contact_id = co.id
+         JOIN crm_clients cl ON co.client_id = cl.id
+         WHERE o.user_id = $1
+         ORDER BY o.created_at DESC`,
+        [userId]
+      );
+      orders = ordersResult.rows;
+    }
 
     // 2. Obtener ítems para cada orden
     for (const order of orders) {
