@@ -405,6 +405,20 @@ export default function DashboardPage() {
   const [isOpenDistMenu, setIsOpenDistMenu] = useState(false);
   const [isOpenAgentMenu, setIsOpenAgentMenu] = useState(false);
 
+  // Borrador de Cotización y Pedidos States
+  const [quoteCarts, setQuoteCarts] = useState<{[key: string]: any[]}>({});
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [clientOrders, setClientOrders] = useState<any[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [expandedOrders, setExpandedOrders] = useState<{[key: number]: boolean}>({});
+  const [crmSubTab, setCrmSubTab] = useState<'details' | 'notes' | 'orders'>('details');
+
+  // Kanban Pipeline Filters and Drag & Drop States
+  const [kanbanSearch, setKanbanSearch] = useState('');
+  const [kanbanAgentFilter, setKanbanAgentFilter] = useState<string>('all');
+  const [draggedCardJid, setDraggedCardJid] = useState<string | null>(null);
+  const [activeDragStage, setActiveDragStage] = useState<string | null>(null);
+
   // Client Tasks States
   const [showActionsDropdown, setShowActionsDropdown] = useState(false);
   const [showTasksModal, setShowTasksModal] = useState(false);
@@ -2422,6 +2436,104 @@ export default function DashboardPage() {
     } finally {
       setNewTaskCreating(false);
     }
+  };
+
+  // --- Borrador de Cotización (Carrito) Métodos ---
+  const getSelectedChatCart = useCallback(() => {
+    if (!selectedChat) return [];
+    return quoteCarts[selectedChat.remoteJid] || [];
+  }, [selectedChat, quoteCarts]);
+
+  const addToCart = (product: any, customPrice?: string, customUnit?: string, customPriceDescription?: string) => {
+    if (!selectedChat) {
+      showNotification('Selecciona una conversación activa para armar el borrador.', 'error');
+      return;
+    }
+    const remoteJid = selectedChat.remoteJid;
+    const currentCart = quoteCarts[remoteJid] || [];
+    const priceStr = customPrice !== undefined ? customPrice : product.price;
+    const cleanPrice = parseFloat(String(priceStr).replace(/[^0-9.]/g, '')) || 0;
+    const desc = customPriceDescription || '';
+    const compositeKey = `${product.id}-${desc}`;
+    const existingIndex = currentCart.findIndex((item: any) => item.compositeKey === compositeKey);
+    let updatedCart = [...currentCart];
+    if (existingIndex > -1) {
+      updatedCart[existingIndex] = { ...updatedCart[existingIndex], qty: updatedCart[existingIndex].qty + 1 };
+    } else {
+      updatedCart.push({ compositeKey, product, qty: 1, price: cleanPrice, priceDescription: desc, unitType: customUnit || product.unit_type_id || 'NIU' });
+    }
+    setQuoteCarts({ ...quoteCarts, [remoteJid]: updatedCart });
+    showNotification(`"${product.name}" añadido al borrador.`, 'success');
+  };
+
+  const removeFromCart = (compositeKey: string) => {
+    if (!selectedChat) return;
+    const remoteJid = selectedChat.remoteJid;
+    const currentCart = quoteCarts[remoteJid] || [];
+    setQuoteCarts({ ...quoteCarts, [remoteJid]: currentCart.filter((item: any) => item.compositeKey !== compositeKey) });
+  };
+
+  const updateCartQty = (compositeKey: string, newQty: number) => {
+    if (!selectedChat || newQty < 1) return;
+    const remoteJid = selectedChat.remoteJid;
+    const currentCart = quoteCarts[remoteJid] || [];
+    setQuoteCarts({ ...quoteCarts, [remoteJid]: currentCart.map((item: any) => item.compositeKey === compositeKey ? { ...item, qty: newQty } : item) });
+  };
+
+  const clearCart = () => {
+    if (!selectedChat) return;
+    setQuoteCarts({ ...quoteCarts, [selectedChat.remoteJid]: [] });
+  };
+
+  const fetchClientOrders = useCallback(async () => {
+    if (!selectedChat) return;
+    setOrdersLoading(true);
+    try {
+      const phone = selectedChat.remoteJid.split('@')[0];
+      const res = await api.get(`/crm/orders?phone_number=${phone}`);
+      if (res.data?.success) setClientOrders(res.data.data || []);
+    } catch (err: any) { console.error('Error fetching orders:', err.message); }
+    finally { setOrdersLoading(false); }
+  }, [selectedChat]);
+
+  useEffect(() => {
+    if (selectedChat) { fetchClientOrders(); } else { setClientOrders([]); }
+  }, [selectedChat, fetchClientOrders]);
+
+  const handleSendBulkQuoteToChat = async () => {
+    if (!selectedChat) { showNotification('Selecciona una conversación.', 'error'); return; }
+    const items = quoteCarts[selectedChat.remoteJid] || [];
+    if (items.length === 0) { showNotification('Agrega productos al borrador.', 'error'); return; }
+    const quoteId = Math.floor(100000 + Math.random() * 900000);
+    const clientName = crmClient?.name || getChatDisplayName(selectedChat) || 'Contacto';
+    let total = 0;
+    items.forEach((item: any) => { total += item.price * item.qty; });
+    const subtotalNeto = total / 1.18;
+    const igv = total - subtotalNeto;
+    let messageText = `🧾 *COTIZACIÓN #${quoteId}*\n---------------------------------------\n👤 *Cliente*: ${clientName}\n\n📦 *Detalle*:`;
+    items.forEach((item: any, idx: number) => {
+      messageText += `\n\n${idx + 1}. *${item.product.name}*\n   💵 P.U.: S/. ${item.price.toFixed(2)} (${item.unitType})`;
+      if (item.priceDescription) messageText += `\n   🏷️ Tarifa: ${item.priceDescription}`;
+      messageText += `\n   🔢 Cant: ${item.qty}\n   💰 Subtotal: S/. ${(item.price * item.qty).toFixed(2)}`;
+    });
+    messageText += `\n\n---------------------------------------\n📊 *Subtotal Neto*: S/. ${subtotalNeto.toFixed(2)}\n📈 *IGV (18%)*: S/. ${igv.toFixed(2)}\n💰 *TOTAL*: S/. ${total.toFixed(2)}\n\n_Validez: 7 días hábiles._`;
+    try {
+      const orderData = { phone_number: selectedChat.remoteJid, quote_id: String(quoteId), total_amount: total, pushName: clientName, items: items.map((item: any) => ({ product_id: String(item.product.id), product_name: item.product.name, quantity: item.qty, price: item.price, unit_type: item.unitType, price_description: item.priceDescription || null })) };
+      const dbRes = await api.post('/crm/orders', orderData);
+      if (!dbRes.data?.success) { showNotification('Error al registrar pedido.', 'error'); return; }
+      useCrmStore.getState().addOptimisticMessage(messageText, selectedChat.remoteJid);
+      const wsRes = await api.post(`/instances/chats/${selectedInstanceForChats}/send`, { remoteJid: selectedChat.remoteJid, text: messageText });
+      if (wsRes.data?.success) { showNotification('Cotización enviada.', 'success'); clearCart(); setIsCartOpen(false); fetchClientOrders(); fetchPipelineData(); }
+      else { showNotification('Error al enviar WhatsApp.', 'error'); }
+    } catch (err: any) { showNotification('Error al enviar la cotización.', 'error'); }
+  };
+
+  const handleUpdateOrderStatus = async (orderId: number, status: 'CONFIRMADO' | 'CANCELADO') => {
+    try {
+      const res = await api.post(`/crm/orders/${orderId}/status`, { status });
+      if (res.data?.success) { showNotification(status === 'CONFIRMADO' ? '¡Venta confirmada!' : 'Pedido cancelado.', 'success'); fetchClientOrders(); fetchPipelineData(); }
+      else { showNotification('Error al cambiar estado.', 'error'); }
+    } catch (err: any) { showNotification('Error al actualizar pedido.', 'error'); }
   };
 
   const handleGoToChat = (phone: string, clientName: string) => {
