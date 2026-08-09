@@ -389,6 +389,8 @@ export default function DashboardPage() {
   const [datePickerYear, setDatePickerYear] = useState(new Date().getFullYear());
   const [datePickerMonth, setDatePickerMonth] = useState(new Date().getMonth());
   const [crmLanguage, setCrmLanguage] = useState('Español');
+  const [crmCompany, setCrmCompany] = useState('');
+  const [crmAssignedAgentId, setCrmAssignedAgentId] = useState<string>('');
 
   // Client Tasks States
   const [showActionsDropdown, setShowActionsDropdown] = useState(false);
@@ -4820,6 +4822,8 @@ echo $response;`;
                                         setCrmCategoryId(crmContact?.category_id?.toString() || '');
                                         setCrmBirthday(crmClient.birthday ? crmClient.birthday.substring(0, 10) : '');
                                         setCrmLanguage(crmClient.idioma || 'Español');
+                                        setCrmCompany(crmClient.empresa || '');
+                                        setCrmAssignedAgentId(crmContact?.assigned_agent_id || '');
                                         setCrmIsEditing(true);
                                       }}
                                       className="text-[9.5px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer transition-colors"
@@ -5097,8 +5101,20 @@ echo $response;`;
                               </div>
                             ) : (
                               /* Create / Edit Form Mode */
-                              <div className="space-y-3">
-                                <div className="space-y-1 text-left">
+                              <div className="space-y-4 pb-6">
+                                {/* Title and Subtitle Header */}
+                                <div className="pb-3 border-b border-slate-100 dark:border-slate-800/60 text-left">
+                                  <h5 className="text-[12px] font-extrabold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                                    <User size={13} className="text-brand-primary" />
+                                    <span>{crmClient ? 'Editar Ficha del Cliente' : 'Crear Ficha del Cliente'}</span>
+                                  </h5>
+                                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 leading-relaxed font-medium">
+                                    {crmClient ? 'Modifica los datos del contacto e información de facturación.' : 'Registra un nuevo contacto en el sistema de facturación y CRM.'}
+                                  </p>
+                                </div>
+
+                                <div className="space-y-3">
+                                  <div className="space-y-1 text-left">
                                   <label className="text-[8.5px] font-bold text-surface-505 dark:text-surface-400 uppercase tracking-wider block">Identificación DNI / RUC</label>
                                   <div className="flex gap-1.5">
                                     <div className="relative">
@@ -5453,6 +5469,45 @@ echo $response;`;
                                   />
                                 </div>
 
+                                <div className="space-y-1 text-left">
+                                  <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Teléfono (WhatsApp)</label>
+                                  <input
+                                    type="text"
+                                    disabled
+                                    value={crmContact?.phone_number || ''}
+                                    className="w-full px-2.5 py-1.5 bg-slate-100/40 dark:bg-slate-950/40 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl text-[11px] text-slate-400 dark:text-slate-500 font-medium cursor-not-allowed"
+                                  />
+                                </div>
+
+                                <div className="space-y-1 text-left">
+                                  <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Empresa</label>
+                                  <input
+                                    type="text"
+                                    placeholder="No registrada"
+                                    value={crmCompany}
+                                    onChange={(e) => setCrmCompany(e.target.value)}
+                                    className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
+                                  />
+                                </div>
+
+                                <div className="space-y-1 text-left">
+                                  <label className="text-[8.5px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-wider block">Asesor Asignado</label>
+                                  <select
+                                    value={crmAssignedAgentId}
+                                    onChange={(e) => setCrmAssignedAgentId(e.target.value)}
+                                    className="w-full px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] text-slate-800 dark:text-white focus:outline-none focus:bg-white dark:focus:bg-slate-900/40 focus:ring-1 focus:ring-brand-primary/20 font-bold transition-all cursor-pointer"
+                                  >
+                                    <option value="" className="bg-white dark:bg-slate-900 text-slate-850 dark:text-slate-200 font-bold">Sin Asignar</option>
+                                    {teamMembers.map((agent: any) => (
+                                      <option key={agent.id} value={agent.id} className="bg-white dark:bg-slate-900 text-slate-850 dark:text-slate-200 font-bold">
+                                        {agent.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+
+                              </div>
+
                                 <div className="flex gap-2 pt-1.5">
                                   {crmClient && (
                                     <button
@@ -5704,30 +5759,30 @@ echo $response;`;
                                     return filtered.map(prod => (
                                       <div 
                                         key={prod.id} 
-                                        className="group bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-3xl p-4 hover:shadow-xl hover:shadow-slate-200/20 dark:hover:shadow-none hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-300 text-left flex flex-col md:flex-row gap-4 items-center relative overflow-hidden"
+                                        className="group bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-3xl p-4 hover:shadow-xl hover:shadow-slate-200/20 dark:hover:shadow-none hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-300 text-left flex flex-col gap-3.5 items-stretch relative overflow-hidden"
                                       >
-                                        {/* Left Column: Image */}
-                                        <div className="relative w-full md:w-[150px] lg:w-[180px] h-[140px] md:h-[150px] lg:h-[175px] rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800/80 flex-shrink-0 bg-slate-50 dark:bg-slate-950 shadow-sm">
-                                          <img 
-                                            src={prod.image} 
-                                            alt={prod.name} 
-                                            onError={(e) => {
-                                              e.currentTarget.src = 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=100';
-                                            }}
-                                            className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
-                                          />
-                                        </div>
+                                        {/* Top Block: Image and Information Row */}
+                                        <div className="flex flex-row gap-4 items-start">
+                                          {/* Left Column: Image */}
+                                          <div className="relative w-[110px] h-[110px] md:w-[130px] md:h-[130px] rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800/80 flex-shrink-0 bg-slate-50 dark:bg-slate-950 shadow-sm">
+                                            <img 
+                                              src={prod.image} 
+                                              alt={prod.name} 
+                                              onError={(e) => {
+                                                e.currentTarget.src = 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=100';
+                                              }}
+                                              className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                                            />
+                                          </div>
 
-                                        {/* Right Column: Info & Actions */}
-                                        <div className="flex-1 flex flex-col justify-between min-w-0 space-y-3.5 relative">
-                                          
-                                          {/* Top Row: Stock & Title */}
-                                          <div className="space-y-2">
+                                          {/* Right Column: Info details */}
+                                          <div className="flex-1 min-w-0 flex flex-col justify-between h-[110px] md:h-[130px] relative">
+                                            
+                                            {/* Stock and Category line */}
                                             <div className="flex items-center justify-between gap-2">
-                                              {/* Stock badge top-right */}
                                               <div className="ml-auto flex-shrink-0">
                                                 {prod.stock !== null ? (
-                                                  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-[9px] font-extrabold rounded-full border ${
+                                                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[8.5px] font-extrabold rounded-full border ${
                                                     prod.stock > 0 
                                                       ? 'bg-green-50/60 dark:bg-green-950/20 text-green-600 dark:text-green-400 border-green-500/10' 
                                                       : 'bg-rose-50/60 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border-rose-500/10'
@@ -5736,50 +5791,50 @@ echo $response;`;
                                                     Stock: {prod.stock}
                                                   </span>
                                                 ) : (
-                                                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[9px] font-extrabold rounded-full border bg-slate-50 dark:bg-slate-800 text-slate-400 border-slate-200/50 dark:border-slate-800">
+                                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[8.5px] font-extrabold rounded-full border bg-slate-50 dark:bg-slate-800 text-slate-400 border-slate-200/50 dark:border-slate-800">
                                                     Sin Control
                                                   </span>
                                                 )}
                                               </div>
                                             </div>
 
-                                            <h6 className="text-[13px] md:text-[14px] font-black text-slate-900 dark:text-slate-100 leading-snug tracking-tight whitespace-normal break-words pr-1">
+                                            {/* Title */}
+                                            <h6 className="text-[13px] md:text-[13.5px] font-black text-slate-900 dark:text-slate-100 leading-snug tracking-tight truncate pr-1">
                                               {prod.name}
                                             </h6>
-                                          </div>
 
-                                          {/* Middle Row: Price & Description */}
-                                          <div className="space-y-2">
+                                            {/* Price Tag */}
                                             <div>
-                                              <span className="inline-flex px-3 py-1.5 bg-slate-50 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 text-[11px] font-extrabold rounded-2xl border border-slate-100/50 dark:border-slate-800/60 leading-none">
+                                              <span className="inline-flex px-2.5 py-1 bg-slate-50 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 text-[10.5px] font-extrabold rounded-xl border border-slate-100/50 dark:border-slate-800/60 leading-none">
                                                 {prod.price}
                                               </span>
                                             </div>
                                             
-                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium line-clamp-3 pr-1">
+                                            {/* Description */}
+                                            <p className="text-[9.5px] text-slate-400 dark:text-slate-500 leading-relaxed font-medium line-clamp-2 pr-1 pt-0.5">
                                               {prod.description || 'Sin descripción disponible para este producto.'}
                                             </p>
                                           </div>
+                                        </div>
 
-                                          {/* Bottom Row: Actions (Vertical Stack) */}
-                                          <div className="flex flex-col gap-2 pt-2.5 w-full">
-                                            <button
-                                              type="button"
-                                              onClick={() => handleSendProductToChat(prod)}
-                                              className="w-full py-2 bg-slate-950 dark:bg-slate-100 hover:bg-black dark:hover:bg-white text-white dark:text-slate-900 font-extrabold text-[9px] uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all cursor-pointer shadow-sm"
-                                            >
-                                              <Send size={10} className="stroke-[2.5]" />
-                                              <span>Enviar Ficha</span>
-                                            </button>
-                                            <button
-                                              type="button"
-                                              onClick={() => handleSendQuoteToChat(prod)}
-                                              className="w-full py-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800/60 active:scale-[0.98] font-extrabold text-[9px] uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-                                            >
-                                              <FileText size={10} className="stroke-[2.5]" />
-                                              <span>Cotizar</span>
-                                            </button>
-                                          </div>
+                                        {/* Bottom Block: Actions Row */}
+                                        <div className="flex flex-row gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800/40 w-full">
+                                          <button
+                                            type="button"
+                                            onClick={() => handleSendProductToChat(prod)}
+                                            className="flex-1 py-2 bg-slate-950 dark:bg-slate-100 hover:bg-black dark:hover:bg-white text-white dark:text-slate-900 font-extrabold text-[9px] uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all cursor-pointer shadow-sm"
+                                          >
+                                            <Send size={10} className="stroke-[2.5]" />
+                                            <span>Enviar Ficha</span>
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleSendQuoteToChat(prod)}
+                                            className="flex-1 py-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800/60 active:scale-[0.98] font-extrabold text-[9px] uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                                          >
+                                            <FileText size={10} className="stroke-[2.5]" />
+                                            <span>Cotizar</span>
+                                          </button>
                                         </div>
                                       </div>
                                     ));
