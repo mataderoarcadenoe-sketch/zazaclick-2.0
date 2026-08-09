@@ -335,7 +335,8 @@ router.get('/contacts/map', async (req: AuthenticatedRequest, res: Response) => 
     const contactMap: Record<string, string> = {};
     for (const row of mapRes.rows) {
       if (row.phone_number) {
-        contactMap[row.phone_number] = row.name;
+        const cleanPhone = row.phone_number.split('@')[0].split(':')[0].replace('+', '');
+        contactMap[cleanPhone] = row.name;
       }
     }
 

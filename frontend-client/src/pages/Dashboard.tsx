@@ -306,14 +306,23 @@ export default function DashboardPage() {
     
     const primaryName = waName || `+${cleanRemoteJid}`;
     
-    // 2. CRM Registered Name
-    const registeredName = crmContactMap[cleanRemoteJid];
+    // 2. CRM Registered Name (Check clean key, checked + key, or check active client state)
+    let registeredName = crmContactMap[cleanRemoteJid] || crmContactMap[`+${cleanRemoteJid}`];
+    
+    if (!registeredName && selectedChat && selectedChat.remoteJid === chat.remoteJid) {
+      if (crmClient && crmClient.name) {
+        registeredName = crmClient.name;
+      } else if (crmContact && crmContact.name) {
+        registeredName = crmContact.name;
+      }
+    }
+    
     if (registeredName) {
       return `${primaryName} (${registeredName})`;
     }
     
     return primaryName;
-  }, [crmContactMap]);
+  }, [crmContactMap, selectedChat, crmClient, crmContact]);
   
   // Colaboradores (Equipo) States
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
