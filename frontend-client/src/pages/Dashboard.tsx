@@ -5704,10 +5704,10 @@ echo $response;`;
                                     return filtered.map(prod => (
                                       <div 
                                         key={prod.id} 
-                                        className="group bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-3xl p-4 hover:shadow-xl hover:shadow-slate-200/20 dark:hover:shadow-none hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-300 text-left flex flex-col md:flex-row gap-4 items-stretch relative overflow-hidden"
+                                        className="group bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-3xl p-4 hover:shadow-xl hover:shadow-slate-200/20 dark:hover:shadow-none hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-300 text-left flex flex-col md:flex-row gap-4 items-center relative overflow-hidden"
                                       >
                                         {/* Left Column: Image */}
-                                        <div className="relative w-full md:w-[150px] lg:w-[180px] h-[140px] md:h-auto min-h-[140px] rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800/80 flex-shrink-0 bg-slate-50 dark:bg-slate-950 shadow-sm">
+                                        <div className="relative w-full md:w-[150px] lg:w-[180px] h-[140px] md:h-[150px] lg:h-[175px] rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800/80 flex-shrink-0 bg-slate-50 dark:bg-slate-950 shadow-sm">
                                           <img 
                                             src={prod.image} 
                                             alt={prod.name} 
