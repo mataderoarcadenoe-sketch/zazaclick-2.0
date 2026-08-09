@@ -6558,66 +6558,68 @@ echo $response;`;
                         const columns = getPipelineColumns();
                         const stageThemes: Record<string, { headerBg: string, columnBg: string, border: string, badgeBg: string, titleText: string, totalText: string }> = {
                           'Nuevo': {
-                            headerBg: 'bg-slate-500 dark:bg-slate-800',
+                            headerBg: 'bg-slate-600 dark:bg-slate-800',
                             columnBg: 'bg-slate-50/60 dark:bg-slate-900/10',
                             border: 'border-slate-200 dark:border-slate-800/80',
-                            badgeBg: 'bg-slate-600/90 text-white',
+                            badgeBg: 'bg-slate-700/80 dark:bg-slate-900 text-white',
                             titleText: 'text-white font-black',
                             totalText: 'text-slate-200'
                           },
                           'Contactado': {
-                            headerBg: 'bg-blue-650 dark:bg-blue-800',
+                            headerBg: 'bg-blue-500 dark:bg-blue-650', // Tailwind fallback is bg-blue-600 if bg-blue-500 is used
+                            headerBg: 'bg-blue-500 dark:bg-blue-700',
                             columnBg: 'bg-blue-50/30 dark:bg-blue-950/10',
-                            border: 'border-blue-200 dark:border-blue-900/30',
-                            badgeBg: 'bg-blue-700/80 text-white',
+                            border: 'border-blue-200/40 dark:border-blue-900/30',
+                            badgeBg: 'bg-blue-600/80 dark:bg-blue-900 text-white',
                             titleText: 'text-white font-black',
                             totalText: 'text-blue-100'
                           },
                           'Interesado': {
-                            headerBg: 'bg-purple-600 dark:bg-purple-800',
+                            headerBg: 'bg-purple-500 dark:bg-purple-700',
                             columnBg: 'bg-purple-50/30 dark:bg-purple-950/10',
-                            border: 'border-purple-200 dark:border-purple-900/30',
-                            badgeBg: 'bg-purple-700/80 text-white',
+                            border: 'border-purple-200/40 dark:border-purple-900/30',
+                            badgeBg: 'bg-purple-600/80 dark:bg-purple-900 text-white',
                             titleText: 'text-white font-black',
                             totalText: 'text-purple-100'
                           },
                           'Cotización enviada': {
                             headerBg: 'bg-amber-500 dark:bg-amber-600',
                             columnBg: 'bg-amber-50/30 dark:bg-amber-950/10',
-                            border: 'border-amber-200 dark:border-amber-900/30',
-                            badgeBg: 'bg-amber-600 text-white',
+                            border: 'border-amber-200/40 dark:border-amber-900/30',
+                            badgeBg: 'bg-amber-600 dark:bg-amber-700 text-white',
                             titleText: 'text-white font-black',
                             totalText: 'text-amber-100'
                           },
                           'Negociación': {
-                            headerBg: 'bg-indigo-600 dark:bg-indigo-800',
+                            headerBg: 'bg-indigo-500 dark:bg-indigo-700',
                             columnBg: 'bg-indigo-50/30 dark:bg-indigo-950/10',
-                            border: 'border-indigo-200 dark:border-indigo-900/30',
-                            badgeBg: 'bg-indigo-700/80 text-white',
+                            border: 'border-indigo-200/40 dark:border-indigo-900/30',
+                            badgeBg: 'bg-indigo-650/80 dark:bg-indigo-900 text-white',
+                            badgeBg: 'bg-indigo-600 dark:bg-indigo-900 text-white',
                             titleText: 'text-white font-black',
                             totalText: 'text-indigo-100'
                           },
                           'Pago pendiente': {
-                            headerBg: 'bg-rose-600 dark:bg-rose-800',
+                            headerBg: 'bg-rose-500 dark:bg-rose-700',
                             columnBg: 'bg-rose-50/30 dark:bg-rose-950/10',
-                            border: 'border-rose-200 dark:border-rose-900/30',
-                            badgeBg: 'bg-rose-700/80 text-white',
+                            border: 'border-rose-200/40 dark:border-rose-900/30',
+                            badgeBg: 'bg-rose-600 dark:bg-rose-900 text-white',
                             titleText: 'text-white font-black',
                             totalText: 'text-rose-100'
                           },
                           'Cliente': {
-                            headerBg: 'bg-emerald-600 dark:bg-emerald-800',
+                            headerBg: 'bg-emerald-500 dark:bg-emerald-700',
                             columnBg: 'bg-emerald-50/30 dark:bg-emerald-950/10',
-                            border: 'border-emerald-200 dark:border-emerald-900/30',
-                            badgeBg: 'bg-emerald-700/80 text-white',
+                            border: 'border-emerald-200/40 dark:border-emerald-900/30',
+                            badgeBg: 'bg-emerald-600 dark:bg-emerald-900 text-white',
                             titleText: 'text-white font-black',
                             totalText: 'text-emerald-100'
                           },
                           'Postventa': {
-                            headerBg: 'bg-violet-600 dark:bg-violet-800',
+                            headerBg: 'bg-violet-500 dark:bg-violet-700',
                             columnBg: 'bg-violet-50/30 dark:bg-violet-950/10',
-                            border: 'border-violet-200 dark:border-violet-900/30',
-                            badgeBg: 'bg-violet-700/80 text-white',
+                            border: 'border-violet-200/40 dark:border-violet-900/30',
+                            badgeBg: 'bg-violet-600 dark:bg-violet-900 text-white',
                             titleText: 'text-white font-black',
                             totalText: 'text-violet-100'
                           }
