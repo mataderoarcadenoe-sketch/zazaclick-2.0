@@ -86,7 +86,7 @@ const APIPERU_TOKEN = process.env.APIPERU_TOKEN || '76ca7246c8a8c464fd551b6555e7
 async function getRealPhoneIfNeeded(userId: string | undefined, phone: string): Promise<string> {
   const cleanPhone = phone.split('@')[0].split(':')[0];
   if (!userId) return cleanPhone;
-  const isLid = cleanPhone.startsWith('1000') && cleanPhone.length >= 13;
+  const isLid = (cleanPhone.startsWith('1') && cleanPhone.length >= 13) || cleanPhone.length >= 14;
   if (isLid) {
     try {
       const userCheck = await pool.query("SELECT parent_id FROM users WHERE id = $1", [userId]);

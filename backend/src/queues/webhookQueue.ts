@@ -17,6 +17,23 @@ export const webhookQueue = new Queue('webhook-queue', {
   connection: connectionConfig
 });
 
+// Helper to resolve JID to real WhatsApp JID if it is a LID
+async function resolveJidIfNeeded(instanceName: string, jid: string): Promise<string> {
+  if (!jid) return jid;
+  let cleanJid = jid.replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net');
+  if (cleanJid.endsWith('@lid')) {
+    try {
+      const resolved = await EvolutionService.resolveLidToPhone(instanceName, cleanJid);
+      if (resolved && resolved.endsWith('@s.whatsapp.net')) {
+        return resolved;
+      }
+    } catch (err: any) {
+      console.warn(`[QueueWorker] Error resolving LID JID ${cleanJid}:`, err.message);
+    }
+  }
+  return cleanJid;
+}
+
 // Crear el procesador (Worker) de la cola
 const worker = new Worker('webhook-queue', async (job: Job) => {
   const { event, instance, data } = job.data;
@@ -46,7 +63,12 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
 
       const remoteJid = data.key?.remoteJid;
       if (remoteJid) {
-        let cleanJid = remoteJid.replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net');
+        let cleanJid = await resolveJidIfNeeded(instance, remoteJid);
+        
+        // Actualizar el JID en el mensaje para que el frontend reciba el número real
+        if (data.key) {
+          data.key.remoteJid = cleanJid;
+        }
         
         // Caching automático del nombre si viene en pushName / notify y NO es un mensaje saliente
         const pushName = data.pushName || data.key?.pushName;
@@ -106,7 +128,9 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
       for (const update of chatUpdates) {
         const remoteJid = update.id || update.remoteJid;
         if (remoteJid) {
-          let cleanJid = remoteJid.replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net');
+          let cleanJid = await resolveJidIfNeeded(instance, remoteJid);
+          if (update.id) update.id = cleanJid;
+          if (update.remoteJid) update.remoteJid = cleanJid;
           if (update.unreadCount === 0 || update.unreadMessages === 0) {
             const redisKey = `unread:${instance}:${cleanJid}`;
             await redis.set(redisKey, 0);
@@ -126,7 +150,9 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
       for (const update of msgUpdates) {
         const remoteJid = update.key?.remoteJid || update.remoteJid;
         if (remoteJid) {
-          let cleanJid = remoteJid.replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net');
+          let cleanJid = await resolveJidIfNeeded(instance, remoteJid);
+          if (update.key) update.key.remoteJid = cleanJid;
+          if (update.remoteJid) update.remoteJid = cleanJid;
           const isRead = update.update?.status === 3 || update.status === 'READ' || update.unreadCount === 0;
           if (isRead) {
             const redisKey = `unread:${instance}:${cleanJid}`;
@@ -165,7 +191,9 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
     else if (eventUpper === 'PRESENCE_UPDATE') {
       const remoteJid = data.id || data.remoteJid;
       if (remoteJid && data.presences) {
-        let cleanJid = remoteJid.replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net');
+        let cleanJid = await resolveJidIfNeeded(instance, remoteJid);
+        if (data.id) data.id = cleanJid;
+        if (data.remoteJid) data.remoteJid = cleanJid;
         const jids = Object.keys(data.presences);
         const targetKey = jids.find(k => k.includes(cleanJid.split('@')[0])) || jids[0];
         
