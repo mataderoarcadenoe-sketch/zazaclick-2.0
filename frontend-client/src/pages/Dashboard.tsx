@@ -3852,7 +3852,7 @@ echo $response;`;
                     <div className={`${
                       selectedChat 
                         ? (selectedChat.remoteJid && selectedChat.remoteJid.endsWith && !selectedChat.remoteJid.endsWith('@g.us') 
-                            ? (showCrmDetails ? 'md:col-span-4' : 'md:col-span-7') 
+                            ? 'md:col-span-4' 
                             : 'md:col-span-9') 
                         : 'md:col-span-8'
                     } flex-col min-h-0 bg-gradient-to-b from-slate-50/50 via-slate-100/20 to-indigo-50/15 dark:from-slate-950/65 dark:via-slate-900/40 dark:to-slate-950/55 w-full md:w-auto ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
@@ -4687,7 +4687,7 @@ echo $response;`;
 
                     {/* CRM Sidebar Pane */}
                     {selectedChat && selectedChat.remoteJid && selectedChat.remoteJid.endsWith && !selectedChat.remoteJid.endsWith('@g.us') && (
-                      <div className={`hidden md:grid min-h-0 relative ${showCrmDetails ? 'md:col-span-6 grid-cols-1 lg:grid-cols-2' : 'md:col-span-3 grid-cols-1'}`}>
+                      <div className={`hidden md:grid md:col-span-6 min-h-0 relative ${showCrmDetails ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
                         {/* Column 1: CRM Details */}
                         {showCrmDetails && (
                           <div className="flex flex-col min-h-0 bg-slate-50/45 dark:bg-slate-950 text-left relative overflow-hidden">
