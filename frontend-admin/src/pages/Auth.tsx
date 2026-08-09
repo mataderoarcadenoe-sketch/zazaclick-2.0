@@ -70,7 +70,7 @@ export default function AuthPage() {
     <div className="min-h-screen relative flex items-center justify-center p-4 md:p-8 mesh-gradient overflow-hidden transition-colors duration-300">
       {/* Light Nodes */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-rose-500/10 dark:bg-rose-500/5 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-500/10 dark:bg-emerald-500/5 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-zinc-500/10 dark:bg-zinc-500/5 blur-[120px] pointer-events-none" />
 
       {/* Floating Theme Button */}
       <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-50">
@@ -93,7 +93,7 @@ export default function AuthPage() {
           
           <div className="space-y-1">
             <h2 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">
-              Zaza.click <span className="text-emerald-500">2.0 Admin</span>
+              Zaza.click <span className="text-zinc-400">2.0 Admin</span>
             </h2>
             <p className="text-[10px] text-rose-600 dark:text-rose-400 font-bold uppercase tracking-widest">
               Acceso Exclusivo de Administrador
@@ -115,7 +115,7 @@ export default function AuthPage() {
         <div className="flex flex-col items-center justify-center py-6 space-y-4 border-t border-b border-slate-200/50 dark:border-slate-800/50">
           {loading ? (
             <div className="flex flex-col items-center space-y-2 py-4">
-              <span className="w-6 h-6 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+              <span className="w-6 h-6 border-2 border-zinc-400/30 border-t-zinc-500 rounded-full animate-spin" />
               <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest">Validando cuenta...</span>
             </div>
           ) : (

@@ -234,10 +234,10 @@ export default function AdminDashboardPage() {
       {notification && (
         <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-2xl border shadow-premium-lg flex items-center gap-2.5 text-xs font-semibold animate-fadeIn ${
           notification.type === 'success'
-            ? 'bg-emerald-50/90 dark:bg-emerald-950/90 border-emerald-250 dark:border-emerald-800 text-emerald-800 dark:text-emerald-350'
+            ? 'bg-green-50/90 dark:bg-green-950/90 border-green-250 dark:border-green-800 text-green-800 dark:text-green-350'
             : 'bg-rose-50/90 dark:bg-rose-950/90 border-rose-250 dark:border-rose-800 text-rose-800 dark:text-rose-350'
         }`}>
-          {notification.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <AlertCircle className="w-4 h-4 text-rose-500" />}
+          {notification.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <AlertCircle className="w-4 h-4 text-rose-500" />}
           <span>{notification.text}</span>
         </div>
       )}
@@ -455,8 +455,8 @@ export default function AdminDashboardPage() {
                   </div>
 
                   <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm space-y-1.5 text-left">
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest text-emerald-500">Planes Activos</span>
-                    <h3 className="text-2xl font-bold text-emerald-500">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Planes Activos</span>
+                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
                       {stats?.active_subscriptions ?? 0}
                     </h3>
                     <p className="text-[9px] text-slate-500">Licencias habilitadas.</p>
@@ -471,8 +471,8 @@ export default function AdminDashboardPage() {
                   </div>
 
                   <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm space-y-1.5 text-left">
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest text-emerald-500">WhatsApp Online</span>
-                    <h3 className="text-2xl font-bold text-emerald-500">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest text-green-500">WhatsApp Online</span>
+                    <h3 className="text-2xl font-bold text-green-500">
                       {stats?.connected_instances ?? 0}
                     </h3>
                     <p className="text-[9px] text-slate-500">Sesiones conectadas en vivo.</p>
@@ -596,7 +596,7 @@ export default function AdminDashboardPage() {
                                     <option value="cancelled">Cancelado</option>
                                   </select>
                                 ) : client.subscription_status === 'active' ? (
-                                  <span className="px-2.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-md font-bold text-[9px]">
+                                  <span className="px-2.5 py-0.5 bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400 rounded-md font-bold text-[9px]">
                                     ACTIVO
                                   </span>
                                 ) : (
@@ -636,7 +636,7 @@ export default function AdminDashboardPage() {
                                     <button
                                       onClick={() => handleUpdateSubscription(client.id)}
                                       disabled={submittingSub}
-                                      className="p-2 bg-emerald-500 hover:bg-emerald-600 rounded-xl text-white cursor-pointer hover-lift shadow-sm shadow-emerald-500/10"
+                                      className="p-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 rounded-xl text-white cursor-pointer hover-lift shadow-sm shadow-zinc-900/10"
                                       title="Guardar"
                                     >
                                       <Check size={14} />
@@ -707,7 +707,7 @@ export default function AdminDashboardPage() {
                     <div className="flex justify-between items-center text-xs py-2 border-t border-b border-slate-100 dark:border-slate-800/60 font-medium">
                       <span className="text-slate-500">Estado</span>
                       {healthBackend === 'checking' && <span className="text-slate-400 animate-pulse">Comprobando...</span>}
-                      {healthBackend === 'ok' && <span className="text-emerald-500 font-bold uppercase flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Conectado</span>}
+                      {healthBackend === 'ok' && <span className="text-green-500 font-bold uppercase flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> Conectado</span>}
                       {healthBackend === 'error' && <span className="text-rose-500 font-bold uppercase flex items-center gap-1">⚠️ Error</span>}
                     </div>
 
@@ -719,7 +719,7 @@ export default function AdminDashboardPage() {
                   {/* Evolution API Status Card */}
                   <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 p-6 rounded-3xl shadow-sm space-y-4">
                     <div className="flex items-center gap-3">
-                      <div className="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-500">
+                      <div className="p-2.5 bg-green-500/10 rounded-xl text-green-500">
                         <Globe size={20} />
                       </div>
                       <div>
@@ -731,7 +731,7 @@ export default function AdminDashboardPage() {
                     <div className="flex justify-between items-center text-xs py-2 border-t border-b border-slate-100 dark:border-slate-800/60 font-medium">
                       <span className="text-slate-500">Estado</span>
                       {healthEvolution === 'checking' && <span className="text-slate-400 animate-pulse">Comprobando...</span>}
-                      {healthEvolution === 'ok' && <span className="text-emerald-500 font-bold uppercase flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Operativo</span>}
+                      {healthEvolution === 'ok' && <span className="text-green-500 font-bold uppercase flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> Operativo</span>}
                       {healthEvolution === 'error' && <span className="text-rose-500 font-bold uppercase flex items-center gap-1">⚠️ Error</span>}
                     </div>
 
@@ -781,7 +781,7 @@ export default function AdminDashboardPage() {
                           <span className="block text-[10px] text-slate-400 uppercase font-bold">Estado General</span>
                           <span className={`block font-bold mt-1 ${
                             licenseStatus.status === 'active' || licenseStatus.active
-                              ? 'text-emerald-500'
+                              ? 'text-green-500'
                               : 'text-rose-500'
                           }`}>
                             {licenseStatus.status === 'active' || licenseStatus.active ? 'ACTIVO / VÁLIDO' : 'ACTIVACIÓN REQUERIDA'}
@@ -833,7 +833,7 @@ export default function AdminDashboardPage() {
                     <h5 className="text-xs font-bold uppercase tracking-widest text-slate-500">Servicios Conectados</h5>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-medium pt-2">
                       <div className="p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 flex items-center gap-3">
-                        <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-500">
+                        <div className="p-2 bg-green-500/10 rounded-xl text-green-500">
                           <Database size={16} />
                         </div>
                         <div>

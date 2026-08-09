@@ -66,8 +66,8 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4 md:p-8 mesh-gradient overflow-hidden transition-colors duration-300">
       {/* Light Nodes */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-500/10 dark:bg-emerald-500/5 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-teal-500/10 dark:bg-teal-500/5 blur-[120px] pointer-events-none" />
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-zinc-500/10 dark:bg-zinc-500/5 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-zinc-600/10 dark:bg-zinc-600/5 blur-[120px] pointer-events-none" />
 
       {/* Floating Theme Button */}
       <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-50">
@@ -85,18 +85,18 @@ export default function AuthPage() {
         {/* Marketing Info Panel */}
         <div className="md:col-span-6 space-y-6 text-left hidden md:block animate-fadeIn">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl text-white shadow-md shadow-emerald-500/20">
+            <div className="p-2.5 bg-gradient-to-br from-zinc-800 to-zinc-950 rounded-2xl text-white shadow-md shadow-zinc-800/20">
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-xs font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">SaaS Platform</span>
-              <span className="block text-xl font-bold text-slate-800 dark:text-white tracking-tight">Zaza.click <span className="text-emerald-500">2.0</span></span>
+              <span className="text-xs font-bold uppercase tracking-widest text-zinc-600 dark:text-zinc-400">SaaS Platform</span>
+              <span className="block text-xl font-bold text-slate-800 dark:text-white tracking-tight">Zaza.click <span className="text-zinc-500 dark:text-zinc-300">2.0</span></span>
             </div>
           </div>
 
           <h1 className="text-4xl lg:text-5xl font-bold text-slate-800 dark:text-white leading-tight tracking-tight">
             API de WhatsApp <br />
-            <span className="bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 bg-clip-text text-transparent">Multi-Inquilino</span> <br />
+            <span className="bg-gradient-to-r from-zinc-700 via-zinc-500 to-zinc-400 bg-clip-text text-transparent">Multi-Inquilino</span> <br />
             para tu negocio.
           </h1>
 
@@ -105,8 +105,8 @@ export default function AuthPage() {
           </p>
 
           <div className="space-y-4 pt-4">
-            <div className="flex items-start gap-3.5 p-3 rounded-2xl bg-white/40 dark:bg-slate-900/40 border border-slate-200/30 dark:border-slate-800/30 hover:border-emerald-500/30 transition-colors">
-              <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-500 mt-0.5">
+            <div className="flex items-start gap-3.5 p-3 rounded-2xl bg-white/40 dark:bg-slate-900/40 border border-slate-200/30 dark:border-slate-800/30 hover:border-zinc-400/30 transition-colors">
+              <div className="p-2 bg-zinc-100 dark:bg-zinc-800 rounded-xl text-zinc-700 dark:text-zinc-300 mt-0.5">
                 <Zap className="w-5 h-5" />
               </div>
               <div>
@@ -115,8 +115,8 @@ export default function AuthPage() {
               </div>
             </div>
 
-            <div className="flex items-start gap-3.5 p-3 rounded-2xl bg-white/40 dark:bg-slate-900/40 border border-slate-200/30 dark:border-slate-800/30 hover:border-emerald-500/30 transition-colors">
-              <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-500 mt-0.5">
+            <div className="flex items-start gap-3.5 p-3 rounded-2xl bg-white/40 dark:bg-slate-900/40 border border-slate-200/30 dark:border-slate-800/30 hover:border-zinc-400/30 transition-colors">
+              <div className="p-2 bg-zinc-100 dark:bg-zinc-800 rounded-xl text-zinc-700 dark:text-zinc-300 mt-0.5">
                 <Cpu className="w-5 h-5" />
               </div>
               <div>
@@ -134,7 +134,7 @@ export default function AuthPage() {
             {/* Header */}
             <div className="space-y-1.5 text-center pb-6">
               <div className="md:hidden flex items-center justify-center gap-2 pb-2">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white font-semibold">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-zinc-800 to-zinc-950 flex items-center justify-center text-white font-semibold">
                   <Smartphone size={16} />
                 </div>
                 <span className="font-semibold text-sm text-slate-800 dark:text-white">Zaza.click 2.0</span>

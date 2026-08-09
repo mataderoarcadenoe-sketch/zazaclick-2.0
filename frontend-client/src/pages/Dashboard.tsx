@@ -91,9 +91,9 @@ const formatTimeLocal = (timestamp: number) => {
 
 // Colores para diferenciar participantes en grupos
 const GROUP_SENDER_COLORS = [
-  'text-brand-primary', 'text-brand-primary', 'text-brand-primary', 'text-amber-500',
-  'text-rose-500', 'text-cyan-500', 'text-brand-primary', 'text-pink-500',
-  'text-teal-500', 'text-orange-500'
+  'text-zinc-700 dark:text-zinc-300', 'text-blue-600', 'text-violet-600', 'text-amber-500',
+  'text-rose-500', 'text-cyan-500', 'text-indigo-500', 'text-pink-500',
+  'text-sky-600', 'text-orange-500'
 ];
 const getSenderColor = (name: string) => {
   let hash = 0;
@@ -3102,7 +3102,7 @@ echo $response;`;
 
       {/* Sidebar */}
       <aside 
-        className={`bg-[#1E293B] dark:bg-surface-950 flex flex-col transition-all duration-300 shadow-premium z-50 fixed top-0 left-0 h-full ${
+        className={`bg-slate-900 dark:bg-surface-950 flex flex-col transition-all duration-300 shadow-premium z-50 fixed top-0 left-0 h-full ${
           sidebarOpen ? 'w-64 translate-x-0' : 'w-20 -translate-x-full lg:translate-x-0'
         }`}
       >
@@ -3114,7 +3114,7 @@ echo $response;`;
                 <Smartphone size={18} />
               </div>
               <span className="font-semibold text-white tracking-wide">
-                Zaza.click <span className="text-brand-primary">2.0</span>
+                Zaza.click <span className="text-zinc-400">2.0</span>
               </span>
             </div>
           )}
@@ -3188,7 +3188,7 @@ echo $response;`;
         </nav>
 
         {/* Footer profile actions */}
-        <div className="p-3 border-t border-white/10 dark:border-slate-800/60 bg-[#071e22] dark:bg-surface-950">
+        <div className="p-3 border-t border-white/10 dark:border-slate-800/60 bg-slate-950 dark:bg-surface-950">
           <button
             onClick={logout}
             className={`w-full group flex items-center ${
@@ -3261,7 +3261,7 @@ echo $response;`;
                   >
                     {selectedInstanceForChats ? (
                       <div className="flex items-center gap-1.5 truncate">
-                        <span className="text-emerald-500 flex-shrink-0">
+                        <span className="text-green-500 flex-shrink-0">
                           <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-8.884 9.888-8.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.458 5.704 1.459h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
                           </svg>
@@ -3290,8 +3290,8 @@ echo $response;`;
                             }}
                             className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-3 cursor-pointer text-left ${
                               selectedInstanceForChats === inst.instance_name 
-                                ? 'bg-[#0D9488] dark:bg-slate-800/60 text-white dark:text-white' 
-                                : 'text-slate-100 dark:text-surface-400 hover:bg-[#0D9488]/40 dark:hover:bg-slate-800/40 hover:text-white dark:hover:text-white'
+                                ? 'bg-zinc-700 dark:bg-slate-800/60 text-white dark:text-white' 
+                                : 'text-slate-100 dark:text-surface-400 hover:bg-zinc-600/40 dark:hover:bg-slate-800/40 hover:text-white dark:hover:text-white'
                             }`}
                           >
                             <span className="truncate">{inst.instance_name}</span>
@@ -3321,9 +3321,9 @@ echo $response;`;
               </div>
             )}
             {/* Online Status */}
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-pastel-100 dark:bg-emerald-950/30 rounded-xl">
-              <span className="w-2 h-2 bg-brand-primary rounded-full animate-pulse"></span>
-              <span className="text-[10px] font-bold text-brand-secondary dark:text-brand-primary uppercase tracking-wider">En Línea</span>
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-green-50 dark:bg-green-950/30 rounded-xl">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+              <span className="text-[10px] font-bold text-green-700 dark:text-green-400 uppercase tracking-wider">En Línea</span>
             </div>
 
             {/* Dark Mode Toggle */}
@@ -3848,7 +3848,7 @@ echo $response;`;
                                             if (tag === 'VIP') colorClass = "bg-amber-500 text-white";
                                             else if (tag === 'Moroso') colorClass = "bg-rose-600 text-white";
                                             else if (tag === 'Pendiente') colorClass = "bg-blue-500 text-white";
-                                            else if (tag === 'Nuevo') colorClass = "bg-emerald-500 text-white";
+                                            else if (tag === 'Nuevo') colorClass = "bg-green-500 text-white";
                                             return (
                                               <span key={tag} className={`px-1.5 py-0.5 text-[8px] font-extrabold rounded-full ${colorClass}`}>
                                                 {tag}
@@ -3926,9 +3926,9 @@ echo $response;`;
                                       if (tag === 'VIP') colorClass = "bg-amber-500 text-white shadow-sm";
                                       else if (tag === 'Moroso') colorClass = "bg-rose-600 text-white shadow-sm";
                                       else if (tag === 'Pendiente') colorClass = "bg-blue-500 text-white shadow-sm";
-                                      else if (tag === 'Nuevo') colorClass = "bg-emerald-500 text-white shadow-sm";
+                                      else if (tag === 'Nuevo') colorClass = "bg-green-500 text-white shadow-sm";
                                       else if (tag === 'Interesado') colorClass = "bg-purple-500 text-white shadow-sm";
-                                      else if (tag === 'Pagó') colorClass = "bg-teal-500 text-white shadow-sm";
+                                      else if (tag === 'Pagó') colorClass = "bg-green-600 text-white shadow-sm";
                                       
                                       return (
                                         <span key={tag} className={`px-2 py-0.5 text-[8.5px] font-bold rounded-full transition-all duration-300 transform hover:scale-105 ${colorClass}`}>
@@ -3964,7 +3964,7 @@ echo $response;`;
                                         presenceDotClass = "bg-amber-500 animate-pulse shadow-[0_0_6px_rgba(245,158,11,0.6)]";
                                         presenceText = "Grabando audio...";
                                       } else if (presenceState === 'available') {
-                                        presenceDotClass = "bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.6)]";
+                                        presenceDotClass = "bg-green-500 shadow-[0_0_4px_rgba(34,197,94,0.6)]";
                                         presenceText = "En línea";
                                       }
 
@@ -3979,7 +3979,7 @@ echo $response;`;
                                                     ? 'text-blue-600 dark:text-blue-400 font-extrabold' 
                                                     : presenceState === 'recording' 
                                                     ? 'text-amber-600 dark:text-amber-400 font-extrabold' 
-                                                    : 'text-emerald-600 dark:text-emerald-400 font-bold'
+                                                    : 'text-green-600 dark:text-green-400 font-bold'
                                                 }>
                                                   {presenceText}
                                                 </span>
@@ -4086,7 +4086,7 @@ echo $response;`;
                                           >
                                             <div className="flex items-center gap-2">
                                               <span className={`w-1.5 h-1.5 rounded-full ${
-                                                agent.status === 'available' ? 'bg-emerald-500' : agent.status === 'busy' ? 'bg-amber-500' : 'bg-slate-400'
+                                                agent.status === 'available' ? 'bg-green-500' : agent.status === 'busy' ? 'bg-amber-500' : 'bg-slate-400'
                                               }`} />
                                               <span>{agent.name}</span>
                                             </div>
@@ -4364,7 +4364,7 @@ echo $response;`;
                                         >
                                           {isLoading ? (
                                             <div className="p-3 bg-white/80 dark:bg-slate-950/80 rounded-full shadow-md animate-spin">
-                                              <span className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full block" />
+                                              <span className="w-5 h-5 border-2 border-zinc-400 border-t-transparent rounded-full block" />
                                             </div>
                                           ) : (
                                             <div className="p-3 bg-white/80 dark:bg-slate-950/80 rounded-full shadow-md group-hover:scale-105 transition-transform text-surface-600 dark:text-surface-400">
@@ -4406,7 +4406,7 @@ echo $response;`;
                                           className="flex items-center gap-2 p-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300"
                                         >
                                           {isLoading ? (
-                                            <span className="w-3.5 h-3.5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin block" />
+                                            <span className="w-3.5 h-3.5 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin block" />
                                           ) : (
                                             <Play size={12} className="fill-brand-primary" />
                                           )}
@@ -4524,7 +4524,7 @@ echo $response;`;
                                         >
                                           {isLoading ? (
                                             <div className="p-3 bg-white/80 dark:bg-slate-950/80 rounded-full shadow-md animate-spin">
-                                              <span className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full block" />
+                                              <span className="w-5 h-5 border-2 border-zinc-400 border-t-transparent rounded-full block" />
                                             </div>
                                           ) : (
                                             <div className="p-3 bg-white/80 dark:bg-slate-950/80 rounded-full shadow-md group-hover:scale-105 transition-transform text-surface-600 dark:text-surface-400">
@@ -4740,7 +4740,7 @@ echo $response;`;
                                           if (cat === 'VIP' || cat === 'Cliente frecuente') pillColor = 'bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400';
                                           else if (cat === 'Moroso' || cat === 'Pendiente') pillColor = 'bg-rose-50 text-rose-600 dark:bg-rose-950/30 dark:text-rose-400';
                                           else if (cat === 'Interesado' || cat === 'Prospecto') pillColor = 'bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400';
-                                          else if (cat === 'Pagó') pillColor = 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400';
+                                          else if (cat === 'Pagó') pillColor = 'bg-green-50 text-green-600 dark:bg-green-950/30 dark:text-green-400';
                                           return <span className={`px-2 py-0.5 text-[8px] font-bold uppercase rounded-md ${pillColor}`}>{cat}</span>;
                                         })()}
                                       </div>
@@ -4962,7 +4962,7 @@ echo $response;`;
                                     </button>
                                   </div>
                                   <div className="flex flex-wrap gap-1.5">
-                                    <span className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 text-[9px] font-semibold rounded-lg flex items-center gap-1">
+                                    <span className="px-2.5 py-1 bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400 text-[9px] font-semibold rounded-lg flex items-center gap-1">
                                       <Tag size={9} />
                                       {crmContact?.category_name || 'Cliente'}
                                     </span>
@@ -4994,7 +4994,7 @@ echo $response;`;
                                       <span className="text-[8px] text-slate-400 font-medium mt-1.5 block">Tiempo promedio</span>
                                     </div>
                                     <div className="bg-slate-50 dark:bg-slate-800/40 rounded-xl p-3 text-center">
-                                      <span className="text-emerald-600 dark:text-emerald-400 font-bold text-[15px] leading-none block">98%</span>
+                                      <span className="text-green-600 dark:text-green-400 font-bold text-[15px] leading-none block">98%</span>
                                       <span className="text-[8px] text-slate-400 font-medium mt-1.5 block">Respondidas</span>
                                     </div>
                                   </div>
@@ -5032,7 +5032,7 @@ echo $response;`;
                                                 setCrmAddress('');
                                                 setIsDocTypeDropdownOpen(false);
                                               }}
-                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-[#0D9488]/40 hover:text-white transition-colors cursor-pointer ${crmDocType === 'DNI' ? 'text-white bg-[#0D9488]' : 'text-slate-100 dark:text-slate-200'}`}
+                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-zinc-600/40 hover:text-white transition-colors cursor-pointer ${crmDocType === 'DNI' ? 'text-white bg-zinc-700' : 'text-slate-100 dark:text-slate-200'}`}
                                             >
                                               DNI
                                             </button>
@@ -5045,7 +5045,7 @@ echo $response;`;
                                                 setCrmAddress('');
                                                 setIsDocTypeDropdownOpen(false);
                                               }}
-                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-[#0D9488]/40 hover:text-white transition-colors cursor-pointer ${crmDocType === 'RUC' ? 'text-white bg-[#0D9488]' : 'text-slate-100 dark:text-slate-200'}`}
+                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-zinc-600/40 hover:text-white transition-colors cursor-pointer ${crmDocType === 'RUC' ? 'text-white bg-zinc-700' : 'text-slate-100 dark:text-slate-200'}`}
                                             >
                                               RUC
                                             </button>
@@ -5120,7 +5120,7 @@ echo $response;`;
                                                 setCrmCategoryId('');
                                                 setIsCategoryDropdownOpen(false);
                                               }}
-                                              className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-[#0D9488]/40 hover:text-white transition-colors cursor-pointer ${crmCategoryId === '' ? 'text-white bg-[#0D9488]' : 'text-slate-100 dark:text-slate-200'}`}
+                                              className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-zinc-600/40 hover:text-white transition-colors cursor-pointer ${crmCategoryId === '' ? 'text-white bg-zinc-700' : 'text-slate-100 dark:text-slate-200'}`}
                                             >
                                               Sin Categoría
                                             </button>
@@ -5132,7 +5132,7 @@ echo $response;`;
                                                   setCrmCategoryId(cat.id.toString());
                                                   setIsCategoryDropdownOpen(false);
                                                 }}
-                                                className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-[#0D9488]/40 hover:text-white transition-colors cursor-pointer ${crmCategoryId === cat.id.toString() ? 'text-white bg-[#0D9488]' : 'text-slate-100 dark:text-slate-200'}`}
+                                                className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-zinc-600/40 hover:text-white transition-colors cursor-pointer ${crmCategoryId === cat.id.toString() ? 'text-white bg-zinc-700' : 'text-slate-100 dark:text-slate-200'}`}
                                               >
                                                 {cat.name}
                                               </button>
@@ -5412,7 +5412,7 @@ echo $response;`;
                                                         {clientNotes.length > 0 ? (
                                                           clientNotes.map((note: any, idx: number) => {
                                                             const noteColors = [
-                                                              { bg: 'bg-emerald-50 dark:bg-emerald-950/30', hover: 'hover:bg-emerald-100/70 dark:hover:bg-emerald-950/50', avatar: 'bg-emerald-200 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300', text: 'text-emerald-600/70 dark:text-emerald-400/70' },
+                                                              { bg: 'bg-zinc-50 dark:bg-zinc-950/30', hover: 'hover:bg-zinc-100/70 dark:hover:bg-zinc-950/50', avatar: 'bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300', text: 'text-zinc-600/70 dark:text-zinc-400/70' },
                                                               { bg: 'bg-blue-50 dark:bg-blue-950/30', hover: 'hover:bg-blue-100/70 dark:hover:bg-blue-950/50', avatar: 'bg-blue-200 dark:bg-blue-900 text-blue-700 dark:text-blue-300', text: 'text-blue-600/70 dark:text-blue-400/70' },
                                                               { bg: 'bg-violet-50 dark:bg-violet-950/30', hover: 'hover:bg-violet-100/70 dark:hover:bg-violet-950/50', avatar: 'bg-violet-200 dark:bg-violet-900 text-violet-700 dark:text-violet-300', text: 'text-violet-600/70 dark:text-violet-400/70' },
                                                               { bg: 'bg-amber-50 dark:bg-amber-950/30', hover: 'hover:bg-amber-100/70 dark:hover:bg-amber-950/50', avatar: 'bg-amber-200 dark:bg-amber-900 text-amber-700 dark:text-amber-300', text: 'text-amber-600/70 dark:text-amber-400/70' },
@@ -5635,10 +5635,10 @@ echo $response;`;
                                             {prod.stock !== null && (
                                               <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 text-[8.5px] font-black rounded-lg border ${
                                                 prod.stock > 0 
-                                                  ? 'bg-emerald-50 dark:bg-emerald-950/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/10' 
+                                                  ? 'bg-green-50 dark:bg-green-950/10 text-green-600 dark:text-green-400 border-green-500/10' 
                                                   : 'bg-rose-50 dark:bg-rose-950/10 text-rose-600 dark:text-rose-400 border-rose-500/10'
                                               }`}>
-                                                <span className={`w-1 h-1 rounded-full ${prod.stock > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                                                <span className={`w-1 h-1 rounded-full ${prod.stock > 0 ? 'bg-green-500 animate-pulse' : 'bg-rose-500'}`} />
                                                 Stock: {prod.stock}
                                               </span>
                                             )}
@@ -5876,7 +5876,7 @@ echo $response;`;
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Completadas</p>
                       <h4 className="text-xl font-black text-slate-800 dark:text-white mt-1">{globalTasks.filter(t => t.completed).length}</h4>
                     </div>
-                    <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 flex items-center justify-center text-emerald-500">
+                    <div className="w-10 h-10 rounded-xl bg-green-50 dark:bg-green-950/20 flex items-center justify-center text-green-500">
                       <CheckCircle2 size={20} />
                     </div>
                   </div>
@@ -5927,7 +5927,7 @@ echo $response;`;
                                     setNewTaskClientId('');
                                     setIsClientDropdownOpen(false);
                                   }}
-                                  className="w-full text-left px-3.5 py-2 text-xs text-slate-350 dark:text-slate-450 hover:bg-[#0D9488]/40 hover:text-white transition-colors cursor-pointer"
+                                  className="w-full text-left px-3.5 py-2 text-xs text-slate-350 dark:text-slate-450 hover:bg-zinc-600/40 hover:text-white transition-colors cursor-pointer"
                                 >
                                   -- Seleccionar Cliente --
                                 </button>
@@ -5939,9 +5939,9 @@ echo $response;`;
                                       setNewTaskClientId(c.id.toString());
                                       setIsClientDropdownOpen(false);
                                     }}
-                                    className={`w-full text-left px-3.5 py-2 text-xs hover:bg-[#0D9488]/40 hover:text-white transition-colors cursor-pointer ${
+                                    className={`w-full text-left px-3.5 py-2 text-xs hover:bg-zinc-600/40 hover:text-white transition-colors cursor-pointer ${
                                       newTaskClientId === c.id.toString() 
-                                        ? 'text-white bg-[#0D9488]' 
+                                        ? 'text-white bg-zinc-700' 
                                         : 'text-slate-100 dark:text-slate-200'
                                     }`}
                                   >
@@ -6211,7 +6211,7 @@ echo $response;`;
                                       onClick={() => handleToggleGlobalTask(task)}
                                       className={`w-5 h-5 rounded-lg border flex items-center justify-center flex-shrink-0 transition-all cursor-pointer ${
                                         task.completed 
-                                          ? 'bg-emerald-500 border-emerald-500 text-white' 
+                                          ? 'bg-green-500 border-green-500 text-white' 
                                           : isOverdue 
                                           ? 'border-rose-300 hover:border-rose-500 bg-rose-50 dark:bg-rose-950/20'
                                           : 'border-slate-300 hover:border-slate-400 bg-white dark:bg-slate-800'
@@ -6804,7 +6804,7 @@ echo $response;`;
                                     }}
                                     className={`p-3.5 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition-all border text-left ${
                                       isSelected
-                                        ? 'bg-slate-50 dark:bg-slate-800/40 border-emerald-500/30'
+                                        ? 'bg-slate-50 dark:bg-slate-800/40 border-green-500/30'
                                         : 'bg-slate-50/50 dark:bg-slate-950/20 border-transparent hover:bg-slate-100/50 dark:hover:bg-slate-800/20'
                                     }`}
                                   >
@@ -7274,7 +7274,7 @@ echo $response;`;
 
                       {/* Code Container */}
                       <div className="relative group">
-                        <pre className="bg-slate-950 text-brand-primary dark:text-emerald-300 font-mono text-[10.5px] p-5 rounded-2xl overflow-x-auto leading-relaxed shadow-inner">
+                        <pre className="bg-slate-950 text-zinc-300 dark:text-zinc-300 font-mono text-[10.5px] p-5 rounded-2xl overflow-x-auto leading-relaxed shadow-inner">
                           {getDocCode()}
                         </pre>
                         
@@ -7473,14 +7473,14 @@ echo $response;`;
                                 onClick={() => handleToggleAgentStatus(agent.id, agent.status)}
                                 className={`px-2.5 py-1 rounded-xl text-[9px] font-bold uppercase transition-all cursor-pointer flex items-center gap-1.5 ${
                                   isActiveStatus 
-                                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
+                                    ? 'bg-green-500/10 text-green-600 dark:text-green-400' 
                                     : isBusyStatus 
                                       ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' 
                                       : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
                                 }`}
                               >
                                 <span className={`w-1.5 h-1.5 rounded-full ${
-                                  isActiveStatus ? 'bg-emerald-500' : isBusyStatus ? 'bg-amber-500' : 'bg-slate-400'
+                                  isActiveStatus ? 'bg-green-500' : isBusyStatus ? 'bg-amber-500' : 'bg-slate-400'
                                 }`} />
                                 <span>
                                   {agent.status === 'available' && 'Disponible'}
@@ -7687,7 +7687,7 @@ echo $response;`;
                     {[
                       { label: 'Empresas Registradas', value: adminStats?.total_users || 0, color: 'text-indigo-500' },
                       { label: 'Instancias Totales', value: adminStats?.total_instances || 0, color: 'text-brand-primary' },
-                      { label: 'Líneas Conectadas', value: adminStats?.connected_instances || 0, color: 'text-emerald-500' },
+                      { label: 'Líneas Conectadas', value: adminStats?.connected_instances || 0, color: 'text-green-500' },
                       { label: 'Suscripciones Activas', value: adminStats?.active_subscriptions || 0, color: 'text-amber-500' },
                     ].map((card, idx) => (
                       <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 p-5 rounded-3xl shadow-sm">
@@ -7746,7 +7746,7 @@ echo $response;`;
                               <td className="px-6 py-4">
                                 <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
                                   client.subscription_status === 'active' 
-                                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
+                                    ? 'bg-green-500/10 text-green-600 dark:text-green-400' 
                                     : 'bg-rose-500/10 text-rose-500'
                                 }`}>
                                   {client.subscription_status || 'Sin Plan'}
@@ -7811,7 +7811,7 @@ echo $response;`;
                               <td className="px-6 py-4">
                                 <span className={`px-2.5 py-1 rounded-xl text-[9px] font-bold uppercase ${
                                   inst.status === 'connected' 
-                                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
+                                    ? 'bg-green-500/10 text-green-600 dark:text-green-400' 
                                     : 'bg-rose-500/10 text-rose-500'
                                 }`}>
                                   {inst.status === 'connected' ? 'Conectado' : 'Desconectado'}
@@ -7855,7 +7855,7 @@ echo $response;`;
             <div className="w-52 h-52 bg-white rounded-2xl mx-auto flex items-center justify-center border border-slate-200/20 shadow-inner overflow-hidden relative">
               {qrLoading ? (
                 <div className="flex flex-col items-center gap-2">
-                  <span className="w-6 h-6 border-2 border-emerald-500/30 border-t-brand-primary rounded-full animate-spin" />
+                  <span className="w-6 h-6 border-2 border-zinc-400/30 border-t-zinc-600 dark:border-t-zinc-300 rounded-full animate-spin" />
                   <span className="text-[10px] text-surface-400 font-bold uppercase">Generando QR...</span>
                 </div>
               ) : qrBase64 ? (
