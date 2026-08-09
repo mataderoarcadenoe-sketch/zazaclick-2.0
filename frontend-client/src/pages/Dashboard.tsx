@@ -6446,7 +6446,7 @@ echo $response;`;
                       >
                         <option value="all">Todos los Asesores</option>
                         <option value="unassigned">Sin Asignar</option>
-                        {users.map((u: any) => (
+                        {teamMembers.map((u: any) => (
                           <option key={u.id} value={String(u.id)}>{u.name}</option>
                         ))}
                       </select>
