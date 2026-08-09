@@ -357,7 +357,7 @@ export default function DashboardPage() {
   const [datePickerMonthTask, setDatePickerMonthTask] = useState(new Date().getMonth());
   const [selectedBirthdayMonth, setSelectedBirthdayMonth] = useState(new Date().getMonth());
   const [showMoreCrmFields, setShowMoreCrmFields] = useState(false);
-  const [showCrmDetails, setShowCrmDetails] = useState(true);
+  const [showCrmDetails, setShowCrmDetails] = useState(false);
   
   // CRM Form States
   const [crmDocType, setCrmDocType] = useState<'DNI' | 'RUC'>('DNI');
