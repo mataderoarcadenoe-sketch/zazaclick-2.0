@@ -9,6 +9,76 @@ import redis from '../config/redis';
 const router = Router();
 router.use(authMiddleware);
 
+/**
+ * Calcula la distancia de Levenshtein entre dos cadenas de texto.
+ */
+function getLevenshteinDistance(a: string, b: string): number {
+  const tmp: number[][] = [];
+  const alen = a.length;
+  const blen = b.length;
+  if (alen === 0) return blen;
+  if (blen === 0) return alen;
+  for (let i = 0; i <= alen; i++) tmp[i] = [i];
+  for (let j = 0; j <= blen; j++) tmp[0][j] = j;
+  for (let i = 1; i <= alen; i++) {
+    for (let j = 1; j <= blen; j++) {
+      tmp[i][j] = Math.min(
+        tmp[i - 1][j] + 1,
+        tmp[i][j - 1] + 1,
+        tmp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+      );
+    }
+  }
+  return tmp[alen][blen];
+}
+
+/**
+ * Normaliza y compara palabras individuales permitiendo pequeños errores ortográficos.
+ */
+function fuzzyMatch(text: string, query: string): boolean {
+  // Quitar acentos, convertir a minúsculas y limpiar caracteres raros
+  const normText = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  const normQuery = query.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  
+  if (!normQuery) return true;
+  if (normText.includes(normQuery)) return true;
+  
+  const textWords = normText.split(/[\s,.-]+/);
+  const queryWords = normQuery.split(/[\s,.-]+/);
+  
+  // Cada palabra en la consulta de búsqueda debe tener alguna coincidencia aceptable
+  for (const qWord of queryWords) {
+    if (!qWord) continue;
+    
+    // Si la palabra es muy corta (1 o 2 letras), buscamos coincidencia exacta de subcadena
+    if (qWord.length <= 2) {
+      if (textWords.some(tWord => tWord.includes(qWord))) continue;
+      return false;
+    }
+    
+    let wordMatched = false;
+    for (const tWord of textWords) {
+      // Coincidencia de subcadena directa (ej: "shampu" contiene "sham")
+      if (tWord.includes(qWord) || qWord.includes(tWord)) {
+        wordMatched = true;
+        break;
+      }
+      
+      // Calcular distancia de edición para tolerar errores (typos)
+      const dist = getLevenshteinDistance(tWord, qWord);
+      // Permitimos distancia de 1 para palabras medianas (3-5 letras) y 2 para palabras largas (>5 letras)
+      const maxAllowedDist = qWord.length > 5 ? 2 : 1;
+      
+      if (dist <= maxAllowedDist) {
+        wordMatched = true;
+        break;
+      }
+    }
+    if (!wordMatched) return false;
+  }
+  return true;
+}
+
 // Token por defecto provisto por el usuario
 const APIPERU_TOKEN = process.env.APIPERU_TOKEN || '76ca7246c8a8c464fd551b6555e780791a69ff89acb8887558d65b23f05ab81b';
 
@@ -1508,6 +1578,7 @@ router.post('/billing/test', async (req: AuthenticatedRequest, res: Response) =>
 
   try {
     const response = await axios.get(targetUrl, {
+      params: { input: 'conexion_prueba_crm' }, // Evita descargar todo el catálogo al probar la conexión
       headers: {
         'Accept': 'application/json',
         'Authorization': `Bearer ${finalToken}`,
@@ -1517,14 +1588,9 @@ router.post('/billing/test', async (req: AuthenticatedRequest, res: Response) =>
     });
 
     if (response.data && response.data.success) {
-      const itemsArray = Array.isArray(response.data.data) 
-        ? response.data.data 
-        : (response.data.data?.items || []);
-
       return res.json({ 
         success: true, 
-        message: '¡Conexión exitosa! El facturador respondió correctamente.',
-        productsCount: itemsArray.length
+        message: '¡Conexión exitosa! El facturador respondió correctamente.'
       });
     }
 
@@ -1549,129 +1615,140 @@ router.post('/billing/test', async (req: AuthenticatedRequest, res: Response) =>
  */
 router.get('/billing/products', async (req: AuthenticatedRequest, res: Response) => {
   const { search, refresh } = req.query;
+  const searchQuery = typeof search === 'string' ? search.trim() : '';
 
   try {
-    // 1. Verificar si tenemos caché en Redis (a menos que se pida forzar la recarga)
-    const redisKey = `billing:products:${req.userId}:${search || ''}`;
+    // 1. Clave de caché global para TODOS los productos de esta empresa
+    const redisKey = `billing:products:${req.userId}:all`;
+    let catalogProducts: any[] = [];
+    let isFromCache = false;
+
+    // Intentar leer del caché si no se solicita forzar la recarga
     if (refresh !== 'true') {
       try {
         const cached = await redis.get(redisKey);
         if (cached) {
-          return res.json({ 
-            success: true, 
-            configured: true, 
-            data: JSON.parse(cached),
-            cached: true
-          });
+          catalogProducts = JSON.parse(cached);
+          isFromCache = true;
         }
       } catch (redisErr: any) {
         console.warn('[CRM Billing Products] Fallo al leer de Redis:', redisErr.message);
       }
     }
 
-    // 2. Obtener la configuración del facturador de la empresa
-    const configRes = await pool.query(
-      'SELECT billing_subdomain, billing_token FROM billing_configs WHERE user_id = $1',
-      [req.userId]
-    );
+    // 2. Si no estaba en caché, consultar al facturador en vivo
+    if (catalogProducts.length === 0) {
+      const configRes = await pool.query(
+        'SELECT billing_subdomain, billing_token FROM billing_configs WHERE user_id = $1',
+        [req.userId]
+      );
 
-    if (configRes.rows.length === 0) {
-      return res.json({ 
-        success: true, 
-        configured: false, 
-        data: [] 
-      });
-    }
-
-    const { billing_subdomain, billing_token } = configRes.rows[0];
-    const decryptedToken = decryptToken(billing_token);
-
-    if (!decryptedToken) {
-      return res.status(500).json({ success: false, error: 'Error de desencripción del token del facturador.' });
-    }
-
-    // 3. Realizar la llamada HTTP al facturador correspondiente de la empresa
-    const targetUrl = `https://${billing_subdomain}.syscomecosistemadigital.com/api/document/search-items`;
-
-    const response = await axios.get(targetUrl, {
-      params: search ? { input: search } : {},
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${decryptedToken}`,
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      },
-      timeout: 8000 // 8 segundos timeout
-    });
-
-    if (response.data && response.data.success) {
-      // 4. Mapear y estandarizar los productos para el frontend
-      const itemsArray = Array.isArray(response.data.data) 
-        ? response.data.data 
-        : (response.data.data?.items || []);
-
-      const freshProducts = itemsArray.map((item: any) => {
-        // En Facturador Pro, a veces la imagen viene como "image_url" o como "image"
-        // Si viene como "image", construimos la URL absoluta al almacenamiento del cliente
-        let imageUrl = item.image_url || null;
-        if (!imageUrl && item.image) {
-          if (item.image.startsWith('http')) {
-            imageUrl = item.image;
-          } else {
-            imageUrl = `https://${billing_subdomain}.syscomecosistemadigital.com/storage/uploads/items/${item.image}`;
-          }
-        }
-
-        return {
-          id: item.id || item.item_id || item.internal_id || Math.random().toString(),
-          name: item.description || item.name || 'Producto sin nombre',
-          price: `S/ ${(Number(item.sale_unit_price) || 0).toFixed(2)}`,
-          originalPrice: Number(item.sale_unit_price) || 0,
-          category: item.unit_type_id === 'ZZ' ? 'soft' : 'hard', // Determinar tipo (ZZ = Servicio, otros = Equipos/Físico)
-          description: item.name || item.description || '',
-          image: imageUrl || 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=120&auto=format&fit=crop&q=60', // Fallback premium
-          originalImage: imageUrl || 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c',
-          stock: item.stock !== undefined ? Number(item.stock) : null
-        };
-      });
-
-      // 5. Guardar en Redis con un TTL de 5 minutos (300 segundos)
-      try {
-        await redis.setex(redisKey, 300, JSON.stringify(freshProducts));
-      } catch (redisSetErr: any) {
-        console.warn('[CRM Billing Products] Fallo al escribir en Redis:', redisSetErr.message);
+      if (configRes.rows.length === 0) {
+        return res.json({ 
+          success: true, 
+          configured: false, 
+          data: [] 
+        });
       }
 
-      return res.json({ 
-        success: true, 
-        configured: true, 
-        data: freshProducts 
+      const { billing_subdomain, billing_token } = configRes.rows[0];
+      const decryptedToken = decryptToken(billing_token);
+
+      if (!decryptedToken) {
+        return res.status(500).json({ success: false, error: 'Error de desencripción del token del facturador.' });
+      }
+
+      const targetUrl = `https://${billing_subdomain}.syscomecosistemadigital.com/api/document/search-items`;
+
+      // Llamada limpia: sin parámetros de búsqueda para traer el catálogo completo
+      const response = await axios.get(targetUrl, {
+        params: {}, // Catálogo completo
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${decryptedToken}`,
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        },
+        timeout: 10000 // 10 segundos timeout
       });
+
+      if (response.data && response.data.success) {
+        const itemsArray = Array.isArray(response.data.data) 
+          ? response.data.data 
+          : (response.data.data?.items || []);
+
+        catalogProducts = itemsArray.map((item: any) => {
+          let imageUrl = item.image_url || null;
+          if (!imageUrl && item.image) {
+            if (item.image.startsWith('http')) {
+              imageUrl = item.image;
+            } else {
+              imageUrl = `https://${billing_subdomain}.syscomecosistemadigital.com/storage/uploads/items/${item.image}`;
+            }
+          }
+
+          return {
+            id: item.id || item.item_id || item.internal_id || Math.random().toString(),
+            name: item.description || item.name || 'Producto sin nombre',
+            price: `S/ ${(Number(item.sale_unit_price) || 0).toFixed(2)}`,
+            originalPrice: Number(item.sale_unit_price) || 0,
+            category: item.unit_type_id === 'ZZ' ? 'soft' : 'hard', // ZZ = Servicio, otros = Equipos/Físico
+            description: item.name || item.description || '',
+            image: imageUrl || 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=120&auto=format&fit=crop&q=60',
+            originalImage: imageUrl || 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c',
+            stock: item.stock !== undefined ? Number(item.stock) : null
+          };
+        });
+
+        // Guardar en Redis con un TTL corto de 2 minutos (120 segundos) para mantener datos frescos
+        try {
+          await redis.setex(redisKey, 120, JSON.stringify(catalogProducts));
+        } catch (redisSetErr: any) {
+          console.warn('[CRM Billing Products] Fallo al escribir en Redis:', redisSetErr.message);
+        }
+      }
+    }
+
+    // 3. Filtrar los productos localmente en memoria usando Búsqueda Difusa (Fuzzy Match)
+    let filteredProducts = catalogProducts;
+    if (searchQuery) {
+      filteredProducts = catalogProducts.filter((prod: any) => 
+        fuzzyMatch(prod.name, searchQuery) || fuzzyMatch(prod.description, searchQuery)
+      );
     }
 
     return res.json({ 
       success: true, 
       configured: true, 
-      data: [] 
+      data: filteredProducts,
+      cached: isFromCache
     });
+
   } catch (error: any) {
     console.warn(`[CRM Billing Products] Fallo al consultar catálogo de la empresa ${req.userId}:`, error.message);
     
-    // Si la llamada falla pero tenemos algo en el caché (aunque hayamos pedido refresh), intentar devolverlo como fallback
+    // Fallback: Si falla la conexión, intentar servir los productos del caché global filtrados localmente
     try {
-      const redisKey = `billing:products:${req.userId}:${search || ''}`;
+      const redisKey = `billing:products:${req.userId}:all`;
       const cached = await redis.get(redisKey);
       if (cached) {
+        const cachedProducts = JSON.parse(cached);
+        let filteredProducts = cachedProducts;
+        if (searchQuery) {
+          filteredProducts = cachedProducts.filter((prod: any) => 
+            fuzzyMatch(prod.name, searchQuery) || fuzzyMatch(prod.description, searchQuery)
+          );
+        }
+
         return res.json({ 
           success: true, 
           configured: true, 
-          data: JSON.parse(cached),
+          data: filteredProducts,
           cached: true,
-          warning: 'Mostrando datos del caché debido a problemas de conexión con el facturador.'
+          warning: 'Mostrando datos locales de caché debido a problemas de conexión con el facturador.'
         });
       }
     } catch (e) {}
 
-    // Retornamos éxito vacío en vez de romper la UI en caso de problemas del facturador del cliente
     return res.json({ 
       success: true, 
       configured: true, 
