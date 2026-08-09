@@ -3156,7 +3156,7 @@ echo $response;`;
                     sidebarOpen ? 'px-4 py-3 justify-start' : 'p-3 justify-center'
                   } rounded-2xl transition-all duration-300 relative cursor-pointer ${
                     active 
-                      ? 'bg-[#12a160] text-white font-bold'
+                      ? 'bg-brand-primary text-white font-bold'
                       : 'text-slate-300 dark:text-surface-400 hover:bg-white/5 hover:text-white font-medium'
                   }`}
                 >
@@ -3175,7 +3175,7 @@ echo $response;`;
                   )}
                   {sidebarOpen && item.id === 'chats' && (
                     <span className={`ml-auto text-[10px] font-extrabold px-1.5 h-5 min-w-[20px] rounded-full flex items-center justify-center ${
-                      active ? 'bg-white text-[#12a160]' : 'bg-white/10 text-white'}`}>
+                      active ? 'bg-white text-brand-primary' : 'bg-white/10 text-white'}`}>
                       {chats.reduce((sum, c) => sum + (Number(c.unreadCount) || 0), 0) > 0 
                         ? chats.reduce((sum, c) => sum + (Number(c.unreadCount) || 0), 0) 
                         : 8}
@@ -3288,14 +3288,14 @@ echo $response;`;
                               setSelectedChat(null);
                               setShowChatsInstanceMenu(false);
                             }}
-                            className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-3 cursor-pointer text-left \${
+                            className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-3 cursor-pointer text-left ${
                               selectedInstanceForChats === inst.instance_name 
                                 ? 'bg-[#0D9488] dark:bg-slate-800/60 text-white dark:text-white' 
                                 : 'text-slate-100 dark:text-surface-400 hover:bg-[#0D9488]/40 dark:hover:bg-slate-800/40 hover:text-white dark:hover:text-white'
                             }`}
                           >
                             <span className="truncate">{inst.instance_name}</span>
-                            <span className={`px-2 py-0.5 rounded-md text-[8.5px] font-bold \${
+                            <span className={`px-2 py-0.5 rounded-md text-[8.5px] font-bold ${
                               inst.status === 'connected' 
                                 ? 'bg-pastel-100/50 text-brand-secondary dark:text-brand-primary' 
                                 : 'bg-slate-100 dark:bg-slate-950 text-surface-500'
@@ -3904,7 +3904,7 @@ echo $response;`;
                                 </button>
                                 
                                 {/* Profile Pic */}
-                                <div className="w-12 h-12 rounded-full bg-[#12a160] text-white flex items-center justify-center font-bold text-lg overflow-hidden shrink-0">
+                                <div className="w-12 h-12 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-lg overflow-hidden shrink-0">
                                   {selectedChat.profilePicUrl ? (
                                     <img src={selectedChat.profilePicUrl} alt="" className="w-full h-full object-cover" />
                                   ) : (
@@ -5013,7 +5013,7 @@ echo $response;`;
                                         className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100/70 dark:bg-slate-950 border-0 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all cursor-pointer min-w-[65px] justify-between focus:outline-none"
                                       >
                                         <span>{crmDocType}</span>
-                                        <ChevronDown size={10} className={`text-surface-400 transition-transform duration-200 \${isDocTypeDropdownOpen ? 'rotate-180' : ''}`} />
+                                        <ChevronDown size={10} className={`text-surface-400 transition-transform duration-200 ${isDocTypeDropdownOpen ? 'rotate-180' : ''}`} />
                                       </button>
 
                                       {isDocTypeDropdownOpen && (
@@ -5032,7 +5032,7 @@ echo $response;`;
                                                 setCrmAddress('');
                                                 setIsDocTypeDropdownOpen(false);
                                               }}
-                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-[#0D9488]/40 hover:text-white transition-colors cursor-pointer \${crmDocType === 'DNI' ? 'text-white bg-[#0D9488]' : 'text-slate-100 dark:text-slate-200'}`}
+                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-[#0D9488]/40 hover:text-white transition-colors cursor-pointer ${crmDocType === 'DNI' ? 'text-white bg-[#0D9488]' : 'text-slate-100 dark:text-slate-200'}`}
                                             >
                                               DNI
                                             </button>
@@ -5045,7 +5045,7 @@ echo $response;`;
                                                 setCrmAddress('');
                                                 setIsDocTypeDropdownOpen(false);
                                               }}
-                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-[#0D9488]/40 hover:text-white transition-colors cursor-pointer \${crmDocType === 'RUC' ? 'text-white bg-[#0D9488]' : 'text-slate-100 dark:text-slate-200'}`}
+                                              className={`w-full text-left px-2.5 py-1.5 text-[11px] font-bold hover:bg-[#0D9488]/40 hover:text-white transition-colors cursor-pointer ${crmDocType === 'RUC' ? 'text-white bg-[#0D9488]' : 'text-slate-100 dark:text-slate-200'}`}
                                             >
                                               RUC
                                             </button>
@@ -5104,7 +5104,7 @@ echo $response;`;
                                         <span>
                                           {crmCategories.find(c => c.id.toString() === crmCategoryId)?.name || 'Sin Categoría'}
                                         </span>
-                                        <ChevronDown size={11} className={`text-surface-400 transition-transform duration-200 \${isCategoryDropdownOpen ? 'rotate-180' : ''}`} />
+                                        <ChevronDown size={11} className={`text-surface-400 transition-transform duration-200 ${isCategoryDropdownOpen ? 'rotate-180' : ''}`} />
                                       </button>
 
                                       {isCategoryDropdownOpen && (
@@ -5120,7 +5120,7 @@ echo $response;`;
                                                 setCrmCategoryId('');
                                                 setIsCategoryDropdownOpen(false);
                                               }}
-                                              className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-[#0D9488]/40 hover:text-white transition-colors cursor-pointer \${crmCategoryId === '' ? 'text-white bg-[#0D9488]' : 'text-slate-100 dark:text-slate-200'}`}
+                                              className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-[#0D9488]/40 hover:text-white transition-colors cursor-pointer ${crmCategoryId === '' ? 'text-white bg-[#0D9488]' : 'text-slate-100 dark:text-slate-200'}`}
                                             >
                                               Sin Categoría
                                             </button>
@@ -5132,7 +5132,7 @@ echo $response;`;
                                                   setCrmCategoryId(cat.id.toString());
                                                   setIsCategoryDropdownOpen(false);
                                                 }}
-                                                className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-[#0D9488]/40 hover:text-white transition-colors cursor-pointer \${crmCategoryId === cat.id.toString() ? 'text-white bg-[#0D9488]' : 'text-slate-100 dark:text-slate-200'}`}
+                                                className={`w-full text-left px-3 py-1.5 text-[11px] font-bold hover:bg-[#0D9488]/40 hover:text-white transition-colors cursor-pointer ${crmCategoryId === cat.id.toString() ? 'text-white bg-[#0D9488]' : 'text-slate-100 dark:text-slate-200'}`}
                                               >
                                                 {cat.name}
                                               </button>
@@ -5762,7 +5762,7 @@ echo $response;`;
                                       >
                                         <div className="flex items-start justify-between gap-2.5">
                                           <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 rounded-full bg-[#12a160] text-white flex items-center justify-center font-bold text-xs shrink-0">
+                                            <div className="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-xs shrink-0">
                                               {initials}
                                             </div>
                                             <div className="truncate text-left">
