@@ -3243,7 +3243,7 @@ echo $response;`;
       <div className="flex-1 flex flex-col overflow-hidden">
         
         {/* Header Bar */}
-        <header className="h-16 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl px-6 flex items-center justify-between z-30 transition-colors duration-300">
+        <header className="h-16 bg-white dark:bg-slate-950 border-b border-slate-200/50 dark:border-slate-800/40 px-6 flex items-center justify-between z-30 transition-colors duration-300">
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setSidebarOpen(true)}
