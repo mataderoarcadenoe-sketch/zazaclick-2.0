@@ -72,7 +72,7 @@
   }
 
   body.dark {
-    background-color: #232b45;
+    background-color: #0b0f19;
     color: #f8fafc;
   }
 
@@ -177,7 +177,7 @@
   }
 
   body.dark .mesh-gradient {
-    background: #232b45;
+    background: #0b0f19;
   }
 
   /* Custom utility classes */

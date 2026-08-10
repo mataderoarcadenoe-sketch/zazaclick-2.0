@@ -3425,12 +3425,12 @@ echo $response;`;
 
       {/* Sidebar */}
       <aside 
-        className={`bg-[#232b45] flex flex-col transition-all duration-300 shadow-premium z-50 fixed top-0 left-0 h-full ${
+        className={`bg-[#232b45] dark:bg-[#0b0f19] flex flex-col transition-all duration-300 shadow-premium z-50 fixed top-0 left-0 h-full ${
           sidebarOpen ? 'w-64 translate-x-0' : 'w-20 -translate-x-full lg:translate-x-0'
         }`}
       >
         {/* Brand header */}
-        <div className={`h-16 flex items-center ${sidebarOpen ? 'justify-between px-6' : 'justify-center'} border-b border-[#2e3757]`}>
+        <div className={`h-16 flex items-center ${sidebarOpen ? 'justify-between px-6' : 'justify-center'} border-b border-[#2e3757] dark:border-slate-800/80`}>
           {sidebarOpen && (
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-primary to-brand-secondary flex items-center justify-center text-white shadow-md shadow-brand-primary/25">
@@ -3511,7 +3511,7 @@ echo $response;`;
         </nav>
 
         {/* Footer profile actions */}
-        <div className="p-3 border-t border-[#2e3757] bg-[#232b45]">
+        <div className="p-3 border-t border-[#2e3757] dark:border-slate-800/80 bg-[#232b45] dark:bg-[#0b0f19]">
           <button
             onClick={logout}
             className={`w-full group flex items-center ${
@@ -3535,7 +3535,7 @@ echo $response;`;
       <div className="flex-1 flex flex-col overflow-hidden">
         
         {/* Header Bar */}
-        <header className="h-16 bg-[#232b45] text-white border-b border-[#2e3757] px-6 flex items-center justify-between z-30 transition-colors duration-300">
+        <header className="h-16 bg-[#232b45] dark:bg-[#0b0f19] text-white border-b border-[#2e3757] dark:border-slate-800/80 px-6 flex items-center justify-between z-30 transition-colors duration-300">
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setSidebarOpen(true)}
