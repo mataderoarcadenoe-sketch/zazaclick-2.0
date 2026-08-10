@@ -3383,7 +3383,7 @@ echo $response;`;
 
       {/* Sidebar */}
       <aside 
-        className={`bg-[#232b45] dark:bg-surface-950 flex flex-col transition-all duration-300 shadow-premium z-50 fixed top-0 left-0 h-full ${
+        className={`bg-[#232b45] flex flex-col transition-all duration-300 shadow-premium z-50 fixed top-0 left-0 h-full ${
           sidebarOpen ? 'w-64 translate-x-0' : 'w-20 -translate-x-full lg:translate-x-0'
         }`}
       >
