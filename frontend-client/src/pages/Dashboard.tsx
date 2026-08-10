@@ -6602,7 +6602,7 @@ echo $response;`;
                             columnBg: 'bg-blue-50/20 dark:bg-blue-950/5',
                             border: 'border-blue-100 dark:border-blue-900/20',
                             badgeBg: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-350',
-                            titleText: 'text-blue-700 dark:text-blue-400 font-extrabold',
+                            titleText: 'text-slate-700 dark:text-slate-200 font-extrabold',
                             totalText: 'text-blue-600/70 dark:text-blue-400/60',
                             totalAmount: 'text-blue-700 dark:text-blue-300'
                           },
@@ -6611,7 +6611,7 @@ echo $response;`;
                             columnBg: 'bg-purple-50/20 dark:bg-purple-950/5',
                             border: 'border-purple-100 dark:border-purple-900/20',
                             badgeBg: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-350',
-                            titleText: 'text-purple-700 dark:text-purple-400 font-extrabold',
+                            titleText: 'text-slate-700 dark:text-slate-200 font-extrabold',
                             totalText: 'text-purple-600/70 dark:text-purple-400/60',
                             totalAmount: 'text-purple-700 dark:text-purple-300'
                           },
@@ -6620,7 +6620,7 @@ echo $response;`;
                             columnBg: 'bg-amber-50/20 dark:bg-amber-950/5',
                             border: 'border-amber-100 dark:border-amber-900/20',
                             badgeBg: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-350',
-                            titleText: 'text-amber-700 dark:text-amber-400 font-extrabold',
+                            titleText: 'text-slate-700 dark:text-slate-200 font-extrabold',
                             totalText: 'text-amber-600/70 dark:text-amber-400/60',
                             totalAmount: 'text-amber-700 dark:text-amber-300'
                           },
@@ -6629,7 +6629,7 @@ echo $response;`;
                             columnBg: 'bg-indigo-50/20 dark:bg-indigo-950/5',
                             border: 'border-indigo-100 dark:border-indigo-900/20',
                             badgeBg: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-350',
-                            titleText: 'text-indigo-700 dark:text-indigo-400 font-extrabold',
+                            titleText: 'text-slate-700 dark:text-slate-200 font-extrabold',
                             totalText: 'text-indigo-650/75 dark:text-indigo-400/60',
                             totalAmount: 'text-indigo-700 dark:text-indigo-300'
                           },
@@ -6638,7 +6638,7 @@ echo $response;`;
                             columnBg: 'bg-rose-50/20 dark:bg-rose-950/5',
                             border: 'border-rose-100 dark:border-rose-900/20',
                             badgeBg: 'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-350',
-                            titleText: 'text-rose-750 dark:text-rose-400 font-extrabold',
+                            titleText: 'text-slate-700 dark:text-slate-200 font-extrabold',
                             totalText: 'text-rose-600/70 dark:text-rose-400/60',
                             totalAmount: 'text-rose-700 dark:text-rose-300'
                           },
@@ -6647,7 +6647,7 @@ echo $response;`;
                             columnBg: 'bg-emerald-50/20 dark:bg-emerald-950/5',
                             border: 'border-emerald-100 dark:border-emerald-900/20',
                             badgeBg: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-350',
-                            titleText: 'text-emerald-750 dark:text-emerald-400 font-extrabold',
+                            titleText: 'text-slate-700 dark:text-slate-200 font-extrabold',
                             totalText: 'text-emerald-600/70 dark:text-emerald-400/60',
                             totalAmount: 'text-emerald-700 dark:text-emerald-300'
                           },
@@ -6656,7 +6656,7 @@ echo $response;`;
                             columnBg: 'bg-violet-50/20 dark:bg-violet-950/5',
                             border: 'border-violet-100 dark:border-violet-900/20',
                             badgeBg: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-350',
-                            titleText: 'text-violet-750 dark:text-violet-400 font-extrabold',
+                            titleText: 'text-slate-700 dark:text-slate-200 font-extrabold',
                             totalText: 'text-violet-600/70 dark:text-violet-400/60',
                             totalAmount: 'text-violet-700 dark:text-violet-300'
                           }
