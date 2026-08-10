@@ -3343,7 +3343,7 @@ echo $response;`;
         }`}
       >
         {/* Brand header */}
-        <div className={`h-[72px] flex items-center ${sidebarOpen ? 'justify-between px-6' : 'justify-center'} border-b border-white/5`}>
+        <div className={`h-16 flex items-center ${sidebarOpen ? 'justify-between px-6' : 'justify-center'} border-b border-slate-800`}>
           {sidebarOpen && (
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-primary to-brand-secondary flex items-center justify-center text-white shadow-md shadow-brand-primary/25">
