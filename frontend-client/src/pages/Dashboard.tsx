@@ -4526,17 +4526,17 @@ echo $response;`;
                                     if (msg.MessageUpdate) {
                                       const statuses = msg.MessageUpdate.map((u: any) => u.status);
                                       if (statuses.includes('READ')) {
-                                        statusIcon = <span className="text-[9px] text-sky-400 font-bold ml-1">✓✓</span>;
+                                        statusIcon = <span className="text-[9px] text-blue-600 dark:text-sky-300 font-bold ml-1">✓✓</span>;
                                       } else if (statuses.includes('DELIVERY_ACK')) {
-                                        statusIcon = <span className="text-[9px] text-slate-300 dark:text-white/60 font-bold ml-1">✓✓</span>;
+                                        statusIcon = <span className="text-[9px] text-slate-500 dark:text-white/60 font-bold ml-1">✓✓</span>;
                                       } else if (statuses.includes('SERVER_ACK')) {
-                                        statusIcon = <span className="text-[9px] text-slate-300 dark:text-white/60 font-bold ml-1">✓</span>;
+                                        statusIcon = <span className="text-[9px] text-slate-500 dark:text-white/60 font-bold ml-1">✓</span>;
                                       } else {
-                                        statusIcon = <span className="text-[9px] text-slate-300 dark:text-white/60 font-bold ml-1">✓</span>;
+                                        statusIcon = <span className="text-[9px] text-slate-500 dark:text-white/60 font-bold ml-1">✓</span>;
                                       }
                                     } else {
                                       // Mensajes enviados sin MessageUpdate aún: mostrar ✓ por defecto
-                                      statusIcon = <span className="text-[9px] text-slate-300 dark:text-white/60 font-bold ml-1">✓</span>;
+                                      statusIcon = <span className="text-[9px] text-slate-500 dark:text-white/60 font-bold ml-1">✓</span>;
                                     }
                                   }
 
@@ -4823,11 +4823,11 @@ echo $response;`;
                                       )}
 
                                       {/* Bubble */}
-                                      <div className={`p-3 rounded-2xl ${fromMe ? 'bg-slate-900 text-white rounded-tr-none shadow-sm border border-slate-800' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-tl-none border border-slate-100 dark:border-slate-700/50 shadow-sm'}`}>
+                                      <div className={`p-3 rounded-2xl ${fromMe ? 'bg-[#d0e1f9] dark:bg-[#1e293b] text-slate-900 dark:text-slate-100 rounded-tr-none shadow-sm border border-blue-200/60 dark:border-slate-700' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-tl-none border border-slate-100 dark:border-slate-700/50 shadow-sm'}`}>
                                         {renderMessageContent()}
                                         
                                         {/* Timestamp and Checks */}
-                                        <div className={`flex items-center justify-end mt-1 text-[9px] font-medium ${fromMe ? 'text-slate-300 dark:text-white/60' : 'text-surface-400 dark:text-surface-500'}`}>
+                                        <div className={`flex items-center justify-end mt-1 text-[9px] font-medium ${fromMe ? 'text-slate-500 dark:text-white/60' : 'text-surface-400 dark:text-surface-500'}`}>
                                           <span>{timestamp}</span>
                                           {statusIcon}
                                         </div>
