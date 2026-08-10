@@ -4047,7 +4047,7 @@ echo $response;`;
                                     key={chat.remoteJid}
                                     onClick={() => setSelectedChat(chat)}
                                     type="button"
-                                    className={`w-full py-3.5 px-3.5 flex items-center gap-3 text-left transition-all duration-300 cursor-pointer rounded-2xl relative ${isActive ? 'bg-[#d0e1f9] dark:bg-slate-800 border border-blue-200/80 dark:border-slate-700 shadow-sm' : 'hover:bg-slate-100/60 dark:hover:bg-slate-800/20 border border-transparent'}`}
+                                    className={`w-full py-3.5 px-3.5 flex items-center gap-3 text-left transition-all duration-300 cursor-pointer rounded-2xl relative ${isActive ? 'bg-[#d0e1f9] dark:bg-slate-800' : 'hover:bg-slate-100/60 dark:hover:bg-slate-800/20'}`}
                                   >
                                     {/* Active indicator pill */}
                                     {isActive && (
