@@ -3400,7 +3400,7 @@ echo $response;`;
                     size={20} 
                     className={`flex-shrink-0 transition-colors ${active ? 'text-white' : 'text-slate-400 group-hover:text-slate-300'}`}
                     strokeWidth={active ? 2.5 : 2}
-                    fill={active && item.id === 'chats' ? 'currentColor' : 'none'}
+                    fill="none"
                   />
                   {sidebarOpen ? (
                     <span className="ml-3.5 text-[13.5px] tracking-wide">{item.label}</span>
