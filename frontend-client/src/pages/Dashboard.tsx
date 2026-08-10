@@ -5019,37 +5019,6 @@ echo $response;`;
                                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
                             {!crmIsEditing && crmClient ? (
                               <div className="space-y-3.5 pb-6">
-                                {/* Professional Header Card */}
-                                <div className="relative rounded-2xl p-4 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 shadow-sm text-left">
-                                  <div className="flex items-center gap-3.5">
-                                    <div className="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[13px] font-bold text-slate-600 dark:text-slate-300 flex-shrink-0 uppercase tracking-wide">
-                                      {crmClient.name.split(' ').slice(0, 2).map((n: string) => n[0]).join('').toUpperCase() || 'C'}
-                                    </div>
-                                    <div className="flex-1 min-w-0 pr-8 space-y-1.5">
-                                      <h4 className="text-[12.5px] font-extrabold text-slate-800 dark:text-white uppercase truncate leading-tight" title={crmClient.name}>
-                                        {crmClient.name}
-                                      </h4>
-                                      <div className="flex items-center gap-2 flex-wrap">
-                                        {crmClient.doc_number && !crmClient.doc_number.startsWith('MANUAL-') && (
-                                          <span className="text-[9.5px] font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                                            <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase">{crmClient.doc_type || 'DOC'}</span>
-                                            {crmClient.doc_number}
-                                          </span>
-                                        )}
-                                        {(() => {
-                                          const cat = crmContact?.category_name || 'Cliente';
-                                          let pillColor = 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400';
-                                          if (cat === 'VIP' || cat === 'Cliente frecuente') pillColor = 'bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400';
-                                          else if (cat === 'Moroso' || cat === 'Pendiente') pillColor = 'bg-rose-50 text-rose-600 dark:bg-rose-950/30 dark:text-rose-400';
-                                          else if (cat === 'Interesado' || cat === 'Prospecto') pillColor = 'bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400';
-                                          else if (cat === 'Pagó') pillColor = 'bg-green-50 text-green-600 dark:bg-green-950/30 dark:text-green-400';
-                                          return <span className={`px-2 py-0.5 text-[8px] font-bold uppercase rounded-md ${pillColor}`}>{cat}</span>;
-                                        })()}
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                </div>
                               
                                 {/* Información del contacto */}
                                 <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800 space-y-4">
