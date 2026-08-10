@@ -4995,13 +4995,14 @@ echo $response;`;
                             <>
                               {/* CRM Header Bar */}
                               <div className="h-[96px] px-4 flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900 flex-shrink-0">
-                                <div className="min-w-0 text-left space-y-1">
-                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary text-[8px] font-bold uppercase tracking-wider border border-brand-primary/20">
-                                    Ficha de Cliente
-                                  </span>
-                                  <h4 className="text-[12px] font-extrabold text-slate-800 dark:text-white uppercase tracking-tight truncate max-w-[180px]">
-                                    {crmClient?.name || 'Datos CRM'}
+                                <div className="min-w-0 text-left space-y-0.5">
+                                  <h4 className="text-xs font-bold text-slate-800 dark:text-white leading-tight flex items-center gap-1.5">
+                                    <User size={14} className="text-brand-primary" />
+                                    <span>{crmClient ? 'Editar Ficha del Cliente' : 'Ficha de Cliente'}</span>
                                   </h4>
+                                  <p className="text-[9px] sm:text-[10px] text-slate-400 font-medium leading-tight">
+                                    {crmClient ? 'Modifica los datos del contacto e información de facturación.' : 'Registra un nuevo contacto en el sistema de facturación y CRM.'}
+                                  </p>
                                 </div>
                                 <button
                                   type="button"
@@ -5373,16 +5374,6 @@ echo $response;`;
                             ) : (
                               /* Create / Edit Form Mode */
                               <div className="space-y-4 pb-6">
-                                {/* Title and Subtitle Header */}
-                                <div className="pb-3 border-b border-slate-100 dark:border-slate-800/60 text-left">
-                                  <h5 className="text-[12px] font-extrabold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                                    <User size={13} className="text-brand-primary" />
-                                    <span>{crmClient ? 'Editar Ficha del Cliente' : 'Crear Ficha del Cliente'}</span>
-                                  </h5>
-                                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 leading-relaxed font-medium">
-                                    {crmClient ? 'Modifica los datos del contacto e información de facturación.' : 'Registra un nuevo contacto en el sistema de facturación y CRM.'}
-                                  </p>
-                                </div>
 
                                 <div className="space-y-3">
                                   <div className="space-y-1 text-left">
