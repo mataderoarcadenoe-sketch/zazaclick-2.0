@@ -4511,7 +4511,7 @@ echo $response;`;
                             ) : messages.length === 0 ? (
                               <div className="my-auto text-center text-xs text-surface-400">No hay mensajes en este chat.</div>
                             ) : (
-                              messages
+                                    messages
                                 .slice()
                                 .reverse()
                                 .map((msg) => {
@@ -4526,17 +4526,17 @@ echo $response;`;
                                     if (msg.MessageUpdate) {
                                       const statuses = msg.MessageUpdate.map((u: any) => u.status);
                                       if (statuses.includes('READ')) {
-                                        statusIcon = <span className="text-[9px] text-sky-600 dark:text-sky-300 font-bold ml-1">✓✓</span>;
+                                        statusIcon = <span className="text-[9px] text-sky-400 font-bold ml-1">✓✓</span>;
                                       } else if (statuses.includes('DELIVERY_ACK')) {
-                                        statusIcon = <span className="text-[9px] text-slate-500/80 dark:text-white/60 font-bold ml-1">✓✓</span>;
+                                        statusIcon = <span className="text-[9px] text-slate-300 dark:text-white/60 font-bold ml-1">✓✓</span>;
                                       } else if (statuses.includes('SERVER_ACK')) {
-                                        statusIcon = <span className="text-[9px] text-slate-500/80 dark:text-white/60 font-bold ml-1">✓</span>;
+                                        statusIcon = <span className="text-[9px] text-slate-300 dark:text-white/60 font-bold ml-1">✓</span>;
                                       } else {
-                                        statusIcon = <span className="text-[9px] text-slate-500/80 dark:text-white/60 font-bold ml-1">✓</span>;
+                                        statusIcon = <span className="text-[9px] text-slate-300 dark:text-white/60 font-bold ml-1">✓</span>;
                                       }
                                     } else {
                                       // Mensajes enviados sin MessageUpdate aún: mostrar ✓ por defecto
-                                      statusIcon = <span className="text-[9px] text-slate-500/80 dark:text-white/60 font-bold ml-1">✓</span>;
+                                      statusIcon = <span className="text-[9px] text-slate-300 dark:text-white/60 font-bold ml-1">✓</span>;
                                     }
                                   }
 
@@ -4823,11 +4823,11 @@ echo $response;`;
                                       )}
 
                                       {/* Bubble */}
-                                      <div className={`p-3 rounded-2xl ${fromMe ? 'bg-[#D8F3DC] dark:bg-[#005c4b] text-slate-800 dark:text-slate-100 rounded-tr-none' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-tl-none border border-slate-100 dark:border-slate-700/50'}`}>
+                                      <div className={`p-3 rounded-2xl ${fromMe ? 'bg-slate-900 text-white rounded-tr-none shadow-sm border border-slate-800' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-tl-none border border-slate-100 dark:border-slate-700/50 shadow-sm'}`}>
                                         {renderMessageContent()}
                                         
                                         {/* Timestamp and Checks */}
-                                        <div className={`flex items-center justify-end mt-1 text-[9px] font-medium ${fromMe ? 'text-slate-500 dark:text-white/60' : 'text-surface-400 dark:text-surface-500'}`}>
+                                        <div className={`flex items-center justify-end mt-1 text-[9px] font-medium ${fromMe ? 'text-slate-300 dark:text-white/60' : 'text-surface-400 dark:text-surface-500'}`}>
                                           <span>{timestamp}</span>
                                           {statusIcon}
                                         </div>
