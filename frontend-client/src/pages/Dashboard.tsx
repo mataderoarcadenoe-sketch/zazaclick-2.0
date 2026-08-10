@@ -3701,10 +3701,10 @@ echo $response;`;
         )}
 
         {/* Interactive Content Container */}
-        <main className={`flex-1 bg-transparent relative ${activeTab === 'chats' ? 'overflow-hidden p-3.5 md:p-4 pb-4' : 'p-4 sm:p-6 lg:p-6 overflow-y-auto'}`}>
+        <main className={`flex-1 bg-transparent relative ${(activeTab === 'chats' || activeTab === 'pipeline') ? 'overflow-hidden p-3.5 md:p-4 pb-4' : 'p-4 sm:p-6 lg:p-6 overflow-y-auto'}`}>
           
           {/* Active Section Renderer */}
-          <div className={`w-full ${activeTab === 'chats' ? 'h-full flex flex-col space-y-0' : 'space-y-6'}`}>
+          <div className={`w-full ${(activeTab === 'chats' || activeTab === 'pipeline') ? 'h-full flex flex-col space-y-0 min-h-0' : 'space-y-6'}`}>
             
             {/* OVERVIEW SECTION */}
             {activeTab === 'overview' && (
@@ -6615,7 +6615,7 @@ echo $response;`;
                           }
                         };
                         return (
-                          <div className="flex-1 overflow-x-auto pb-4 flex gap-4.5 items-start min-h-0 hide-scrollbar select-none">
+                          <div className="flex-1 overflow-x-auto pb-1 flex gap-4.5 items-stretch min-h-0 hide-scrollbar select-none">
                             {PIPELINE_STAGES.filter(stage => visibleStages.includes(stage)).map((columnName) => {
                               const rawItems = columns[columnName] || [];
                               const items = rawItems.filter((item: any) => {
@@ -6643,7 +6643,7 @@ echo $response;`;
                                     setDraggedCardJid(null);
                                     setActiveDragStage(null);
                                   }}
-                                  className={`w-72 shrink-0 ${theme.columnBg} border ${theme.border} rounded-2xl flex flex-col max-h-[72vh] overflow-hidden transition-all duration-200 ${
+                                  className={`w-72 shrink-0 ${theme.columnBg} border ${theme.border} rounded-2xl flex flex-col h-full min-h-0 overflow-hidden transition-all duration-200 ${
                                     isOver ? 'bg-indigo-500/5 dark:bg-indigo-500/10 ring-2 ring-indigo-500/20 scale-[1.01]' : ''
                                   }`}
                                 >
@@ -6666,7 +6666,7 @@ echo $response;`;
                                   </div>
 
                                   {/* Column Body */}
-                                  <div className="flex-1 overflow-y-auto p-3 pb-24 space-y-2.5 min-h-[200px]">
+                                  <div className="flex-1 overflow-y-auto p-3 pb-4 space-y-2.5 min-h-0">
                                     {items.length === 0 ? (
                                       <div className="h-24 border border-dashed border-slate-200/50 dark:border-slate-800 rounded-2xl flex items-center justify-center text-[9px] text-slate-400 font-medium">Sin prospectos</div>
                                     ) : (
