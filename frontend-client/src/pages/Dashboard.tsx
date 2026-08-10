@@ -2515,10 +2515,15 @@ export default function DashboardPage() {
     try {
       const res = await api.get('/crm/orders');
       if (res.data?.success) {
-        setAllQuotes(res.data.data || []);
+        const rawData = res.data.data;
+        const quotesArray = Array.isArray(rawData) ? rawData : (rawData && typeof rawData === 'object' && Array.isArray(rawData.orders) ? rawData.orders : []);
+        setAllQuotes(quotesArray);
+      } else {
+        setAllQuotes([]);
       }
     } catch (err: any) {
       console.error('Error fetching all quotes:', err.message);
+      setAllQuotes([]);
     } finally {
       setAllQuotesLoading(false);
     }
@@ -10343,122 +10348,144 @@ echo $response;`;
 
               {/* Quotes Grid */}
               <div className="flex-1 overflow-y-auto min-h-0 pr-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-start content-start">
-                {allQuotesLoading && allQuotes.length === 0 ? (
-                  <div className="flex-1 flex items-center justify-center py-16 col-span-full">
-                    <RefreshCw size={24} className="animate-spin text-brand-primary" />
-                  </div>
-                ) : allQuotes.length === 0 ? (
-                  <div className="flex-1 text-center py-16 text-xs text-slate-400 font-medium col-span-full">
-                    No hay cotizaciones registradas en el sistema.
-                  </div>
-                ) : (
-                  (() => {
-                    const filteredQuotes = allQuotes.filter((q: any) => {
-                      const query = quotesSearch.toLowerCase().trim();
-                      const matchSearch = !query || 
-                        q.quote_id.toLowerCase().includes(query) || 
-                        (q.client_name && q.client_name.toLowerCase().includes(query)) ||
-                        (q.client_phone && q.client_phone.includes(query));
-                      const matchStatus = quotesStatusFilter === 'all' || q.status === quotesStatusFilter;
-                      return matchSearch && matchStatus;
-                    });
+                {(() => {
+                  const safeQuotes = Array.isArray(allQuotes) ? allQuotes : [];
+                  if (allQuotesLoading && safeQuotes.length === 0) {
+                    return (
+                      <div className="flex-1 flex items-center justify-center py-16 col-span-full">
+                        <RefreshCw size={24} className="animate-spin text-brand-primary" />
+                      </div>
+                    );
+                  }
 
-                    if (filteredQuotes.length === 0) {
-                      return <div className="text-center py-12 text-xs text-slate-400 col-span-full">Ninguna cotización coincide con los filtros.</div>;
+                  if (safeQuotes.length === 0) {
+                    return (
+                      <div className="flex-1 text-center py-16 text-xs text-slate-400 font-medium col-span-full">
+                        No hay cotizaciones registradas en el sistema.
+                      </div>
+                    );
+                  }
+
+                  const filteredQuotes = safeQuotes.filter((q: any) => {
+                    if (!q) return false;
+                    const query = quotesSearch.toLowerCase().trim();
+                    const qId = String(q.quote_id || q.id || '');
+                    const clientName = String(q.client_name || q.pushName || '');
+                    const clientPhone = String(q.client_phone || q.phone_number || '');
+                    const matchSearch = !query || 
+                      qId.toLowerCase().includes(query) || 
+                      clientName.toLowerCase().includes(query) ||
+                      clientPhone.includes(query);
+                    const matchStatus = quotesStatusFilter === 'all' || q.status === quotesStatusFilter;
+                    return matchSearch && matchStatus;
+                  });
+
+                  if (filteredQuotes.length === 0) {
+                    return <div className="text-center py-12 text-xs text-slate-400 col-span-full">Ninguna cotización coincide con los filtros.</div>;
+                  }
+
+                  return filteredQuotes.map((quote: any) => {
+                    const isExpanded = expandedAllQuotes[quote.id];
+                    const statusColors: Record<string, string> = {
+                      'PENDIENTE': 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+                      'CONFIRMADO': 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+                      'CANCELADO': 'bg-red-500/10 text-red-500 dark:text-red-400 border-red-500/20'
+                    };
+
+                    let itemsArray: any[] = [];
+                    if (Array.isArray(quote.items)) {
+                      itemsArray = quote.items;
+                    } else if (typeof quote.items === 'string') {
+                      try { itemsArray = JSON.parse(quote.items); } catch (e) { itemsArray = []; }
                     }
 
-                    return filteredQuotes.map((quote: any) => {
-                      const isExpanded = expandedAllQuotes[quote.id];
-                      const statusColors: Record<string, string> = {
-                        'PENDIENTE': 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
-                        'CONFIRMADO': 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
-                        'CANCELADO': 'bg-red-500/10 text-red-500 dark:text-red-400 border-red-500/20'
-                      };
+                    return (
+                      <div key={quote.id || quote.quote_id} className="bg-slate-50/60 dark:bg-slate-900/40 rounded-2xl border border-slate-200/50 dark:border-slate-800/60 p-4 space-y-3 shadow-sm hover:shadow-md transition-all flex flex-col justify-between text-left h-fit">
+                        {/* Cabecera de Tarjeta */}
+                        <div className="flex items-center justify-between gap-2 border-b border-slate-200/50 dark:border-slate-800/50 pb-2">
+                          <span className="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Cotización #{quote.quote_id || quote.id}</span>
+                          <span className={`px-2 py-0.5 text-[8.5px] font-black rounded-md border uppercase tracking-wider ${statusColors[quote.status] || statusColors['PENDIENTE']}`}>{quote.status || 'PENDIENTE'}</span>
+                        </div>
 
-                      return (
-                        <div key={quote.id} className="bg-slate-50/60 dark:bg-slate-900/40 rounded-2xl border border-slate-200/50 dark:border-slate-800/60 p-4 space-y-3 shadow-sm hover:shadow-md transition-all flex flex-col justify-between text-left h-fit">
-                          {/* Cabecera de Tarjeta */}
-                          <div className="flex items-center justify-between gap-2 border-b border-slate-200/50 dark:border-slate-800/50 pb-2">
-                            <span className="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Cotización #{quote.quote_id}</span>
-                            <span className={`px-2 py-0.5 text-[8.5px] font-black rounded-md border uppercase tracking-wider ${statusColors[quote.status] || statusColors['PENDIENTE']}`}>{quote.status}</span>
+                        {/* Info Cliente */}
+                        <div className="space-y-1">
+                          <h5 className="text-xs font-black uppercase text-brand-primary truncate" title={quote.client_name}>
+                            {quote.client_name || 'Desconocido'}
+                          </h5>
+                          <div className="flex flex-col gap-0.5 text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+                            <span>📞 +{quote.client_phone || quote.phone_number}</span>
+                            <span className="text-[8.5px] text-slate-400 font-medium">📅 {quote.created_at ? new Date(quote.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Reciente'}</span>
                           </div>
+                        </div>
 
-                          {/* Info Cliente */}
-                          <div className="space-y-1">
-                            <h5 className="text-xs font-black uppercase text-brand-primary truncate" title={quote.client_name}>
-                              {quote.client_name || 'Desconocido'}
-                            </h5>
-                            <div className="flex flex-col gap-0.5 text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
-                              <span>📞 +{quote.client_phone || quote.phone_number}</span>
-                              <span className="text-[8.5px] text-slate-400 font-medium">📅 {new Date(quote.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                            </div>
+                        {/* Monto y Botones */}
+                        <div className="flex items-center justify-between border-t border-slate-200/50 dark:border-slate-800/50 pt-2.5">
+                          <div>
+                            <span className="text-[8.5px] text-slate-400 font-bold block uppercase tracking-wider">Total</span>
+                            <span className="text-xs font-black text-slate-800 dark:text-white">S/. {Number(quote.total_amount || 0).toFixed(2)}</span>
                           </div>
-
-                          {/* Monto y Botones */}
-                          <div className="flex items-center justify-between border-t border-slate-200/50 dark:border-slate-800/50 pt-2.5">
-                            <div>
-                              <span className="text-[8.5px] text-slate-400 font-bold block uppercase tracking-wider">Total</span>
-                              <span className="text-xs font-black text-slate-800 dark:text-white">S/. {Number(quote.total_amount).toFixed(2)}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setShowQuotesListModal(false);
-                                  handleGoToChat(quote.client_phone || quote.phone_number, quote.client_name);
-                                }}
-                                className="px-3 py-1.5 bg-brand-primary hover:bg-brand-secondary text-white font-extrabold text-[9.5px] uppercase tracking-wider rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
-                                title="Ir al chat"
-                              >
-                                <MessageCircle size={12} />
-                                <span>Ir al Chat</span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setExpandedAllQuotes({ ...expandedAllQuotes, [quote.id]: !isExpanded })}
-                                className="p-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-white rounded-xl transition-all cursor-pointer shadow-sm"
-                                title="Ver detalles"
-                              >
-                                <ChevronDown size={13} className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
-                              </button>
-                            </div>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setShowQuotesListModal(false);
+                                handleGoToChat(quote.client_phone || quote.phone_number, quote.client_name);
+                              }}
+                              className="px-3 py-1.5 bg-brand-primary hover:bg-brand-secondary text-white font-extrabold text-[9.5px] uppercase tracking-wider rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
+                              title="Ir al chat"
+                            >
+                              <MessageCircle size={12} />
+                              <span>Ir al Chat</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setExpandedAllQuotes({ ...expandedAllQuotes, [quote.id]: !isExpanded })}
+                              className="p-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-white rounded-xl transition-all cursor-pointer shadow-sm"
+                              title="Ver detalles"
+                            >
+                              <ChevronDown size={13} className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                            </button>
                           </div>
+                        </div>
 
-                          {/* Detalles Expandidos */}
-                          {isExpanded && (
-                            <div className="border-t border-slate-200/50 dark:border-slate-800/50 bg-white/60 dark:bg-slate-900/60 p-3 rounded-xl mt-2 space-y-2.5">
-                              <div className="space-y-1">
-                                <div className="text-[8.5px] font-black text-slate-400 uppercase tracking-wider">Productos:</div>
-                                {quote.items && quote.items.map((it: any, idx: number) => (
+                        {/* Detalles Expandidos */}
+                        {isExpanded && (
+                          <div className="border-t border-slate-200/50 dark:border-slate-800/50 bg-white/60 dark:bg-slate-900/60 p-3 rounded-xl mt-2 space-y-2.5">
+                            <div className="space-y-1">
+                              <div className="text-[8.5px] font-black text-slate-400 uppercase tracking-wider">Productos:</div>
+                              {itemsArray.length === 0 ? (
+                                <div className="text-[9px] text-slate-400 italic">Sin detalle de productos</div>
+                              ) : (
+                                itemsArray.map((it: any, idx: number) => (
                                   <div key={idx} className="flex items-start justify-between text-[9.5px] py-1 border-b border-dashed border-slate-200 dark:border-slate-800 last:border-b-0">
-                                    <span className="text-slate-700 dark:text-slate-300 font-semibold truncate mr-2 flex-1">{it.product_name}</span>
-                                    <span className="text-slate-500 dark:text-slate-400 font-bold whitespace-nowrap text-right">x{it.quantity}</span>
+                                    <span className="text-slate-700 dark:text-slate-300 font-semibold truncate mr-2 flex-1">{it.product_name || it.name || 'Producto'}</span>
+                                    <span className="text-slate-500 dark:text-slate-400 font-bold whitespace-nowrap text-right">x{it.quantity || it.qty || 1}</span>
                                   </div>
-                                ))}
-                              </div>
-                              {quote.status === 'PENDIENTE' && (
-                                <div className="flex gap-2 pt-2 border-t border-slate-200/50 dark:border-slate-800/50">
-                                  <button
-                                    onClick={() => handleUpdateOrderStatus(quote.id, 'CONFIRMADO')}
-                                    className="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-black rounded-lg cursor-pointer transition-all uppercase tracking-wider"
-                                  >
-                                    Aprobar
-                                  </button>
-                                  <button
-                                    onClick={() => handleUpdateOrderStatus(quote.id, 'CANCELADO')}
-                                    className="flex-1 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-[9px] font-black rounded-lg cursor-pointer transition-all uppercase tracking-wider"
-                                  >
-                                    Rechazar
-                                  </button>
-                                </div>
+                                ))
                               )}
                             </div>
-                          )}
-                        </div>
-                      );
-                    })()
-                  })()
-                )}
+                            {quote.status === 'PENDIENTE' && (
+                              <div className="flex gap-2 pt-2 border-t border-slate-200/50 dark:border-slate-800/50">
+                                <button
+                                  onClick={() => handleUpdateOrderStatus(quote.id, 'CONFIRMADO')}
+                                  className="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-black rounded-lg cursor-pointer transition-all uppercase tracking-wider"
+                                >
+                                  Aprobar
+                                </button>
+                                <button
+                                  onClick={() => handleUpdateOrderStatus(quote.id, 'CANCELADO')}
+                                  className="flex-1 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-[9px] font-black rounded-lg cursor-pointer transition-all uppercase tracking-wider"
+                                >
+                                  Rechazar
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  });
+                })()}
               </div>
             </div>
           </div>
