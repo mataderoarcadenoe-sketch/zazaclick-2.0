@@ -6362,8 +6362,8 @@ echo $response;`;
               <div className="space-y-5 animate-fadeIn h-full flex flex-col min-h-0 text-left">
                 {/* Header Filter Bar */}
                 <div className="flex items-center justify-between flex-wrap gap-3.5 border-b border-slate-200/50 dark:border-slate-800/80 pb-3.5 flex-shrink-0">
-                  <h4 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <span>📊 Tablero Kanban</span>
+                  <h4 className="text-xs font-extrabold text-white uppercase tracking-wider">
+                    <span>Tablero Kanban</span>
                   </h4>
                   <div className="flex items-center gap-2">
                     <button
