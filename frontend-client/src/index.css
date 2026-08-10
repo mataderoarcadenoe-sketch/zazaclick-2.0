@@ -65,8 +65,8 @@
   }
 
   body {
-    background-color: #cbd5e1;
-    color: #0f172a;
+    background-color: #0f172a;
+    color: #f8fafc;
     transition: background-color 0.3s ease, color 0.3s ease;
     overflow-x: hidden;
   }
@@ -172,7 +172,7 @@
 
   /* Mesh gradients */
   .mesh-gradient {
-    background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
+    background: #0f172a;
     transition: background 0.5s ease;
   }
 
