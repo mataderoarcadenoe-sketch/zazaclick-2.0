@@ -510,6 +510,7 @@ export default function DashboardPage() {
   const [billingProducts, setBillingProducts] = useState<any[]>([]);
   const [billingLoading, setBillingLoading] = useState(false);
   const [billingConfigured, setBillingConfigured] = useState(false);
+  const [billingConfigLoading, setBillingConfigLoading] = useState(true);
   const [showBillingConfigModal, setShowBillingConfigModal] = useState(false);
   const [billingSubdomain, setBillingSubdomain] = useState('');
   const [billingToken, setBillingToken] = useState('');
@@ -947,7 +948,8 @@ export default function DashboardPage() {
   }, []);
 
   // Cargar configuración de facturación activa
-  const fetchBillingConfig = async () => {
+  const fetchBillingConfig = useCallback(async () => {
+    setBillingConfigLoading(true);
     try {
       const res = await api.get('/crm/billing/config');
       if (res.data?.success) {
@@ -959,8 +961,15 @@ export default function DashboardPage() {
       }
     } catch (err: any) {
       console.error('Error fetching billing config:', err.message);
+    } finally {
+      setBillingConfigLoading(false);
     }
-  };
+  }, []);
+
+  // Cargar configuración de facturación automáticamente al montar la aplicación
+  useEffect(() => {
+    fetchBillingConfig();
+  }, [fetchBillingConfig]);
 
   const handleSaveBillingConfig = async () => {
     if (!billingSubdomain.trim() || !billingToken.trim()) {
@@ -6232,7 +6241,11 @@ echo $response;`;
                               {/* Products List Scroll Container */}
                               <div className="flex-1 overflow-y-auto pr-1 -mr-1 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800 scrollbar-track-transparent">
                                 <div className={`grid gap-3 pb-2 ${(showCrmDetails || showNotesFloatingWindow) ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'}`}>
-                                  {billingLoading ? (
+                                  {billingConfigLoading ? (
+                                    <div className="col-span-full flex items-center justify-center py-12">
+                                      <RefreshCw size={20} className="animate-spin text-brand-primary" />
+                                    </div>
+                                  ) : billingLoading ? (
                                     <div className="col-span-full flex flex-col items-center justify-center py-12 space-y-2">
                                       <div className="w-5 h-5 border-2 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
                                       <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Buscando productos...</p>
