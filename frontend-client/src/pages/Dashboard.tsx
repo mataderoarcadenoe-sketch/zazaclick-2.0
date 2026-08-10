@@ -422,6 +422,7 @@ export default function DashboardPage() {
   const [quotesSearch, setQuotesSearch] = useState('');
   const [quotesStatusFilter, setQuotesStatusFilter] = useState('all');
   const [expandedAllQuotes, setExpandedAllQuotes] = useState<{[key: number]: boolean}>({});
+  const [showQuotesListModal, setShowQuotesListModal] = useState(false);
   const [visibleStages, setVisibleStages] = useState<string[]>(PIPELINE_STAGES);
   const [showColumnFilterDropdown, setShowColumnFilterDropdown] = useState(false);
   const columnFilterDropdownRef = useRef<HTMLDivElement>(null);
@@ -6120,12 +6121,11 @@ echo $response;`;
                               <button
                                 type="button"
                                 onClick={() => {
-                                  setActiveTab('pipeline');
-                                  setPipelineSubTab('quotes');
+                                  setShowQuotesListModal(true);
                                   fetchAllQuotes();
                                 }}
                                 className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-[10px] font-extrabold text-slate-700 dark:text-slate-200 transition-all cursor-pointer border border-slate-100 dark:border-slate-800 shadow-sm active:scale-95"
-                                title="Ver Lista de Cotizaciones"
+                                title="Ver Lista de Cotizaciones Registradas"
                               >
                                 <FileCheck size={13} className="text-brand-primary" />
                                 <span>Lista de Cotizaciones</span>
@@ -6357,43 +6357,22 @@ echo $response;`;
             )}
 
 
-            {/* PIPELINE COMERCIAL (KANBAN BOARD / LISTADO COTIZACIONES) */}
+            {/* PIPELINE COMERCIAL (KANBAN BOARD) */}
             {activeTab === 'pipeline' && (
               <div className="space-y-5 animate-fadeIn h-full flex flex-col min-h-0 text-left">
-                {/* Tab Selector & Filter Bar */}
+                {/* Header Filter Bar */}
                 <div className="flex items-center justify-between flex-wrap gap-3.5 border-b border-slate-200/50 dark:border-slate-800/80 pb-3.5 flex-shrink-0">
-                  <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/60 rounded-xl">
-                    <button
-                      type="button"
-                      onClick={() => setPipelineSubTab('kanban')}
-                      className={`px-4 py-2 rounded-lg text-[10.5px] font-black uppercase tracking-wider transition-all cursor-pointer ${
-                        pipelineSubTab === 'kanban'
-                          ? 'bg-white dark:bg-slate-900 text-slate-800 dark:text-white shadow-sm'
-                          : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-                      }`}
-                    >
-                      📊 Tablero Kanban
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setPipelineSubTab('quotes'); fetchAllQuotes(); }}
-                      className={`px-4 py-2 rounded-lg text-[10.5px] font-black uppercase tracking-wider transition-all cursor-pointer ${
-                        pipelineSubTab === 'quotes'
-                          ? 'bg-white dark:bg-slate-900 text-slate-800 dark:text-white shadow-sm'
-                          : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-                      }`}
-                    >
-                      🧾 Lista de Cotizaciones
-                    </button>
-                  </div>
+                  <h4 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                    <span>📊 Tablero Kanban</span>
+                  </h4>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => { if (pipelineSubTab === 'kanban') { fetchPipelineData(); } else { fetchAllQuotes(); } }}
-                      disabled={pipelineLoading || allQuotesLoading}
+                      onClick={() => fetchPipelineData()}
+                      disabled={pipelineLoading}
                       className="p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-surface-600 dark:text-slate-300 rounded-xl transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5 text-xs font-bold"
                     >
-                      <RefreshCw size={13} className={pipelineLoading || allQuotesLoading ? 'animate-spin' : ''} />
+                      <RefreshCw size={13} className={pipelineLoading ? 'animate-spin' : ''} />
                       <span>Actualizar Datos</span>
                     </button>
                   </div>
@@ -10295,6 +10274,192 @@ echo $response;`;
               >
                 Cerrar
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Dedicado de Lista de Cotizaciones */}
+      {showQuotesListModal && (
+        <div className="fixed inset-0 z-[9995] flex items-center justify-center p-4 sm:p-6 animate-fadeIn">
+          <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={() => setShowQuotesListModal(false)} />
+          <div className="relative w-full max-w-5xl max-h-[85vh] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col min-h-0 overflow-hidden z-10 text-left">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-slate-200/60 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between flex-shrink-0">
+              <div className="space-y-0.5">
+                <h3 className="text-sm font-extrabold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                  <FileCheck size={16} className="text-brand-primary" />
+                  <span>Lista de Cotizaciones Registradas</span>
+                </h3>
+                <p className="text-[10px] text-slate-400 font-medium">
+                  Historial de cotizaciones emitidas a tus clientes desde el catálogo.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={fetchAllQuotes}
+                  disabled={allQuotesLoading}
+                  className="p-2 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 rounded-xl transition-all cursor-pointer border border-slate-200 dark:border-slate-700"
+                  title="Actualizar Cotizaciones"
+                >
+                  <RefreshCw size={14} className={allQuotesLoading ? 'animate-spin' : ''} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowQuotesListModal(false)}
+                  className="p-2 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl transition-all cursor-pointer border border-slate-200 dark:border-slate-700"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 flex-1 flex flex-col min-h-0 space-y-4 overflow-hidden">
+              {/* Filters Bar */}
+              <div className="flex items-center gap-3 flex-wrap flex-shrink-0">
+                <div className="relative flex-1 min-w-[200px]">
+                  <Search size={13} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={quotesSearch}
+                    onChange={(e) => setQuotesSearch(e.target.value)}
+                    placeholder="Buscar por cliente, teléfono o cotización #..."
+                    className="w-full pl-8.5 pr-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-[10.5px] font-medium text-slate-700 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
+                  />
+                </div>
+                <select
+                  value={quotesStatusFilter}
+                  onChange={(e) => setQuotesStatusFilter(e.target.value)}
+                  className="px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-[10.5px] font-bold text-slate-700 dark:text-slate-200 cursor-pointer focus:outline-none"
+                >
+                  <option value="all">Todos los Estados</option>
+                  <option value="PENDIENTE">Pendientes</option>
+                  <option value="CONFIRMADO">Confirmados</option>
+                  <option value="CANCELADO">Cancelados</option>
+                </select>
+              </div>
+
+              {/* Quotes Grid */}
+              <div className="flex-1 overflow-y-auto min-h-0 pr-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-start content-start">
+                {allQuotesLoading && allQuotes.length === 0 ? (
+                  <div className="flex-1 flex items-center justify-center py-16 col-span-full">
+                    <RefreshCw size={24} className="animate-spin text-brand-primary" />
+                  </div>
+                ) : allQuotes.length === 0 ? (
+                  <div className="flex-1 text-center py-16 text-xs text-slate-400 font-medium col-span-full">
+                    No hay cotizaciones registradas en el sistema.
+                  </div>
+                ) : (
+                  (() => {
+                    const filteredQuotes = allQuotes.filter((q: any) => {
+                      const query = quotesSearch.toLowerCase().trim();
+                      const matchSearch = !query || 
+                        q.quote_id.toLowerCase().includes(query) || 
+                        (q.client_name && q.client_name.toLowerCase().includes(query)) ||
+                        (q.client_phone && q.client_phone.includes(query));
+                      const matchStatus = quotesStatusFilter === 'all' || q.status === quotesStatusFilter;
+                      return matchSearch && matchStatus;
+                    });
+
+                    if (filteredQuotes.length === 0) {
+                      return <div className="text-center py-12 text-xs text-slate-400 col-span-full">Ninguna cotización coincide con los filtros.</div>;
+                    }
+
+                    return filteredQuotes.map((quote: any) => {
+                      const isExpanded = expandedAllQuotes[quote.id];
+                      const statusColors: Record<string, string> = {
+                        'PENDIENTE': 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+                        'CONFIRMADO': 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+                        'CANCELADO': 'bg-red-500/10 text-red-500 dark:text-red-400 border-red-500/20'
+                      };
+
+                      return (
+                        <div key={quote.id} className="bg-slate-50/60 dark:bg-slate-900/40 rounded-2xl border border-slate-200/50 dark:border-slate-800/60 p-4 space-y-3 shadow-sm hover:shadow-md transition-all flex flex-col justify-between text-left h-fit">
+                          {/* Cabecera de Tarjeta */}
+                          <div className="flex items-center justify-between gap-2 border-b border-slate-200/50 dark:border-slate-800/50 pb-2">
+                            <span className="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-wider">Cotización #{quote.quote_id}</span>
+                            <span className={`px-2 py-0.5 text-[8.5px] font-black rounded-md border uppercase tracking-wider ${statusColors[quote.status] || statusColors['PENDIENTE']}`}>{quote.status}</span>
+                          </div>
+
+                          {/* Info Cliente */}
+                          <div className="space-y-1">
+                            <h5 className="text-xs font-black uppercase text-brand-primary truncate" title={quote.client_name}>
+                              {quote.client_name || 'Desconocido'}
+                            </h5>
+                            <div className="flex flex-col gap-0.5 text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+                              <span>📞 +{quote.client_phone || quote.phone_number}</span>
+                              <span className="text-[8.5px] text-slate-400 font-medium">📅 {new Date(quote.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                          </div>
+
+                          {/* Monto y Botones */}
+                          <div className="flex items-center justify-between border-t border-slate-200/50 dark:border-slate-800/50 pt-2.5">
+                            <div>
+                              <span className="text-[8.5px] text-slate-400 font-bold block uppercase tracking-wider">Total</span>
+                              <span className="text-xs font-black text-slate-800 dark:text-white">S/. {Number(quote.total_amount).toFixed(2)}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setShowQuotesListModal(false);
+                                  handleGoToChat(quote.client_phone || quote.phone_number, quote.client_name);
+                                }}
+                                className="px-3 py-1.5 bg-brand-primary hover:bg-brand-secondary text-white font-extrabold text-[9.5px] uppercase tracking-wider rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95"
+                                title="Ir al chat"
+                              >
+                                <MessageCircle size={12} />
+                                <span>Ir al Chat</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setExpandedAllQuotes({ ...expandedAllQuotes, [quote.id]: !isExpanded })}
+                                className="p-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-white rounded-xl transition-all cursor-pointer shadow-sm"
+                                title="Ver detalles"
+                              >
+                                <ChevronDown size={13} className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Detalles Expandidos */}
+                          {isExpanded && (
+                            <div className="border-t border-slate-200/50 dark:border-slate-800/50 bg-white/60 dark:bg-slate-900/60 p-3 rounded-xl mt-2 space-y-2.5">
+                              <div className="space-y-1">
+                                <div className="text-[8.5px] font-black text-slate-400 uppercase tracking-wider">Productos:</div>
+                                {quote.items && quote.items.map((it: any, idx: number) => (
+                                  <div key={idx} className="flex items-start justify-between text-[9.5px] py-1 border-b border-dashed border-slate-200 dark:border-slate-800 last:border-b-0">
+                                    <span className="text-slate-700 dark:text-slate-300 font-semibold truncate mr-2 flex-1">{it.product_name}</span>
+                                    <span className="text-slate-500 dark:text-slate-400 font-bold whitespace-nowrap text-right">x{it.quantity}</span>
+                                  </div>
+                                ))}
+                              </div>
+                              {quote.status === 'PENDIENTE' && (
+                                <div className="flex gap-2 pt-2 border-t border-slate-200/50 dark:border-slate-800/50">
+                                  <button
+                                    onClick={() => handleUpdateOrderStatus(quote.id, 'CONFIRMADO')}
+                                    className="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-black rounded-lg cursor-pointer transition-all uppercase tracking-wider"
+                                  >
+                                    Aprobar
+                                  </button>
+                                  <button
+                                    onClick={() => handleUpdateOrderStatus(quote.id, 'CANCELADO')}
+                                    className="flex-1 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-[9px] font-black rounded-lg cursor-pointer transition-all uppercase tracking-wider"
+                                  >
+                                    Rechazar
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()
+                  })()
+                )}
+              </div>
             </div>
           </div>
         </div>
