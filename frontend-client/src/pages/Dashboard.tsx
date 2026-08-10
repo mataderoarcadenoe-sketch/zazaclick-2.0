@@ -114,11 +114,8 @@ interface Instance {
 
 const PIPELINE_STAGES = [
   'Nuevo',
-  'Contactado',
-  'Interesado',
-  'Cotización enviada',
-  'Negociación',
-  'Pago pendiente',
+  'En Negociación',
+  'Cotizado / Pago Pendiente',
   'Cliente',
   'Postventa'
 ];
@@ -3267,9 +3264,25 @@ echo $response;`;
     });
 
     pipelineData.forEach(contact => {
-      const stage = contact.pipeline_stage || 'Nuevo';
+      let stage = contact.pipeline_stage || 'Nuevo';
+      if (stage === 'Contactado' || stage === 'Interesado' || stage === 'Negociación') {
+        stage = 'En Negociación';
+      } else if (stage === 'Cotización enviada' || stage === 'Pago pendiente') {
+        stage = 'Cotizado / Pago Pendiente';
+      }
+
       if (columns[stage]) {
         columns[stage].push({
+          type: 'crm',
+          remoteJid: `${contact.phone_number}@s.whatsapp.net`,
+          name: contact.client_name,
+          phone: contact.phone_number,
+          category: contact.category_name,
+          notes: contact.notes,
+          contactId: contact.contact_id
+        });
+      } else {
+        columns['Nuevo'].push({
           type: 'crm',
           remoteJid: `${contact.phone_number}@s.whatsapp.net`,
           name: contact.client_name,
@@ -6597,7 +6610,7 @@ echo $response;`;
                             totalText: 'text-slate-500 dark:text-slate-400',
                             totalAmount: 'text-slate-700 dark:text-slate-200'
                           },
-                          'Contactado': {
+                          'En Negociación': {
                             headerBg: 'bg-blue-50 dark:bg-blue-950/30',
                             columnBg: 'bg-blue-50/20 dark:bg-blue-950/5',
                             border: 'border-blue-100 dark:border-blue-900/20',
@@ -6606,16 +6619,7 @@ echo $response;`;
                             totalText: 'text-blue-600/70 dark:text-blue-400/60',
                             totalAmount: 'text-blue-700 dark:text-blue-300'
                           },
-                          'Interesado': {
-                            headerBg: 'bg-purple-50 dark:bg-purple-950/30',
-                            columnBg: 'bg-purple-50/20 dark:bg-purple-950/5',
-                            border: 'border-purple-100 dark:border-purple-900/20',
-                            badgeBg: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-350',
-                            titleText: 'text-slate-700 dark:text-slate-200 font-extrabold',
-                            totalText: 'text-purple-600/70 dark:text-purple-400/60',
-                            totalAmount: 'text-purple-700 dark:text-purple-300'
-                          },
-                          'Cotización enviada': {
+                          'Cotizado / Pago Pendiente': {
                             headerBg: 'bg-amber-50 dark:bg-amber-950/30',
                             columnBg: 'bg-amber-50/20 dark:bg-amber-950/5',
                             border: 'border-amber-100 dark:border-amber-900/20',
@@ -6623,24 +6627,6 @@ echo $response;`;
                             titleText: 'text-slate-700 dark:text-slate-200 font-extrabold',
                             totalText: 'text-amber-600/70 dark:text-amber-400/60',
                             totalAmount: 'text-amber-700 dark:text-amber-300'
-                          },
-                          'Negociación': {
-                            headerBg: 'bg-indigo-50 dark:bg-indigo-950/30',
-                            columnBg: 'bg-indigo-50/20 dark:bg-indigo-950/5',
-                            border: 'border-indigo-100 dark:border-indigo-900/20',
-                            badgeBg: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-350',
-                            titleText: 'text-slate-700 dark:text-slate-200 font-extrabold',
-                            totalText: 'text-indigo-650/75 dark:text-indigo-400/60',
-                            totalAmount: 'text-indigo-700 dark:text-indigo-300'
-                          },
-                          'Pago pendiente': {
-                            headerBg: 'bg-rose-50 dark:bg-rose-950/30',
-                            columnBg: 'bg-rose-50/20 dark:bg-rose-950/5',
-                            border: 'border-rose-100 dark:border-rose-900/20',
-                            badgeBg: 'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-350',
-                            titleText: 'text-slate-700 dark:text-slate-200 font-extrabold',
-                            totalText: 'text-rose-600/70 dark:text-rose-400/60',
-                            totalAmount: 'text-rose-700 dark:text-rose-300'
                           },
                           'Cliente': {
                             headerBg: 'bg-emerald-50 dark:bg-emerald-950/30',
