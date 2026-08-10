@@ -91,6 +91,31 @@ const formatTimeLocal = (timestamp: number) => {
   return date.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: '2-digit' });
 };
 
+// Generador de colores vibrantes deterministas para avatares de clientes por iniciales
+const AVATAR_COLOR_CLASSES = [
+  'bg-gradient-to-br from-indigo-500 to-indigo-600 text-white shadow-sm',
+  'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-sm',
+  'bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-sm',
+  'bg-gradient-to-br from-rose-500 to-rose-600 text-white shadow-sm',
+  'bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-sm',
+  'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-sm',
+  'bg-gradient-to-br from-teal-500 to-teal-600 text-white shadow-sm',
+  'bg-gradient-to-br from-violet-500 to-violet-600 text-white shadow-sm',
+  'bg-gradient-to-br from-cyan-500 to-cyan-600 text-white shadow-sm',
+  'bg-gradient-to-br from-pink-500 to-pink-600 text-white shadow-sm',
+  'bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-sm',
+];
+
+const getAvatarColor = (nameOrPhone: string) => {
+  if (!nameOrPhone) return AVATAR_COLOR_CLASSES[0];
+  let hash = 0;
+  for (let i = 0; i < nameOrPhone.length; i++) {
+    hash = nameOrPhone.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % AVATAR_COLOR_CLASSES.length;
+  return AVATAR_COLOR_CLASSES[index];
+};
+
 // Colores para diferenciar participantes en grupos
 const GROUP_SENDER_COLORS = [
   'text-zinc-700 dark:text-zinc-300', 'text-blue-600', 'text-violet-600', 'text-amber-500',
@@ -4074,12 +4099,12 @@ echo $response;`;
                                       <div className="absolute left-0.5 top-1/2 -translate-y-1/2 w-1 h-6 bg-blue-600 dark:bg-brand-500 rounded-r-full" />
                                     )}
 
-                                    {/* Profile Photo */}
-                                    <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center flex-shrink-0 relative overflow-hidden">
+                                    {/* Profile Photo / Vibrant Initial Avatar */}
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 relative overflow-hidden font-black text-xs ${chat.profilePicUrl ? 'bg-white dark:bg-slate-800' : getAvatarColor(contactName)}`}>
                                       {chat.profilePicUrl ? (
                                         <img src={chat.profilePicUrl} alt="" className="w-full h-full object-cover" />
                                       ) : (
-                                        <MessageCircle size={18} className="text-surface-400" />
+                                        <span className="uppercase tracking-wider font-extrabold">{contactName.substring(0, 2).toUpperCase()}</span>
                                       )}
                                     </div>
 
@@ -4163,16 +4188,16 @@ echo $response;`;
                                   <ArrowLeft size={18} />
                                 </button>
                                 
-                                {/* Profile Pic */}
-                                <div className="w-12 h-12 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-lg overflow-hidden shrink-0">
-                                  {selectedChat.profilePicUrl ? (
-                                    <img src={selectedChat.profilePicUrl} alt="" className="w-full h-full object-cover" />
-                                  ) : (
-                                    <span className="uppercase tracking-wide">
-                                      {getChatDisplayName(selectedChat).substring(0, 2)}
-                                    </span>
-                                  )}
-                                </div>
+                                {/* Profile Pic / Vibrant Initial Avatar */}
+                                 <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-sm overflow-hidden shrink-0 shadow-sm ${selectedChat.profilePicUrl ? 'bg-white dark:bg-slate-800' : getAvatarColor(getChatDisplayName(selectedChat))}`}>
+                                   {selectedChat.profilePicUrl ? (
+                                     <img src={selectedChat.profilePicUrl} alt="" className="w-full h-full object-cover" />
+                                   ) : (
+                                     <span className="uppercase tracking-wider font-black">
+                                       {getChatDisplayName(selectedChat).substring(0, 2).toUpperCase()}
+                                     </span>
+                                   )}
+                                 </div>
                                 
                                 {/* Contact Info */}
                                 <div className="flex flex-col justify-center text-left">
@@ -6387,7 +6412,7 @@ echo $response;`;
                   <>
                     {/* Kanban Filters Bar */}
                     <div className="flex items-center gap-2.5 px-1 pb-1 flex-wrap">
-<div className="relative flex-1 min-w-[160px]">
+                      <div className="relative flex-1 min-w-[160px]">
                         <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                         <input
                           type="text"
@@ -6530,7 +6555,7 @@ echo $response;`;
                             border: 'border-emerald-100 dark:border-emerald-900/20',
                             badgeBg: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-350',
                             titleText: 'text-slate-700 dark:text-slate-200 font-extrabold',
-                            totalText: 'text-emerald-600/70 dark:text-emerald-400/60',
+                            totalText: 'text-emerald-600/70 dark:emerald-400/60',
                             totalAmount: 'text-emerald-700 dark:text-emerald-300'
                           },
                           'Postventa': {
@@ -6621,7 +6646,7 @@ echo $response;`;
                                           >
                                             <div className="flex items-start justify-between gap-2">
                                               <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                                <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center font-black text-[10px] shrink-0 uppercase">{initials}</div>
+                                                <div className={`w-8 h-8 rounded-full ${getAvatarColor(item.name || item.phone)} flex items-center justify-center font-black text-[10px] shrink-0 uppercase shadow-sm`}>{initials}</div>
                                                 <div className="truncate text-left flex-1 min-w-0">
                                                   <h5 className="text-[11px] font-black text-slate-800 dark:text-white truncate uppercase tracking-tight">{item.name}</h5>
                                                   <span className="text-[9px] text-slate-400 font-bold block mt-0.5">+{item.phone}</span>
@@ -10408,11 +10433,16 @@ echo $response;`;
                         </div>
 
                         {/* Info Cliente */}
-                        <div className="space-y-1">
-                          <h5 className="text-xs font-black uppercase text-brand-primary truncate" title={quote.client_name}>
-                            {quote.client_name || 'Desconocido'}
-                          </h5>
-                          <div className="flex flex-col gap-0.5 text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-6 h-6 rounded-full ${getAvatarColor(quote.client_name || quote.client_phone)} flex items-center justify-center font-black text-[8.5px] shrink-0 uppercase shadow-sm`}>
+                              {(quote.client_name || 'CL').substring(0, 2).toUpperCase()}
+                            </div>
+                            <h5 className="text-xs font-black uppercase text-brand-primary truncate flex-1" title={quote.client_name}>
+                              {quote.client_name || 'Desconocido'}
+                            </h5>
+                          </div>
+                          <div className="flex flex-col gap-0.5 text-[10px] text-slate-500 dark:text-slate-400 font-semibold pl-8">
                             <span>📞 +{quote.client_phone || quote.phone_number}</span>
                             <span className="text-[8.5px] text-slate-400 font-medium">📅 {quote.created_at ? new Date(quote.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Reciente'}</span>
                           </div>
