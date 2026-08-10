@@ -6435,10 +6435,10 @@ echo $response;`;
 
             {/* PIPELINE COMERCIAL (KANBAN BOARD) */}
             {activeTab === 'pipeline' && (
-              <div className="space-y-5 animate-fadeIn h-full flex flex-col min-h-0 text-left">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-3xl p-5 shadow-premium-sm flex flex-col min-h-0 h-full overflow-hidden space-y-4 animate-fadeIn text-left">
                 {/* Header Filter Bar */}
                 <div className="flex items-center justify-between flex-wrap gap-3.5 border-b border-slate-200/50 dark:border-slate-800/80 pb-3.5 flex-shrink-0">
-                  <h4 className="text-xs font-extrabold text-white uppercase tracking-wider">
+                  <h4 className="text-xs font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                     <span>Tablero Kanban</span>
                   </h4>
                   <div className="flex items-center gap-2">
