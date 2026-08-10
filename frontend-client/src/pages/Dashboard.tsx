@@ -3933,7 +3933,7 @@ echo $response;`;
                   </div>
                 ) : (
                   /* Connected Chat Interface */
-                   <div className="flex-1 min-h-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md rounded-3xl overflow-hidden grid grid-cols-1 md:grid-cols-12 shadow-premium-lg text-left">
+                   <div className="flex-1 min-h-0 bg-white dark:bg-slate-900 border border-slate-300/80 dark:border-slate-800 rounded-3xl overflow-hidden grid grid-cols-1 md:grid-cols-12 shadow-2xl text-left">
                     
                     {/* LEFT PANEL: Chats List */}
                     <div className={`${selectedChat ? (selectedChat.remoteJid && selectedChat.remoteJid.endsWith && !selectedChat.remoteJid.endsWith('@g.us') ? 'md:col-span-2' : 'md:col-span-3') : 'md:col-span-4'} bg-white dark:bg-slate-950 flex-col min-h-0 w-full md:w-auto ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
