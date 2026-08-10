@@ -4047,11 +4047,11 @@ echo $response;`;
                                     key={chat.remoteJid}
                                     onClick={() => setSelectedChat(chat)}
                                     type="button"
-                                    className={`w-full py-3.5 px-3.5 flex items-center gap-3 text-left transition-all duration-300 cursor-pointer rounded-2xl relative ${isActive ? 'bg-pastel-100/20 dark:bg-brand-secondary/20' : 'hover:bg-white/45 dark:hover:bg-slate-800/20'}`}
+                                    className={`w-full py-3.5 px-3.5 flex items-center gap-3 text-left transition-all duration-300 cursor-pointer rounded-2xl relative ${isActive ? 'bg-[#d0e1f9] dark:bg-slate-800 border border-blue-200/80 dark:border-slate-700 shadow-sm' : 'hover:bg-slate-100/60 dark:hover:bg-slate-800/20 border border-transparent'}`}
                                   >
                                     {/* Active indicator pill */}
                                     {isActive && (
-                                      <div className="absolute left-0.5 top-1/2 -translate-y-1/2 w-1 h-6 bg-brand-500 rounded-r-full" />
+                                      <div className="absolute left-0.5 top-1/2 -translate-y-1/2 w-1 h-6 bg-blue-600 dark:bg-brand-500 rounded-r-full" />
                                     )}
 
                                     {/* Profile Photo */}
