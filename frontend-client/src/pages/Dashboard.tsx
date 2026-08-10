@@ -4175,22 +4175,6 @@ echo $response;`;
                                   </h4>
                                   
                                   <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                                    {crmContact?.tags && crmContact.tags.map((tag: string) => {
-                                      let colorClass = "bg-slate-500 text-white shadow-sm";
-                                      if (tag === 'VIP') colorClass = "bg-amber-500 text-white shadow-sm";
-                                      else if (tag === 'Moroso') colorClass = "bg-rose-600 text-white shadow-sm";
-                                      else if (tag === 'Pendiente') colorClass = "bg-blue-500 text-white shadow-sm";
-                                      else if (tag === 'Nuevo') colorClass = "bg-green-500 text-white shadow-sm";
-                                      else if (tag === 'Interesado') colorClass = "bg-purple-500 text-white shadow-sm";
-                                      else if (tag === 'Pagó') colorClass = "bg-green-600 text-white shadow-sm";
-                                      
-                                      return (
-                                        <span key={tag} className={`px-2 py-0.5 text-[8.5px] font-bold rounded-full transition-all duration-300 transform hover:scale-105 ${colorClass}`}>
-                                          {tag}
-                                        </span>
-                                      );
-                                    })}
-                                    
                                     {/* Assigned Advisor badge */}
                                     {(() => {
                                       const cleanPhone = selectedChat?.remoteJid?.split('@')[0]?.split(':')[0]?.split(':')[0] || '';
