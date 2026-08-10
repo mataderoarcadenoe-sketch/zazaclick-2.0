@@ -5119,55 +5119,42 @@ echo $response;`;
                                     </div>
                                   </div>
                               
-                                  {/* Collapsible More Fields */}
-                                  <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800/40">
-                                    <button
-                                      type="button"
-                                      onClick={() => setShowMoreCrmFields(!showMoreCrmFields)}
-                                      className="w-full flex items-center justify-center gap-1 text-[9px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors cursor-pointer"
-                                    >
-                                      <span>{showMoreCrmFields ? 'Ocultar campos adicionales' : 'Ver más campos (6)'}</span>
-                                      <ChevronDown size={10} className={`transition-transform duration-200 ${showMoreCrmFields ? 'rotate-180' : ''}`} />
-                                    </button>
-                                    
-                                    {showMoreCrmFields && (
-                                      <div className="mt-3 space-y-2 animate-fadeIn">
-                                        <div className="flex justify-between items-center text-[10px] py-1">
-                                          <span className="text-slate-400 font-medium">Ubicación (Dpto/Prov/Dist)</span>
-                                          <span className="text-slate-700 dark:text-slate-300 font-semibold truncate max-w-[150px]" title={`${crmClient.departamento || ''} / ${crmClient.provincia || ''} / ${crmClient.distrito || ''}`}>
-                                            {crmClient.departamento || crmClient.provincia || crmClient.distrito ? (
-                                              `${crmClient.departamento || '-'} / ${crmClient.provincia || '-'} / ${crmClient.distrito || '-'}`
-                                            ) : 'No registrado'}
-                                          </span>
-                                        </div>
-                                        <div className="flex justify-between items-center text-[10px] py-1 border-t border-slate-50 dark:border-slate-800/30">
-                                          <span className="text-slate-400 font-medium">Dirección física</span>
-                                          <span className="text-slate-700 dark:text-slate-300 font-semibold truncate max-w-[150px]" title={crmClient.address || ''}>
-                                            {crmClient.address || 'No registrado'}
-                                          </span>
-                                        </div>
-                                        <div className="flex justify-between items-center text-[10px] py-1 border-t border-slate-50 dark:border-slate-800/30">
-                                          <span className="text-slate-400 font-medium">Idioma</span>
-                                          <span className="text-slate-700 dark:text-slate-300 font-semibold">{crmClient.idioma || 'Español'}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center text-[10px] py-1 border-t border-slate-50 dark:border-slate-800/30">
-                                          <span className="text-slate-400 font-medium">Cumpleaños</span>
-                                          <span className="text-slate-700 dark:text-slate-300 font-semibold">
-                                            {crmClient.birthday ? formatBirthdayString(crmClient.birthday) : 'No registrado'}
-                                          </span>
-                                        </div>
-                                        <div className="flex justify-between items-center text-[10px] py-1 border-t border-slate-50 dark:border-slate-800/30">
-                                          <span className="text-slate-400 font-medium">Primer contacto</span>
-                                          <span className="text-slate-700 dark:text-slate-300 font-semibold">
-                                            {crmClient.created_at ? new Date(crmClient.created_at).toLocaleDateString('es-ES') : 'No registrado'}
-                                          </span>
-                                        </div>
-                                        <div className="flex justify-between items-center text-[10px] py-1 border-t border-slate-50 dark:border-slate-800/30">
-                                          <span className="text-slate-400 font-medium">ID Cliente</span>
-                                          <span className="text-slate-700 dark:text-slate-300 font-semibold">#{crmClient.id}</span>
-                                        </div>
-                                      </div>
-                                    )}
+                                  {/* All Additional Contact Fields Always Visible */}
+                                  <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800/40 space-y-2">
+                                    <div className="flex justify-between items-center text-[10px] py-1">
+                                      <span className="text-slate-400 font-medium">Ubicación (Dpto/Prov/Dist)</span>
+                                      <span className="text-slate-700 dark:text-slate-300 font-semibold truncate max-w-[150px]" title={`${crmClient.departamento || ''} / ${crmClient.provincia || ''} / ${crmClient.distrito || ''}`}>
+                                        {crmClient.departamento || crmClient.provincia || crmClient.distrito ? (
+                                          `${crmClient.departamento || '-'} / ${crmClient.provincia || '-'} / ${crmClient.distrito || '-'}`
+                                        ) : 'No registrado'}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-[10px] py-1 border-t border-slate-50 dark:border-slate-800/30">
+                                      <span className="text-slate-400 font-medium">Dirección física</span>
+                                      <span className="text-slate-700 dark:text-slate-300 font-semibold truncate max-w-[150px]" title={crmClient.address || ''}>
+                                        {crmClient.address || 'No registrado'}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-[10px] py-1 border-t border-slate-50 dark:border-slate-800/30">
+                                      <span className="text-slate-400 font-medium">Idioma</span>
+                                      <span className="text-slate-700 dark:text-slate-300 font-semibold">{crmClient.idioma || 'Español'}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-[10px] py-1 border-t border-slate-50 dark:border-slate-800/30">
+                                      <span className="text-slate-400 font-medium">Cumpleaños</span>
+                                      <span className="text-slate-700 dark:text-slate-300 font-semibold">
+                                        {crmClient.birthday ? formatBirthdayString(crmClient.birthday) : 'No registrado'}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-[10px] py-1 border-t border-slate-50 dark:border-slate-800/30">
+                                      <span className="text-slate-400 font-medium">Primer contacto</span>
+                                      <span className="text-slate-700 dark:text-slate-300 font-semibold">
+                                        {crmClient.created_at ? new Date(crmClient.created_at).toLocaleDateString('es-ES') : 'No registrado'}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-[10px] py-1 border-t border-slate-50 dark:border-slate-800/30">
+                                      <span className="text-slate-400 font-medium">ID Cliente</span>
+                                      <span className="text-slate-700 dark:text-slate-300 font-semibold">#{crmClient.id}</span>
+                                    </div>
                                   </div>
                                 </div>
                               
