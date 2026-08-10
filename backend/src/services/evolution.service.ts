@@ -699,50 +699,52 @@ export class EvolutionService {
 
       const existing = mergedMap.get(realJid);
       
-      if (!existing) {
-        // Primer vez que vemos este JID real
-        const newChat = { 
-          ...chat, 
-          remoteJid: realJid, 
-          originalJid: finalOriginalJid,
-          pushName: displayName || chat.pushName || null,
-          unreadCount: finalUnreadCount
-        };
-        mergedMap.set(realJid, newChat);
-      } else {
-        // Fusionar si ya existía
-        const currentTs = chat.lastMessage?.messageTimestamp || 0;
-        const existingTs = existing.lastMessage?.messageTimestamp || 0;
-        
-        // Conservar el originalJid especial si alguno de los dos lo es (ej: LID o que contenga ':')
-        let resolvedOriginalJid = existing.originalJid || existing.remoteJid;
-        if (finalOriginalJid && (finalOriginalJid.endsWith('@lid') || finalOriginalJid.includes(':') || !resolvedOriginalJid.endsWith('@lid'))) {
-          // Si el nuevo es un LID o tiene puerto, o el anterior no es un LID (preferir LID sobre todo)
-          if (finalOriginalJid.endsWith('@lid') || !resolvedOriginalJid.endsWith('@lid')) {
-            resolvedOriginalJid = finalOriginalJid;
+        const picUrl = chat.profilePicUrl || chat.profilePictureUrl || chat.pictureUrl || chat.picture || null;
+        if (!existing) {
+          // Primer vez que vemos este JID real
+          const newChat = { 
+            ...chat, 
+            remoteJid: realJid, 
+            originalJid: finalOriginalJid,
+            profilePicUrl: picUrl,
+            pushName: displayName || chat.pushName || null,
+            unreadCount: finalUnreadCount
+          };
+          mergedMap.set(realJid, newChat);
+        } else {
+          // Fusionar si ya existía
+          const currentTs = chat.lastMessage?.messageTimestamp || 0;
+          const existingTs = existing.lastMessage?.messageTimestamp || 0;
+          
+          // Conservar el originalJid especial si alguno de los dos lo es (ej: LID o que contenga ':')
+          let resolvedOriginalJid = existing.originalJid || existing.remoteJid;
+          if (finalOriginalJid && (finalOriginalJid.endsWith('@lid') || finalOriginalJid.includes(':') || !resolvedOriginalJid.endsWith('@lid'))) {
+            // Si el nuevo es un LID o tiene puerto, o el anterior no es un LID (preferir LID sobre todo)
+            if (finalOriginalJid.endsWith('@lid') || !resolvedOriginalJid.endsWith('@lid')) {
+              resolvedOriginalJid = finalOriginalJid;
+            }
+          }
+
+          const totalUnread = Math.max(Number(existing.unreadCount) || 0, finalUnreadCount);
+          
+          if (currentTs > existingTs) {
+            const merged = { 
+              ...chat, 
+              remoteJid: realJid,
+              originalJid: resolvedOriginalJid,
+              profilePicUrl: picUrl || existing.profilePicUrl || null,
+              pushName: displayName || chat.pushName || existing.pushName || null,
+              unreadCount: totalUnread
+            };
+            mergedMap.set(realJid, merged);
+          } else {
+            existing.profilePicUrl = existing.profilePicUrl || picUrl || null;
+            existing.pushName = displayName || existing.pushName || chat.pushName || null;
+            existing.unreadCount = totalUnread;
+            existing.originalJid = resolvedOriginalJid;
+            mergedMap.set(realJid, existing);
           }
         }
-
-        const totalUnread = Math.max(Number(existing.unreadCount) || 0, finalUnreadCount);
-        
-        if (currentTs > existingTs) {
-          const merged = { 
-            ...chat, 
-            remoteJid: realJid,
-            originalJid: resolvedOriginalJid,
-            profilePicUrl: chat.profilePicUrl || existing.profilePicUrl,
-            pushName: displayName || chat.pushName || existing.pushName || null,
-            unreadCount: totalUnread
-          };
-          mergedMap.set(realJid, merged);
-        } else {
-          existing.profilePicUrl = existing.profilePicUrl || chat.profilePicUrl;
-          existing.pushName = displayName || existing.pushName || chat.pushName || null;
-          existing.unreadCount = totalUnread;
-          existing.originalJid = resolvedOriginalJid;
-          mergedMap.set(realJid, existing);
-        }
-      }
     }
 
     // Ordenar por el timestamp del último mensaje de forma descendente

@@ -116,6 +116,39 @@ const getAvatarColor = (nameOrPhone: string) => {
   return AVATAR_COLOR_CLASSES[index];
 };
 
+// Helper para obtener iniciales limpias de contactos sin caracteres extraños como @, +, etc.
+const getCleanInitials = (nameOrJid?: string) => {
+  if (!nameOrJid) return 'CL';
+  let str = String(nameOrJid).trim();
+
+  if (str.includes('@')) {
+    str = str.startsWith('@') ? str.substring(1) : str.split('@')[0];
+  }
+  str = str.replace(/^[+#\s]+/, '').trim();
+
+  if (/^\d+$/.test(str)) {
+    return str.length >= 2 ? str.slice(-2) : str;
+  }
+
+  const words = str.split(/\s+/).filter(w => /[a-zA-ZáéíóúÁÉÍÓÚñÑ]/.test(w));
+  if (words.length >= 2) {
+    const firstChar = words[0].replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ]/g, '')[0];
+    const secondChar = words[1].replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ]/g, '')[0];
+    if (firstChar && secondChar) {
+      return (firstChar + secondChar).toUpperCase();
+    }
+  }
+
+  const lettersOnly = str.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ]/g, '');
+  if (lettersOnly.length >= 2) {
+    return lettersOnly.substring(0, 2).toUpperCase();
+  } else if (lettersOnly.length === 1) {
+    return lettersOnly.toUpperCase();
+  }
+
+  return str.substring(0, 2).toUpperCase() || 'CL';
+};
+
 // Colores para diferenciar participantes en grupos
 const GROUP_SENDER_COLORS = [
   'text-zinc-700 dark:text-zinc-300', 'text-blue-600', 'text-violet-600', 'text-amber-500',
@@ -4113,7 +4146,7 @@ echo $response;`;
                                       {chat.profilePicUrl ? (
                                         <img src={chat.profilePicUrl} alt="" className="w-full h-full object-cover" />
                                       ) : (
-                                        <span className="uppercase tracking-wider font-extrabold">{contactName.substring(0, 2).toUpperCase()}</span>
+                                        <span className="uppercase tracking-wider font-extrabold">{getCleanInitials(contactName)}</span>
                                       )}
                                     </div>
 
@@ -4203,7 +4236,7 @@ echo $response;`;
                                      <img src={selectedChat.profilePicUrl} alt="" className="w-full h-full object-cover" />
                                    ) : (
                                      <span className="uppercase tracking-wider font-black">
-                                       {getChatDisplayName(selectedChat).substring(0, 2).toUpperCase()}
+                                       {getCleanInitials(getChatDisplayName(selectedChat))}
                                      </span>
                                    )}
                                  </div>
@@ -6546,7 +6579,7 @@ echo $response;`;
                           },
                           'Cotización enviada': {
                             headerBg: 'bg-amber-50 dark:bg-amber-950/30',
-                            columnBg: 'bg-amber-50/20 dark:bg-amber-950/5',
+                            columnBg: 'bg-amber-50/20 dark:amber-950/5',
                             border: 'border-amber-100 dark:border-amber-900/20',
                             badgeBg: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-350',
                             titleText: 'text-slate-700 dark:text-slate-200 font-extrabold',
@@ -6555,7 +6588,7 @@ echo $response;`;
                           },
                           'Pago pendiente': {
                             headerBg: 'bg-rose-50 dark:bg-rose-950/30',
-                            columnBg: 'bg-rose-50/20 dark:bg-rose-950/5',
+                            columnBg: 'bg-rose-50/20 dark:rose-950/5',
                             border: 'border-rose-100 dark:border-rose-900/20',
                             badgeBg: 'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-350',
                             titleText: 'text-slate-700 dark:text-slate-200 font-extrabold',
@@ -6564,7 +6597,7 @@ echo $response;`;
                           },
                           'Cliente': {
                             headerBg: 'bg-emerald-50 dark:bg-emerald-950/30',
-                            columnBg: 'bg-emerald-50/20 dark:bg-emerald-950/5',
+                            columnBg: 'bg-emerald-50/20 dark:emerald-950/5',
                             border: 'border-emerald-100 dark:border-emerald-900/20',
                             badgeBg: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-350',
                             titleText: 'text-slate-700 dark:text-slate-200 font-extrabold',
@@ -6573,7 +6606,7 @@ echo $response;`;
                           },
                           'Postventa': {
                             headerBg: 'bg-violet-50 dark:bg-violet-950/30',
-                            columnBg: 'bg-violet-50/20 dark:bg-violet-950/5',
+                            columnBg: 'bg-violet-50/20 dark:violet-950/5',
                             border: 'border-violet-100 dark:border-violet-900/20',
                             badgeBg: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-350',
                             titleText: 'text-slate-700 dark:text-slate-200 font-extrabold',
@@ -6638,7 +6671,7 @@ echo $response;`;
                                       <div className="h-24 border border-dashed border-slate-200/50 dark:border-slate-800 rounded-2xl flex items-center justify-center text-[9px] text-slate-400 font-medium">Sin prospectos</div>
                                     ) : (
                                       items.map((item: any, index: number) => {
-                                        const initials = item.name.substring(0, 2).toUpperCase();
+                                        const initials = getCleanInitials(item.name || item.phone);
                                         const isCrm = item.type === 'crm';
                                         const isDragged = draggedCardJid === item.remoteJid;
                                         return (
