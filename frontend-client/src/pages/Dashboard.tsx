@@ -3438,7 +3438,7 @@ echo $response;`;
         </nav>
 
         {/* Footer profile actions */}
-        <div className="p-3 border-t border-white/10 dark:border-slate-800/60 bg-slate-950 dark:bg-surface-950">
+        <div className="p-3 border-t border-[#2e3757] bg-[#232b45]">
           <button
             onClick={logout}
             className={`w-full group flex items-center ${
@@ -3450,7 +3450,7 @@ echo $response;`;
             {sidebarOpen ? (
               <span className="ml-3 text-xs font-bold">Cerrar Sesión</span>
             ) : (
-              <span className="absolute left-full ml-3 px-3 py-1.5 bg-slate-900 text-white text-xs font-semibold rounded-xl shadow-xl whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 pointer-events-none">
+              <span className="absolute left-full ml-3 px-3 py-1.5 bg-[#1a2035] text-white text-xs font-semibold rounded-xl shadow-xl whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 pointer-events-none">
                 Cerrar Sesión
               </span>
             )}
