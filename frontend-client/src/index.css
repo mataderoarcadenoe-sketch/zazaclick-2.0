@@ -65,7 +65,7 @@
   }
 
   body {
-    background-color: #0f172a;
+    background-color: #232b45;
     color: #f8fafc;
     transition: background-color 0.3s ease, color 0.3s ease;
     overflow-x: hidden;
@@ -172,7 +172,7 @@
 
   /* Mesh gradients */
   .mesh-gradient {
-    background: #0f172a;
+    background: #232b45;
     transition: background 0.5s ease;
   }
 

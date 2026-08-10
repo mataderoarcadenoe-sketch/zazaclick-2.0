@@ -3352,12 +3352,12 @@ echo $response;`;
 
       {/* Sidebar */}
       <aside 
-        className={`bg-slate-900 dark:bg-surface-950 flex flex-col transition-all duration-300 shadow-premium z-50 fixed top-0 left-0 h-full ${
+        className={`bg-[#232b45] dark:bg-surface-950 flex flex-col transition-all duration-300 shadow-premium z-50 fixed top-0 left-0 h-full ${
           sidebarOpen ? 'w-64 translate-x-0' : 'w-20 -translate-x-full lg:translate-x-0'
         }`}
       >
         {/* Brand header */}
-        <div className={`h-16 flex items-center ${sidebarOpen ? 'justify-between px-6' : 'justify-center'} border-b border-slate-800`}>
+        <div className={`h-16 flex items-center ${sidebarOpen ? 'justify-between px-6' : 'justify-center'} border-b border-[#2e3757]`}>
           {sidebarOpen && (
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-primary to-brand-secondary flex items-center justify-center text-white shadow-md shadow-brand-primary/25">
@@ -3462,11 +3462,11 @@ echo $response;`;
       <div className="flex-1 flex flex-col overflow-hidden">
         
         {/* Header Bar */}
-        <header className="h-16 bg-slate-900 text-white border-b border-slate-800 px-6 flex items-center justify-between z-30 transition-colors duration-300">
+        <header className="h-16 bg-[#232b45] text-white border-b border-[#2e3757] px-6 flex items-center justify-between z-30 transition-colors duration-300">
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 hover:bg-slate-800 rounded-xl transition-colors text-slate-300 cursor-pointer"
+              className="lg:hidden p-2 hover:bg-white/10 rounded-xl transition-colors text-slate-300 cursor-pointer"
             >
               <Menu size={20} />
             </button>
@@ -3475,23 +3475,23 @@ echo $response;`;
                 {activeTab === 'chats' ? 'Chats en Vivo' : (menuItems.find(i => i.id === activeTab)?.label || 'Panel')}
               </h2>
               {activeTab === 'chats' ? (
-                <p className="text-[9px] sm:text-[10px] text-slate-400 font-medium leading-none mt-0.5 hidden sm:block">
+                <p className="text-[9px] sm:text-[10px] text-slate-300 font-medium leading-none mt-0.5 hidden sm:block">
                   Administra tus conversaciones de WhatsApp en tiempo real.
                 </p>
               ) : activeTab === 'pipeline' ? (
-                <p className="text-[9px] sm:text-[10px] text-slate-400 font-medium leading-none mt-0.5 hidden sm:block">
+                <p className="text-[9px] sm:text-[10px] text-slate-300 font-medium leading-none mt-0.5 hidden sm:block">
                   Visualiza y gestiona las etapas de tus prospectos y clientes.
                 </p>
               ) : activeTab === 'tasks' ? (
-                <p className="text-[9px] sm:text-[10px] text-slate-400 font-medium leading-none mt-0.5 hidden sm:block">
+                <p className="text-[9px] sm:text-[10px] text-slate-300 font-medium leading-none mt-0.5 hidden sm:block">
                   Visualiza, administra y completa las tareas asignadas a tus clientes.
                 </p>
               ) : activeTab === 'contacts' ? (
-                <p className="text-[9px] sm:text-[10px] text-slate-400 font-medium leading-none mt-0.5 hidden sm:block">
+                <p className="text-[9px] sm:text-[10px] text-slate-300 font-medium leading-none mt-0.5 hidden sm:block">
                   Gestiona tu base de clientes, contactos y agenda de Google.
                 </p>
               ) : activeTab === 'birthdays' ? (
-                <p className="text-[9px] sm:text-[10px] text-slate-400 font-medium leading-none mt-0.5 hidden sm:block">
+                <p className="text-[9px] sm:text-[10px] text-slate-300 font-medium leading-none mt-0.5 hidden sm:block">
                   Seguimiento de cumpleaños de tus contactos del CRM para fortalecer relaciones comerciales.
                 </p>
               ) : null}
@@ -3501,13 +3501,13 @@ echo $response;`;
           <div className="flex items-center gap-3.5">
             {/* Header Line Selector */}
             {activeTab === 'chats' && (
-              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-slate-800/90 rounded-2xl border border-slate-700/60 shadow-sm">
-                <span className="text-[10px] font-bold text-slate-400 whitespace-nowrap">Línea activa:</span>
+              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-[#1a2035] rounded-2xl border border-[#2e3757] shadow-sm">
+                <span className="text-[10px] font-bold text-slate-300 whitespace-nowrap">Línea activa:</span>
                 <div className="relative font-sans" ref={chatsDropdownRef}>
                   <button
                     type="button"
                     onClick={() => setShowChatsInstanceMenu(!showChatsInstanceMenu)}
-                    className="px-2.5 py-1 bg-slate-900 rounded-xl text-[10px] text-white hover:bg-slate-700 transition-all font-bold cursor-pointer flex items-center justify-between gap-1.5 min-w-[130px] focus:outline-none border border-slate-700/50"
+                    className="px-2.5 py-1 bg-[#232b45] rounded-xl text-[10px] text-white hover:bg-white/10 transition-all font-bold cursor-pointer flex items-center justify-between gap-1.5 min-w-[130px] focus:outline-none border border-[#2e3757]"
                   >
                     {selectedInstanceForChats ? (
                       <div className="flex items-center gap-1.5 truncate">
