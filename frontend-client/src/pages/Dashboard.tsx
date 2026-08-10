@@ -9,7 +9,7 @@ import {
   AlertCircle, Copy, Send, LayoutGrid, Terminal, 
   Moon, Sun, Menu, X, Check, Play, ExternalLink, Sparkles, BookOpen, Clock,
   MessageSquare, Search, MessageCircle, Smile, ArrowLeft,
-  Paperclip, FileText, Image, Video, Download, ChevronDown, ChevronLeft, ChevronRight, Users, Users2, Settings,
+  Paperclip, FileText, FileCheck, Image, Video, Download, ChevronDown, ChevronLeft, ChevronRight, Users, Users2, Settings,
   Phone, User, UserMinus, Tag, MoreVertical, Mail, MapPin, Building, Calendar,
   GitBranch, Grip, Gift, ListTodo, ShoppingCart
 } from 'lucide-react';
@@ -6116,7 +6116,21 @@ echo $response;`;
                                 Catálogo integrado con tu Facturador Electrónico.
                               </p>
                             </div>
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setActiveTab('pipeline');
+                                  setPipelineSubTab('quotes');
+                                  fetchAllQuotes();
+                                }}
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-[10px] font-extrabold text-slate-700 dark:text-slate-200 transition-all cursor-pointer border border-slate-100 dark:border-slate-800 shadow-sm active:scale-95"
+                                title="Ver Lista de Cotizaciones"
+                              >
+                                <FileCheck size={13} className="text-brand-primary" />
+                                <span>Lista de Cotizaciones</span>
+                              </button>
+
                               {billingConfigured && (
                                 <button
                                   type="button"
