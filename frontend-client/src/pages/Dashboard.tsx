@@ -3937,46 +3937,49 @@ echo $response;`;
                     
                     {/* LEFT PANEL: Chats List */}
                     <div className={`${selectedChat ? (selectedChat.remoteJid && selectedChat.remoteJid.endsWith && !selectedChat.remoteJid.endsWith('@g.us') ? 'md:col-span-2' : 'md:col-span-3') : 'md:col-span-4'} bg-white dark:bg-slate-950 flex-col min-h-0 w-full md:w-auto ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
-                      {/* Search Bar */}
-                      <div className="p-4 pb-2 relative">
-                        <input
-                          type="text"
-                          placeholder="Buscar conversación..."
-                          value={chatsSearchQuery}
-                          onChange={(e) => setChatsSearchQuery(e.target.value)}
-                          className="w-full pl-9 pr-4 py-2.5 bg-slate-100/60 dark:bg-slate-900/60 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
-                        />
-                        <Search size={14} className="absolute left-7 top-1/2 -translate-y-1/2 text-surface-400" />
-                      </div>
+                      {/* Sidebar Header Bar */}
+                      <div className="h-[96px] flex flex-col justify-center border-b border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-950 flex-shrink-0">
+                        {/* Search Bar */}
+                        <div className="px-4 pt-3 pb-1.5 relative">
+                          <input
+                            type="text"
+                            placeholder="Buscar conversación..."
+                            value={chatsSearchQuery}
+                            onChange={(e) => setChatsSearchQuery(e.target.value)}
+                            className="w-full pl-9 pr-4 py-2 bg-slate-100/60 dark:bg-slate-900/60 rounded-2xl text-xs text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-brand-primary/20 font-medium transition-all"
+                          />
+                          <Search size={14} className="absolute left-7 top-[22px] text-surface-400" />
+                        </div>
 
-                      {/* Barra de Filtro de Etiquetas */}
-                      <div className="px-4 pb-3 flex gap-1.5 overflow-x-auto hide-scrollbar scroll-smooth">
-                        <button
-                          onClick={() => setSelectedFilterTag(null)}
-                          className={`px-2.5 py-1 rounded-full text-[9px] font-bold transition-all cursor-pointer whitespace-nowrap ${
-                            selectedFilterTag === null
-                              ? 'bg-brand-primary text-white'
-                              : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
-                          }`}
-                        >
-                          Todo
-                        </button>
-                        {SMART_TAGS.map(tag => {
-                          const isSelected = selectedFilterTag === tag;
-                          return (
-                            <button
-                              key={tag}
-                              onClick={() => setSelectedFilterTag(isSelected ? null : tag)}
-                              className={`px-2.5 py-1 rounded-full text-[9px] font-bold transition-all cursor-pointer whitespace-nowrap ${
-                                isSelected
-                                  ? 'bg-brand-primary text-white'
-                                  : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
-                              }`}
-                            >
-                              {tag}
-                            </button>
-                          );
-                        })}
+                        {/* Barra de Filtro de Etiquetas */}
+                        <div className="px-4 pb-2.5 flex gap-1.5 overflow-x-auto hide-scrollbar scroll-smooth">
+                          <button
+                            onClick={() => setSelectedFilterTag(null)}
+                            className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold transition-all cursor-pointer whitespace-nowrap ${
+                              selectedFilterTag === null
+                                ? 'bg-brand-primary text-white'
+                                : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                            }`}
+                          >
+                            Todo
+                          </button>
+                          {SMART_TAGS.map(tag => {
+                            const isSelected = selectedFilterTag === tag;
+                            return (
+                              <button
+                                key={tag}
+                                onClick={() => setSelectedFilterTag(isSelected ? null : tag)}
+                                className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold transition-all cursor-pointer whitespace-nowrap ${
+                                  isSelected
+                                    ? 'bg-brand-primary text-white'
+                                    : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                                }`}
+                              >
+                                {tag}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
 
                       {/* Chats List Body */}
@@ -4127,9 +4130,9 @@ echo $response;`;
                         <div className="flex-1 flex flex-col min-h-0">
                           
                           {/* Chat Window Header */}
-                          <div className="bg-white dark:bg-slate-900 border-b border-slate-200/60 dark:border-slate-800 flex flex-col z-20 relative">
+                          <div className="bg-white dark:bg-slate-900 border-b border-slate-200/60 dark:border-slate-800 flex flex-col z-20 relative flex-shrink-0">
                             {/* Top Row */}
-                            <div className="p-3.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/50">
+                            <div className="h-[96px] px-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/50">
                               <div className="flex items-center gap-3.5">
                                 {/* Botón volver en mobile */}
                                 <button
@@ -4974,10 +4977,31 @@ echo $response;`;
                         {/* Column 1: CRM Details */}
                         {(showCrmDetails || showNotesFloatingWindow) && (
                           <div className="flex flex-col min-h-0 bg-slate-50/45 dark:bg-slate-950 text-left relative overflow-hidden">
-                          {showCrmDetails ? (crmLoading ? (
-                            <div className="flex-1 flex items-center justify-center py-8 text-center text-[11px] text-surface-400 animate-pulse p-4">Cargando datos CRM...</div>
-                          ) : (
-                            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                          {showCrmDetails ? (
+                            <>
+                              {/* CRM Header Bar */}
+                              <div className="h-[96px] px-4 flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900 flex-shrink-0">
+                                <div className="min-w-0 text-left space-y-1">
+                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary text-[8px] font-bold uppercase tracking-wider border border-brand-primary/20">
+                                    Ficha de Cliente
+                                  </span>
+                                  <h4 className="text-[12px] font-extrabold text-slate-800 dark:text-white uppercase tracking-tight truncate max-w-[180px]">
+                                    {crmClient?.name || 'Datos CRM'}
+                                  </h4>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setShowCrmDetails(false)}
+                                  className="p-1.5 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl transition-all cursor-pointer border border-slate-100 dark:border-slate-800"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </div>
+
+                              {crmLoading ? (
+                                <div className="flex-1 flex items-center justify-center py-8 text-center text-[11px] text-surface-400 animate-pulse p-4">Cargando datos CRM...</div>
+                              ) : (
+                                <div className="flex-1 overflow-y-auto p-4 space-y-4">
                             {!crmIsEditing && crmClient ? (
                               <div className="space-y-3.5 pb-6">
                                 {/* Professional Header Card */}
@@ -6069,146 +6093,153 @@ echo $response;`;
                               </div>
                             )}
                           </div>
-                          )) : null}
-                          
+                          )}
+                          </>
+                          ) : null}
+
                           {/* Floating Notes Panel (No Bloqueante) */}
-                                                  {showNotesFloatingWindow && crmClient && (
-                                                    <div className="absolute inset-0 bg-white dark:bg-slate-900/95 z-50 flex flex-col p-4 animate-fadeIn border-l border-slate-100 dark:border-slate-800 shadow-2xl">
-                                                      {/* Header */}
-                                                      <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 flex-shrink-0">
-                                                        <div className="min-w-0 space-y-0.5 text-left">
-                                                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary text-[8px] font-bold uppercase tracking-wider border border-brand-primary/20">
-                                                            <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse"></span>
-                                                            Notas de Negocio
-                                                          </span>
-                                                          <h4 className="text-[12px] font-extrabold text-slate-800 dark:text-white uppercase tracking-tight truncate pr-2">
-                                                            {crmClient.name}
-                                                          </h4>
-                                                        </div>
-                                                        <button
-                                                          type="button"
-                                                          onClick={() => setShowNotesFloatingWindow(false)}
-                                                          className="p-1.5 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl transition-all cursor-pointer border border-slate-100 dark:border-slate-800"
-                                                        >
-                                                          <X size={14} />
-                                                        </button>
-                                                      </div>
-                          
-                                                      {/* List of notes */}
-                                                      <div className="flex-1 overflow-y-auto space-y-3.5 py-4 pr-1 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800 scrollbar-track-transparent">
-                                                        {clientNotes.length > 0 ? (
-                                                          clientNotes.map((note: any, idx: number) => {
-                                                            const noteColors = [
-                                                              { bg: 'bg-zinc-50 dark:bg-zinc-950/30', hover: 'hover:bg-zinc-100/70 dark:hover:bg-zinc-950/50', avatar: 'bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300', text: 'text-zinc-600/70 dark:text-zinc-400/70' },
-                                                              { bg: 'bg-blue-50 dark:bg-blue-950/30', hover: 'hover:bg-blue-100/70 dark:hover:bg-blue-950/50', avatar: 'bg-blue-200 dark:bg-blue-900 text-blue-700 dark:text-blue-300', text: 'text-blue-600/70 dark:text-blue-400/70' },
-                                                              { bg: 'bg-violet-50 dark:bg-violet-950/30', hover: 'hover:bg-violet-100/70 dark:hover:bg-violet-950/50', avatar: 'bg-violet-200 dark:bg-violet-900 text-violet-700 dark:text-violet-300', text: 'text-violet-600/70 dark:text-violet-400/70' },
-                                                              { bg: 'bg-amber-50 dark:bg-amber-950/30', hover: 'hover:bg-amber-100/70 dark:hover:bg-amber-950/50', avatar: 'bg-amber-200 dark:bg-amber-900 text-amber-700 dark:text-amber-300', text: 'text-amber-600/70 dark:text-amber-400/70' },
-                                                              { bg: 'bg-rose-50 dark:bg-rose-950/30', hover: 'hover:bg-rose-100/70 dark:hover:bg-rose-950/50', avatar: 'bg-rose-200 dark:bg-rose-900 text-rose-700 dark:text-rose-300', text: 'text-rose-600/70 dark:text-rose-400/70' },
-                                                            ];
-                                                            const color = noteColors[idx % noteColors.length];
-                                                            return (
-                                                              <div 
-                                                                key={note.id} 
-                                                                className={`${color.bg} ${color.hover} p-3.5 rounded-2xl text-left space-y-2.5 transition-all duration-200`}
-                                                              >
-                                                                <p className="text-[10.5px] text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line font-medium pr-5">
-                                                                  {note.content}
-                                                                </p>
-                                                                
-                                                                <div className={`flex items-center justify-between text-[8px] font-bold ${color.text}`}>
-                                                                  <span className="flex items-center gap-1.5">
-                                                                    <span className={`w-4 h-4 rounded-full ${color.avatar} text-[8px] font-extrabold flex items-center justify-center`}>
-                                                                      {note.agent_name?.charAt(0).toUpperCase() || 'A'}
-                                                                    </span>
-                                                                    <span className="max-w-[100px] truncate">{note.agent_name || 'Asesor'}</span>
-                                                                  </span>
-                                                                  
-                                                                  <div className="flex items-center gap-1.5">
-                                                                    <span>{new Date(note.created_at).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}</span>
-                                                                    <button
-                                                                      type="button"
-                                                                      onClick={() => handleDeleteNote(note.id)}
-                                                                      className="text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors p-1 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg cursor-pointer"
-                                                                      title="Eliminar nota"
-                                                                    >
-                                                                      <Trash2 size={10} />
-                                                                    </button>
-                                                                  </div>
-                                                                </div>
-                                                              </div>
-                                                            );
-                                                          })
-                                                        ) : (
-                                                          <div className="h-full flex flex-col items-center justify-center text-center py-10 space-y-2">
-                                                            <span className="text-[10px] text-slate-400 dark:text-slate-500 italic">No hay notas registradas para este cliente.</span>
-                                                          </div>
-                                                        )}
-                                                      </div>
-                          
-                                                      {/* Footer (Add note form) */}
-                                                      <div className="border-t border-slate-100 dark:border-slate-800 pt-3 flex-shrink-0 space-y-2.5">
-                                                        <textarea
-                                                          value={newNoteText}
-                                                          onChange={(e) => setNewNoteText(e.target.value)}
-                                                          rows={3}
-                                                          placeholder="Escribe una nueva nota interna..."
-                                                          className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-800 dark:text-white rounded-2xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 resize-none font-medium placeholder-slate-400 transition-all"
-                                                        />
-                                                        <button
-                                                          type="button"
-                                                          onClick={handleAddNewNote}
-                                                          disabled={newNoteLoading || !newNoteText.trim()}
-                                                          className="w-full py-2.5 bg-brand-500 hover:bg-brand-secondary text-white text-xs font-bold rounded-2xl shadow-lg shadow-brand-500/10 active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100 disabled:shadow-none cursor-pointer flex items-center justify-center gap-1.5"
-                                                        >
-                                                          {newNoteLoading ? (
-                                                            <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                                          ) : (
-                                                            <span>+ Agregar Nota</span>
-                                                          )}
-                                                        </button>
-                                                      </div>
-                                                    </div>
-                                                  )}
+                          {showNotesFloatingWindow && crmClient && (
+                            <div className="absolute inset-0 bg-white dark:bg-slate-900/95 z-50 flex flex-col animate-fadeIn border-l border-slate-100 dark:border-slate-800 shadow-2xl">
+                              {/* Header */}
+                              <div className="h-[96px] px-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 flex-shrink-0 bg-white dark:bg-slate-900">
+                                <div className="min-w-0 space-y-1 text-left">
+                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary text-[8px] font-bold uppercase tracking-wider border border-brand-primary/20">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse"></span>
+                                    Notas de Negocio
+                                  </span>
+                                  <h4 className="text-[12px] font-extrabold text-slate-800 dark:text-white uppercase tracking-tight truncate pr-2">
+                                    {crmClient.name}
+                                  </h4>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setShowNotesFloatingWindow(false)}
+                                  className="p-1.5 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl transition-all cursor-pointer border border-slate-100 dark:border-slate-800"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </div>
+  
+                              {/* Body Wrapper */}
+                              <div className="flex-1 flex flex-col min-h-0 p-4 bg-white dark:bg-slate-900">
+                                {/* List of notes */}
+                                <div className="flex-1 overflow-y-auto space-y-3.5 pr-1 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800 scrollbar-track-transparent">
+                                  {clientNotes.length > 0 ? (
+                                    clientNotes.map((note: any, idx: number) => {
+                                      const noteColors = [
+                                        { bg: 'bg-zinc-50 dark:bg-zinc-950/30', hover: 'hover:bg-zinc-100/70 dark:hover:bg-zinc-950/50', avatar: 'bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300', text: 'text-zinc-600/70 dark:text-zinc-400/70' },
+                                        { bg: 'bg-blue-50 dark:bg-blue-950/30', hover: 'hover:bg-blue-100/70 dark:hover:bg-blue-950/50', avatar: 'bg-blue-200 dark:bg-blue-900 text-blue-700 dark:text-blue-300', text: 'text-blue-600/70 dark:text-blue-400/70' },
+                                        { bg: 'bg-violet-50 dark:bg-violet-950/30', hover: 'hover:bg-violet-100/70 dark:hover:bg-violet-950/50', avatar: 'bg-violet-200 dark:bg-violet-900 text-violet-700 dark:text-violet-300', text: 'text-violet-600/70 dark:text-violet-400/70' },
+                                        { bg: 'bg-amber-50 dark:bg-amber-950/30', hover: 'hover:bg-amber-100/70 dark:hover:bg-amber-950/50', avatar: 'bg-amber-200 dark:bg-amber-900 text-amber-700 dark:text-amber-300', text: 'text-amber-600/70 dark:text-amber-400/70' },
+                                        { bg: 'bg-rose-50 dark:bg-rose-950/30', hover: 'hover:bg-rose-100/70 dark:hover:bg-rose-950/50', avatar: 'bg-rose-200 dark:bg-rose-900 text-rose-700 dark:text-rose-300', text: 'text-rose-600/70 dark:text-rose-400/70' },
+                                      ];
+                                      const color = noteColors[idx % noteColors.length];
+                                      return (
+                                        <div 
+                                          key={note.id} 
+                                          className={`${color.bg} ${color.hover} p-3.5 rounded-2xl text-left space-y-2.5 transition-all duration-200`}
+                                        >
+                                          <p className="text-[10.5px] text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line font-medium pr-5">
+                                            {note.content}
+                                          </p>
+                                          
+                                          <div className={`flex items-center justify-between text-[8px] font-bold ${color.text}`}>
+                                            <span className="flex items-center gap-1.5">
+                                              <span className={`w-4 h-4 rounded-full ${color.avatar} text-[8px] font-extrabold flex items-center justify-center`}>
+                                                {note.agent_name?.charAt(0).toUpperCase() || 'A'}
+                                              </span>
+                                              <span className="max-w-[100px] truncate">{note.agent_name || 'Asesor'}</span>
+                                            </span>
+                                            
+                                            <div className="flex items-center gap-1.5">
+                                              <span>{new Date(note.created_at).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}</span>
+                                              <button
+                                                type="button"
+                                                onClick={() => handleDeleteNote(note.id)}
+                                                className="text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors p-1 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg cursor-pointer"
+                                                title="Eliminar nota"
+                                              >
+                                                <Trash2 size={10} />
+                                              </button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      );
+                                    })
+                                  ) : (
+                                    <div className="h-full flex flex-col items-center justify-center text-center py-10 space-y-2">
+                                      <span className="text-[10px] text-slate-400 dark:text-slate-500 italic">No hay notas registradas para este cliente.</span>
+                                    </div>
+                                  )}
+                                </div>
+                            
+                                {/* Footer (Add note form) */}
+                                <div className="border-t border-slate-100 dark:border-slate-800 pt-3 flex-shrink-0 space-y-2.5">
+                                  <textarea
+                                    value={newNoteText}
+                                    onChange={(e) => setNewNoteText(e.target.value)}
+                                    rows={3}
+                                    placeholder="Escribe una nueva nota interna..."
+                                    className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-800 dark:text-white rounded-2xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 resize-none font-medium placeholder-slate-400 transition-all"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={handleAddNewNote}
+                                    disabled={newNoteLoading || !newNoteText.trim()}
+                                    className="w-full py-2.5 bg-brand-500 hover:bg-brand-secondary text-white text-xs font-bold rounded-2xl shadow-lg shadow-brand-500/10 active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100 disabled:shadow-none cursor-pointer flex items-center justify-center gap-1.5"
+                                  >
+                                    {newNoteLoading ? (
+                                      <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    ) : (
+                                      <span>+ Agregar Nota</span>
+                                    )}
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                           )}
                           </div>
                         )}
 
                         {/* Column 2: Facturación / Catálogo */}
                         <div className={`flex flex-col min-h-0 bg-slate-50/45 dark:bg-slate-950 text-left relative overflow-hidden ${showCrmDetails ? 'border-l border-slate-200/50 dark:border-slate-800/50' : 'border-l-0'}`}>
+                          {/* Facturación Header Bar */}
+                          <div className="h-[96px] px-4 flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900 flex-shrink-0">
+                            <div className="min-w-0 text-left space-y-1">
+                              <h5 className="text-[12px] font-extrabold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                                <FileText size={13} className="text-brand-primary" />
+                                <span>Facturación API</span>
+                              </h5>
+                              <p className="text-[9.5px] text-slate-400 dark:text-slate-500 leading-tight truncate max-w-[200px]">
+                                Catálogo integrado con tu Facturador Electrónico.
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              {billingConfigured && (
+                                <button
+                                  type="button"
+                                  onClick={() => fetchBillingProducts(billingSearchQuery, true)}
+                                  disabled={billingLoading}
+                                  className="p-1.5 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-850 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-350 transition-colors cursor-pointer disabled:opacity-50 border border-slate-100 dark:border-slate-800"
+                                  title="Sincronizar Catálogo (Vaciar Caché)"
+                                >
+                                  <RefreshCw size={13} className={billingLoading ? 'animate-spin' : ''} />
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={handleOpenBillingConfigModal}
+                                className="p-1.5 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-850 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-350 transition-colors cursor-pointer border border-slate-100 dark:border-slate-800"
+                                title="Configurar Conexión al Facturador"
+                              >
+                                <Settings size={13} />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Facturación Body Container */}
                           <div className="flex-1 flex flex-col min-h-0 p-4 bg-white dark:bg-slate-950/20">
                             <div className="space-y-4 flex flex-col h-full min-h-0">
-                              {/* Integration Header */}
-                              <div className="pb-3 border-b border-slate-100 dark:border-slate-800/60 text-left flex-shrink-0">
-                                <h5 className="text-[12px] font-extrabold text-slate-800 dark:text-white uppercase tracking-wider flex items-center justify-between">
-                                  <div className="flex items-center gap-1.5">
-                                    <FileText size={13} className="text-brand-primary" />
-                                    <span>Facturación API</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    {billingConfigured && (
-                                      <button
-                                        type="button"
-                                        onClick={() => fetchBillingProducts(billingSearchQuery, true)}
-                                        disabled={billingLoading}
-                                        className="p-1 hover:bg-slate-150 dark:hover:bg-slate-850 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-350 transition-colors cursor-pointer disabled:opacity-50"
-                                        title="Sincronizar Catálogo (Vaciar Caché)"
-                                      >
-                                        <RefreshCw size={13} className={billingLoading ? 'animate-spin' : ''} />
-                                      </button>
-                                    )}
-                                    <button
-                                      type="button"
-                                      onClick={handleOpenBillingConfigModal}
-                                      className="p-1 hover:bg-slate-150 dark:hover:bg-slate-850 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-350 transition-colors cursor-pointer"
-                                      title="Configurar Conexión al Facturador"
-                                    >
-                                      <Settings size={13} />
-                                    </button>
-                                  </div>
-                                </h5>
-                                <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1.5 leading-relaxed font-medium">
-                                  Catálogo integrado con tu Facturador Electrónico para enviar fichas de productos y cotizaciones.
-                                </p>
-                              </div>
 
                               {/* Search & Category Tabs */}
                               <div className="space-y-2 flex-shrink-0">
