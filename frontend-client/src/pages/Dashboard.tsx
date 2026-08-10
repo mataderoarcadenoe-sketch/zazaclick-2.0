@@ -5171,50 +5171,7 @@ echo $response;`;
                                   </div>
                                 </div>
                               
-                                {/* Notas del contacto */}
-                                <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800 space-y-3">
-                                  <div className="flex items-center justify-between">
-                                    <h5 className="text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Notas del contacto</h5>
-                                    <button 
-                                      type="button"
-                                      onClick={() => {
-                                        setNewNoteText('');
-                                        setShowNotesFloatingWindow(true);
-                                      }}
-                                      className="text-[9.5px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer transition-colors flex items-center gap-1"
-                                    >
-                                      {clientNotes.length > 0 ? (
-                                        <span>Ver notas ({clientNotes.length})</span>
-                                      ) : (
-                                        <>
-                                          <Plus size={10} />
-                                          <span>Agregar nota</span>
-                                        </>
-                                      )}
-                                    </button>
-                                  </div>
-                                  
-                                  {clientNotes.length > 0 ? (
-                                    <div className="bg-slate-50 dark:bg-slate-800/40 p-3.5 rounded-xl">
-                                      <p className="text-[10px] text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line font-medium">
-                                        {clientNotes[0].content}
-                                      </p>
-                                      <div className="text-[8.5px] text-slate-400 mt-2.5 flex items-center justify-between">
-                                        <span className="flex items-center gap-1.5 font-medium">
-                                          <span className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-[7.5px] font-bold flex items-center justify-center">
-                                            {clientNotes[0].agent_name?.charAt(0).toUpperCase() || 'A'}
-                                          </span>
-                                          {clientNotes[0].agent_name || 'Asesor'}
-                                        </span>
-                                        <span className="font-medium">{new Date(clientNotes[0].created_at).toLocaleDateString('es-ES')}</span>
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <p className="text-[10px] text-slate-400 text-center py-3 italic">Sin notas registradas.</p>
-                                  )}
-                                </div>
-                              
-                                {/* Etiquetas */}
+                                  {/* Etiquetas */}
                                  <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/50 dark:border-slate-800 space-y-3 relative">
                                    <div className="flex items-center justify-between">
                                      <h5 className="text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Etiquetas</h5>
