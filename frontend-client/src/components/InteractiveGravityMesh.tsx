@@ -4,7 +4,6 @@ export type MeshVariant = 'admin' | 'client' | 'login' | 'minimal' | 'analytics'
 
 export interface InteractiveGravityMeshProps {
   variant?: MeshVariant;
-  particleCount?: number;
   maxDistance?: number;
   gravityRadius?: number;
   gravityStrength?: number;
@@ -74,7 +73,6 @@ interface SignalWave {
   speed: number;
 }
 
-// Preset visual configurations for Living API Network
 const PRESETS: Record<MeshVariant, {
   coreCount: number;
   hubCount: number;
@@ -92,14 +90,46 @@ const PRESETS: Record<MeshVariant, {
   feederOpacity: number;
 }> = {
   premium: {
-    coreCount: 3,
-    hubCount: 7,
-    relayCount: 16,
-    edgeCount: 28,
-    maxDistance: 160,
+    coreCount: 4,
+    hubCount: 8,
+    relayCount: 18,
+    edgeCount: 30,
+    maxDistance: 165,
     gravityRadius: 200,
     gravityStrength: 32,
     springStrength: 0.032,
+    damping: 0.88,
+    pulseFrequency: 0.04,
+    maxPackets: 7,
+    trunkOpacity: 0.6,
+    branchOpacity: 0.4,
+    feederOpacity: 0.22,
+  },
+  admin: {
+    coreCount: 5,
+    hubCount: 10,
+    relayCount: 22,
+    edgeCount: 34,
+    maxDistance: 175,
+    gravityRadius: 220,
+    gravityStrength: 36,
+    springStrength: 0.035,
+    damping: 0.89,
+    pulseFrequency: 0.05,
+    maxPackets: 8,
+    trunkOpacity: 0.7,
+    branchOpacity: 0.45,
+    feederOpacity: 0.26,
+  },
+  client: {
+    coreCount: 4,
+    hubCount: 7,
+    relayCount: 16,
+    edgeCount: 26,
+    maxDistance: 160,
+    gravityRadius: 190,
+    gravityStrength: 30,
+    springStrength: 0.03,
     damping: 0.88,
     pulseFrequency: 0.035,
     maxPackets: 6,
@@ -107,85 +137,53 @@ const PRESETS: Record<MeshVariant, {
     branchOpacity: 0.35,
     feederOpacity: 0.2,
   },
-  admin: {
-    coreCount: 4,
-    hubCount: 8,
-    relayCount: 20,
-    edgeCount: 32,
-    maxDistance: 170,
-    gravityRadius: 220,
-    gravityStrength: 36,
-    springStrength: 0.035,
-    damping: 0.89,
-    pulseFrequency: 0.045,
-    maxPackets: 8,
-    trunkOpacity: 0.65,
-    branchOpacity: 0.42,
-    feederOpacity: 0.24,
-  },
-  client: {
+  login: {
     coreCount: 3,
     hubCount: 6,
     relayCount: 14,
     edgeCount: 24,
     maxDistance: 155,
-    gravityRadius: 190,
+    gravityRadius: 185,
     gravityStrength: 28,
-    springStrength: 0.03,
-    damping: 0.88,
+    springStrength: 0.028,
+    damping: 0.87,
     pulseFrequency: 0.03,
     maxPackets: 5,
     trunkOpacity: 0.5,
     branchOpacity: 0.32,
     feederOpacity: 0.18,
   },
-  login: {
-    coreCount: 3,
-    hubCount: 6,
-    relayCount: 12,
-    edgeCount: 22,
-    maxDistance: 150,
-    gravityRadius: 180,
-    gravityStrength: 25,
-    springStrength: 0.028,
-    damping: 0.87,
-    pulseFrequency: 0.025,
-    maxPackets: 4,
-    trunkOpacity: 0.45,
-    branchOpacity: 0.28,
-    feederOpacity: 0.16,
-  },
   analytics: {
     coreCount: 5,
-    hubCount: 10,
-    relayCount: 24,
-    edgeCount: 36,
-    maxDistance: 180,
-    gravityRadius: 230,
-    gravityStrength: 38,
+    hubCount: 12,
+    relayCount: 26,
+    edgeCount: 38,
+    maxDistance: 185,
+    gravityRadius: 240,
+    gravityStrength: 40,
     springStrength: 0.038,
     damping: 0.9,
-    pulseFrequency: 0.06,
+    pulseFrequency: 0.065,
     maxPackets: 10,
-    trunkOpacity: 0.7,
-    branchOpacity: 0.48,
-    feederOpacity: 0.28,
+    trunkOpacity: 0.75,
+    branchOpacity: 0.5,
+    feederOpacity: 0.3,
   },
   minimal: {
     coreCount: 2,
     hubCount: 4,
-    relayCount: 8,
-    edgeCount: 14,
-    maxDistance: 130,
+    relayCount: 10,
+    edgeCount: 16,
+    maxDistance: 135,
     gravityRadius: 150,
-    gravityStrength: 20,
-    springStrength: 0.024,
+    gravityStrength: 22,
+    springStrength: 0.025,
     damping: 0.86,
-    pulseFrequency: 0.015,
+    pulseFrequency: 0.02,
     maxPackets: 3,
-    trunkOpacity: 0.35,
-    branchOpacity: 0.2,
-    feederOpacity: 0.12,
+    trunkOpacity: 0.4,
+    branchOpacity: 0.25,
+    feederOpacity: 0.14,
   },
 };
 
@@ -327,21 +325,23 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
       if (!ctx) return;
 
       let animationFrameId: number;
-      let width = (canvas.width = window.innerWidth);
-      let height = (canvas.height = window.innerHeight);
+      let width = window.innerWidth;
+      let height = window.innerHeight;
+      let dpr = Math.min(window.devicePixelRatio || 1, 2);
 
       const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+      // Master Color Palettes
       const darkPalette = {
         core: '#10B981',
         coreInner: '#FFFFFF',
         hub: '#06B6D4',
         relay: '#14B8A6',
         edge: '#34D399',
-        coreHalo: 'rgba(16, 185, 129, 0.35)',
-        hubHalo: 'rgba(6, 182, 212, 0.25)',
-        relayHalo: 'rgba(20, 184, 166, 0.18)',
-        edgeHalo: 'rgba(52, 211, 153, 0.12)',
+        coreHalo: 'rgba(16, 185, 129, 0.45)',
+        hubHalo: 'rgba(6, 182, 212, 0.3)',
+        relayHalo: 'rgba(20, 184, 166, 0.22)',
+        edgeHalo: 'rgba(52, 211, 153, 0.15)',
         trunkLine: 'rgba(16, 185, 129, ',
         branchLine: 'rgba(6, 182, 212, ',
         feederLine: 'rgba(20, 184, 166, ',
@@ -356,10 +356,10 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
         hub: '#0E7490',
         relay: '#0F766E',
         edge: '#059669',
-        coreHalo: 'rgba(4, 120, 87, 0.2)',
-        hubHalo: 'rgba(14, 116, 144, 0.15)',
-        relayHalo: 'rgba(15, 118, 110, 0.12)',
-        edgeHalo: 'rgba(5, 150, 105, 0.08)',
+        coreHalo: 'rgba(4, 120, 87, 0.3)',
+        hubHalo: 'rgba(14, 116, 144, 0.2)',
+        relayHalo: 'rgba(15, 118, 110, 0.16)',
+        edgeHalo: 'rgba(5, 150, 105, 0.12)',
         trunkLine: 'rgba(4, 120, 87, ',
         branchLine: 'rgba(14, 116, 144, ',
         feederLine: 'rgba(15, 118, 110, ',
@@ -375,25 +375,27 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
         const isTablet = width >= 640 && width < 1024;
 
         const coreCount = isMobile ? 2 : preset.coreCount;
-        const hubCount = isMobile ? 4 : isTablet ? 5 : preset.hubCount;
-        const relayCount = isMobile ? 8 : isTablet ? 12 : preset.relayCount;
-        const edgeCount = isMobile ? 12 : isTablet ? 18 : preset.edgeCount;
+        const hubCount = isMobile ? 4 : isTablet ? 6 : preset.hubCount;
+        const relayCount = isMobile ? 8 : isTablet ? 14 : preset.relayCount;
+        const edgeCount = isMobile ? 12 : isTablet ? 20 : preset.edgeCount;
 
         const nodes: NetworkNode[] = [];
         let idCounter = 0;
 
+        // Strategic Regional Centers spanning the whole screen
         const corePositions = [
-          { x: width * 0.20, y: height * 0.32 },
-          { x: width * 0.82, y: height * 0.38 },
-          { x: width * 0.52, y: height * 0.76 },
-          { x: width * 0.15, y: height * 0.80 },
-          { x: width * 0.88, y: height * 0.82 },
+          { x: width * 0.18, y: height * 0.28 },
+          { x: width * 0.82, y: height * 0.25 },
+          { x: width * 0.50, y: height * 0.72 },
+          { x: width * 0.12, y: height * 0.78 },
+          { x: width * 0.88, y: height * 0.78 },
         ];
 
+        // 1. CORE NODES
         for (let i = 0; i < coreCount; i++) {
           const pos = corePositions[i % corePositions.length];
-          const x = pos.x + (Math.random() - 0.5) * 40;
-          const y = pos.y + (Math.random() - 0.5) * 40;
+          const x = Math.max(30, Math.min(width - 30, pos.x + (Math.random() - 0.5) * 60));
+          const y = Math.max(30, Math.min(height - 30, pos.y + (Math.random() - 0.5) * 60));
 
           nodes.push({
             id: idCounter++,
@@ -403,7 +405,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             originY: y,
             vx: 0,
             vy: 0,
-            radius: isDark ? 5.2 : 4.6,
+            radius: isDark ? 5.5 : 4.8,
             tier: 'CORE',
             color: theme.core,
             coreColor: theme.coreInner,
@@ -416,12 +418,13 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           });
         }
 
+        // 2. HUB NODES
         for (let i = 0; i < hubCount; i++) {
           const parentCore = nodes[i % coreCount];
-          const angle = (i * 1.3) + Math.random() * 0.8;
-          const dist = 110 + Math.random() * 90;
-          const x = Math.max(30, Math.min(width - 30, parentCore.originX + Math.cos(angle) * dist));
-          const y = Math.max(30, Math.min(height - 30, parentCore.originY + Math.sin(angle) * dist));
+          const angle = (i * 1.35) + Math.random() * 0.6;
+          const dist = 110 + Math.random() * 110;
+          const x = Math.max(25, Math.min(width - 25, parentCore.originX + Math.cos(angle) * dist));
+          const y = Math.max(25, Math.min(height - 25, parentCore.originY + Math.sin(angle) * dist));
 
           nodes.push({
             id: idCounter++,
@@ -431,7 +434,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             originY: y,
             vx: 0,
             vy: 0,
-            radius: isDark ? 3.8 : 3.4,
+            radius: isDark ? 4.0 : 3.5,
             tier: 'HUB',
             color: theme.hub,
             coreColor: theme.coreInner,
@@ -444,11 +447,12 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           });
         }
 
+        // 3. RELAYS
         const hubsAndCores = nodes.filter(n => n.tier === 'CORE' || n.tier === 'HUB');
         for (let i = 0; i < relayCount; i++) {
           const parent = hubsAndCores[i % hubsAndCores.length];
           const angle = Math.random() * Math.PI * 2;
-          const dist = 80 + Math.random() * 80;
+          const dist = 75 + Math.random() * 95;
           const x = Math.max(20, Math.min(width - 20, parent.originX + Math.cos(angle) * dist));
           const y = Math.max(20, Math.min(height - 20, parent.originY + Math.sin(angle) * dist));
 
@@ -460,7 +464,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             originY: y,
             vx: 0,
             vy: 0,
-            radius: isDark ? 2.8 : 2.5,
+            radius: isDark ? 3.0 : 2.6,
             tier: 'RELAY',
             color: theme.relay,
             coreColor: theme.relay,
@@ -473,11 +477,12 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           });
         }
 
+        // 4. EDGES
         const allUpperNodes = nodes.filter(n => n.tier !== 'EDGE');
         for (let i = 0; i < edgeCount; i++) {
           const parent = allUpperNodes[i % allUpperNodes.length];
           const angle = Math.random() * Math.PI * 2;
-          const dist = 60 + Math.random() * 95;
+          const dist = 55 + Math.random() * 110;
           const x = Math.max(15, Math.min(width - 15, parent.originX + Math.cos(angle) * dist));
           const y = Math.max(15, Math.min(height - 15, parent.originY + Math.sin(angle) * dist));
 
@@ -489,7 +494,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             originY: y,
             vx: 0,
             vy: 0,
-            radius: isDark ? 1.9 : 1.7,
+            radius: isDark ? 2.0 : 1.8,
             tier: 'EDGE',
             color: theme.edge,
             coreColor: theme.edge,
@@ -509,14 +514,13 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
 
       const handleResize = () => {
         if (!canvas) return;
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
         width = window.innerWidth;
         height = window.innerHeight;
-        canvas.width = width * dpr;
-        canvas.height = height * dpr;
+        canvas.width = Math.floor(width * dpr);
+        canvas.height = Math.floor(height * dpr);
         canvas.style.width = `${width}px`;
         canvas.style.height = `${height}px`;
-        ctx.scale(dpr, dpr);
         initNetworkTopology();
       };
 
@@ -604,6 +608,8 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           mouse.x += (mouse.targetX - mouse.x) * 0.16;
           mouse.y += (mouse.targetY - mouse.y) * 0.16;
 
+          ctx.save();
+          ctx.scale(dpr, dpr);
           ctx.clearRect(0, 0, width, height);
 
           const nodes = nodesRef.current;
@@ -614,7 +620,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             const n = nodes[i];
 
             n.phase += n.driftSpeed;
-            const idleAmp = n.tier === 'CORE' ? 0.3 : n.tier === 'HUB' ? 0.5 : 0.8;
+            const idleAmp = n.tier === 'CORE' ? 0.35 : n.tier === 'HUB' ? 0.55 : 0.85;
             const idleX = prefersReducedMotion ? 0 : Math.cos(n.phase * 0.8 + time * 0.7) * idleAmp * n.depth;
             const idleY = prefersReducedMotion ? 0 : Math.sin(n.phase + time) * idleAmp * 1.2 * n.depth;
 
@@ -685,8 +691,8 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
               const n2 = nodes[j];
 
               let allowedDistSq = maxDistSq;
-              if (n1.tier === 'CORE' && n2.tier === 'CORE') allowedDistSq *= 1.4;
-              else if (n1.tier === 'CORE' || n2.tier === 'CORE') allowedDistSq *= 1.25;
+              if (n1.tier === 'CORE' && n2.tier === 'CORE') allowedDistSq *= 1.45;
+              else if (n1.tier === 'CORE' || n2.tier === 'CORE') allowedDistSq *= 1.3;
 
               const dx = n1.x - n2.x;
               const dy = n1.y - n2.y;
@@ -724,7 +730,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             const p1 = nodes[conn.source];
             const p2 = nodes[conn.target];
 
-            const distFactor = 1 - conn.dist / (maxDistance * 1.25);
+            const distFactor = 1 - conn.dist / (maxDistance * 1.3);
             const actBoost = Math.max(p1.activity, p2.activity) * 0.45;
 
             if (conn.tier === 'TRUNK') {
@@ -733,7 +739,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
               ctx.moveTo(p1.x, p1.y);
               ctx.lineTo(p2.x, p2.y);
               ctx.strokeStyle = `${theme.trunkLine}${alpha})`;
-              ctx.lineWidth = isDark ? 1.6 : 1.4;
+              ctx.lineWidth = isDark ? 1.8 : 1.5;
               ctx.stroke();
             } else if (conn.tier === 'BRANCH') {
               const alpha = Math.min(1.0, distFactor * preset.branchOpacity + actBoost).toFixed(3);
@@ -741,7 +747,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
               ctx.moveTo(p1.x, p1.y);
               ctx.lineTo(p2.x, p2.y);
               ctx.strokeStyle = `${theme.branchLine}${alpha})`;
-              ctx.lineWidth = isDark ? 1.1 : 0.95;
+              ctx.lineWidth = isDark ? 1.2 : 1.0;
               ctx.stroke();
             } else {
               const alpha = Math.min(1.0, distFactor * preset.feederOpacity + actBoost).toFixed(3);
@@ -749,7 +755,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
               ctx.moveTo(p1.x, p1.y);
               ctx.lineTo(p2.x, p2.y);
               ctx.strokeStyle = `${theme.feederLine}${alpha})`;
-              ctx.lineWidth = isDark ? 0.8 : 0.7;
+              ctx.lineWidth = isDark ? 0.9 : 0.75;
               ctx.stroke();
             }
           }
@@ -764,13 +770,13 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
 
               if (mDistSq < gravRadSq) {
                 const mDist = Math.sqrt(mDistSq);
-                const mAlpha = ((1 - mDist / gravityRadius) * (isDark ? 0.45 : 0.3)).toFixed(3);
+                const mAlpha = ((1 - mDist / gravityRadius) * (isDark ? 0.5 : 0.35)).toFixed(3);
 
                 ctx.beginPath();
                 ctx.moveTo(mouse.x, mouse.y);
                 ctx.lineTo(n.x, n.y);
                 ctx.strokeStyle = `${theme.mouseFilament}${mAlpha})`;
-                ctx.lineWidth = 1.3;
+                ctx.lineWidth = 1.4;
                 ctx.stroke();
               }
             }
@@ -796,8 +802,8 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
                 available.progress = 0;
                 available.speed = Math.random() * 0.018 + 0.024;
                 available.color = pColor;
-                available.headRadius = isDark ? 3.2 : 2.8;
-                available.length = 0.22;
+                available.headRadius = isDark ? 3.4 : 3.0;
+                available.length = 0.24;
               } else if (packets.length < preset.maxPackets) {
                 packets.push({
                   active: true,
@@ -806,8 +812,8 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
                   progress: 0,
                   speed: Math.random() * 0.018 + 0.024,
                   color: pColor,
-                  headRadius: isDark ? 3.2 : 2.8,
-                  length: 0.22,
+                  headRadius: isDark ? 3.4 : 3.0,
+                  length: 0.24,
                 });
               }
             }
@@ -842,21 +848,21 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
 
               const grad = ctx.createLinearGradient(tailX, tailY, headX, headY);
               grad.addColorStop(0, 'rgba(16, 185, 129, 0)');
-              grad.addColorStop(0.7, `${theme.trunkLine}${(packetVisibility * (isDark ? 0.6 : 0.4)).toFixed(3)})`);
+              grad.addColorStop(0.7, `${theme.trunkLine}${(packetVisibility * (isDark ? 0.7 : 0.5)).toFixed(3)})`);
               grad.addColorStop(1, pkt.color);
 
               ctx.beginPath();
               ctx.moveTo(tailX, tailY);
               ctx.lineTo(headX, headY);
               ctx.strokeStyle = grad;
-              ctx.lineWidth = isDark ? 2.4 : 2.0;
+              ctx.lineWidth = isDark ? 2.6 : 2.2;
               ctx.stroke();
 
               ctx.beginPath();
               ctx.arc(headX, headY, pkt.headRadius, 0, Math.PI * 2);
               ctx.fillStyle = pkt.color;
               ctx.shadowColor = pkt.color;
-              ctx.shadowBlur = isDark ? 10 : 5;
+              ctx.shadowBlur = isDark ? 12 : 6;
               ctx.globalAlpha = packetVisibility;
               ctx.fill();
               ctx.globalAlpha = 1.0;
@@ -881,14 +887,14 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
 
               ctx.beginPath();
               ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
-              ctx.strokeStyle = `${theme.waveColor}${(wave.intensity * 0.5).toFixed(3)})`;
-              ctx.lineWidth = 1.6;
+              ctx.strokeStyle = `${theme.waveColor}${(wave.intensity * 0.55).toFixed(3)})`;
+              ctx.lineWidth = 1.8;
               ctx.stroke();
 
               ctx.beginPath();
               ctx.arc(wave.x, wave.y, Math.max(1, wave.radius - 12), 0, Math.PI * 2);
-              ctx.strokeStyle = `${theme.waveColor}${(wave.intensity * 0.25).toFixed(3)})`;
-              ctx.lineWidth = 0.9;
+              ctx.strokeStyle = `${theme.waveColor}${(wave.intensity * 0.3).toFixed(3)})`;
+              ctx.lineWidth = 1.0;
               ctx.stroke();
             }
           }
@@ -896,13 +902,14 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           // 7. DRAW NODES
           for (let i = 0; i < nodeCount; i++) {
             const n = nodes[i];
-            const nodeAlpha = (0.75 + n.activity * 0.25) * n.depth;
+            const nodeAlpha = (0.8 + n.activity * 0.2) * n.depth;
 
+            // CORE NODES
             if (n.tier === 'CORE' && !prefersReducedMotion) {
-              const haloSize = 28 + Math.sin(time * 2.2 + n.phase) * 6 + (n.activity * 16) + (n.haloPulse * 20);
+              const haloSize = 32 + Math.sin(time * 2.2 + n.phase) * 7 + (n.activity * 18) + (n.haloPulse * 22);
               const haloGrad = ctx.createRadialGradient(n.x, n.y, 2, n.x, n.y, haloSize);
-              haloGrad.addColorStop(0, isDark ? 'rgba(16, 185, 129, 0.35)' : 'rgba(4, 120, 87, 0.25)');
-              haloGrad.addColorStop(0.5, isDark ? 'rgba(6, 182, 212, 0.15)' : 'rgba(14, 116, 144, 0.1)');
+              haloGrad.addColorStop(0, isDark ? 'rgba(16, 185, 129, 0.4)' : 'rgba(4, 120, 87, 0.3)');
+              haloGrad.addColorStop(0.5, isDark ? 'rgba(6, 182, 212, 0.18)' : 'rgba(14, 116, 144, 0.12)');
               haloGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
               ctx.beginPath();
@@ -910,41 +917,46 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
               ctx.fillStyle = haloGrad;
               ctx.fill();
 
-              const orbitRadius = n.radius + 5.5 + Math.sin(time * 1.8 + n.phase) * 1.5;
+              const orbitRadius = n.radius + 6.0 + Math.sin(time * 1.8 + n.phase) * 1.5;
               ctx.beginPath();
               ctx.arc(n.x, n.y, orbitRadius, 0, Math.PI * 2);
-              ctx.strokeStyle = `${theme.trunkLine}${(0.35 + n.activity * 0.45).toFixed(3)})`;
-              ctx.lineWidth = 1.1;
+              ctx.strokeStyle = `${theme.trunkLine}${(0.4 + n.activity * 0.45).toFixed(3)})`;
+              ctx.lineWidth = 1.2;
               ctx.stroke();
             }
 
+            // HUB NODES
             if (n.tier === 'HUB' && !prefersReducedMotion) {
-              const hubRingRadius = n.radius + 3.8 + Math.sin(time * 2.5 + n.phase) * 1.0;
+              const hubRingRadius = n.radius + 4.2 + Math.sin(time * 2.5 + n.phase) * 1.2;
               ctx.beginPath();
               ctx.arc(n.x, n.y, hubRingRadius, 0, Math.PI * 2);
-              ctx.strokeStyle = `${theme.branchLine}${(0.25 + n.activity * 0.4).toFixed(3)})`;
-              ctx.lineWidth = 0.9;
+              ctx.strokeStyle = `${theme.branchLine}${(0.3 + n.activity * 0.4).toFixed(3)})`;
+              ctx.lineWidth = 1.0;
               ctx.stroke();
             }
 
-            const currentRadius = n.radius + (n.activity * 1.0);
+            // MAIN NODE BODY
+            const currentRadius = n.radius + (n.activity * 1.2);
             ctx.beginPath();
             ctx.arc(n.x, n.y, currentRadius, 0, Math.PI * 2);
             ctx.fillStyle = n.color;
             ctx.shadowColor = n.color;
-            ctx.shadowBlur = isDark ? (n.tier === 'CORE' ? 14 : n.tier === 'HUB' ? 9 : 5) : 3;
+            ctx.shadowBlur = isDark ? (n.tier === 'CORE' ? 16 : n.tier === 'HUB' ? 10 : 6) : 4;
             ctx.globalAlpha = nodeAlpha;
             ctx.fill();
             ctx.globalAlpha = 1.0;
             ctx.shadowBlur = 0;
 
+            // CORE CENTER DOT
             if (n.tier === 'CORE' || n.tier === 'HUB') {
               ctx.beginPath();
-              ctx.arc(n.x, n.y, n.tier === 'CORE' ? 2.0 : 1.4, 0, Math.PI * 2);
+              ctx.arc(n.x, n.y, n.tier === 'CORE' ? 2.2 : 1.5, 0, Math.PI * 2);
               ctx.fillStyle = n.coreColor;
               ctx.fill();
             }
           }
+
+          ctx.restore();
         }
 
         animationFrameId = requestAnimationFrame(render);
@@ -979,7 +991,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
       <canvas
         ref={canvasRef}
         className={className}
-        style={{ display: 'block' }}
+        style={{ display: 'block', width: '100%', height: '100%' }}
       />
     );
   }

@@ -166,9 +166,9 @@ export default function Auth() {
           </div>
 
           {/* Hero Visual: WhatsApp API Architecture Gateway Canvas */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#0D131F] relative overflow-hidden space-y-5">
+          <div className="p-6 rounded-3xl bg-white/75 dark:bg-[#0D1829]/75 backdrop-blur-xl relative overflow-hidden space-y-5 border border-emerald-500/10 dark:border-white/5 shadow-xl shadow-emerald-950/5 dark:shadow-black/50">
             
-            <div className="flex items-center justify-between pb-3">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/80">
               <div className="flex items-center gap-2">
                 <Terminal size={16} className="text-emerald-500" />
                 <span className="text-xs font-bold text-slate-900 dark:text-white">Flujo de Arquitectura en Tiempo Real</span>
@@ -183,7 +183,7 @@ export default function Auth() {
             <div className="grid grid-cols-3 gap-3 text-center">
               
               {/* Node 1: Client App */}
-              <div className="p-4 bg-slate-50 dark:bg-[#141D2E] rounded-2xl space-y-1">
+              <div className="p-4 bg-slate-50/80 dark:bg-[#141D2E]/80 rounded-2xl space-y-1 border border-slate-100 dark:border-slate-800/50">
                 <div className="w-8 h-8 mx-auto rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 flex items-center justify-center font-bold text-xs">
                   <Server size={16} />
                 </div>
@@ -192,7 +192,7 @@ export default function Auth() {
               </div>
 
               {/* Node 2: Zaza Core Gateway */}
-              <div className="p-4 bg-emerald-50/80 dark:bg-emerald-950/40 rounded-2xl space-y-1 relative">
+              <div className="p-4 bg-emerald-50/70 dark:bg-emerald-950/40 rounded-2xl space-y-1 relative border border-emerald-500/15">
                 <div className="absolute -left-3 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600">
                   <ArrowRight size={14} />
                 </div>
@@ -207,7 +207,7 @@ export default function Auth() {
               </div>
 
               {/* Node 3: WhatsApp Multi-Tenant Instances */}
-              <div className="p-4 bg-slate-50 dark:bg-[#141D2E] rounded-2xl space-y-1">
+              <div className="p-4 bg-slate-50/80 dark:bg-[#141D2E]/80 rounded-2xl space-y-1 border border-slate-100 dark:border-slate-800/50">
                 <div className="w-8 h-8 mx-auto rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold text-xs">
                   <Smartphone size={16} />
                 </div>
@@ -218,37 +218,37 @@ export default function Auth() {
             </div>
 
             {/* Architecture Metrics Live Bar */}
-            <div className="grid grid-cols-3 gap-2 pt-2 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+            <div className="grid grid-cols-3 gap-2 pt-2 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
               <div className="flex items-center gap-1.5">
-                <CheckCircle2 size={13} className="text-emerald-500" />
-                <span>Redis Queue Engine</span>
+                <CheckCircle2 size={13} className="text-emerald-500 flex-shrink-0" />
+                <span>Webhooks HMAC</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <CheckCircle2 size={13} className="text-teal-500" />
-                <span>Latencia: &lt; 85ms</span>
+                <CheckCircle2 size={13} className="text-teal-500 flex-shrink-0" />
+                <span>Sub-segundo SLA</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <CheckCircle2 size={13} className="text-cyan-500" />
-                <span>Webhooks en Vivo</span>
+                <CheckCircle2 size={13} className="text-cyan-500 flex-shrink-0" />
+                <span>API Key Auth</span>
               </div>
             </div>
 
           </div>
 
-          {/* Feature Highlights Strip */}
+          {/* Feature Highlights Cards */}
           <div className="grid grid-cols-2 gap-4 max-w-2xl">
             
-            <div className="p-5 rounded-2xl bg-white dark:bg-[#0D131F] space-y-1.5">
+            <div className="p-5 rounded-2xl bg-white/75 dark:bg-[#0D1829]/75 backdrop-blur-md space-y-1.5 border border-emerald-500/10 dark:border-white/5 shadow-md">
               <div className="flex items-center gap-2 text-slate-900 dark:text-white text-xs font-bold">
                 <Zap size={16} className="text-emerald-500" />
-                <span>Alta Disponibilidad & Escala</span>
+                <span>API REST Directa</span>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-normal">
-                Enrutamiento concurrente de mensajes masivos con balanceo de carga en clúster.
+                Envía mensajes, audios, documentos y botones con simples llamadas JSON HTTP.
               </p>
             </div>
 
-            <div className="p-5 rounded-2xl bg-white dark:bg-[#0D131F] space-y-1.5">
+            <div className="p-5 rounded-2xl bg-white/75 dark:bg-[#0D1829]/75 backdrop-blur-md space-y-1.5 border border-emerald-500/10 dark:border-white/5 shadow-md">
               <div className="flex items-center gap-2 text-slate-900 dark:text-white text-xs font-bold">
                 <ShieldCheck size={16} className="text-teal-500" />
                 <span>Aislamiento Criptográfico</span>
@@ -264,7 +264,7 @@ export default function Auth() {
 
         {/* Right Column — Master Authentication Card (Flat Minimalist Surface) */}
         <div className="lg:col-span-5 flex justify-center w-full animate-fadeIn">
-          <div className="w-full max-w-md bg-white dark:bg-[#0D131F] p-8 sm:p-10 rounded-[32px] relative overflow-hidden transition-all">
+          <div className="w-full max-w-md bg-white/80 dark:bg-[#0D1829]/80 backdrop-blur-2xl p-8 sm:p-10 rounded-[32px] relative overflow-hidden transition-all border border-emerald-500/15 dark:border-white/5 shadow-2xl shadow-emerald-950/10 dark:shadow-black/70">
             
             {/* Brand Logo & Header */}
             <div className="space-y-4 text-center pb-6">

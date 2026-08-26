@@ -11,6 +11,7 @@ import {
 
 import { AsyncOperationModal, type AsyncStep, type AsyncStatus } from '../components/AsyncOperationModal';
 import { CustomSelect } from '../components/CustomSelect';
+import { InteractiveGravityMesh } from '../components/InteractiveGravityMesh';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -506,8 +507,15 @@ echo $response;`;
   };
 
   return (
-    <div className="flex h-screen bg-[#F8FAFC] dark:bg-[#070B12] text-slate-900 dark:text-white transition-colors duration-250 font-sans overflow-hidden">
+    <div className="flex h-screen bg-[#F8FAFC] dark:bg-[#070B12] text-slate-900 dark:text-white transition-colors duration-250 font-sans overflow-hidden relative">
       
+      {/* Living API Network Infrastructure Canvas (Client Connectivity Engine) */}
+      <InteractiveGravityMesh 
+        variant="client"
+        isDark={isDark}
+        className="fixed inset-0 pointer-events-none z-0 opacity-35 dark:opacity-50"
+      />
+
       {/* Toast Notification (Flat Pill) */}
       {notification && (
         <div className={`fixed top-5 right-5 z-50 px-4 py-3 rounded-2xl flex items-center gap-2.5 text-xs font-bold animate-fadeIn ${

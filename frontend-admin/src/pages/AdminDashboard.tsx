@@ -12,6 +12,7 @@ import {
 import { useDarkMode } from '../hooks/useDarkMode';
 import api from '../services/api';
 import { CustomSelect } from '../components/CustomSelect';
+import { InteractiveGravityMesh } from '../components/InteractiveGravityMesh';
 
 export default function AdminDashboardPage() {
   const { user, logout } = useAuth();
@@ -230,8 +231,15 @@ export default function AdminDashboardPage() {
   ];
 
   return (
-    <div className="flex h-screen bg-[#F8FAFC] dark:bg-[#070B12] text-slate-900 dark:text-white transition-colors duration-250 font-sans overflow-hidden">
+    <div className="flex h-screen bg-[#F8FAFC] dark:bg-[#070B12] text-slate-900 dark:text-white transition-colors duration-250 font-sans overflow-hidden relative">
       
+      {/* Living API Network Infrastructure Canvas (Admin Supervision Engine) */}
+      <InteractiveGravityMesh 
+        variant="admin"
+        isDark={isDark}
+        className="fixed inset-0 pointer-events-none z-0 opacity-40 dark:opacity-60"
+      />
+
       {/* Toast Notification */}
       {notification && (
         <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-2xl flex items-center gap-2.5 text-xs font-bold animate-fadeIn ${

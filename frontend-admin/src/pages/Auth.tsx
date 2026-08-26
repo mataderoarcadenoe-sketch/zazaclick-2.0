@@ -169,7 +169,7 @@ export default function AuthPage() {
           </div>
 
           {/* SuperAdmin Architecture Canvas */}
-          <div className="p-6 rounded-3xl bg-white/90 dark:bg-[#0D1829]/90 backdrop-blur-xl relative overflow-hidden space-y-5 shadow-xl shadow-emerald-950/5 dark:shadow-black/50">
+          <div className="p-6 rounded-3xl bg-white/75 dark:bg-[#0D1829]/75 backdrop-blur-xl relative overflow-hidden space-y-5 shadow-xl shadow-emerald-950/5 dark:shadow-black/50 border border-emerald-500/10 dark:border-white/5">
             
             <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800/80">
               <div className="flex items-center gap-2">
@@ -186,7 +186,7 @@ export default function AuthPage() {
             <div className="grid grid-cols-3 gap-3.5 text-center">
               
               {/* Node 1: SuperAdmin Authority */}
-              <div className="p-4 bg-gradient-to-b from-slate-50 to-slate-100/80 dark:from-[#132238] dark:to-[#0F1B2D] rounded-2xl space-y-1.5 shadow-sm">
+              <div className="p-4 bg-slate-50/80 dark:bg-[#132238]/80 rounded-2xl space-y-1.5 shadow-sm border border-slate-100 dark:border-slate-800/50">
                 <div className="w-9 h-9 mx-auto rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 text-white dark:from-emerald-500 dark:to-teal-600 dark:text-white flex items-center justify-center font-bold text-xs shadow-md">
                   <ShieldCheck size={18} className="text-emerald-400 dark:text-white" />
                 </div>
@@ -195,7 +195,7 @@ export default function AuthPage() {
               </div>
 
               {/* Node 2: Database & Atomic Quota */}
-              <div className="p-4 bg-gradient-to-b from-emerald-50 to-teal-50/80 dark:from-emerald-950/60 dark:to-teal-950/40 rounded-2xl space-y-1.5 relative shadow-sm">
+              <div className="p-4 bg-emerald-50/70 dark:bg-emerald-950/40 rounded-2xl space-y-1.5 relative shadow-sm border border-emerald-500/15">
                 <div className="absolute -left-3 top-1/2 -translate-y-1/2 text-emerald-500">
                   <ArrowRight size={15} />
                 </div>
@@ -210,7 +210,7 @@ export default function AuthPage() {
               </div>
 
               {/* Node 3: Evolution Cluster */}
-              <div className="p-4 bg-gradient-to-b from-slate-50 to-slate-100/80 dark:from-[#132238] dark:to-[#0F1B2D] rounded-2xl space-y-1.5 shadow-sm">
+              <div className="p-4 bg-slate-50/80 dark:bg-[#132238]/80 rounded-2xl space-y-1.5 shadow-sm border border-slate-100 dark:border-slate-800/50">
                 <div className="w-9 h-9 mx-auto rounded-xl bg-gradient-to-br from-teal-500 to-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow-md">
                   <Server size={18} />
                 </div>
@@ -241,7 +241,7 @@ export default function AuthPage() {
           {/* Feature Highlights Cards with Vibrant Gradients */}
           <div className="grid grid-cols-2 gap-4 max-w-2xl">
             
-            <div className="p-5 rounded-2xl bg-white/90 dark:bg-[#0D1829]/90 backdrop-blur-md space-y-1.5 shadow-md">
+            <div className="p-5 rounded-2xl bg-white/75 dark:bg-[#0D1829]/75 backdrop-blur-md space-y-1.5 shadow-md border border-emerald-500/10 dark:border-white/5">
               <div className="flex items-center gap-2 text-slate-900 dark:text-white text-xs font-black">
                 <Zap size={16} className="text-emerald-500" />
                 <span>Control Total de Clientes</span>
@@ -251,7 +251,7 @@ export default function AuthPage() {
               </p>
             </div>
 
-            <div className="p-5 rounded-2xl bg-white/90 dark:bg-[#0D1829]/90 backdrop-blur-md space-y-1.5 shadow-md">
+            <div className="p-5 rounded-2xl bg-white/75 dark:bg-[#0D1829]/75 backdrop-blur-md space-y-1.5 shadow-md border border-emerald-500/10 dark:border-white/5">
               <div className="flex items-center gap-2 text-slate-900 dark:text-white text-xs font-black">
                 <LockKeyhole size={16} className="text-teal-500" />
                 <span>Pagos & Trazabilidad</span>
@@ -267,7 +267,7 @@ export default function AuthPage() {
 
         {/* Right Column — Master SuperAdmin Google SSO Card */}
         <div className="md:col-span-6 lg:col-span-5 flex justify-center w-full animate-fadeIn">
-          <div className="w-full max-w-md bg-white/95 dark:bg-[#0D1829]/95 backdrop-blur-2xl p-8 sm:p-10 rounded-[36px] relative overflow-hidden transition-all shadow-2xl shadow-emerald-950/10 dark:shadow-black/70 text-center space-y-6">
+          <div className="w-full max-w-md bg-white/80 dark:bg-[#0D1829]/80 backdrop-blur-2xl p-8 sm:p-10 rounded-[36px] relative overflow-hidden transition-all shadow-2xl shadow-emerald-950/10 dark:shadow-black/70 text-center space-y-6 border border-emerald-500/15 dark:border-white/5">
             
             {/* Brand Logo & Header */}
             <div className="space-y-4">
