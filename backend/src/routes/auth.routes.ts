@@ -4,7 +4,6 @@ import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import { authMiddleware, AuthenticatedRequest } from '../middleware/auth.middleware';
 import { GoogleService } from '../services/google.service';
-import { GoogleContactsService } from '../services/google-contacts.service';
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'whatsapp-secret-key-2024';
@@ -229,70 +228,6 @@ router.post('/google-login', async (req, res) => {
   }
 });
 
-/**
- * GET /google-contacts/connect - Iniciar flujo OAuth de Google Contactos
- */
-router.get('/google-contacts/connect', async (req, res) => {
-  const { token } = req.query;
-  if (!token) return res.status(400).send('Falta token de autorización');
-  
-  try {
-    const decoded = jwt.verify(token as string, JWT_SECRET) as any;
-    const state = decoded.id; // userId
-    const authUrl = GoogleContactsService.getAuthUrl(state);
-    res.redirect(authUrl);
-  } catch (err) {
-    res.status(401).send('Token inválido');
-  }
-});
 
-/**
- * GET /google-contacts/callback - Callback de OAuth de Google Contactos
- */
-router.get('/google-contacts/callback', async (req, res) => {
-  const { code, state } = req.query;
-  if (!code || !state) return res.status(400).send('Parámetros inválidos de Google Callback');
-
-  try {
-    const userId = state as string;
-    const tokens = await GoogleContactsService.getTokensFromCode(code as string);
-
-    if (!tokens.access_token || !tokens.refresh_token) {
-      return res.status(400).send('No se recibió el token de actualización de Google. Revoca los accesos de Zaza en tu cuenta de Google e inténtalo de nuevo.');
-    }
-
-    // Decodificar email de Google si viene id_token
-    let googleEmail = '';
-    if (tokens.id_token) {
-      try {
-        const decodedToken = jwt.decode(tokens.id_token) as any;
-        googleEmail = decodedToken?.email || '';
-      } catch (e) {}
-    }
-
-    await GoogleContactsService.saveCredentials(
-      userId,
-      tokens.access_token,
-      tokens.refresh_token,
-      tokens.expiry_date!,
-      googleEmail
-    );
-
-    // Redirigir dinámicamente según el host (local o producción)
-    const host = req.get('host') || 'zaza-click-20-production.up.railway.app';
-    const protocol = host.includes('localhost') || host.includes('127.0.0.1') ? 'http' : 'https';
-    
-    // Si viene de Vite en dev port 5173
-    const redirectHost = host.includes('localhost:5000') ? 'localhost:5173' : host;
-    
-    res.redirect(`${protocol}://${redirectHost}/?google_contacts=success`);
-  } catch (err: any) {
-    console.error('[GoogleContactsCallback] Error:', err.message);
-    const host = req.get('host') || 'zaza-click-20-production.up.railway.app';
-    const protocol = host.includes('localhost') || host.includes('127.0.0.1') ? 'http' : 'https';
-    const redirectHost = host.includes('localhost:5000') ? 'localhost:5173' : host;
-    res.redirect(`${protocol}://${redirectHost}/?google_contacts=error`);
-  }
-});
 
 export default router;

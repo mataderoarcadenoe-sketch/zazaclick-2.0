@@ -8,13 +8,11 @@ import authRoutes from './routes/auth.routes';
 import instanceRoutes from './routes/instance.routes';
 import adminRoutes from './routes/admin.routes';
 import webhookRoutes from './routes/webhook.routes';
-import crmRoutes from './routes/crm.routes';
 import { EvolutionService } from './services/evolution.service';
 
 dotenv.config();
 
 const app = express();
-// Default to 3000 to match Railway default target port or process.env.PORT
 const PORT = parseInt(process.env.PORT || '3000', 10);
 
 // Configuración de orígenes autorizados para desarrollo y producción en Railway
@@ -28,7 +26,6 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Permitir solicitudes sin origin (como cURL, Postman o backend-to-backend)
     if (!origin) return callback(null, true);
 
     if (
@@ -59,12 +56,11 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Routes Mount
+// SaaS Core API Routes Mount
 app.use('/api/auth', authRoutes);
 app.use('/api/instances', instanceRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/webhooks', webhookRoutes);
-app.use('/api/crm', crmRoutes);
 
 // Root Health Check Route
 app.get('/', (req, res) => {
@@ -104,7 +100,7 @@ async function configureAllWebhooks() {
 // Start Server
 async function startServer() {
   try {
-    console.log('🔄 Inicializando base de datos...');
+    console.log('🔄 Inicializando base de datos SaaS Core...');
     await initDatabase();
     
     const server = createServer(app);
@@ -114,8 +110,6 @@ async function startServer() {
       console.log(`🚀 Servidor Express + Socket.io ejecutándose exitosamente en http://0.0.0.0:${PORT}`);
       // Configurar automáticamente los webhooks para todas las instancias existentes
       configureAllWebhooks();
-      // Ejecutar la migración y resolución de contactos LID existentes en base de datos
-      EvolutionService.resolveDatabaseLids();
     });
   } catch (error) {
     console.error('❌ Error fatal al iniciar el servidor:', error);
