@@ -324,82 +324,107 @@ export default function AdminDashboardPage() {
       <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-250 ${sidebarOpen ? 'lg:pl-64' : 'lg:pl-20'}`}>
         
         {/* Header */}
-        <header className="h-16 bg-white dark:bg-[#0B0F19] px-4 sm:px-8 lg:px-12 flex items-center justify-between z-30 transition-colors border-b border-slate-100 dark:border-slate-800/40">
+        <header className="h-16 bg-white/95 dark:bg-[#0B0F19]/95 backdrop-blur-md px-4 sm:px-8 lg:px-12 flex items-center justify-between z-30 transition-colors duration-250 border-b border-slate-200/80 dark:border-slate-800/80 sticky top-0">
           <div className="flex items-center gap-3">
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-600">
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-600 dark:text-slate-300 lg:hidden cursor-pointer">
               <Menu size={20} />
             </button>
             <div className="flex flex-col text-left">
-              <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
-                {menuItems.find(i => i.id === activeTab)?.label || 'Panel de Control'}
-              </h2>
-              <p className="text-[11px] text-slate-400">Control maestro de licenciamiento, cuotas atómicas y facturación.</p>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight tracking-tight">
+                  {menuItems.find(i => i.id === activeTab)?.label || 'Panel de Control'}
+                </h2>
+                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-mono font-bold">
+                  SUPERADMIN
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 font-normal leading-none mt-0.5 hidden sm:block">Control maestro de licenciamiento, cuotas atómicas y facturación.</p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Live Gateway Telemetry Pill */}
+            <div className="hidden md:inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span className="text-[10px] font-bold tracking-wider uppercase font-mono">Control Core · Activo</span>
+            </div>
+
             <button
               onClick={toggleDark}
-              className="p-2.5 bg-slate-100 dark:bg-slate-800 rounded-2xl text-slate-600 dark:text-slate-300 cursor-pointer"
+              className="p-2.5 bg-slate-100 dark:bg-slate-800/80 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-slate-600 dark:text-slate-300 cursor-pointer border border-transparent dark:border-slate-700/50"
+              title="Cambiar Tema"
             >
-              {isDark ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-emerald-600" />}
+              {isDark ? <Sun size={17} className="text-amber-400" /> : <Moon size={17} className="text-emerald-600" />}
             </button>
             <button
               onClick={fetchAdminData}
-              className="p-2.5 bg-slate-100 dark:bg-slate-800 rounded-2xl text-slate-600 hover:text-emerald-600 cursor-pointer"
+              className="p-2.5 bg-slate-100 dark:bg-slate-800/80 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-slate-600 dark:text-slate-300 cursor-pointer border border-transparent dark:border-slate-700/50"
               title="Actualizar datos"
             >
-              <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+              <RefreshCw size={17} className={loading ? 'animate-spin text-emerald-500' : ''} />
             </button>
+
+            <div className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center font-bold text-xs uppercase shadow-sm">
+                {(user?.email || 'A')[0].toUpperCase()}
+              </div>
+              <div className="hidden lg:flex flex-col text-left">
+                <span className="text-xs font-semibold text-slate-900 dark:text-white leading-tight truncate max-w-[130px]">{user?.email}</span>
+                <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">SuperAdmin</span>
+              </div>
+            </div>
           </div>
         </header>
 
         {/* Content Body */}
-        <main className="flex-1 bg-[#F8FAFC] dark:bg-[#070B12] relative overflow-y-auto">
+        <main className="flex-1 bg-[#F8FAFC] dark:bg-[#070B12] bg-grid-tech relative overflow-y-auto">
           <div className="w-full px-4 sm:px-8 lg:px-12 py-8 space-y-8 max-w-[1920px] mx-auto">
             
             {/* OVERVIEW GLOBAL DASHBOARD */}
             {activeTab === 'overview' && (
-              <div className="space-y-8 animate-fadeIn text-left">
+              <div className="space-y-6 animate-fadeIn text-left">
                 
                 {/* Alertas Operativas */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="p-4 bg-white dark:bg-[#0D131F] rounded-2xl border-l-4 border-amber-400 ring-1 ring-slate-100 dark:ring-slate-800">
+                  <div className="card-saas card-saas-hover p-4 rounded-2xl border-l-4 border-amber-400">
                     <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-xs font-semibold">
                       <Clock size={15} />
                       <span>Próximos a Vencer (3d)</span>
                     </div>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">
+                    <div className="text-2xl font-black text-slate-900 dark:text-white mt-1 font-mono">
                       {stats?.subscriptions?.expiring_soon || 0}
                     </div>
                   </div>
 
-                  <div className="p-4 bg-white dark:bg-[#0D131F] rounded-2xl border-l-4 border-rose-400 ring-1 ring-slate-100 dark:ring-slate-800">
+                  <div className="card-saas card-saas-hover p-4 rounded-2xl border-l-4 border-rose-400">
                     <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 text-xs font-semibold">
                       <AlertTriangle size={15} />
                       <span>Suscripciones Vencidas</span>
                     </div>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">
+                    <div className="text-2xl font-black text-slate-900 dark:text-white mt-1 font-mono">
                       {stats?.subscriptions?.expired_subscriptions || 0}
                     </div>
                   </div>
 
-                  <div className="p-4 bg-white dark:bg-[#0D131F] rounded-2xl border-l-4 border-sky-400 ring-1 ring-slate-100 dark:ring-slate-800">
+                  <div className="card-saas card-saas-hover p-4 rounded-2xl border-l-4 border-sky-400">
                     <div className="flex items-center gap-2 text-sky-600 dark:text-sky-400 text-xs font-semibold">
                       <CreditCard size={15} />
                       <span>Pagos Pendientes</span>
                     </div>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">
+                    <div className="text-2xl font-black text-slate-900 dark:text-white mt-1 font-mono">
                       {stats?.financial?.pending_payments || 0}
                     </div>
                   </div>
 
-                  <div className="p-4 bg-white dark:bg-[#0D131F] rounded-2xl border-l-4 border-emerald-400 ring-1 ring-slate-100 dark:ring-slate-800">
+                  <div className="card-saas card-saas-hover p-4 rounded-2xl border-l-4 border-emerald-400">
                     <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
                       <DollarSign size={15} />
                       <span>Ingresos Totales</span>
                     </div>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">
+                    <div className="text-2xl font-black text-slate-900 dark:text-white mt-1 font-mono">
                       ${Number(stats?.financial?.total_revenue || 0).toFixed(2)}
                     </div>
                   </div>
@@ -407,12 +432,12 @@ export default function AdminDashboardPage() {
 
                 {/* Métricas Principales */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                  <div className="p-6 bg-white dark:bg-[#0D131F] rounded-2xl border-l-4 border-violet-500 ring-1 ring-slate-100 dark:ring-slate-800 hover:shadow-md transition-shadow">
+                  <div className="card-saas card-saas-hover p-6 rounded-2xl border-l-4 border-violet-500">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Clientes Totales</span>
                       <div className="w-8 h-8 rounded-xl bg-violet-50 dark:bg-violet-950/40 flex items-center justify-center"><Users size={16} className="text-violet-500" /></div>
                     </div>
-                    <div className="text-3xl font-black text-slate-900 dark:text-white mt-2">
+                    <div className="text-3xl font-black text-slate-900 dark:text-white mt-2 font-mono">
                       {stats?.users?.total_users || 0}
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
@@ -420,25 +445,25 @@ export default function AdminDashboardPage() {
                     </p>
                   </div>
 
-                  <div className="p-6 bg-white dark:bg-[#0D131F] rounded-2xl border-l-4 border-emerald-500 ring-1 ring-slate-100 dark:ring-slate-800 hover:shadow-md transition-shadow">
+                  <div className="card-saas card-saas-hover p-6 rounded-2xl border-l-4 border-emerald-500">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Líneas WhatsApp</span>
                       <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center"><Smartphone size={16} className="text-emerald-500" /></div>
                     </div>
-                    <div className="text-3xl font-black text-slate-900 dark:text-white mt-2">
-                      {stats?.instances?.connected_instances || 0} <span className="text-sm font-normal text-slate-400">/ {stats?.instances?.total_instances || 0}</span>
+                    <div className="text-3xl font-black text-slate-900 dark:text-white mt-2 font-mono">
+                      {stats?.instances?.connected_instances || 0} <span className="text-sm font-normal text-slate-400 font-sans">/ {stats?.instances?.total_instances || 0}</span>
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
                       {stats?.instances?.disabled_instances || 0} deshabilitadas por administración
                     </p>
                   </div>
 
-                  <div className="p-6 bg-white dark:bg-[#0D131F] rounded-2xl border-l-4 border-cyan-500 ring-1 ring-slate-100 dark:ring-slate-800 hover:shadow-md transition-shadow">
+                  <div className="card-saas card-saas-hover p-6 rounded-2xl border-l-4 border-cyan-500">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Mensajes Procesados</span>
                       <div className="w-8 h-8 rounded-xl bg-cyan-50 dark:bg-cyan-950/40 flex items-center justify-center"><Activity size={16} className="text-cyan-500" /></div>
                     </div>
-                    <div className="text-3xl font-black text-slate-900 dark:text-white mt-2">
+                    <div className="text-3xl font-black text-slate-900 dark:text-white mt-2 font-mono">
                       {stats?.traffic?.total_messages || 0}
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
@@ -486,11 +511,11 @@ export default function AdminDashboardPage() {
                 </div>
 
                 {/* Tabla de Clientes */}
-                <div className="bg-white dark:bg-[#0D131F] rounded-2xl overflow-hidden ring-1 ring-slate-200/80 dark:ring-slate-800 shadow-sm">
+                <div className="card-saas rounded-2xl overflow-hidden shadow-sm">
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs">
                       <thead>
-                        <tr className="bg-slate-50/80 dark:bg-[#111827]/75 border-b border-slate-200/80 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase font-semibold text-[10px] tracking-wider">
+                        <tr className="bg-slate-50/80 dark:bg-[#111827]/75 border-b border-slate-200/80 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase font-semibold text-[10px] tracking-wider font-mono">
                           <th className="px-6 py-3.5">Cliente / Empresa</th>
                           <th className="px-6 py-3.5">Plan Actual</th>
                           <th className="px-6 py-3.5">Estado Cuenta</th>
@@ -502,10 +527,10 @@ export default function AdminDashboardPage() {
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 font-medium">
                         {filteredUsers.map((u) => (
-                          <tr key={u.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition-colors">
+                          <tr key={u.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
                             <td className="px-6 py-4">
                               <div className="font-bold text-slate-900 dark:text-white">{u.email}</div>
-                              <div className="text-[11px] text-slate-400">{u.company_name || 'Sin empresa'} {u.phone ? `· ${u.phone}` : ''}</div>
+                              <div className="text-[11px] text-slate-400 font-normal">{u.company_name || 'Sin empresa'} {u.phone ? `· ${u.phone}` : ''}</div>
                             </td>
 
                             <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-200">
@@ -535,18 +560,18 @@ export default function AdminDashboardPage() {
                             </td>
 
                             <td className="px-6 py-4 space-y-1">
-                              <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                              <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300 font-mono">
                                 {u.messages_used || 0} / {u.messages_limit || 1000} msgs
                               </div>
                               <div className="w-24 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                                 <div 
-                                  className={`h-full rounded-full ${u.consumption_percentage > 90 ? 'bg-rose-500' : 'bg-emerald-500'}`}
+                                  className={`h-full rounded-full transition-all duration-300 ${u.consumption_percentage > 90 ? 'bg-rose-500' : 'bg-emerald-500'}`}
                                   style={{ width: `${u.consumption_percentage || 0}%` }}
                                 />
                               </div>
                             </td>
 
-                            <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-200">
+                            <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-200 font-mono">
                               {u.connected_instances_count || 0} / {u.max_instances || 1}
                             </td>
 
@@ -561,7 +586,7 @@ export default function AdminDashboardPage() {
                                   });
                                   setEditSubscriptionModal({ open: true, user: u });
                                 }}
-                                className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-semibold text-[11px] transition-colors cursor-pointer"
+                                className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-semibold text-[11px] transition-colors cursor-pointer border border-slate-200/60 dark:border-slate-750"
                                 title="Cambiar Plan / Extender"
                               >
                                 Licencia
@@ -579,7 +604,7 @@ export default function AdminDashboardPage() {
                                   });
                                   setRecordPaymentModal({ open: true, user: u });
                                 }}
-                                className="px-2.5 py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 hover:bg-emerald-100 rounded-lg font-semibold text-[11px] transition-colors cursor-pointer"
+                                className="px-2.5 py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 hover:bg-emerald-100 rounded-lg font-semibold text-[11px] transition-colors cursor-pointer border border-emerald-200/50 dark:border-emerald-900/40"
                                 title="Registrar Pago"
                               >
                                 + Pago
@@ -589,8 +614,8 @@ export default function AdminDashboardPage() {
                                 onClick={() => handleUpdateUserStatus(u.id, u.user_status === 'active' ? 'suspended' : 'active')}
                                 className={`px-2.5 py-1 rounded-lg font-semibold text-[11px] transition-colors cursor-pointer ${
                                   u.user_status === 'active'
-                                    ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 hover:bg-amber-100'
-                                    : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 hover:bg-emerald-100'
+                                    ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 hover:bg-amber-100 border border-amber-200/50'
+                                    : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 hover:bg-emerald-100 border border-emerald-200/50'
                                 }`}
                               >
                                 {u.user_status === 'active' ? 'Suspender' : 'Activar'}
@@ -598,7 +623,7 @@ export default function AdminDashboardPage() {
 
                               <button
                                 onClick={() => handleDeleteUser(u.id, u.email)}
-                                className="p-1 text-slate-400 hover:text-rose-600 rounded-lg"
+                                className="p-1 text-slate-400 hover:text-rose-600 rounded-lg transition-colors cursor-pointer"
                                 title="Eliminar cliente"
                               >
                                 <Trash2 size={14} />
@@ -626,10 +651,10 @@ export default function AdminDashboardPage() {
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-[#0D131F] rounded-2xl overflow-hidden ring-1 ring-slate-200/80 dark:ring-slate-800 shadow-sm">
+                <div className="card-saas rounded-2xl overflow-hidden shadow-sm">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="bg-slate-50/80 dark:bg-[#111827]/75 border-b border-slate-200/80 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase font-semibold text-[10px] tracking-wider">
+                      <tr className="bg-slate-50/80 dark:bg-[#111827]/75 border-b border-slate-200/80 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase font-semibold text-[10px] tracking-wider font-mono">
                         <th className="px-6 py-3.5">Instancia</th>
                         <th className="px-6 py-3.5">Propietario</th>
                         <th className="px-6 py-3.5">Conexión WhatsApp</th>
@@ -640,10 +665,10 @@ export default function AdminDashboardPage() {
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 font-medium">
                       {instancesList.map(inst => (
-                        <tr key={inst.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition-colors">
+                        <tr key={inst.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
                           <td className="px-6 py-4 font-mono font-bold text-slate-900 dark:text-white">
                             {inst.instance_name}
-                            <div className="text-[10px] font-normal text-slate-400">{inst.phone || 'Sin número'}</div>
+                            <div className="text-[10px] font-normal text-slate-400 font-sans">{inst.phone || 'Sin número'}</div>
                           </td>
                           <td className="px-6 py-4 font-bold text-slate-700 dark:text-slate-300">
                             {inst.owner_email}
@@ -662,7 +687,7 @@ export default function AdminDashboardPage() {
                               {inst.is_enabled !== false ? 'HABILITADA' : 'DESHABILITADA'}
                             </span>
                           </td>
-                          <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-200">
+                          <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-200 font-mono">
                             {inst.messages_sent || 0} msgs
                           </td>
                           <td className="px-6 py-4 text-right">
@@ -701,7 +726,7 @@ export default function AdminDashboardPage() {
                       setPlanFormData({ id: '', name: '', maxInstances: 1, price: 15, durationMonths: 1, maxMessages: 1000, isTrial: false, trialDays: 7, trialMessages: 100, description: '' });
                       setPlanModal({ open: true, plan: null });
                     }}
-                    className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+                    className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center gap-2 shadow-sm shadow-emerald-600/20 transition-all cursor-pointer"
                   >
                     <Plus size={15} />
                     <span>Crear Plan</span>
@@ -710,14 +735,14 @@ export default function AdminDashboardPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                   {plansList.map(plan => (
-                    <div key={plan.id} className="p-5 bg-white dark:bg-[#0D131F] rounded-2xl space-y-4 text-left ring-1 ring-slate-200/80 dark:ring-slate-800 hover:ring-2 hover:ring-emerald-500/30 hover:shadow-md transition-all">
+                    <div key={plan.id} className="card-saas card-saas-hover p-5 rounded-2xl space-y-4 text-left border-l-4 border-amber-500">
                       <div className="flex items-center justify-between">
                         <span className={`px-2.5 py-0.5 text-[9px] font-bold rounded-full uppercase ${
                           plan.is_trial ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300' : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
                         }`}>
                           {plan.is_trial ? 'PLAN TRIAL' : 'PLAN COMERCIAL'}
                         </span>
-                        <span className="text-lg font-black text-slate-900 dark:text-white">${plan.price}<span className="text-xs text-slate-400 font-normal">/mes</span></span>
+                        <span className="text-lg font-black text-slate-900 dark:text-white font-mono">${plan.price}<span className="text-xs text-slate-400 font-normal font-sans">/mes</span></span>
                       </div>
 
                       <div className="space-y-1">
@@ -747,7 +772,7 @@ export default function AdminDashboardPage() {
                           });
                           setPlanModal({ open: true, plan });
                         }}
-                        className="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl font-semibold text-xs transition-colors cursor-pointer"
+                        className="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl font-semibold text-xs transition-colors cursor-pointer border border-slate-200/60 dark:border-slate-700"
                       >
                         Editar Plan
                       </button>
@@ -770,10 +795,10 @@ export default function AdminDashboardPage() {
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-[#0D131F] rounded-2xl overflow-hidden ring-1 ring-slate-200/80 dark:ring-slate-800 shadow-sm">
+                <div className="card-saas rounded-2xl overflow-hidden shadow-sm">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="bg-slate-50/80 dark:bg-[#111827]/75 border-b border-slate-200/80 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase font-semibold text-[10px] tracking-wider">
+                      <tr className="bg-slate-50/80 dark:bg-[#111827]/75 border-b border-slate-200/80 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase font-semibold text-[10px] tracking-wider font-mono">
                         <th className="px-6 py-3.5">Fecha</th>
                         <th className="px-6 py-3.5">Cliente</th>
                         <th className="px-6 py-3.5">Monto</th>
@@ -784,10 +809,10 @@ export default function AdminDashboardPage() {
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 font-medium">
                       {paymentsList.map(pay => (
-                        <tr key={pay.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition-colors">
-                          <td className="px-6 py-4 text-slate-500">{new Date(pay.created_at).toLocaleDateString()}</td>
+                        <tr key={pay.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                          <td className="px-6 py-4 text-slate-500 font-mono">{new Date(pay.created_at).toLocaleDateString()}</td>
                           <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">{pay.user_email}</td>
-                          <td className="px-6 py-4 font-black text-emerald-600">${Number(pay.amount).toFixed(2)} {pay.currency}</td>
+                          <td className="px-6 py-4 font-black text-emerald-600 font-mono">${Number(pay.amount).toFixed(2)} {pay.currency}</td>
                           <td className="px-6 py-4 text-slate-700 dark:text-slate-300">{pay.payment_method} {pay.reference ? `(${pay.reference})` : ''}</td>
                           <td className="px-6 py-4">
                             <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[10px] font-bold rounded-full uppercase">
@@ -816,10 +841,10 @@ export default function AdminDashboardPage() {
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-[#0D131F] rounded-2xl overflow-hidden ring-1 ring-slate-200/80 dark:ring-slate-800 shadow-sm">
+                <div className="card-saas rounded-2xl overflow-hidden shadow-sm">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="bg-slate-50/80 dark:bg-[#111827]/75 border-b border-slate-200/80 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase font-semibold text-[10px] tracking-wider">
+                      <tr className="bg-slate-50/80 dark:bg-[#111827]/75 border-b border-slate-200/80 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase font-semibold text-[10px] tracking-wider font-mono">
                         <th className="px-6 py-3.5">Fecha / Hora</th>
                         <th className="px-6 py-3.5">Administrador</th>
                         <th className="px-6 py-3.5">Acción</th>
@@ -829,12 +854,12 @@ export default function AdminDashboardPage() {
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 font-medium font-mono text-[11px]">
                       {auditLogs.map(log => (
-                        <tr key={log.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition-colors">
+                        <tr key={log.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
                           <td className="px-6 py-4 text-slate-500">{new Date(log.created_at).toLocaleString()}</td>
-                          <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">{log.admin_email}</td>
+                          <td className="px-6 py-4 font-bold text-slate-900 dark:text-white font-sans">{log.admin_email}</td>
                           <td className="px-6 py-4 font-bold text-emerald-600">{log.action}</td>
                           <td className="px-6 py-4 uppercase text-slate-700 dark:text-slate-300">{log.entity} ({log.entity_id})</td>
-                          <td className="px-6 py-4 text-slate-400">{JSON.stringify(log.details)}</td>
+                          <td className="px-6 py-4 text-slate-400 font-mono text-[10px]">{JSON.stringify(log.details)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -849,11 +874,11 @@ export default function AdminDashboardPage() {
 
       {/* MODAL CREAR CLIENTE */}
       {createUserModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white dark:bg-[#0D131F] rounded-2xl p-6 sm:p-7 max-w-md w-full text-left space-y-5 ring-1 ring-slate-200 dark:ring-slate-800 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fadeIn">
+          <div className="bg-white dark:bg-[#0D131F] rounded-2xl p-6 sm:p-7 max-w-md w-full text-left space-y-5 border border-slate-200 dark:border-slate-800 shadow-2xl">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
               <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">Crear Nuevo Cliente</h3>
-              <button onClick={() => setCreateUserModal(false)} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg"><X size={16} /></button>
+              <button onClick={() => setCreateUserModal(false)} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg cursor-pointer"><X size={16} /></button>
             </div>
 
             <form onSubmit={handleCreateUser} className="space-y-4">
@@ -911,7 +936,7 @@ export default function AdminDashboardPage() {
 
               <button
                 type="submit"
-                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer mt-2"
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm shadow-emerald-600/20 transition-all cursor-pointer mt-2"
               >
                 Crear Cliente y Activar Cuenta
               </button>
@@ -922,11 +947,11 @@ export default function AdminDashboardPage() {
 
       {/* MODAL EDITAR SUSCRIPCIÓN / LICENCIA */}
       {editSubscriptionModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white dark:bg-[#0D131F] rounded-2xl p-6 sm:p-7 max-w-md w-full text-left space-y-5 ring-1 ring-slate-200 dark:ring-slate-800 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fadeIn">
+          <div className="bg-white dark:bg-[#0D131F] rounded-2xl p-6 sm:p-7 max-w-md w-full text-left space-y-5 border border-slate-200 dark:border-slate-800 shadow-2xl">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
               <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">Modificar Licencia y Cuota</h3>
-              <button onClick={() => setEditSubscriptionModal({ open: false, user: null })} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg"><X size={16} /></button>
+              <button onClick={() => setEditSubscriptionModal({ open: false, user: null })} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg cursor-pointer"><X size={16} /></button>
             </div>
 
             <div className="text-xs text-slate-500 dark:text-slate-400">
@@ -986,7 +1011,7 @@ export default function AdminDashboardPage() {
 
               <button
                 type="submit"
-                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer mt-2"
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm shadow-emerald-600/20 transition-all cursor-pointer mt-2"
               >
                 Aplicar Cambios de Suscripción
               </button>
@@ -997,11 +1022,11 @@ export default function AdminDashboardPage() {
 
       {/* MODAL REGISTRAR PAGO */}
       {recordPaymentModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white dark:bg-[#0D131F] rounded-2xl p-6 sm:p-7 max-w-md w-full text-left space-y-5 ring-1 ring-slate-200 dark:ring-slate-800 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fadeIn">
+          <div className="bg-white dark:bg-[#0D131F] rounded-2xl p-6 sm:p-7 max-w-md w-full text-left space-y-5 border border-slate-200 dark:border-slate-800 shadow-2xl">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
               <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">Registrar Pago y Renovar</h3>
-              <button onClick={() => setRecordPaymentModal({ open: false, user: null })} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg"><X size={16} /></button>
+              <button onClick={() => setRecordPaymentModal({ open: false, user: null })} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg cursor-pointer"><X size={16} /></button>
             </div>
 
             <div className="text-xs text-slate-500 dark:text-slate-400">
@@ -1073,7 +1098,7 @@ export default function AdminDashboardPage() {
 
               <button
                 type="submit"
-                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer mt-2"
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm shadow-emerald-600/20 transition-all cursor-pointer mt-2"
               >
                 Confirmar Pago y Reactivar Servicio
               </button>
@@ -1084,13 +1109,13 @@ export default function AdminDashboardPage() {
 
       {/* MODAL PLANES (CREAR / EDITAR) */}
       {planModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white dark:bg-[#0D131F] rounded-2xl p-6 sm:p-7 max-w-md w-full text-left space-y-5 ring-1 ring-slate-200 dark:ring-slate-800 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fadeIn">
+          <div className="bg-white dark:bg-[#0D131F] rounded-2xl p-6 sm:p-7 max-w-md w-full text-left space-y-5 border border-slate-200 dark:border-slate-800 shadow-2xl">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
               <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
                 {planModal.plan?.id ? 'Editar Plan' : 'Crear Plan'}
               </h3>
-              <button onClick={() => setPlanModal({ open: false, plan: null })} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg"><X size={16} /></button>
+              <button onClick={() => setPlanModal({ open: false, plan: null })} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg cursor-pointer"><X size={16} /></button>
             </div>
 
             <form onSubmit={handleSavePlan} className="space-y-4">
@@ -1113,7 +1138,7 @@ export default function AdminDashboardPage() {
                   type="text"
                   required
                   value={planFormData.name}
-                  onChange={e => setNewPlanFormData ? setNewPlanFormData({ ...planFormData, name: e.target.value }) : setPlanFormData({ ...planFormData, name: e.target.value })}
+                  onChange={e => setPlanFormData({ ...planFormData, name: e.target.value })}
                   className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-semibold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition-all"
                 />
               </div>
@@ -1155,7 +1180,7 @@ export default function AdminDashboardPage() {
 
               <button
                 type="submit"
-                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer mt-2"
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm shadow-emerald-600/20 transition-all cursor-pointer mt-2"
               >
                 Guardar Configuración de Plan
               </button>

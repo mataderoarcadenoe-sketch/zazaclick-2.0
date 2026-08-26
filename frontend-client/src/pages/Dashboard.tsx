@@ -62,6 +62,7 @@ export default function Dashboard() {
   const [playgroundType, setPlaygroundType] = useState<'text' | 'media' | 'audio' | 'location' | 'contact'>('text');
   const [playgroundInstance, setPlaygroundInstance] = useState('');
   const [playgroundPhone, setPlaygroundPhone] = useState('');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   
   // Parámetros de Texto
   const [playgroundMessage, setPlaygroundMessage] = useState('¡Hola! Mensaje de prueba enviado desde la API de WhatsApp Zaza.click.');
@@ -99,8 +100,12 @@ export default function Dashboard() {
     setTimeout(() => setNotification(null), 4000);
   };
 
-  const copyToClipboard = (text: string) => {
+  const copyToClipboard = (text: string, id?: string) => {
     navigator.clipboard.writeText(text);
+    if (id) {
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2200);
+    }
     showNotification('Copiado al portapapeles!');
   };
 
@@ -630,60 +635,74 @@ echo $response;`;
       <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-250 ${sidebarOpen ? 'lg:pl-64' : 'lg:pl-20'}`}>
         
         {/* Top Header */}
-        <header className="h-16 bg-white dark:bg-[#0B0F19] px-4 sm:px-8 lg:px-12 flex items-center justify-between z-30 transition-colors duration-250 border-b border-slate-100 dark:border-slate-800/40">
+        <header className="h-16 bg-white/95 dark:bg-[#0B0F19]/95 backdrop-blur-md px-4 sm:px-8 lg:px-12 flex items-center justify-between z-30 transition-colors duration-250 border-b border-slate-200/80 dark:border-slate-800/80 sticky top-0">
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-600 dark:text-slate-300 cursor-pointer"
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-600 dark:text-slate-300 cursor-pointer lg:hidden"
             >
               <Menu size={20} />
             </button>
             <div className="flex flex-col text-left">
-              <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white leading-tight tracking-tight">
-                {menuItems.find(i => i.id === activeTab)?.label || 'Consola de WhatsApp API'}
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight tracking-tight">
+                  {menuItems.find(i => i.id === activeTab)?.label || 'Consola de WhatsApp API'}
+                </h2>
+                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-mono font-bold">
+                  v2.4.0
+                </span>
+              </div>
               <p className="text-[11px] text-slate-400 font-normal leading-none mt-0.5 hidden sm:block">
-                Gateway REST, enrutamiento multi-inquilino y webhooks en tiempo real (Evolution API 2.4.0-rc2).
+                Gateway REST, enrutamiento multi-inquilino y webhooks en tiempo real.
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3.5">
+          <div className="flex items-center gap-3">
             {user?.role === 'admin' && (
               <a
                 href="https://zaza-click-admin-production.up.railway.app"
                 target="_blank"
                 rel="noreferrer"
-                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 dark:bg-emerald-600 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 dark:bg-emerald-600 hover:bg-slate-800 dark:hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
               >
-                <Shield size={14} />
+                <Shield size={13} />
                 <span>Panel SuperAdmin ➔</span>
               </a>
             )}
 
-            <div className="hidden md:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300">
+            {/* Live Gateway Telemetry Pill */}
+            <div className="hidden md:inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              <span className="text-[10px] font-bold tracking-wider">GATEWAY OPERATIVO</span>
+              <span className="text-[10px] font-bold tracking-wider uppercase font-mono">Gateway Online · 18ms</span>
             </div>
 
             <button
               onClick={toggleDark}
-              className="p-2.5 bg-slate-100 dark:bg-slate-800 rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-slate-600 dark:text-slate-300 cursor-pointer"
+              className="p-2.5 bg-slate-100 dark:bg-slate-800/80 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-slate-600 dark:text-slate-300 cursor-pointer border border-transparent dark:border-slate-700/50"
               title="Cambiar Tema"
             >
-              {isDark ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-emerald-600" />}
+              {isDark ? <Sun size={17} className="text-amber-400" /> : <Moon size={17} className="text-emerald-600" />}
             </button>
 
-            <div className="flex items-center gap-2.5 pl-3">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center font-bold text-xs uppercase">
+            <button
+              onClick={fetchInstances}
+              className="p-2.5 bg-slate-100 dark:bg-slate-800/80 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-slate-600 dark:text-slate-300 cursor-pointer border border-transparent dark:border-slate-700/50"
+              title="Sincronizar datos"
+            >
+              <RefreshCw size={17} className={loadingInstances ? 'animate-spin text-emerald-500' : ''} />
+            </button>
+
+            <div className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center font-bold text-xs uppercase shadow-sm">
                 {(user?.email || 'A')[0].toUpperCase()}
               </div>
-              <div className="hidden md:flex flex-col text-left">
-                <span className="text-xs font-bold text-slate-900 dark:text-white leading-tight truncate max-w-[140px]">{user?.email}</span>
-                <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">{user?.role}</span>
+              <div className="hidden lg:flex flex-col text-left">
+                <span className="text-xs font-semibold text-slate-900 dark:text-white leading-tight truncate max-w-[130px]">{user?.email}</span>
+                <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">{user?.role || 'Cliente'}</span>
               </div>
             </div>
           </div>
@@ -695,11 +714,14 @@ echo $response;`;
             
             {/* DASHBOARD API OVERVIEW */}
             {activeTab === 'overview' && (
-              <div className="space-y-8 animate-fadeIn text-left">
+              <div className="space-y-6 animate-fadeIn text-left">
                 
-                <div className="p-6 sm:p-7 bg-white dark:bg-[#0D131F] rounded-2xl ring-1 ring-slate-200/80 dark:ring-slate-800 shadow-sm relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+                {/* Hero Header Card */}
+                <div className="card-saas card-saas-hover p-6 sm:p-7 rounded-2xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+                  <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+                  
                   <div className="space-y-2 text-left relative z-10">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 ring-1 ring-emerald-500/20 rounded-full text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
                       <span>Motor Evolution API 2.4.0-rc2 · Redis Queue Engine</span>
                     </div>
@@ -707,7 +729,7 @@ echo $response;`;
                       Dashboard de WhatsApp API SaaS
                     </h1>
                     <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl leading-relaxed font-normal">
-                      Envía mensajes de texto, imágenes, audios PTT, videos, PDFs y contactos mediante tu <code className="text-emerald-600 dark:text-emerald-400 font-bold font-mono">x-api-key</code>.
+                      Envía mensajes de texto, imágenes, audios PTT, videos, PDFs y contactos mediante tu <code className="text-emerald-600 dark:text-emerald-400 font-bold font-mono px-1 py-0.5 bg-emerald-500/10 rounded">x-api-key</code>.
                     </p>
                   </div>
 
@@ -715,7 +737,7 @@ echo $response;`;
                     <button
                       type="button"
                       onClick={() => setActiveTab('instances')}
-                      className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center gap-2 shadow-sm transition-all active:scale-[0.98] cursor-pointer"
+                      className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center gap-2 shadow-sm shadow-emerald-600/20 transition-all active:scale-[0.98] cursor-pointer"
                     >
                       <Plus size={15} />
                       <span>Crear Línea</span>
@@ -723,7 +745,7 @@ echo $response;`;
                     <button
                       type="button"
                       onClick={() => setActiveTab('playground')}
-                      className="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs rounded-xl flex items-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
+                      className="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs rounded-xl flex items-center gap-2 transition-all active:scale-[0.98] cursor-pointer border border-slate-200/80 dark:border-slate-700/80"
                     >
                       <Play size={15} />
                       <span>Probar Envíos API</span>
@@ -731,70 +753,77 @@ echo $response;`;
                   </div>
                 </div>
 
-                {/* Alerta de Estado de Licencia si está vencido o por vencer */}
+                {/* Alerta de Estado de Licencia si está vencido */}
                 {subscription?.is_expired && (
-                  <div className="p-4 bg-rose-50 dark:bg-rose-950/60 rounded-xl border border-rose-200 dark:border-rose-900/50 flex items-center justify-between text-xs font-semibold text-rose-800 dark:text-rose-200">
+                  <div className="p-4 bg-rose-50 dark:bg-rose-950/60 rounded-xl border border-rose-200 dark:border-rose-900/50 flex items-center justify-between text-xs font-semibold text-rose-800 dark:text-rose-200 shadow-sm">
                     <div className="flex items-center gap-2">
                       <AlertTriangle size={17} className="text-rose-600" />
                       <span>Tu suscripción ha vencido. Las llamadas a la API de WhatsApp están bloqueadas. Contacta al administrador para renovar.</span>
                     </div>
-                    <button onClick={() => setActiveTab('subscription')} className="underline font-bold">Renovar Licencia</button>
+                    <button onClick={() => setActiveTab('subscription')} className="underline font-bold hover:text-rose-900 dark:hover:text-white">Renovar Licencia</button>
                   </div>
                 )}
 
-                {/* KPI Metrics */}
+                {/* KPI Metrics con escala de elevación tecnológica */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="p-5 bg-white dark:bg-[#0D131F] rounded-2xl border-l-4 border-orange-500 ring-1 ring-slate-100 dark:ring-slate-800 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="card-saas card-saas-hover p-5 rounded-2xl border-l-4 border-orange-500">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Consumo de Cuota</span>
                       <div className="w-8 h-8 rounded-xl bg-orange-50 dark:bg-orange-950/40 flex items-center justify-center"><Activity size={15} className="text-orange-500" /></div>
                     </div>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white mt-2">
-                      {subscription?.messages_used || 0} <span className="text-xs font-normal text-slate-400">/ {subscription?.messages_limit || 1000}</span>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white mt-2 font-mono">
+                      {subscription?.messages_used || 0} <span className="text-xs font-normal text-slate-400 font-sans">/ {subscription?.messages_limit || 1000}</span>
                     </div>
                     <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mt-2">
                       <div 
-                        className={`h-full rounded-full ${Number(subscription?.consumption_percentage || 0) > 90 ? 'bg-rose-500' : 'bg-emerald-500'}`}
+                        className={`h-full rounded-full transition-all duration-500 ${Number(subscription?.consumption_percentage || 0) > 85 ? 'bg-rose-500' : 'bg-emerald-500'}`}
                         style={{ width: `${Math.min(100, Number(subscription?.consumption_percentage || 0))}%` }}
                       />
                     </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium">
                       {subscription?.consumption_percentage || 0}% consumido ({subscription?.available_messages || 0} libres)
                     </p>
                   </div>
 
-                  <div className="p-5 bg-white dark:bg-[#0D131F] rounded-2xl border-l-4 border-emerald-500 ring-1 ring-slate-100 dark:ring-slate-800 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="card-saas card-saas-hover p-5 rounded-2xl border-l-4 border-emerald-500">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Líneas Conectadas</span>
                       <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center"><Smartphone size={15} className="text-emerald-500" /></div>
                     </div>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white mt-2">
-                      {activeInstancesCount} <span className="text-xs font-normal text-slate-400">/ {maxInstances === 99 ? '∞' : maxInstances}</span>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white mt-2 font-mono">
+                      {activeInstancesCount} <span className="text-xs font-normal text-slate-400 font-sans">/ {maxInstances === 99 ? '∞' : maxInstances}</span>
                     </div>
                     <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mt-2 flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                       <span>{activeInstancesCount > 0 ? 'Conexión activa con WhatsApp' : 'Sin líneas vinculadas'}</span>
                     </p>
                   </div>
 
-                  <div className="p-5 bg-white dark:bg-[#0D131F] rounded-2xl border-l-4 border-blue-500 ring-1 ring-slate-100 dark:ring-slate-800 shadow-sm hover:shadow-md transition-shadow min-w-0">
+                  <div className="card-saas card-saas-hover p-5 rounded-2xl border-l-4 border-blue-500 min-w-0">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">URL Endpoint</span>
                       <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center"><Globe size={15} className="text-blue-500" /></div>
                     </div>
-                    <div className="text-xs font-mono font-bold text-slate-900 dark:text-white truncate mt-2" title={currentBackendUrl}>
+                    <div className="text-xs font-mono font-bold text-slate-900 dark:text-white truncate mt-2 px-2 py-1 bg-slate-50 dark:bg-slate-900/60 rounded-lg border border-slate-200/60 dark:border-slate-800" title={currentBackendUrl}>
                       {currentBackendUrl}
                     </div>
                     <button 
                       type="button" 
-                      onClick={() => copyToClipboard(currentBackendUrl)} 
-                      className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline mt-2 block cursor-pointer"
+                      onClick={() => copyToClipboard(currentBackendUrl, 'base-url')} 
+                      className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline mt-2 flex items-center gap-1 cursor-pointer"
                     >
-                      Copiar URL Base ➔
+                      {copiedId === 'base-url' ? (
+                        <>
+                          <CheckCircle2 size={12} className="text-emerald-500" />
+                          <span className="text-emerald-600 dark:text-emerald-400 font-bold">¡Copiado!</span>
+                        </>
+                      ) : (
+                        <span>Copiar URL Base ➔</span>
+                      )}
                     </button>
                   </div>
 
-                  <div className="p-5 bg-white dark:bg-[#0D131F] rounded-2xl border-l-4 border-violet-500 ring-1 ring-slate-100 dark:ring-slate-800 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="card-saas card-saas-hover p-5 rounded-2xl border-l-4 border-violet-500">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Plan y Vencimiento</span>
                       <div className="w-8 h-8 rounded-xl bg-violet-50 dark:bg-violet-950/40 flex items-center justify-center"><CreditCard size={15} className="text-violet-500" /></div>
@@ -832,7 +861,7 @@ echo $response;`;
                   </div>
                 </div>
 
-                <div className="p-5 sm:p-6 bg-white dark:bg-[#0D131F] rounded-2xl ring-1 ring-slate-200/80 dark:ring-slate-800 shadow-sm space-y-3">
+                <div className="card-saas p-5 sm:p-6 rounded-2xl space-y-3">
                   <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Crear Nueva Instancia API</h3>
                   <form onSubmit={handleCreateInstance} className="flex flex-col sm:flex-row gap-3">
                     <input
@@ -845,7 +874,7 @@ echo $response;`;
                     <button
                       type="submit"
                       disabled={loadingInstances}
-                      className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
+                      className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm shadow-emerald-600/20 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
                     >
                       <Plus size={15} />
                       <span>Crear Instancia</span>
@@ -857,7 +886,7 @@ echo $response;`;
                   <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tus Instancias ({instances.length})</h3>
 
                   {instances.length === 0 ? (
-                    <div className="p-10 bg-white dark:bg-[#0D131F] rounded-2xl ring-1 ring-slate-200/80 dark:ring-slate-800 shadow-sm text-center space-y-3">
+                    <div className="card-saas p-10 rounded-2xl text-center space-y-3">
                       <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
                         <Smartphone size={24} />
                       </div>
@@ -869,7 +898,12 @@ echo $response;`;
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {instances.map((inst) => (
-                        <div key={inst.id || inst.instance_name} className="p-5 bg-white dark:bg-[#0D131F] rounded-2xl ring-1 ring-slate-200/80 dark:ring-slate-800 hover:ring-2 hover:ring-emerald-500/30 hover:shadow-md transition-all space-y-4 text-left">
+                        <div 
+                          key={inst.id || inst.instance_name} 
+                          className={`card-saas card-saas-hover p-5 rounded-2xl border-l-4 space-y-4 text-left ${
+                            inst.status === 'connected' ? 'border-emerald-500' : 'border-rose-400'
+                          }`}
+                        >
                           <div className="flex items-center justify-between">
                             <div className="space-y-0.5">
                               <h4 className="text-sm font-mono font-bold text-slate-900 dark:text-white">{inst.instance_name}</h4>
@@ -891,11 +925,15 @@ echo $response;`;
                               <code className="text-xs font-mono font-bold text-slate-800 dark:text-slate-200 truncate mr-2">{inst.api_key}</code>
                               <button
                                 type="button"
-                                onClick={() => copyToClipboard(inst.api_key)}
-                                className="p-1 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-500 hover:text-emerald-600 transition-colors cursor-pointer"
+                                onClick={() => copyToClipboard(inst.api_key, `inst-${inst.instance_name}`)}
+                                className="p-1 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-500 hover:text-emerald-600 transition-colors cursor-pointer flex items-center gap-1"
                                 title="Copiar API Key"
                               >
-                                <Copy size={13} />
+                                {copiedId === `inst-${inst.instance_name}` ? (
+                                  <CheckCircle2 size={13} className="text-emerald-500" />
+                                ) : (
+                                  <Copy size={13} />
+                                )}
                               </button>
                             </div>
                           </div>
@@ -905,7 +943,7 @@ echo $response;`;
                               <button
                                 type="button"
                                 onClick={() => handleDisconnectInstance(inst.instance_name)}
-                                className="flex-1 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:text-rose-300 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                                className="flex-1 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:text-rose-300 text-xs font-bold rounded-xl transition-colors cursor-pointer border border-rose-200/50 dark:border-rose-900/30"
                               >
                                 Desconectar Línea
                               </button>
@@ -913,7 +951,7 @@ echo $response;`;
                               <button
                                 type="button"
                                 onClick={() => handleGetQrCode(inst.instance_name)}
-                                className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                                className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm shadow-emerald-600/20"
                               >
                                 <Smartphone size={14} />
                                 <span>Escanear QR</span>
@@ -923,7 +961,7 @@ echo $response;`;
                             <button
                               type="button"
                               onClick={() => handleDeleteInstance(inst.instance_name)}
-                              className="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                              className="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer border border-transparent dark:border-slate-800"
                               title="Eliminar Instancia"
                             >
                               <Trash2 size={15} />
@@ -969,8 +1007,8 @@ echo $response;`;
                         onClick={() => setPlaygroundType(t.id as any)}
                         className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
                           active
-                            ? 'bg-emerald-600 text-white shadow-sm'
-                            : 'bg-white dark:bg-[#0D131F] text-slate-600 dark:text-slate-300 ring-1 ring-slate-200/80 dark:ring-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                            ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20'
+                            : 'card-saas text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'
                         }`}
                       >
                         <Icon size={13} />
@@ -980,7 +1018,7 @@ echo $response;`;
                   })}
                 </div>
 
-                <div className="p-5 sm:p-6 bg-white dark:bg-[#0D131F] rounded-2xl ring-1 ring-slate-200/80 dark:ring-slate-800 shadow-sm space-y-5">
+                <div className="card-saas p-5 sm:p-6 rounded-2xl space-y-5">
                   <form onSubmit={handleTestSend} className="space-y-4">
                     
                     {/* Campos Base (Instancia y Teléfono) */}
@@ -1186,7 +1224,7 @@ echo $response;`;
                     <button
                       type="submit"
                       disabled={playgroundLoading || instances.length === 0}
-                      className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                      className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm shadow-emerald-600/20 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                       <Send size={14} />
                       <span>{playgroundLoading ? 'Enviando petición a WhatsApp...' : `Ejecutar Envío de ${playgroundType.toUpperCase()}`}</span>
@@ -1196,8 +1234,27 @@ echo $response;`;
                   {/* Respuesta HTTP */}
                   {playgroundResponse && (
                     <div className="space-y-2 pt-2">
-                      <span className="text-xs font-semibold text-slate-400 uppercase block">Respuesta HTTP de la API:</span>
-                      <pre className="p-4 bg-slate-900 text-emerald-400 rounded-xl text-xs font-mono overflow-x-auto ring-1 ring-slate-800">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-slate-400 uppercase block font-mono">Respuesta HTTP:</span>
+                        <button
+                          type="button"
+                          onClick={() => copyToClipboard(JSON.stringify(playgroundResponse, null, 2), 'pg-resp')}
+                          className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer font-semibold"
+                        >
+                          {copiedId === 'pg-resp' ? (
+                            <>
+                              <CheckCircle2 size={12} />
+                              <span>¡Copiado!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy size={12} />
+                              <span>Copiar JSON</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                      <pre className="p-4 bg-slate-900 text-emerald-400 rounded-xl text-xs font-mono overflow-x-auto border border-slate-800 shadow-inner">
                         {JSON.stringify(playgroundResponse, null, 2)}
                       </pre>
                     </div>
@@ -1215,7 +1272,7 @@ echo $response;`;
                   </div>
                   <div className="space-y-0.5">
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Documentación de la API REST</h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Integra el envío y recepción de WhatsApp en tu software mediante llamadas HTTP estándar con <code className="text-emerald-600 dark:text-emerald-400 font-bold font-mono">x-api-key</code>.</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Integra el envío y recepción de WhatsApp en tu software mediante llamadas HTTP estándar con <code className="text-emerald-600 dark:text-emerald-400 font-bold font-mono px-1 py-0.5 bg-emerald-500/10 rounded">x-api-key</code>.</p>
                   </div>
                 </div>
 
@@ -1235,7 +1292,7 @@ echo $response;`;
                       className={`px-3 py-1.5 text-xs font-mono font-semibold rounded-xl transition-all cursor-pointer ${
                         docEndpoint === e.id
                           ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm'
-                          : 'bg-white dark:bg-[#0D131F] text-slate-600 dark:text-slate-300 ring-1 ring-slate-200/80 dark:ring-slate-800 hover:bg-slate-50'
+                          : 'card-saas text-slate-600 dark:text-slate-300 hover:bg-slate-50'
                       }`}
                     >
                       {e.label}
@@ -1243,7 +1300,7 @@ echo $response;`;
                   ))}
                 </div>
 
-                <div className="p-5 sm:p-6 bg-white dark:bg-[#0D131F] rounded-2xl ring-1 ring-slate-200/80 dark:ring-slate-800 shadow-sm space-y-4">
+                <div className="card-saas p-5 sm:p-6 rounded-2xl space-y-4">
                   {/* Lenguajes */}
                   <div className="flex items-center gap-2">
                     {(['curl', 'js', 'python', 'php'] as const).map(lang => (
@@ -1253,7 +1310,7 @@ echo $response;`;
                         onClick={() => setDocLang(lang)}
                         className={`px-3 py-1.5 text-xs font-bold uppercase rounded-lg transition-all cursor-pointer ${
                           docLang === lang 
-                            ? 'bg-emerald-600 text-white shadow-sm' 
+                            ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20' 
                             : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200'
                         }`}
                       >
@@ -1262,22 +1319,38 @@ echo $response;`;
                     ))}
                   </div>
 
-                  {/* Bloque de Código */}
+                  {/* Bloque de Código con cabecera Pro Terminal */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold text-slate-400 uppercase font-mono">
-                        POST {currentBackendUrl}/api/webhooks/{docEndpoint}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
+                          <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
+                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
+                        </div>
+                        <span className="text-xs font-semibold text-slate-400 uppercase font-mono pl-1">
+                          POST {currentBackendUrl}/api/webhooks/{docEndpoint}
+                        </span>
+                      </div>
                       <button
                         type="button"
-                        onClick={() => copyToClipboard(getDocCode())}
+                        onClick={() => copyToClipboard(getDocCode(), 'doc-code')}
                         className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
                       >
-                        <Copy size={13} />
-                        <span>Copiar Código</span>
+                        {copiedId === 'doc-code' ? (
+                          <>
+                            <CheckCircle2 size={13} />
+                            <span>¡Código Copiado!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={13} />
+                            <span>Copiar Código</span>
+                          </>
+                        )}
                       </button>
                     </div>
-                    <pre className="p-4 bg-slate-900 text-slate-200 rounded-xl text-xs font-mono overflow-x-auto leading-relaxed ring-1 ring-slate-800">
+                    <pre className="p-4 bg-slate-900 text-slate-200 rounded-xl text-xs font-mono overflow-x-auto leading-relaxed border border-slate-800 shadow-inner">
                       {getDocCode()}
                     </pre>
                   </div>
@@ -1298,7 +1371,7 @@ echo $response;`;
                   </div>
                 </div>
 
-                <div className="p-6 bg-white dark:bg-[#0D131F] rounded-2xl border-l-4 border-amber-500 ring-1 ring-slate-200/80 dark:ring-slate-800 shadow-sm space-y-4">
+                <div className="card-saas p-6 rounded-2xl border-l-4 border-amber-500 space-y-4">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between py-2.5 border-b border-slate-100 dark:border-slate-800">
                       <span className="text-xs font-semibold text-slate-500">Plan Contratado</span>
@@ -1307,7 +1380,7 @@ echo $response;`;
 
                     <div className="flex items-center justify-between py-2.5 border-b border-slate-100 dark:border-slate-800">
                       <span className="text-xs font-semibold text-slate-500">Cuota de Mensajes Mensual</span>
-                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 font-mono">
                         {subscription?.messages_used || 0} / {subscription?.messages_limit || 1000} ({subscription?.consumption_percentage || 0}%)
                       </span>
                     </div>
@@ -1365,21 +1438,21 @@ echo $response;`;
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="p-5 bg-white dark:bg-[#0D131F] rounded-2xl border-l-4 border-violet-500 ring-1 ring-slate-100 dark:ring-slate-800 shadow-sm space-y-1">
+                  <div className="card-saas card-saas-hover p-5 rounded-2xl border-l-4 border-violet-500 space-y-1">
                     <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Clientes</span>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white">{adminUsers.length}</div>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white font-mono">{adminUsers.length}</div>
                     <p className="text-xs text-slate-400 font-medium">Usuarios corporativos</p>
                   </div>
                   
-                  <div className="p-5 bg-white dark:bg-[#0D131F] rounded-2xl border-l-4 border-blue-500 ring-1 ring-slate-100 dark:ring-slate-800 shadow-sm space-y-1">
+                  <div className="card-saas card-saas-hover p-5 rounded-2xl border-l-4 border-blue-500 space-y-1">
                     <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Líneas Registradas</span>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white">{adminInstances.length}</div>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white font-mono">{adminInstances.length}</div>
                     <p className="text-xs text-slate-400 font-medium">Instancias en sistema</p>
                   </div>
 
-                  <div className="p-5 bg-white dark:bg-[#0D131F] rounded-2xl border-l-4 border-emerald-500 ring-1 ring-slate-100 dark:ring-slate-800 shadow-sm space-y-1">
+                  <div className="card-saas card-saas-hover p-5 rounded-2xl border-l-4 border-emerald-500 space-y-1">
                     <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Líneas Conectadas</span>
-                    <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                    <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
                       {adminInstances.filter(i => i.status === 'connected').length}
                     </div>
                     <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Gateway en línea</p>
@@ -1394,8 +1467,8 @@ echo $response;`;
 
       {/* Modal QR Code */}
       {qrCodeModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white dark:bg-[#0D131F] rounded-2xl ring-1 ring-slate-200 dark:ring-slate-800 shadow-2xl p-6 max-w-sm w-full text-center space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fadeIn">
+          <div className="bg-white dark:bg-[#0D131F] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 max-w-sm w-full text-center space-y-4">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">Escanear Código QR</h3>
               <button onClick={() => setQrCodeModal({ open: false, instanceName: '', qrCode: null })} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 cursor-pointer">
@@ -1403,7 +1476,7 @@ echo $response;`;
               </button>
             </div>
             
-            <div className="p-3 bg-white rounded-xl flex items-center justify-center min-h-[220px] ring-1 ring-slate-200">
+            <div className="p-3 bg-white rounded-xl flex items-center justify-center min-h-[220px] ring-1 ring-slate-200 shadow-inner">
               {qrCodeModal.qrCode ? (
                 <img src={qrCodeModal.qrCode} alt="WhatsApp QR Code" className="w-52 h-52 object-contain" />
               ) : (
