@@ -252,9 +252,6 @@ export default function AuthPage() {
         <div className="lg:col-span-5 flex justify-center w-full animate-fadeIn">
           <div className="w-full max-w-md bg-white/90 dark:bg-[#111827]/90 backdrop-blur-2xl border border-slate-200/90 dark:border-slate-800/90 p-8 sm:p-10 rounded-[32px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.25)] relative overflow-hidden transition-all hover:border-emerald-500/40">
             
-            {/* Top Glowing Shimmer Gradient Edge */}
-            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500" />
-
             {/* Brand Logo & Header */}
             <div className="space-y-4 text-center pb-6">
               
