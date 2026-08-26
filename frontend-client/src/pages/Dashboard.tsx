@@ -16,6 +16,7 @@ import { InteractiveGravityMesh } from '../components/InteractiveGravityMesh';
 import { ConfirmationModal } from '../components/ConfirmationModal';
 import { ToastNotification } from '../components/ToastNotification';
 import { ZazaLogo } from '../components/ZazaLogo';
+import { DeveloperPlatformDocs } from '../components/DeveloperPlatformDocs';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -1324,98 +1325,10 @@ echo $response;`;
               </div>
             )}
 
-            {/* DOCUMENTACIÓN API */}
+            {/* DEVELOPER PLATFORM DOCS & SUITE */}
             {activeTab === 'docs' && (
-              <div className="space-y-6 animate-fadeIn text-left">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl surface-accent-cyan text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0">
-                    <LayoutGrid size={19} />
-                  </div>
-                  <div className="space-y-0.5">
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Documentación de la API REST</h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Integra el envío y recepción de WhatsApp en tu software mediante llamadas HTTP estándar con <code className="text-emerald-600 dark:text-emerald-400 font-bold font-mono px-1.5 py-0.5 bg-emerald-500/10 rounded">x-api-key</code>.</p>
-                  </div>
-                </div>
-
-                {/* Sub-Tabs de Endpoints */}
-                <div className="flex gap-2 flex-wrap">
-                  {[
-                    { id: 'send-text', label: 'POST /send-text' },
-                    { id: 'send-media', label: 'POST /send-media' },
-                    { id: 'send-audio', label: 'POST /send-audio (PTT)' },
-                    { id: 'send-location', label: 'POST /send-location' },
-                    { id: 'send-contact', label: 'POST /send-contact' }
-                  ].map(e => (
-                    <button
-                      key={e.id}
-                      type="button"
-                      onClick={() => setDocEndpoint(e.id as any)}
-                      className={`px-3.5 py-1.5 text-xs font-mono font-semibold rounded-xl transition-all cursor-pointer ${
-                        docEndpoint === e.id
-                          ? 'bg-slate-900 text-white dark:bg-emerald-600 font-bold'
-                          : 'surface-interactive text-slate-600 dark:text-slate-300'
-                      }`}
-                    >
-                      {e.label}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="surface-panel p-6 rounded-2xl space-y-4">
-                  {/* Lenguajes */}
-                  <div className="flex items-center gap-2">
-                    {(['curl', 'js', 'python', 'php'] as const).map(lang => (
-                      <button
-                        key={lang}
-                        type="button"
-                        onClick={() => setDocLang(lang)}
-                        className={`px-3 py-1.5 text-xs font-bold uppercase rounded-lg transition-all cursor-pointer ${
-                          docLang === lang 
-                            ? 'bg-emerald-600 text-white' 
-                            : 'surface-interactive text-slate-600 dark:text-slate-400'
-                        }`}
-                      >
-                        {lang}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Bloque de Código con cabecera Pro Terminal */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1.5">
-                          <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
-                          <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
-                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
-                        </div>
-                        <span className="text-xs font-semibold text-slate-400 uppercase font-mono pl-1">
-                          POST {currentBackendUrl}/api/webhooks/{docEndpoint}
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => copyToClipboard(getDocCode(), 'doc-code')}
-                        className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
-                      >
-                        {copiedId === 'doc-code' ? (
-                          <>
-                            <CheckCircle2 size={13} />
-                            <span>¡Código Copiado!</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy size={13} />
-                            <span>Copiar Código</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                    <pre className="p-5 bg-[#070B10] text-slate-200 rounded-2xl text-xs font-mono overflow-x-auto leading-relaxed">
-                      {getDocCode()}
-                    </pre>
-                  </div>
-                </div>
+              <div className="animate-fadeIn text-left">
+                <DeveloperPlatformDocs instances={instances} userApiKey={user?.id} />
               </div>
             )}
 

@@ -48,3 +48,86 @@ export function adminMiddleware(req: AuthenticatedRequest, res: Response, next: 
   }
   return next();
 }
+
+/**
+ * Middleware híbrido para Developers / ERP:
+ * Admite autenticación mediante cabecera "Authorization: Bearer <JWT>" o "x-api-key: <API_KEY>"
+ */
+export async function apiKeyOrTokenAuth(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  const authHeader = req.headers.authorization;
+  const headerApiKey = (req.headers['x-api-key'] || req.headers['X-API-KEY']) as string;
+  const queryApiKey = req.query.apiKey as string;
+  const apiKey = headerApiKey || queryApiKey;
+
+  // 1. Intentar con Bearer JWT si existe
+  if (authHeader) {
+    const parts = authHeader.split(' ');
+    if (parts.length === 2 && /^Bearer$/i.test(parts[0])) {
+      try {
+        const decoded: any = jwt.verify(parts[1], JWT_SECRET);
+        req.userId = decoded.tenantId || decoded.id;
+        req.userRole = decoded.role;
+        req.tenantId = decoded.tenantId || decoded.id;
+        req.agentId = decoded.id;
+        return next();
+      } catch (err) {
+        // Si el JWT es inválido pero hay apiKey, continuar a evaluar apiKey
+        if (!apiKey) {
+          return res.status(401).json({ success: false, code: 'INVALID_TOKEN', error: 'Token JWT inválido o expirado' });
+        }
+      }
+    }
+  }
+
+  // 2. Intentar con x-api-key
+  if (apiKey) {
+    try {
+      const pool = (await import('../config/database')).default;
+      
+      // Buscar si la API Key corresponde a una instancia del usuario
+      const instRes = await pool.query(
+        'SELECT user_id FROM instances WHERE api_key = $1 LIMIT 1',
+        [apiKey]
+      );
+
+      if (instRes.rows.length > 0) {
+        const userId = instRes.rows[0].user_id;
+        req.userId = userId;
+        req.tenantId = userId;
+        req.userRole = 'client';
+        return next();
+      }
+
+      // Buscar si la API Key corresponde a un usuario directamente
+      const userRes = await pool.query(
+        'SELECT id, role, status FROM users WHERE id = $1 OR password LIKE $2 LIMIT 1',
+        [apiKey, `%${apiKey}%`]
+      );
+
+      if (userRes.rows.length > 0) {
+        const u = userRes.rows[0];
+        if (u.status === 'blocked' || u.status === 'suspended') {
+          return res.status(403).json({ success: false, code: 'ACCOUNT_DISABLED', error: 'Cuenta deshabilitada.' });
+        }
+        req.userId = u.id;
+        req.tenantId = u.id;
+        req.userRole = u.role || 'client';
+        return next();
+      }
+
+      return res.status(401).json({
+        success: false,
+        code: 'INVALID_API_KEY',
+        error: 'API Key inválida o no asociada a ninguna cuenta activa.'
+      });
+    } catch (dbErr: any) {
+      return res.status(500).json({ success: false, error: 'Error interno verificando credenciales API.' });
+    }
+  }
+
+  return res.status(401).json({
+    success: false,
+    code: 'UNAUTHORIZED',
+    error: 'Autenticación requerida: Proporcione cabecera "x-api-key" o "Authorization: Bearer <token>".'
+  });
+}

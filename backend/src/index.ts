@@ -8,6 +8,8 @@ import authRoutes from './routes/auth.routes';
 import instanceRoutes from './routes/instance.routes';
 import adminRoutes from './routes/admin.routes';
 import webhookRoutes from './routes/webhook.routes';
+import v1Routes from './routes/v1.routes';
+import openapiRoutes from './routes/openapi.routes';
 import { EvolutionService } from './services/evolution.service';
 import { startSubscriptionScheduler } from './jobs/subscription-scheduler.job';
 import { engineRegistry } from './engines/core/EngineRegistry';
@@ -56,6 +58,8 @@ app.use(cors({
     'x-api-key',
     'X-API-KEY',
     'x-tenant-id',
+    'idempotency-key',
+    'Idempotency-Key',
     'Accept',
     'X-Requested-With'
   ],
@@ -66,18 +70,26 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// SaaS Core API Routes Mount
+// SaaS Core API Routes Mount (Legacy & Modern v1)
 app.use('/api/auth', authRoutes);
 app.use('/api/instances', instanceRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/webhooks', webhookRoutes);
 
+// Developer Platform v1 API Routes & OpenAPI Specification
+app.use('/v1', v1Routes);
+app.use('/api/v1', v1Routes);
+app.use('/', openapiRoutes);
+app.use('/v1', openapiRoutes);
+
 // Root Health Check Route
 app.get('/', (req, res) => {
   res.json({
     status: 'ok',
-    service: 'Zaza.click 2.0 - WhatsApp API SaaS Gateway',
+    service: 'Zaza Click 2.0 — WhatsApp API SaaS Gateway',
     version: '2.0.0',
+    documentation: 'https://api.zazaclick.sbs/openapi.json',
+    developer_platform: 'https://app.zazaclick.sbs',
     port: PORT,
     timestamp: new Date().toISOString()
   });
