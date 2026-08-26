@@ -104,13 +104,11 @@ export default function Auth() {
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4 sm:p-6 lg:p-12 bg-gradient-to-br from-emerald-50/50 via-slate-50 to-teal-50/40 dark:from-[#050C1A] dark:via-[#071322] dark:to-[#041D1A] text-slate-900 dark:text-white overflow-hidden transition-colors duration-300 font-sans selection:bg-emerald-500 selection:text-white">
       
-      {/* Interactive Gravity Mesh Background (Antigravity Signature Physics) */}
+      {/* Interactive Gravity Mesh Background (Living API Network Engine) */}
       <InteractiveGravityMesh 
-        particleCount={70} 
-        maxDistance={140} 
-        gravityRadius={170} 
+        variant="client"
         isDark={isDark} 
-        className="absolute inset-0 pointer-events-auto z-0"
+        className="absolute inset-0 pointer-events-none z-0"
       />
 
       {/* Dynamic Colorful Glow Orbs */}
