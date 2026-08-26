@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '../services/authContext';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { InteractiveGravityMesh } from '../components/InteractiveGravityMesh';
+import { ZazaLogo } from '../components/ZazaLogo';
 import api from '../services/api';
 import { 
   Smartphone, ShieldAlert, Loader2, Moon, Sun, Lock, 
@@ -271,9 +272,7 @@ export default function Auth() {
             <div className="space-y-4 text-center pb-6">
               
               <div className="flex items-center justify-center">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 flex items-center justify-center text-white transform hover:scale-105 transition-transform">
-                  <Smartphone size={32} />
-                </div>
+                <ZazaLogo size={64} animated />
               </div>
 
               <div className="space-y-1">

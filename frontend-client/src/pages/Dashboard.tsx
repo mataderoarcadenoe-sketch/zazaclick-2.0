@@ -15,6 +15,7 @@ import { CustomSelect } from '../components/CustomSelect';
 import { InteractiveGravityMesh } from '../components/InteractiveGravityMesh';
 import { ConfirmationModal } from '../components/ConfirmationModal';
 import { ToastNotification } from '../components/ToastNotification';
+import { ZazaLogo } from '../components/ZazaLogo';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -573,9 +574,7 @@ echo $response;`;
         <div className={`h-16 flex items-center ${sidebarOpen ? 'justify-between px-5' : 'justify-center'}`}>
           {sidebarOpen && (
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white">
-                <Smartphone size={18} />
-              </div>
+              <ZazaLogo size={36} />
               <div className="flex flex-col text-left">
                 <span className="font-black text-slate-900 dark:text-white text-sm tracking-tight">
                   Zaza.click <span className="text-emerald-500">2.0</span>

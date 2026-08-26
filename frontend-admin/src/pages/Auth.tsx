@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { InteractiveGravityMesh } from '../components/InteractiveGravityMesh';
+import { ZazaLogo } from '../components/ZazaLogo';
 import api from '../services/api';
 
 declare global {
@@ -268,9 +269,7 @@ export default function AuthPage() {
             {/* Brand Logo & Header */}
             <div className="space-y-4">
               <div className="flex items-center justify-center">
-                <div className="w-18 h-18 rounded-3xl bg-gradient-to-tr from-slate-900 via-emerald-950 to-emerald-700 dark:from-emerald-600 dark:via-teal-600 dark:to-cyan-500 flex items-center justify-center text-white transform hover:scale-105 transition-transform">
-                  <ShieldCheck size={36} className="text-emerald-400 dark:text-white" />
-                </div>
+                <ZazaLogo size={68} animated />
               </div>
 
               <div className="space-y-1.5">
