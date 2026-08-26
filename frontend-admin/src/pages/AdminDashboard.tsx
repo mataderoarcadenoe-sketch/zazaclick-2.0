@@ -313,12 +313,12 @@ export default function AdminDashboardPage() {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden lg:pl-20">
+      <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-250 ${sidebarOpen ? 'lg:pl-64' : 'lg:pl-20'}`}>
         
         {/* Header */}
-        <header className="h-16 bg-white dark:bg-[#0B0F19] px-4 sm:px-8 flex items-center justify-between z-30 transition-colors">
+        <header className="h-16 bg-white dark:bg-[#0B0F19] px-4 sm:px-8 lg:px-12 flex items-center justify-between z-30 transition-colors border-b border-slate-100 dark:border-slate-800/40">
           <div className="flex items-center gap-3">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-600">
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-600">
               <Menu size={20} />
             </button>
             <div className="flex flex-col text-left">
@@ -332,13 +332,13 @@ export default function AdminDashboardPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={toggleDark}
-              className="p-2.5 bg-slate-100 dark:bg-slate-800 rounded-2xl text-slate-600 dark:text-slate-300"
+              className="p-2.5 bg-slate-100 dark:bg-slate-800 rounded-2xl text-slate-600 dark:text-slate-300 cursor-pointer"
             >
               {isDark ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-emerald-600" />}
             </button>
             <button
               onClick={fetchAdminData}
-              className="p-2.5 bg-slate-100 dark:bg-slate-800 rounded-2xl text-slate-600 hover:text-emerald-600"
+              className="p-2.5 bg-slate-100 dark:bg-slate-800 rounded-2xl text-slate-600 hover:text-emerald-600 cursor-pointer"
               title="Actualizar datos"
             >
               <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
@@ -348,14 +348,14 @@ export default function AdminDashboardPage() {
 
         {/* Content Body */}
         <main className="flex-1 bg-[#F8FAFC] dark:bg-[#070B12] relative overflow-y-auto">
-          <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+          <div className="w-full px-4 sm:px-8 lg:px-12 py-8 space-y-8 max-w-[1920px] mx-auto">
             
             {/* OVERVIEW GLOBAL DASHBOARD */}
             {activeTab === 'overview' && (
               <div className="space-y-8 animate-fadeIn text-left">
                 
                 {/* Alertas Operativas */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                   <div className="p-5 bg-amber-50 dark:bg-amber-950/40 rounded-3xl space-y-1">
                     <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 text-xs font-bold">
                       <Clock size={16} />

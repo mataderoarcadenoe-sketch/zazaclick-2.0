@@ -617,15 +617,15 @@ echo $response;`;
         </div>
       </aside>
 
-      {/* Main Area Canvas */}
-      <div className="flex-1 flex flex-col overflow-hidden lg:pl-20">
+      {/* Main Content Area */}
+      <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-250 ${sidebarOpen ? 'lg:pl-64' : 'lg:pl-20'}`}>
         
         {/* Top Header */}
-        <header className="h-16 bg-white dark:bg-[#0B0F19] px-4 sm:px-8 flex items-center justify-between z-30 transition-colors duration-250">
+        <header className="h-16 bg-white dark:bg-[#0B0F19] px-4 sm:px-8 lg:px-12 flex items-center justify-between z-30 transition-colors duration-250 border-b border-slate-100 dark:border-slate-800/40">
           <div className="flex items-center gap-3">
             <button 
-              onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-600 dark:text-slate-300 cursor-pointer"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-600 dark:text-slate-300 cursor-pointer"
             >
               <Menu size={20} />
             </button>
@@ -682,7 +682,7 @@ echo $response;`;
 
         {/* Content Body Canvas */}
         <main className="flex-1 bg-[#F8FAFC] dark:bg-[#070B12] bg-grid-tech relative overflow-y-auto">
-          <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+          <div className="w-full px-4 sm:px-8 lg:px-12 py-8 space-y-8 max-w-[1920px] mx-auto">
             
             {/* DASHBOARD API OVERVIEW */}
             {activeTab === 'overview' && (
