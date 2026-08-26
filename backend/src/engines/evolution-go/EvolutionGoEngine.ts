@@ -83,21 +83,26 @@ export class EvolutionGoEngine implements WhatsAppEngine {
         await client.delete(`/instance/delete/${instanceName}`);
       } catch {}
 
-      const response = await client.post('/instance/create', {
-        instanceName,
+      // Evolution Go OpenAPI: { name, token, proxy, webhook }
+      const payload = {
+        name: instanceName,
+        instanceName: instanceName,
         qrcode: true,
         webhook: webhookUrl
-      });
+      };
+
+      const response = await client.post('/instance/create', payload);
 
       const latencyMs = Date.now() - start;
-      const data = response.data;
-      const token = data?.hash || data?.token || data?.instance?.token || data?.instance?.apikey || 'go_token_' + Date.now();
+      const data = response.data?.data || response.data;
+      const token = data?.token || data?.hash || data?.apikey || data?.instance?.token || 'go_token_' + Date.now();
+      const qrcode = data?.qrcode || data?.Qrcode || data?.base64;
 
       this.circuitBreaker.recordSuccess();
       return EvolutionGoMapper.mapSuccess({
         token,
-        qrcode: data?.qrcode?.base64 || data?.base64,
-        instance: data?.instance || data
+        qrcode,
+        instance: data
       }, latencyMs);
     } catch (err: any) {
       const latencyMs = Date.now() - start;
@@ -110,7 +115,12 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     const start = Date.now();
     try {
       const client = this.getClient();
-      const response = await client.delete(`/instance/delete/${instanceName}`);
+      let response;
+      try {
+        response = await client.delete(`/instance/delete/${instanceName}`);
+      } catch (e) {
+        response = await client.delete('/instance/delete', { headers: { instance: instanceName } });
+      }
       const latencyMs = Date.now() - start;
       const success = response.status === 200 || response.status === 204;
       this.circuitBreaker.recordSuccess();
@@ -126,10 +136,17 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     const start = Date.now();
     try {
       const client = this.getClient();
-      const response = await client.get(`/instance/connectionState/${instanceName}`);
+      let response;
+      try {
+        response = await client.get(`/instance/connectionState/${instanceName}`);
+      } catch {
+        response = await client.get('/instance/status', { headers: { instance: instanceName } });
+      }
       const latencyMs = Date.now() - start;
-      const state = response.data?.instance?.state || response.data?.state || 'disconnected';
-      const isConnected = state === 'open' || state === 'connected';
+      const resData = response.data?.data || response.data;
+      const isConnected = resData?.connected === true || resData?.state === 'open' || resData?.state === 'connected';
+      const state = resData?.state || (isConnected ? 'connected' : 'disconnected');
+
       this.circuitBreaker.recordSuccess();
       return EvolutionGoMapper.mapSuccess({ state, isConnected }, latencyMs);
     } catch (err: any) {
@@ -142,9 +159,15 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     const start = Date.now();
     try {
       const client = this.getClient();
-      const response = await client.get(`/instance/connect/${instanceName}`);
+      let response;
+      try {
+        response = await client.get(`/instance/connect/${instanceName}`);
+      } catch {
+        response = await client.get('/instance/qr', { headers: { instance: instanceName } });
+      }
       const latencyMs = Date.now() - start;
-      const qrcode = response.data?.qrcode?.base64 || response.data?.base64 || response.data?.qrcode;
+      const resData = response.data?.data || response.data;
+      const qrcode = resData?.Qrcode || resData?.qrcode?.base64 || resData?.qrcode || resData?.base64;
 
       if (qrcode) {
         this.circuitBreaker.recordSuccess();
@@ -173,7 +196,12 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     const start = Date.now();
     try {
       const client = this.getClient();
-      const response = await client.delete(`/instance/logout/${instanceName}`);
+      let response;
+      try {
+        response = await client.delete(`/instance/logout/${instanceName}`);
+      } catch {
+        response = await client.post('/instance/logout', {}, { headers: { instance: instanceName } });
+      }
       const latencyMs = Date.now() - start;
       const success = response.status === 200 || response.status === 204;
       this.circuitBreaker.recordSuccess();
@@ -190,7 +218,12 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     try {
       const client = this.getClient();
       const url = webhookUrl || `${process.env.BACKEND_URL || 'https://zaza-click-20-production.up.railway.app'}/api/webhooks/whatsapp`;
-      const response = await client.post(`/webhook/set/${instanceName}`, { url, enabled: true });
+      let response;
+      try {
+        response = await client.post(`/webhook/set/${instanceName}`, { url, enabled: true });
+      } catch {
+        response = await client.post('/webhook/set', { url, enabled: true }, { headers: { instance: instanceName } });
+      }
       const latencyMs = Date.now() - start;
       return EvolutionGoMapper.mapSuccess(response.status === 200, latencyMs);
     } catch (err: any) {
@@ -225,15 +258,33 @@ export class EvolutionGoEngine implements WhatsAppEngine {
         targetNumber = cleanNumber;
       }
 
-      const response = await client.post(`/message/sendText/${params.instanceName}`, {
-        number: targetNumber,
-        text: params.text
-      });
+      let response;
+      // Intento 1: Path-based (/message/sendText/:instance)
+      // Intento 2: OpenAPI (/send/text) con header instance
+      try {
+        response = await client.post(`/message/sendText/${params.instanceName}`, {
+          number: targetNumber,
+          text: params.text
+        });
+      } catch (e: any) {
+        if (e.response?.status === 404) {
+          response = await client.post('/send/text', {
+            number: targetNumber,
+            text: params.text
+          }, {
+            headers: { instance: params.instanceName }
+          });
+        } else {
+          throw e;
+        }
+      }
+
       const latencyMs = Date.now() - start;
 
       if (response.status === 200 || response.status === 201) {
         this.circuitBreaker.recordSuccess();
-        const msgId = response.data?.key?.id || response.data?.id || response.data?.messageId;
+        const resData = response.data?.data || response.data;
+        const msgId = resData?.Info?.ID || resData?.key?.id || resData?.id || resData?.messageId;
         return EvolutionGoMapper.mapSuccess(response.data, latencyMs, msgId);
       }
 
@@ -289,19 +340,38 @@ export class EvolutionGoEngine implements WhatsAppEngine {
         }
       }
 
-      const response = await client.post(`/message/sendMedia/${params.instanceName}`, {
-        number: targetNumber,
-        media: finalMedia,
-        mediatype: params.mediatype,
-        mimetype: params.mimetype,
-        caption: params.caption,
-        fileName: params.fileName
-      });
+      let response;
+      try {
+        response = await client.post(`/message/sendMedia/${params.instanceName}`, {
+          number: targetNumber,
+          media: finalMedia,
+          mediatype: params.mediatype,
+          mimetype: params.mimetype,
+          caption: params.caption,
+          fileName: params.fileName
+        });
+      } catch (e: any) {
+        if (e.response?.status === 404) {
+          response = await client.post('/send/media', {
+            number: targetNumber,
+            url: finalMedia,
+            type: params.mediatype,
+            caption: params.caption,
+            filename: params.fileName
+          }, {
+            headers: { instance: params.instanceName }
+          });
+        } else {
+          throw e;
+        }
+      }
+
       const latencyMs = Date.now() - start;
 
       if (response.status === 200 || response.status === 201) {
         this.circuitBreaker.recordSuccess();
-        const msgId = response.data?.key?.id || response.data?.id;
+        const resData = response.data?.data || response.data;
+        const msgId = resData?.Info?.ID || resData?.key?.id || resData?.id;
         return EvolutionGoMapper.mapSuccess(response.data, latencyMs, msgId);
       }
 
@@ -337,18 +407,36 @@ export class EvolutionGoEngine implements WhatsAppEngine {
         targetNumber = cleanNumber;
       }
 
-      const response = await client.post(`/message/sendLocation/${params.instanceName}`, {
-        number: targetNumber,
-        name: params.name,
-        address: params.address,
-        latitude: params.latitude,
-        longitude: params.longitude
-      });
+      let response;
+      try {
+        response = await client.post(`/message/sendLocation/${params.instanceName}`, {
+          number: targetNumber,
+          name: params.name,
+          address: params.address,
+          latitude: params.latitude,
+          longitude: params.longitude
+        });
+      } catch (e: any) {
+        if (e.response?.status === 404) {
+          response = await client.post('/send/location', {
+            number: targetNumber,
+            name: params.name,
+            address: params.address,
+            latitude: params.latitude,
+            longitude: params.longitude
+          }, {
+            headers: { instance: params.instanceName }
+          });
+        } else {
+          throw e;
+        }
+      }
       const latencyMs = Date.now() - start;
 
       if (response.status === 200 || response.status === 201) {
         this.circuitBreaker.recordSuccess();
-        const msgId = response.data?.key?.id || response.data?.id;
+        const resData = response.data?.data || response.data;
+        const msgId = resData?.Info?.ID || resData?.key?.id || resData?.id;
         return EvolutionGoMapper.mapSuccess(response.data, latencyMs, msgId);
       }
 
@@ -373,15 +461,30 @@ export class EvolutionGoEngine implements WhatsAppEngine {
         targetNumber = cleanNumber;
       }
 
-      const response = await client.post(`/message/sendContact/${params.instanceName}`, {
-        number: targetNumber,
-        contact: params.contact
-      });
+      let response;
+      try {
+        response = await client.post(`/message/sendContact/${params.instanceName}`, {
+          number: targetNumber,
+          contact: params.contact
+        });
+      } catch (e: any) {
+        if (e.response?.status === 404) {
+          response = await client.post('/send/contact', {
+            number: targetNumber,
+            contact: params.contact
+          }, {
+            headers: { instance: params.instanceName }
+          });
+        } else {
+          throw e;
+        }
+      }
       const latencyMs = Date.now() - start;
 
       if (response.status === 200 || response.status === 201) {
         this.circuitBreaker.recordSuccess();
-        const msgId = response.data?.key?.id || response.data?.id;
+        const resData = response.data?.data || response.data;
+        const msgId = resData?.Info?.ID || resData?.key?.id || resData?.id;
         return EvolutionGoMapper.mapSuccess(response.data, latencyMs, msgId);
       }
 
