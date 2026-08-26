@@ -13,6 +13,8 @@ import {
 import { AsyncOperationModal, type AsyncStep, type AsyncStatus } from '../components/AsyncOperationModal';
 import { CustomSelect } from '../components/CustomSelect';
 import { InteractiveGravityMesh } from '../components/InteractiveGravityMesh';
+import { ConfirmationModal } from '../components/ConfirmationModal';
+import { ToastNotification } from '../components/ToastNotification';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -21,7 +23,6 @@ export default function Dashboard() {
   // State Management - WhatsApp API SaaS Core
   const [activeTab, setActiveTab] = useState<string>(user?.role === 'admin' ? 'admin_overview' : 'overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [notification, setNotification] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   // Máquina de Estados de Operaciones Asíncronas
   const [asyncOp, setAsyncOp] = useState<{
@@ -95,9 +96,10 @@ export default function Dashboard() {
   const [docLang, setDocLang] = useState<'curl' | 'js' | 'python' | 'php'>('curl');
 
   // Notificaciones Toast
-  const showNotification = (text: string, type: 'success' | 'error' = 'success') => {
-    setNotification({ text, type });
-    setTimeout(() => setNotification(null), 4000);
+  const [notification, setNotification] = useState<{ text: string; title?: string; type?: 'success' | 'error' | 'warning' | 'info' } | null>(null);
+
+  const showNotification = (text: string, type: 'success' | 'error' | 'warning' | 'info' = 'success', title?: string) => {
+    setNotification({ text, type, title });
   };
 
   const copyToClipboard = (text: string, id?: string) => {
@@ -251,42 +253,49 @@ export default function Dashboard() {
   const [confirmModal, setConfirmModal] = useState<{
     open: boolean;
     title: string;
-    message: string;
-    type?: 'danger' | 'warning' | 'info';
+    message: string | React.ReactNode;
+    warningNote?: string;
+    type?: 'danger' | 'warning' | 'info' | 'success';
     confirmText?: string;
     cancelText?: string;
-    onConfirm: () => void;
+    loading?: boolean;
+    onConfirm: () => void | Promise<void>;
   }>({
     open: false,
     title: '',
     message: '',
-    type: 'danger',
-    confirmText: 'Confirmar',
-    cancelText: 'Cancelar',
-    onConfirm: () => {}
+    onConfirm: () => {},
   });
 
   const handleDeleteInstance = (instanceName: string) => {
     setConfirmModal({
       open: true,
-      title: 'Eliminar Instancia',
-      message: `¿Estás seguro de que deseas eliminar la instancia "${instanceName}"? Esta acción eliminará permanentemente la conexión de WhatsApp y no se podrá deshacer.`,
+      title: 'Eliminar Instancia WhatsApp',
+      message: (
+        <span>
+          ¿Estás seguro de que deseas eliminar permanentemente la instancia <strong className="text-slate-900 dark:text-white font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">{instanceName}</strong>?
+        </span>
+      ),
+      warningNote: 'Esta acción destruirá permanentemente la conexión con WhatsApp y su API Key. No se puede deshacer.',
       type: 'danger',
       confirmText: 'Eliminar Instancia',
       cancelText: 'Cancelar',
       onConfirm: async () => {
-        setConfirmModal(prev => ({ ...prev, open: false }));
+        setConfirmModal(prev => ({ ...prev, loading: true }));
         try {
           setLoadingInstances(true);
           const res = await api.delete(`/instances/${instanceName}`);
           if (res.data?.success) {
             showNotification('Instancia eliminada correctamente', 'success');
+            setConfirmModal(prev => ({ ...prev, open: false, loading: false }));
             fetchInstances();
           } else {
             showNotification(res.data?.error || 'No se pudo eliminar la instancia', 'error');
+            setConfirmModal(prev => ({ ...prev, loading: false }));
           }
         } catch (err: any) {
           showNotification(err.response?.data?.error || 'Error al eliminar la instancia', 'error');
+          setConfirmModal(prev => ({ ...prev, loading: false }));
         } finally {
           setLoadingInstances(false);
         }
@@ -308,16 +317,37 @@ export default function Dashboard() {
     }
   };
 
-  const handleDisconnectInstance = async (instanceName: string) => {
-    try {
-      const res = await api.post(`/instances/${instanceName}/logout`);
-      if (res.data?.success) {
-        showNotification('Línea desconectada de WhatsApp');
-        fetchInstances();
+  const handleDisconnectInstance = (instanceName: string) => {
+    setConfirmModal({
+      open: true,
+      title: 'Desconectar WhatsApp',
+      message: (
+        <span>
+          ¿Deseas cerrar la sesión activa de WhatsApp para la línea <strong className="text-slate-900 dark:text-white font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">{instanceName}</strong>?
+        </span>
+      ),
+      warningNote: 'La recepción y emisión de mensajes a través de esta instancia quedará pausada hasta que se vuelva a escanear el QR.',
+      type: 'warning',
+      confirmText: 'Desconectar Sesión',
+      cancelText: 'Cancelar',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, loading: true }));
+        try {
+          const res = await api.post(`/instances/${instanceName}/logout`);
+          if (res.data?.success) {
+            showNotification('Línea desconectada de WhatsApp exitosamente', 'success');
+            setConfirmModal(prev => ({ ...prev, open: false, loading: false }));
+            fetchInstances();
+          } else {
+            showNotification(res.data?.error || 'No se pudo desconectar la línea', 'error');
+            setConfirmModal(prev => ({ ...prev, loading: false }));
+          }
+        } catch (err: any) {
+          showNotification(err.response?.data?.error || 'Error al desconectar', 'error');
+          setConfirmModal(prev => ({ ...prev, loading: false }));
+        }
       }
-    } catch (err: any) {
-      showNotification(err.response?.data?.error || 'Error al desconectar', 'error');
-    }
+    });
   };
 
   // Manejador del Tester API Multi-Tipo (Playground)
@@ -522,17 +552,8 @@ echo $response;`;
         className="fixed inset-0 pointer-events-none z-0 opacity-40 dark:opacity-60"
       />
 
-      {/* Toast Notification (Atmospheric Pill) */}
-      {notification && (
-        <div className={`fixed top-5 right-5 z-50 px-4 py-3 rounded-2xl flex items-center gap-2.5 text-xs font-bold animate-fadeIn backdrop-blur-xl ${
-          notification.type === 'success'
-            ? 'bg-emerald-500/20 text-emerald-900 dark:text-emerald-200'
-            : 'bg-rose-500/20 text-rose-900 dark:text-rose-200'
-        }`}>
-          {notification.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <AlertCircle className="w-4 h-4 text-rose-500" />}
-          <span>{notification.text}</span>
-        </div>
-      )}
+      {/* Toast Notification */}
+      <ToastNotification notification={notification} onClose={() => setNotification(null)} />
 
       {/* Sidebar Overlay (Mobile) */}
       {sidebarOpen && (
@@ -1491,59 +1512,19 @@ echo $response;`;
         </div>
       )}
 
-      {/* Modal de Confirmación Personalizado */}
-      {confirmModal.open && (
-        <div className="fixed inset-0 z-[9990] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-2xl animate-fadeIn">
-          <div className="surface-elevated rounded-3xl p-7 sm:p-8 max-w-sm w-full text-left space-y-5">
-            <div className="flex items-center justify-between">
-              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold ${
-                confirmModal.type === 'danger'
-                  ? 'surface-accent-rose text-rose-600 dark:text-rose-400'
-                  : confirmModal.type === 'warning'
-                  ? 'surface-accent-amber text-amber-600 dark:text-amber-400'
-                  : 'surface-accent-cyan text-cyan-600 dark:text-cyan-400'
-              }`}>
-                <AlertCircle size={20} />
-              </div>
-              <button 
-                onClick={() => setConfirmModal(prev => ({ ...prev, open: false }))} 
-                className="p-1.5 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 rounded-xl text-slate-400 cursor-pointer"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            <div className="space-y-1">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">{confirmModal.title}</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-normal">
-                {confirmModal.message}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setConfirmModal(prev => ({ ...prev, open: false }))}
-                className="flex-1 py-2.5 surface-interactive text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition-colors cursor-pointer min-h-[42px]"
-              >
-                {confirmModal.cancelText || 'Cancelar'}
-              </button>
-
-              <button
-                type="button"
-                onClick={confirmModal.onConfirm}
-                className={`flex-1 py-2.5 text-xs font-bold rounded-xl active:scale-[0.98] transition-all cursor-pointer min-h-[42px] ${
-                  confirmModal.type === 'danger'
-                    ? 'bg-rose-600 hover:bg-rose-500 text-white'
-                    : 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                }`}
-              >
-                {confirmModal.confirmText || 'Confirmar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modal de Confirmación Premium */}
+      <ConfirmationModal
+        open={confirmModal.open}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        warningNote={confirmModal.warningNote}
+        type={confirmModal.type}
+        confirmText={confirmModal.confirmText}
+        cancelText={confirmModal.cancelText}
+        loading={confirmModal.loading}
+        onConfirm={confirmModal.onConfirm}
+        onClose={() => setConfirmModal(prev => ({ ...prev, open: false }))}
+      />
 
       {/* Modal de Operaciones Asíncronas */}
       <AsyncOperationModal

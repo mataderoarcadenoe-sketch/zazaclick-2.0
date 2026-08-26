@@ -13,6 +13,8 @@ import { useDarkMode } from '../hooks/useDarkMode';
 import api from '../services/api';
 import { CustomSelect } from '../components/CustomSelect';
 import { InteractiveGravityMesh } from '../components/InteractiveGravityMesh';
+import { ConfirmationModal } from '../components/ConfirmationModal';
+import { ToastNotification } from '../components/ToastNotification';
 
 export default function AdminDashboardPage() {
   const { user, logout } = useAuth();
@@ -29,7 +31,25 @@ export default function AdminDashboardPage() {
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [notification, setNotification] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [notification, setNotification] = useState<{ text: string; title?: string; type?: 'success' | 'error' | 'warning' | 'info' } | null>(null);
+
+  // Modal de Confirmación Personalizado
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean;
+    title: string;
+    message: string | React.ReactNode;
+    warningNote?: string;
+    type?: 'danger' | 'warning' | 'info' | 'success';
+    confirmText?: string;
+    cancelText?: string;
+    loading?: boolean;
+    onConfirm: () => void | Promise<void>;
+  }>({
+    open: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   // Modales Administrativos
   const [clientDetailModal, setClientDetailModal] = useState<{ open: boolean; user: any | null }>({ open: false, user: null });
@@ -46,9 +66,8 @@ export default function AdminDashboardPage() {
   const [newPassword, setNewPassword] = useState('');
   const [planFormData, setPlanFormData] = useState({ id: '', name: '', maxInstances: 1, price: 15, durationMonths: 1, maxMessages: 1000, isTrial: false, trialDays: 7, trialMessages: 100, description: '' });
 
-  const showNotification = (text: string, type: 'success' | 'error' = 'success') => {
-    setNotification({ text, type });
-    setTimeout(() => setNotification(null), 4000);
+  const showNotification = (text: string, type: 'success' | 'error' | 'warning' | 'info' = 'success', title?: string) => {
+    setNotification({ text, type, title });
   };
 
   const fetchAdminData = useCallback(async () => {
@@ -97,16 +116,50 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const handleUpdateUserStatus = async (userId: string, status: 'active' | 'suspended' | 'blocked') => {
-    try {
-      const res = await api.put(`/admin/users/${userId}/status`, { status });
-      if (res.data?.success) {
-        showNotification(`Estado de cliente actualizado a ${status.toUpperCase()}`);
-        fetchAdminData();
-      }
-    } catch (err: any) {
-      showNotification(err.response?.data?.error || 'Error al actualizar estado', 'error');
+  const handleUpdateUserStatus = (userId: string, status: 'active' | 'suspended' | 'blocked', email?: string) => {
+    if (status === 'blocked' || status === 'suspended') {
+      setConfirmModal({
+        open: true,
+        title: status === 'blocked' ? 'Bloquear Acceso del Cliente' : 'Suspender Servicio',
+        message: (
+          <span>
+            ¿Deseas cambiar el estado de acceso de {email ? <strong className="text-slate-900 dark:text-white font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">{email}</strong> : 'este cliente'} a <strong className="uppercase text-amber-500">{status}</strong>? Sus llamadas a la API e instancias quedarán deshabilitadas.
+          </span>
+        ),
+        warningNote: 'El cliente no podrá autenticarse ni emitir llamadas a través de la API Gateway mientras esté suspendido/bloqueado.',
+        type: 'warning',
+        confirmText: status === 'blocked' ? 'Bloquear Cliente' : 'Suspender Servicio',
+        cancelText: 'Cancelar',
+        onConfirm: async () => {
+          setConfirmModal(prev => ({ ...prev, loading: true }));
+          try {
+            const res = await api.put(`/admin/users/${userId}/status`, { status });
+            if (res.data?.success) {
+              showNotification(`Estado de cliente actualizado a ${status.toUpperCase()}`, 'success');
+              setConfirmModal(prev => ({ ...prev, open: false, loading: false }));
+              fetchAdminData();
+            }
+          } catch (err: any) {
+            showNotification(err.response?.data?.error || 'Error al actualizar estado', 'error');
+            setConfirmModal(prev => ({ ...prev, loading: false }));
+          }
+        }
+      });
+      return;
     }
+
+    // Activar directamente
+    (async () => {
+      try {
+        const res = await api.put(`/admin/users/${userId}/status`, { status });
+        if (res.data?.success) {
+          showNotification(`Estado de cliente activado exitosamente`, 'success');
+          fetchAdminData();
+        }
+      } catch (err: any) {
+        showNotification(err.response?.data?.error || 'Error al actualizar estado', 'error');
+      }
+    })();
   };
 
   const handleUpdateSubscription = async (e: React.FormEvent) => {
@@ -116,7 +169,7 @@ export default function AdminDashboardPage() {
     try {
       const res = await api.put(`/admin/users/${editSubscriptionModal.user.id}/subscription`, subFormData);
       if (res.data?.success) {
-        showNotification('Suscripción y cuotas del cliente actualizadas exitosamente');
+        showNotification('Suscripción y cuotas del cliente actualizadas exitosamente', 'success');
         setEditSubscriptionModal({ open: false, user: null });
         fetchAdminData();
       }
@@ -125,16 +178,33 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const handleResetQuota = async (userId: string) => {
-    try {
-      const res = await api.post(`/admin/users/${userId}/reset-quota`);
-      if (res.data?.success) {
-        showNotification('Cuota de mensajes reseteada a 0 exitosamente');
-        fetchAdminData();
+  const handleResetQuota = (userId: string, email?: string) => {
+    setConfirmModal({
+      open: true,
+      title: 'Resetear Cuota de Mensajes',
+      message: (
+        <span>
+          ¿Estás seguro de restablecer a <strong>0</strong> el conteo de mensajes usados de {email ? <strong className="text-slate-900 dark:text-white font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">{email}</strong> : 'este cliente'}?
+        </span>
+      ),
+      type: 'info',
+      confirmText: 'Resetear Cuota a 0',
+      cancelText: 'Cancelar',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, loading: true }));
+        try {
+          const res = await api.post(`/admin/users/${userId}/reset-quota`);
+          if (res.data?.success) {
+            showNotification('Cuota de mensajes reseteada a 0 exitosamente', 'success');
+            setConfirmModal(prev => ({ ...prev, open: false, loading: false }));
+            fetchAdminData();
+          }
+        } catch (err: any) {
+          showNotification(err.response?.data?.error || 'Error al resetear cuota', 'error');
+          setConfirmModal(prev => ({ ...prev, loading: false }));
+        }
       }
-    } catch (err: any) {
-      showNotification(err.response?.data?.error || 'Error al resetear cuota', 'error');
-    }
+    });
   };
 
   const handleRecordPayment = async (e: React.FormEvent) => {
@@ -147,7 +217,7 @@ export default function AdminDashboardPage() {
         ...paymentFormData
       });
       if (res.data?.success) {
-        showNotification('Pago registrado exitosamente y servicio renovado');
+        showNotification('Pago registrado exitosamente y servicio renovado', 'success');
         setRecordPaymentModal({ open: false, user: null });
         fetchAdminData();
       }
@@ -156,16 +226,48 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const handleToggleInstance = async (instId: string, currentEnabled: boolean) => {
-    try {
-      const res = await api.put(`/admin/instances/${instId}/toggle`, { isEnabled: !currentEnabled });
-      if (res.data?.success) {
-        showNotification(`Instancia ${!currentEnabled ? 'habilitada' : 'deshabilitada'}`);
-        fetchAdminData();
-      }
-    } catch (err: any) {
-      showNotification(err.response?.data?.error || 'Error al modificar instancia', 'error');
+  const handleToggleInstance = (instId: string, currentEnabled: boolean, instanceName?: string) => {
+    if (currentEnabled) {
+      setConfirmModal({
+        open: true,
+        title: 'Deshabilitar Instancia WhatsApp',
+        message: (
+          <span>
+            ¿Deseas deshabilitar la instancia {instanceName ? <strong className="text-slate-900 dark:text-white font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">{instanceName}</strong> : ''}? El cliente no podrá enviar ni recibir mensajes a través de ella hasta que sea reactivada.
+          </span>
+        ),
+        type: 'warning',
+        confirmText: 'Deshabilitar Instancia',
+        cancelText: 'Cancelar',
+        onConfirm: async () => {
+          setConfirmModal(prev => ({ ...prev, loading: true }));
+          try {
+            const res = await api.put(`/admin/instances/${instId}/toggle`, { isEnabled: false });
+            if (res.data?.success) {
+              showNotification('Instancia deshabilitada', 'warning');
+              setConfirmModal(prev => ({ ...prev, open: false, loading: false }));
+              fetchAdminData();
+            }
+          } catch (err: any) {
+            showNotification(err.response?.data?.error || 'Error al modificar instancia', 'error');
+            setConfirmModal(prev => ({ ...prev, loading: false }));
+          }
+        }
+      });
+      return;
     }
+
+    (async () => {
+      try {
+        const res = await api.put(`/admin/instances/${instId}/toggle`, { isEnabled: true });
+        if (res.data?.success) {
+          showNotification('Instancia habilitada exitosamente', 'success');
+          fetchAdminData();
+        }
+      } catch (err: any) {
+        showNotification(err.response?.data?.error || 'Error al modificar instancia', 'error');
+      }
+    })();
   };
 
   const handleResetPassword = async (e: React.FormEvent) => {
@@ -175,7 +277,7 @@ export default function AdminDashboardPage() {
     try {
       const res = await api.post(`/admin/users/${resetPasswordModal.user.id}/reset-password`, { newPassword });
       if (res.data?.success) {
-        showNotification('Contraseña actualizada exitosamente');
+        showNotification('Contraseña actualizada exitosamente', 'success');
         setResetPasswordModal({ open: false, user: null });
         setNewPassword('');
       }
@@ -184,18 +286,34 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const handleDeleteUser = async (userId: string, email: string) => {
-    if (!window.confirm(`¿Estás seguro de eliminar permanentemente al cliente "${email}" y todas sus instancias? Esta acción no se puede deshacer.`)) return;
-
-    try {
-      const res = await api.delete(`/admin/users/${userId}`);
-      if (res.data?.success) {
-        showNotification('Cliente eliminado exitosamente');
-        fetchAdminData();
+  const handleDeleteUser = (userId: string, email: string) => {
+    setConfirmModal({
+      open: true,
+      title: 'Eliminar Cliente Permanentemente',
+      message: (
+        <span>
+          ¿Estás seguro de eliminar permanentemente al cliente <strong className="text-slate-900 dark:text-white font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">{email}</strong> y todas sus instancias?
+        </span>
+      ),
+      warningNote: 'Esta acción no se puede deshacer. Se eliminarán permanentemente todas las sesiones, tokens e instancias conectadas.',
+      type: 'danger',
+      confirmText: 'Eliminar Cliente',
+      cancelText: 'Cancelar',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, loading: true }));
+        try {
+          const res = await api.delete(`/admin/users/${userId}`);
+          if (res.data?.success) {
+            showNotification('Cliente eliminado exitosamente', 'success');
+            setConfirmModal(prev => ({ ...prev, open: false, loading: false }));
+            fetchAdminData();
+          }
+        } catch (err: any) {
+          showNotification(err.response?.data?.error || 'Error al eliminar cliente', 'error');
+          setConfirmModal(prev => ({ ...prev, loading: false }));
+        }
       }
-    } catch (err: any) {
-      showNotification(err.response?.data?.error || 'Error al eliminar cliente', 'error');
-    }
+    });
   };
 
   const handleSavePlan = async (e: React.FormEvent) => {
@@ -241,16 +359,7 @@ export default function AdminDashboardPage() {
       />
 
       {/* Toast Notification */}
-      {notification && (
-        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-2xl flex items-center gap-2.5 text-xs font-bold animate-fadeIn backdrop-blur-xl ${
-          notification.type === 'success' 
-            ? 'bg-emerald-500/20 text-emerald-900 dark:text-emerald-200' 
-            : 'bg-rose-500/20 text-rose-900 dark:text-rose-200'
-        }`}>
-          {notification.type === 'success' ? <CheckCircle2 size={16} className="text-emerald-500" /> : <AlertCircle size={16} className="text-rose-500" />}
-          <span>{notification.text}</span>
-        </div>
-      )}
+      <ToastNotification notification={notification} onClose={() => setNotification(null)} />
 
       {/* Sidebar (Atmospheric Translucent Surface) */}
       <aside 
@@ -1191,6 +1300,20 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Modal de Confirmación Premium */}
+      <ConfirmationModal
+        open={confirmModal.open}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        warningNote={confirmModal.warningNote}
+        type={confirmModal.type}
+        confirmText={confirmModal.confirmText}
+        cancelText={confirmModal.cancelText}
+        loading={confirmModal.loading}
+        onConfirm={confirmModal.onConfirm}
+        onClose={() => setConfirmModal(prev => ({ ...prev, open: false }))}
+      />
 
     </div>
   );
