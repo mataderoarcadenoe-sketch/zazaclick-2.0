@@ -10,6 +10,9 @@ import adminRoutes from './routes/admin.routes';
 import webhookRoutes from './routes/webhook.routes';
 import { EvolutionService } from './services/evolution.service';
 import { startSubscriptionScheduler } from './jobs/subscription-scheduler.job';
+import { engineRegistry } from './engines/core/EngineRegistry';
+import { evolutionApiEngine } from './engines/evolution-api/EvolutionApiEngine';
+import { evolutionGoEngine } from './engines/evolution-go/EvolutionGoEngine';
 
 dotenv.config();
 
@@ -109,6 +112,12 @@ async function startServer() {
   try {
     console.log('🔄 Inicializando base de datos SaaS Core...');
     await initDatabase();
+
+    console.log('🔌 [Engines] Registrando motores WhatsApp disponibles...');
+    engineRegistry.register(evolutionApiEngine);
+    if (process.env.EVOLUTION_GO_ENABLED === 'true' || process.env.EVOLUTION_GO_URL) {
+      engineRegistry.register(evolutionGoEngine);
+    }
     
     const server = createServer(app);
     initSocket(server);

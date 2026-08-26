@@ -160,6 +160,21 @@ export async function initDatabase() {
       ALTER TABLE instances ADD COLUMN IF NOT EXISTS messages_sent INTEGER DEFAULT 0;
       ALTER TABLE instances ADD COLUMN IF NOT EXISTS last_activity_at TIMESTAMP NULL;
       ALTER TABLE instances ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS engine_type VARCHAR(50) DEFAULT 'evolution_api';
+    `);
+
+    // Restricción CHECK de engine_type no destructiva
+    await pool.query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'chk_instances_engine_type'
+        ) THEN 
+          ALTER TABLE instances 
+          ADD CONSTRAINT chk_instances_engine_type 
+          CHECK (engine_type IN ('evolution_api', 'evolution_go')); 
+        END IF; 
+      END $$;
     `);
 
     // 5. Tabla de Pagos Administrativos
@@ -210,6 +225,7 @@ export async function initDatabase() {
     // 8. Índices de Alto Rendimiento
     await pool.query(`
       CREATE INDEX IF NOT EXISTS idx_instances_lookup ON instances (instance_name, api_key);
+      CREATE INDEX IF NOT EXISTS idx_instances_engine_type ON instances (engine_type);
       CREATE INDEX IF NOT EXISTS idx_subscriptions_user_status ON subscriptions (user_id, status, end_date);
       CREATE INDEX IF NOT EXISTS idx_usage_logs_user ON usage_logs (user_id, created_at);
       CREATE INDEX IF NOT EXISTS idx_payments_user ON payments (user_id, created_at);

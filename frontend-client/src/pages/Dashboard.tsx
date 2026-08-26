@@ -45,6 +45,7 @@ export default function Dashboard() {
   // Instancias / Líneas WhatsApp
   const [instances, setInstances] = useState<any[]>([]);
   const [newInstanceName, setNewInstanceName] = useState('');
+  const [selectedEngine, setSelectedEngine] = useState<'evolution_api' | 'evolution_go'>('evolution_api');
   const [loadingInstances, setLoadingInstances] = useState(false);
   const [qrCodeModal, setQrCodeModal] = useState<{ open: boolean; instanceName: string; qrCode: string | null }>({
     open: false,
@@ -195,16 +196,17 @@ export default function Dashboard() {
       return;
     }
 
+    const engineName = selectedEngine === 'evolution_go' ? 'Evolution Go ⚡' : 'Evolution API 2.4.0-rc2';
     const initialSteps: AsyncStep[] = [
       { id: '1', label: 'Enviando solicitud de creación al servidor', status: 'active' },
-      { id: '2', label: 'Inicializando motor WhatsApp API (Evolution Engine 2.4.0-rc2)', status: 'pending' },
+      { id: '2', label: `Inicializando motor WhatsApp API (${engineName})`, status: 'pending' },
       { id: '3', label: 'Guardando credenciales y generador de API Key en PostgreSQL', status: 'pending' }
     ];
 
     setAsyncOp({
       open: true,
       title: `Creando Instancia "${instanceName}"`,
-      subtitle: 'Por favor espera mientras configuramos tu nueva línea WhatsApp API.',
+      subtitle: `Configurando tu nueva línea WhatsApp API con ${engineName}.`,
       status: 'submitting',
       steps: initialSteps,
       errorMessage: null,
@@ -214,7 +216,7 @@ export default function Dashboard() {
 
     try {
       setLoadingInstances(true);
-      const res = await api.post('/instances', { instanceName });
+      const res = await api.post('/instances', { instanceName, engineType: selectedEngine });
 
       if (res.data?.success) {
         setAsyncOp(prev => ({
@@ -225,7 +227,7 @@ export default function Dashboard() {
             { ...prev.steps[1], status: 'completed' },
             { ...prev.steps[2], status: 'completed' }
           ],
-          successMessage: `¡La línea "${instanceName}" ha sido creada exitosamente! Puedes generar su código QR para conectar WhatsApp.`
+          successMessage: `¡La línea "${instanceName}" ha sido creada exitosamente con motor ${engineName}! Puedes generar su código QR para conectar WhatsApp.`
         }));
 
         setNewInstanceName('');
@@ -884,8 +886,37 @@ echo $response;`;
                   </div>
                 </div>
 
-                <div className="surface-panel p-6 rounded-2xl space-y-3">
-                  <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Crear Nueva Instancia API</h3>
+                <div className="surface-panel p-6 rounded-2xl space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Crear Nueva Instancia API</h3>
+                    
+                    {/* Selector de Motor */}
+                    <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/60 rounded-xl text-[11px] font-semibold">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedEngine('evolution_api')}
+                        className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                          selectedEngine === 'evolution_api'
+                            ? 'bg-emerald-600 text-white font-bold shadow-sm'
+                            : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'
+                        }`}
+                      >
+                        ● Evolution API
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedEngine('evolution_go')}
+                        className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                          selectedEngine === 'evolution_go'
+                            ? 'bg-indigo-600 text-white font-bold shadow-sm'
+                            : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'
+                        }`}
+                      >
+                        ⚡ Evolution Go
+                      </button>
+                    </div>
+                  </div>
+
                   <form onSubmit={handleCreateInstance} className="flex flex-col sm:flex-row gap-3">
                     <input
                       type="text"
@@ -927,7 +958,16 @@ echo $response;`;
                         >
                           <div className="flex items-center justify-between">
                             <div className="space-y-0.5">
-                              <h4 className="text-sm font-mono font-bold text-slate-900 dark:text-white">{inst.instance_name}</h4>
+                              <div className="flex items-center gap-2">
+                                <h4 className="text-sm font-mono font-bold text-slate-900 dark:text-white">{inst.instance_name}</h4>
+                                <span className={`px-2 py-0.5 text-[9px] font-bold rounded-md uppercase ${
+                                  inst.engine_type === 'evolution_go'
+                                    ? 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300'
+                                    : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                                }`}>
+                                  {inst.engine_type === 'evolution_go' ? '⚡ Go' : '● API v2'}
+                                </span>
+                              </div>
                               <span className="text-xs text-slate-500 dark:text-slate-400 font-normal block">{inst.phone || 'Sin número vinculado'}</span>
                             </div>
 

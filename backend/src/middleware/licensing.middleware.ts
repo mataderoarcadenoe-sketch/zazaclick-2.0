@@ -13,6 +13,7 @@ export interface LicensingContext {
   planId: string;
   instanceName: string;
   instanceId: string;
+  engineType?: string;
   idempotencyKey?: string;
   confirmSuccess: (messageType: string, evolutionMsgId?: string, clientResponseData?: any) => Promise<void>;
   rollback: (messageType: string, errorReason?: string) => Promise<void>;
@@ -69,6 +70,7 @@ export async function licensingMiddleware(req: LicensedRequest, res: Response, n
       SELECT 
         i.id as instance_id,
         i.instance_name,
+        i.engine_type,
         i.is_enabled as instance_is_enabled,
         u.id as user_id,
         u.email as user_email,
@@ -184,6 +186,7 @@ export async function licensingMiddleware(req: LicensedRequest, res: Response, n
       planId: row.plan_id,
       instanceName,
       instanceId,
+      engineType: row.engine_type || 'evolution_api',
       idempotencyKey,
 
       // Confirmar envío exitoso

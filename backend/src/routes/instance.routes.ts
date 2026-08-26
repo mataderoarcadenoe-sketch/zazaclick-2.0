@@ -2,6 +2,8 @@ import { Router, Response } from 'express';
 import pool from '../config/database';
 import { authMiddleware, AuthenticatedRequest } from '../middleware/auth.middleware';
 import { EvolutionService } from '../services/evolution.service';
+import { engineRouter } from '../engines/core/EngineRouter';
+import { EngineType } from '../engines/contracts/engine.types';
 import redis from '../config/redis';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -16,13 +18,12 @@ function generateId(prefix: string): string {
 }
 
 /**
-/**
  * POST / y POST /create - Crear una nueva instancia de WhatsApp
  */
 const createInstanceHandler = async (req: AuthenticatedRequest, res: Response) => {
-  const { instanceName } = req.body;
+  const { instanceName, engineType } = req.body;
 
-  console.log(`[Create] INICIO — userId=${req.userId} instanceName=${instanceName}`);
+  console.log(`[Create] INICIO — userId=${req.userId} instanceName=${instanceName} engineType=${engineType}`);
 
   if (!instanceName || !/^[a-zA-Z0-9_-]+$/.test(instanceName)) {
     return res.status(400).json({ success: false, error: 'Nombre de instancia inválido. Solo letras, números, guiones y guiones bajos.' });
@@ -64,25 +65,30 @@ const createInstanceHandler = async (req: AuthenticatedRequest, res: Response) =
       return res.status(400).json({ success: false, error: 'El nombre de esta instancia ya está en uso. Elige otro.' });
     }
 
-    // 3. Crear la instancia en el motor de Evolution API
-    console.log(`[Create] PASO 4 — Llamando a Evolution API para crear ${instanceName}`);
-    const evoResult = await EvolutionService.createInstance(instanceName);
-    console.log(`[Create] PASO 4 result — success=${evoResult.success} error=${evoResult.error}`);
+    // 3. Resolver motor solicitado (default: evolution_api)
+    const targetEngine: EngineType = (engineType === 'evolution_go' && process.env.EVOLUTION_GO_ENABLED === 'true')
+      ? 'evolution_go'
+      : 'evolution_api';
 
-    if (!evoResult.success || !evoResult.instance) {
-      const statusCode = evoResult.status || 500;
-      return res.status(statusCode).json({ success: false, error: evoResult.error || 'Error al crear la instancia en Evolution API' });
+    console.log(`[Create] PASO 4 — Creando instancia en motor ${targetEngine} para ${instanceName}`);
+    const engine = engineRouter.getEngineByType(targetEngine);
+    const evoResult = await engine.createInstance(instanceName);
+    console.log(`[Create] PASO 4 result — success=${evoResult.success}`);
+
+    if (!evoResult.success || !evoResult.data?.token) {
+      const statusCode = evoResult.error?.statusCode || 500;
+      return res.status(statusCode).json({ success: false, error: evoResult.error?.message || 'Error al crear la instancia en el motor de WhatsApp' });
     }
 
     // 4. Guardar la instancia en la base de datos de Zaza
-    console.log(`[Create] PASO 5 — Guardando instancia en BD`);
+    console.log(`[Create] PASO 5 — Guardando instancia en BD con engine_type=${targetEngine}`);
     const instanceId = generateId('inst');
-    const apiKey = evoResult.instance.token;
+    const apiKey = evoResult.data.token;
 
     await pool.query(`
-      INSERT INTO instances (id, user_id, instance_name, status, api_key)
-      VALUES ($1, $2, $3, $4, $5)
-    `, [instanceId, req.userId, instanceName, 'disconnected', apiKey]);
+      INSERT INTO instances (id, user_id, instance_name, status, api_key, engine_type)
+      VALUES ($1, $2, $3, $4, $5, $6)
+    `, [instanceId, req.userId, instanceName, 'disconnected', apiKey, targetEngine]);
 
     console.log(`[Create] ÉXITO — Instancia ${instanceName} creada correctamente`);
 
@@ -93,13 +99,13 @@ const createInstanceHandler = async (req: AuthenticatedRequest, res: Response) =
         id: instanceId,
         instance_name: instanceName,
         status: 'disconnected',
-        api_key: apiKey
+        api_key: apiKey,
+        engine_type: targetEngine
       }
     });
 
   } catch (error: any) {
     console.error('[Create] ERROR en POST /create:', error.message);
-    console.error('[Create] STACK:', error.stack);
     res.status(500).json({ success: false, error: `Error en el servidor: ${error.message}` });
   }
 };
@@ -113,16 +119,17 @@ router.post('/', authMiddleware, createInstanceHandler);
 const getInstancesListHandler = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const instancesRes = await pool.query(
-      'SELECT id, instance_name, phone, status, api_key, created_at FROM instances WHERE user_id = $1 ORDER BY created_at DESC',
+      'SELECT id, instance_name, phone, status, api_key, engine_type, created_at FROM instances WHERE user_id = $1 ORDER BY created_at DESC',
       [req.userId]
     );
     const dbInstances = instancesRes.rows;
 
-    // Auto-sincronizar el estado de conexión con Evolution API en segundo plano o paralelo rápido
+    // Auto-sincronizar el estado de conexión con el motor en segundo plano o paralelo
     const updatedInstances = await Promise.all(dbInstances.map(async (inst) => {
       try {
-        const state = await EvolutionService.getConnectionState(inst.instance_name);
-        const actualStatus = state === 'open' ? 'connected' : 'disconnected';
+        const engine = await engineRouter.getEngineForInstance(inst.instance_name);
+        const stateRes = await engine.getConnectionState(inst.instance_name);
+        const actualStatus = stateRes.data?.isConnected ? 'connected' : 'disconnected';
         
         if (inst.status !== actualStatus) {
           console.log(`🔄 [InstanceList] Sincronizando estado de "${inst.instance_name}": ${inst.status} -> ${actualStatus}`);
@@ -164,16 +171,17 @@ const getQrHandler = async (req: AuthenticatedRequest, res: Response) => {
       return res.status(403).json({ success: false, error: 'Acceso no autorizado a esta instancia.' });
     }
 
-    // Solicitar el QR a Evolution API
-    const qrRes = await EvolutionService.getQRCode(instanceName);
-    if (!qrRes.success || !qrRes.qrcode) {
-      return res.status(500).json({ success: false, error: qrRes.error || 'Error al obtener código QR.' });
+    // Solicitar el QR al motor asignado
+    const engine = await engineRouter.getEngineForInstance(instanceName);
+    const qrRes = await engine.getQRCode(instanceName);
+    if (!qrRes.success || !qrRes.data?.qrcode) {
+      return res.status(500).json({ success: false, error: qrRes.error?.message || 'Error al obtener código QR.' });
     }
 
     res.json({
       success: true,
-      qrcode: qrRes.qrcode,
-      base64: qrRes.qrcode
+      qrcode: qrRes.data.qrcode,
+      base64: qrRes.data.qrcode
     });
 
   } catch (error: any) {
@@ -196,12 +204,13 @@ const logoutHandler = async (req: AuthenticatedRequest, res: Response) => {
       return res.status(403).json({ success: false, error: 'Acceso no autorizado.' });
     }
 
-    const success = await EvolutionService.logout(instanceName);
-    if (success) {
+    const engine = await engineRouter.getEngineForInstance(instanceName);
+    const outRes = await engine.logout(instanceName);
+    if (outRes.success) {
       await pool.query('UPDATE instances SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE instance_name = $2', ['disconnected', instanceName]);
       return res.json({ success: true, message: 'Sesión cerrada exitosamente.' });
     }
-    res.status(500).json({ success: false, error: 'No se pudo cerrar la sesión en Evolution API.' });
+    res.status(500).json({ success: false, error: outRes.error?.message || 'No se pudo cerrar la sesión en el motor de WhatsApp.' });
 
   } catch (error: any) {
     console.error('[Instance] Error en POST /logout:', error.message);
@@ -222,8 +231,10 @@ const getStatusHandler = async (req: AuthenticatedRequest, res: Response) => {
       return res.status(403).json({ success: false, error: 'Acceso no autorizado.' });
     }
 
-    const state = await EvolutionService.getConnectionState(instanceName);
-    const isConnected = state === 'open' || state === 'connected';
+    const engine = await engineRouter.getEngineForInstance(instanceName);
+    const stateRes = await engine.getConnectionState(instanceName);
+    const isConnected = Boolean(stateRes.data?.isConnected);
+    const state = stateRes.data?.state || (isConnected ? 'connected' : 'disconnected');
 
     if (isConnected && verifyRes.rows[0].status !== 'connected') {
       console.log(`✅ [StatusCheck] Instancia "${instanceName}" vinculada con éxito. Actualizando BD a connected.`);
@@ -259,13 +270,17 @@ const deleteInstanceHandler = async (req: AuthenticatedRequest, res: Response) =
       return res.status(403).json({ success: false, error: 'Acceso no autorizado.' });
     }
 
-    // 1. Eliminar de Evolution API
-    const success = await EvolutionService.deleteInstance(instanceName);
+    // 1. Eliminar del motor asignado
+    const engine = await engineRouter.getEngineForInstance(instanceName);
+    await engine.deleteInstance(instanceName);
 
     // 2. Eliminar de la base de datos de Zaza
     await pool.query('DELETE FROM instances WHERE instance_name = $1', [instanceName]);
 
-    // 3. Limpiar claves de Redis asociadas (contactos y contadores de no leídos)
+    // 3. Invalidar caché en EngineRouter
+    await engineRouter.invalidateCache(instanceName);
+
+    // 4. Limpiar claves de Redis asociadas (contactos y contadores de no leídos)
     try {
       const contactKeys = await redis.keys(`contact:${instanceName}:*`);
       const unreadKeys = await redis.keys(`unread:${instanceName}:*`);

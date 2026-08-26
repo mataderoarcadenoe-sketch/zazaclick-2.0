@@ -451,7 +451,21 @@ router.delete('/users/:id', async (req: AuthenticatedRequest, res) => {
 });
 
 /**
- * GET /instances - Listar todas las instancias del sistema con estado administrativo
+ * GET /engines/health - Estado de salud, latencia y capacidades de todos los motores WhatsApp
+ */
+router.get('/engines/health', async (req: AuthenticatedRequest, res) => {
+  try {
+    const { engineRegistry } = await import('../engines/core/EngineRegistry');
+    const healths = await engineRegistry.healthCheckAll();
+    res.json({ success: true, data: healths });
+  } catch (error: any) {
+    console.error('[AdminEnginesHealth Error]:', error.message);
+    res.status(500).json({ success: false, error: 'Error al consultar estado de los motores de WhatsApp' });
+  }
+});
+
+/**
+ * GET /instances - Listar todas las instancias del sistema con estado administrativo y motor asignado
  */
 router.get('/instances', async (req: AuthenticatedRequest, res) => {
   try {
@@ -462,6 +476,7 @@ router.get('/instances', async (req: AuthenticatedRequest, res) => {
         i.phone, 
         i.status as connection_status, 
         i.is_enabled,
+        i.engine_type,
         i.messages_sent,
         i.last_activity_at,
         i.api_key, 

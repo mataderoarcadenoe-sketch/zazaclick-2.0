@@ -1,0 +1,454 @@
+/**
+ * Adapter Canónico para Evolution Go — Zaza Click 2.0
+ */
+
+import axios, { AxiosInstance } from 'axios';
+import http from 'http';
+import https from 'https';
+import { WhatsAppEngine } from '../contracts/WhatsAppEngine';
+import { EngineType, EngineCapabilities, EngineResult, EngineHealth } from '../contracts/engine.types';
+import {
+  SendTextMessageParams,
+  SendMediaMessageParams,
+  SendAudioMessageParams,
+  SendLocationMessageParams,
+  SendContactMessageParams
+} from '../contracts/message.types';
+import { CircuitBreaker } from '../core/CircuitBreaker';
+import { EvolutionGoMapper } from './EvolutionGoMapper';
+import { validateSafeUrl, normalizeBase64 } from '../../utils/ssrf.util';
+
+export class EvolutionGoEngine implements WhatsAppEngine {
+  public readonly engineType: EngineType = 'evolution_go';
+  public readonly capabilities: EngineCapabilities = {
+    sendText: true,
+    sendMedia: true,
+    sendAudio: true,
+    sendLocation: true,
+    sendContact: true,
+    webhooks: true,
+    groups: false,
+    chatsHistory: false
+  };
+
+  private circuitBreaker: CircuitBreaker;
+  private api: AxiosInstance | null = null;
+
+  constructor() {
+    this.circuitBreaker = new CircuitBreaker('evolution_go', {
+      failureThreshold: 5,
+      cooldownPeriodMs: 30000
+    });
+    this.initHttpClient();
+  }
+
+  private initHttpClient(): void {
+    const url = process.env.EVOLUTION_GO_URL;
+    const key = process.env.EVOLUTION_GO_API_KEY;
+    const timeout = parseInt(process.env.EVOLUTION_GO_TIMEOUT || '10000', 10);
+
+    if (url) {
+      this.api = axios.create({
+        baseURL: url,
+        headers: {
+          'apikey': key || '',
+          'Content-Type': 'application/json'
+        },
+        timeout,
+        httpAgent: new http.Agent({ keepAlive: true, maxSockets: 50 }),
+        httpsAgent: new https.Agent({ keepAlive: true, maxSockets: 50 })
+      });
+    }
+  }
+
+  private getClient(): AxiosInstance {
+    if (!this.api) {
+      this.initHttpClient();
+    }
+    if (!this.api) {
+      throw new Error('[EvolutionGoEngine] EVOLUTION_GO_URL no configurado.');
+    }
+    return this.api;
+  }
+
+  public async createInstance(instanceName: string): Promise<EngineResult<{ token: string; qrcode?: string; instance?: any }>> {
+    const start = Date.now();
+    try {
+      const client = this.getClient();
+      const BACKEND_URL = process.env.BACKEND_URL || 'https://zaza-click-20-production.up.railway.app';
+      const webhookUrl = `${BACKEND_URL}/api/webhooks/whatsapp`;
+
+      // Intentar eliminar la instancia previa en Go por si existía
+      try {
+        await client.delete(`/instance/delete/${instanceName}`);
+      } catch {}
+
+      const response = await client.post('/instance/create', {
+        instanceName,
+        qrcode: true,
+        webhook: webhookUrl
+      });
+
+      const latencyMs = Date.now() - start;
+      const data = response.data;
+      const token = data?.hash || data?.token || data?.instance?.token || data?.instance?.apikey || 'go_token_' + Date.now();
+
+      this.circuitBreaker.recordSuccess();
+      return EvolutionGoMapper.mapSuccess({
+        token,
+        qrcode: data?.qrcode?.base64 || data?.base64,
+        instance: data?.instance || data
+      }, latencyMs);
+    } catch (err: any) {
+      const latencyMs = Date.now() - start;
+      this.circuitBreaker.recordFailure(err);
+      return EvolutionGoMapper.mapFailure(err, latencyMs);
+    }
+  }
+
+  public async deleteInstance(instanceName: string): Promise<EngineResult<boolean>> {
+    const start = Date.now();
+    try {
+      const client = this.getClient();
+      const response = await client.delete(`/instance/delete/${instanceName}`);
+      const latencyMs = Date.now() - start;
+      const success = response.status === 200 || response.status === 204;
+      this.circuitBreaker.recordSuccess();
+      return EvolutionGoMapper.mapSuccess(success, latencyMs);
+    } catch (err: any) {
+      const latencyMs = Date.now() - start;
+      this.circuitBreaker.recordFailure(err);
+      return EvolutionGoMapper.mapFailure(err, latencyMs);
+    }
+  }
+
+  public async getConnectionState(instanceName: string): Promise<EngineResult<{ state: string; isConnected: boolean }>> {
+    const start = Date.now();
+    try {
+      const client = this.getClient();
+      const response = await client.get(`/instance/connectionState/${instanceName}`);
+      const latencyMs = Date.now() - start;
+      const state = response.data?.instance?.state || response.data?.state || 'disconnected';
+      const isConnected = state === 'open' || state === 'connected';
+      this.circuitBreaker.recordSuccess();
+      return EvolutionGoMapper.mapSuccess({ state, isConnected }, latencyMs);
+    } catch (err: any) {
+      const latencyMs = Date.now() - start;
+      return EvolutionGoMapper.mapSuccess({ state: 'disconnected', isConnected: false }, latencyMs);
+    }
+  }
+
+  public async getQRCode(instanceName: string): Promise<EngineResult<{ qrcode: string }>> {
+    const start = Date.now();
+    try {
+      const client = this.getClient();
+      const response = await client.get(`/instance/connect/${instanceName}`);
+      const latencyMs = Date.now() - start;
+      const qrcode = response.data?.qrcode?.base64 || response.data?.base64 || response.data?.qrcode;
+
+      if (qrcode) {
+        this.circuitBreaker.recordSuccess();
+        return EvolutionGoMapper.mapSuccess({ qrcode }, latencyMs);
+      }
+
+      return {
+        success: false,
+        engine: this.engineType,
+        error: {
+          code: 'ENGINE_SEND_FAILED',
+          message: 'No se obtuvo código QR de Evolution Go',
+          isRetryable: true,
+          statusCode: 500
+        },
+        latencyMs
+      };
+    } catch (err: any) {
+      const latencyMs = Date.now() - start;
+      this.circuitBreaker.recordFailure(err);
+      return EvolutionGoMapper.mapFailure(err, latencyMs);
+    }
+  }
+
+  public async logout(instanceName: string): Promise<EngineResult<boolean>> {
+    const start = Date.now();
+    try {
+      const client = this.getClient();
+      const response = await client.delete(`/instance/logout/${instanceName}`);
+      const latencyMs = Date.now() - start;
+      const success = response.status === 200 || response.status === 204;
+      this.circuitBreaker.recordSuccess();
+      return EvolutionGoMapper.mapSuccess(success, latencyMs);
+    } catch (err: any) {
+      const latencyMs = Date.now() - start;
+      this.circuitBreaker.recordFailure(err);
+      return EvolutionGoMapper.mapFailure(err, latencyMs);
+    }
+  }
+
+  public async configureWebhook(instanceName: string, webhookUrl?: string): Promise<EngineResult<boolean>> {
+    const start = Date.now();
+    try {
+      const client = this.getClient();
+      const url = webhookUrl || `${process.env.BACKEND_URL || 'https://zaza-click-20-production.up.railway.app'}/api/webhooks/whatsapp`;
+      const response = await client.post(`/webhook/set/${instanceName}`, { url, enabled: true });
+      const latencyMs = Date.now() - start;
+      return EvolutionGoMapper.mapSuccess(response.status === 200, latencyMs);
+    } catch (err: any) {
+      const latencyMs = Date.now() - start;
+      return EvolutionGoMapper.mapFailure(err, latencyMs);
+    }
+  }
+
+  public async sendTextMessage(params: SendTextMessageParams): Promise<EngineResult> {
+    if (!this.circuitBreaker.canExecute()) {
+      return {
+        success: false,
+        engine: this.engineType,
+        error: {
+          code: 'ENGINE_UNAVAILABLE',
+          message: 'Circuito abierto para Evolution Go debido a fallos continuos de red.',
+          isRetryable: true,
+          statusCode: 503
+        }
+      };
+    }
+
+    const start = Date.now();
+    try {
+      const client = this.getClient();
+      let targetNumber = params.number;
+      if (!targetNumber.includes('@')) {
+        let cleanNumber = targetNumber.replace(/\D/g, '');
+        if (cleanNumber.length === 9 && cleanNumber.startsWith('9')) {
+          cleanNumber = `51${cleanNumber}`;
+        }
+        targetNumber = cleanNumber;
+      }
+
+      const response = await client.post(`/message/sendText/${params.instanceName}`, {
+        number: targetNumber,
+        text: params.text
+      });
+      const latencyMs = Date.now() - start;
+
+      if (response.status === 200 || response.status === 201) {
+        this.circuitBreaker.recordSuccess();
+        const msgId = response.data?.key?.id || response.data?.id || response.data?.messageId;
+        return EvolutionGoMapper.mapSuccess(response.data, latencyMs, msgId);
+      }
+
+      return EvolutionGoMapper.mapFailure(response.data, latencyMs);
+    } catch (err: any) {
+      const latencyMs = Date.now() - start;
+      this.circuitBreaker.recordFailure(err);
+      return EvolutionGoMapper.mapFailure(err, latencyMs);
+    }
+  }
+
+  public async sendMediaMessage(params: SendMediaMessageParams): Promise<EngineResult> {
+    if (!this.circuitBreaker.canExecute()) {
+      return {
+        success: false,
+        engine: this.engineType,
+        error: {
+          code: 'ENGINE_UNAVAILABLE',
+          message: 'Circuito abierto para Evolution Go.',
+          isRetryable: true,
+          statusCode: 503
+        }
+      };
+    }
+
+    const start = Date.now();
+    try {
+      const client = this.getClient();
+      let targetNumber = params.number;
+      if (!targetNumber.includes('@')) {
+        let cleanNumber = targetNumber.replace(/\D/g, '');
+        if (cleanNumber.length === 9 && cleanNumber.startsWith('9')) {
+          cleanNumber = `51${cleanNumber}`;
+        }
+        targetNumber = cleanNumber;
+      }
+
+      let finalMedia = normalizeBase64(params.media);
+
+      if (params.media.startsWith('http://') || params.media.startsWith('https://')) {
+        const ssrfCheck = await validateSafeUrl(params.media);
+        if (!ssrfCheck.safe) {
+          return {
+            success: false,
+            engine: this.engineType,
+            error: {
+              code: 'ENGINE_INVALID_REQUEST',
+              message: `Seguridad SSRF: ${ssrfCheck.error}`,
+              isRetryable: false,
+              statusCode: 400
+            }
+          };
+        }
+      }
+
+      const response = await client.post(`/message/sendMedia/${params.instanceName}`, {
+        number: targetNumber,
+        media: finalMedia,
+        mediatype: params.mediatype,
+        mimetype: params.mimetype,
+        caption: params.caption,
+        fileName: params.fileName
+      });
+      const latencyMs = Date.now() - start;
+
+      if (response.status === 200 || response.status === 201) {
+        this.circuitBreaker.recordSuccess();
+        const msgId = response.data?.key?.id || response.data?.id;
+        return EvolutionGoMapper.mapSuccess(response.data, latencyMs, msgId);
+      }
+
+      return EvolutionGoMapper.mapFailure(response.data, latencyMs);
+    } catch (err: any) {
+      const latencyMs = Date.now() - start;
+      this.circuitBreaker.recordFailure(err);
+      return EvolutionGoMapper.mapFailure(err, latencyMs);
+    }
+  }
+
+  public async sendAudioMessage(params: SendAudioMessageParams): Promise<EngineResult> {
+    // Evolution Go maneja audio PTT a través de sendMedia con mediatype: 'audio'
+    return this.sendMediaMessage({
+      instanceName: params.instanceName,
+      number: params.number,
+      media: params.audio,
+      mediatype: 'audio',
+      mimetype: 'audio/mp4; codecs=opus'
+    });
+  }
+
+  public async sendLocationMessage(params: SendLocationMessageParams): Promise<EngineResult> {
+    const start = Date.now();
+    try {
+      const client = this.getClient();
+      let targetNumber = params.number;
+      if (!targetNumber.includes('@')) {
+        let cleanNumber = targetNumber.replace(/\D/g, '');
+        if (cleanNumber.length === 9 && cleanNumber.startsWith('9')) {
+          cleanNumber = `51${cleanNumber}`;
+        }
+        targetNumber = cleanNumber;
+      }
+
+      const response = await client.post(`/message/sendLocation/${params.instanceName}`, {
+        number: targetNumber,
+        name: params.name,
+        address: params.address,
+        latitude: params.latitude,
+        longitude: params.longitude
+      });
+      const latencyMs = Date.now() - start;
+
+      if (response.status === 200 || response.status === 201) {
+        this.circuitBreaker.recordSuccess();
+        const msgId = response.data?.key?.id || response.data?.id;
+        return EvolutionGoMapper.mapSuccess(response.data, latencyMs, msgId);
+      }
+
+      return EvolutionGoMapper.mapFailure(response.data, latencyMs);
+    } catch (err: any) {
+      const latencyMs = Date.now() - start;
+      this.circuitBreaker.recordFailure(err);
+      return EvolutionGoMapper.mapFailure(err, latencyMs);
+    }
+  }
+
+  public async sendContactMessage(params: SendContactMessageParams): Promise<EngineResult> {
+    const start = Date.now();
+    try {
+      const client = this.getClient();
+      let targetNumber = params.number;
+      if (!targetNumber.includes('@')) {
+        let cleanNumber = targetNumber.replace(/\D/g, '');
+        if (cleanNumber.length === 9 && cleanNumber.startsWith('9')) {
+          cleanNumber = `51${cleanNumber}`;
+        }
+        targetNumber = cleanNumber;
+      }
+
+      const response = await client.post(`/message/sendContact/${params.instanceName}`, {
+        number: targetNumber,
+        contact: params.contact
+      });
+      const latencyMs = Date.now() - start;
+
+      if (response.status === 200 || response.status === 201) {
+        this.circuitBreaker.recordSuccess();
+        const msgId = response.data?.key?.id || response.data?.id;
+        return EvolutionGoMapper.mapSuccess(response.data, latencyMs, msgId);
+      }
+
+      return EvolutionGoMapper.mapFailure(response.data, latencyMs);
+    } catch (err: any) {
+      const latencyMs = Date.now() - start;
+      this.circuitBreaker.recordFailure(err);
+      return EvolutionGoMapper.mapFailure(err, latencyMs);
+    }
+  }
+
+  public async healthCheck(): Promise<EngineHealth> {
+    const isEnabled = process.env.EVOLUTION_GO_ENABLED === 'true';
+    const isConfigured = Boolean(process.env.EVOLUTION_GO_URL && process.env.EVOLUTION_GO_API_KEY);
+
+    if (!isEnabled) {
+      return {
+        engine: this.engineType,
+        status: 'DISABLED',
+        latencyMs: 0,
+        configured: isConfigured,
+        lastCheck: new Date().toISOString(),
+        capabilities: this.capabilities,
+        error: 'Evolution Go está deshabilitado en configuración (EVOLUTION_GO_ENABLED=false).'
+      };
+    }
+
+    if (!isConfigured) {
+      return {
+        engine: this.engineType,
+        status: 'NOT_CONFIGURED',
+        latencyMs: 0,
+        configured: false,
+        lastCheck: new Date().toISOString(),
+        capabilities: this.capabilities,
+        error: 'EVOLUTION_GO_URL o EVOLUTION_GO_API_KEY no definidos.'
+      };
+    }
+
+    const start = Date.now();
+    try {
+      const client = this.getClient();
+      const response = await client.get('/health', { timeout: 4000 });
+      const latencyMs = Date.now() - start;
+
+      return {
+        engine: this.engineType,
+        status: response.status === 200 ? 'ONLINE' : 'DEGRADED',
+        latencyMs,
+        version: response.data?.version || '1.0.0',
+        configured: true,
+        lastCheck: new Date().toISOString(),
+        capabilities: this.capabilities
+      };
+    } catch (err: any) {
+      const latencyMs = Date.now() - start;
+      return {
+        engine: this.engineType,
+        status: 'OFFLINE',
+        latencyMs,
+        configured: true,
+        lastCheck: new Date().toISOString(),
+        capabilities: this.capabilities,
+        error: err.message
+      };
+    }
+  }
+}
+
+export const evolutionGoEngine = new EvolutionGoEngine();

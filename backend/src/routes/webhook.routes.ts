@@ -1,12 +1,12 @@
 import { Router, Response } from 'express';
 import { webhookQueue } from '../queues/webhookQueue';
-import { EvolutionService } from '../services/evolution.service';
 import { licensingMiddleware, LicensedRequest } from '../middleware/licensing.middleware';
+import { engineRouter } from '../engines/core/EngineRouter';
 
 const router = Router();
 
 /**
- * POST /api/webhooks/whatsapp - Recibir eventos de Evolution API 2.4.0-rc2 y encolarlos asíncronamente en Redis
+ * POST /api/webhooks/whatsapp - Recibir eventos de WhatsApp y encolarlos asíncronamente en Redis
  */
 router.post(['/whatsapp', '/whatsapp/:event'], async (req, res) => {
   let { event, instance, data } = req.body;
@@ -47,10 +47,11 @@ router.post('/send-text', licensingMiddleware, async (req: LicensedRequest, res:
   }
 
   try {
-    const sentResult = await EvolutionService.sendTextMessage(instanceName, number, text);
+    const engine = await engineRouter.getEngineForInstance(instanceName);
+    const sentResult = await engine.sendTextMessage({ instanceName, number, text });
 
     if (sentResult.success) {
-      const msgId = sentResult.data?.key?.id;
+      const msgId = sentResult.messageId || sentResult.data?.key?.id;
       await ctx.confirmSuccess('text', msgId, {
         success: true,
         message: 'Mensaje de texto enviado exitosamente a WhatsApp.',
@@ -64,13 +65,14 @@ router.post('/send-text', licensingMiddleware, async (req: LicensedRequest, res:
       });
     }
 
-    // Rollback si Evolution rechazó el mensaje
-    await ctx.rollback('text', sentResult.error || 'EVOLUTION_SEND_FAILED');
-    return res.status(502).json({
+    // Rollback si el motor rechazó el mensaje
+    const errorReason = sentResult.error?.message || 'ENGINE_SEND_FAILED';
+    await ctx.rollback('text', errorReason);
+    return res.status(sentResult.error?.statusCode || 502).json({
       success: false,
-      code: 'SEND_FAILED',
-      message: sentResult.error || 'Error al enviar mensaje de texto en WhatsApp.',
-      details: sentResult.details
+      code: sentResult.error?.code || 'SEND_FAILED',
+      message: sentResult.error?.message || 'Error al enviar mensaje de texto en WhatsApp.',
+      details: sentResult.error?.details
     });
   } catch (error: any) {
     console.error('❌ [SendText Error]:', error.message);
@@ -110,7 +112,8 @@ router.post('/send-media', licensingMiddleware, async (req: LicensedRequest, res
   }
 
   try {
-    const sentResult = await EvolutionService.sendMediaMessage(
+    const engine = await engineRouter.getEngineForInstance(instanceName);
+    const sentResult = await engine.sendMediaMessage({
       instanceName,
       number,
       media,
@@ -118,10 +121,10 @@ router.post('/send-media', licensingMiddleware, async (req: LicensedRequest, res
       mimetype,
       caption,
       fileName
-    );
+    });
 
     if (sentResult.success) {
-      const msgId = sentResult.data?.key?.id;
+      const msgId = sentResult.messageId || sentResult.data?.key?.id;
       await ctx.confirmSuccess(mediatype, msgId, {
         success: true,
         message: `Mensaje multimedia (${mediatype}) enviado exitosamente a WhatsApp.`,
@@ -135,16 +138,17 @@ router.post('/send-media', licensingMiddleware, async (req: LicensedRequest, res
       });
     }
 
-    await ctx.rollback(mediatype, sentResult.error || 'EVOLUTION_MEDIA_FAILED');
-    return res.status(502).json({
+    const errorReason = sentResult.error?.message || 'ENGINE_MEDIA_FAILED';
+    await ctx.rollback(mediatype, errorReason);
+    return res.status(sentResult.error?.statusCode || 502).json({
       success: false,
-      code: 'SEND_FAILED',
-      message: sentResult.error || 'Error al enviar archivo multimedia en WhatsApp.',
-      details: sentResult.details
+      code: sentResult.error?.code || 'SEND_FAILED',
+      message: sentResult.error?.message || 'Error al enviar archivo multimedia en WhatsApp.',
+      details: sentResult.error?.details
     });
   } catch (error: any) {
     console.error('❌ [SendMedia Error]:', error.message);
-    await ctx.rollback('media', error.message);
+    await ctx.rollback(mediatype, error.message);
     res.status(500).json({
       success: false,
       code: 'INTERNAL_ERROR',
@@ -170,10 +174,11 @@ router.post('/send-audio', licensingMiddleware, async (req: LicensedRequest, res
   }
 
   try {
-    const sentResult = await EvolutionService.sendWhatsAppAudio(instanceName, number, audio);
+    const engine = await engineRouter.getEngineForInstance(instanceName);
+    const sentResult = await engine.sendAudioMessage({ instanceName, number, audio });
 
     if (sentResult.success) {
-      const msgId = sentResult.data?.key?.id;
+      const msgId = sentResult.messageId || sentResult.data?.key?.id;
       await ctx.confirmSuccess('audio_ptt', msgId, {
         success: true,
         message: 'Nota de voz PTT enviada exitosamente a WhatsApp.',
@@ -187,12 +192,13 @@ router.post('/send-audio', licensingMiddleware, async (req: LicensedRequest, res
       });
     }
 
-    await ctx.rollback('audio_ptt', sentResult.error || 'EVOLUTION_AUDIO_FAILED');
-    return res.status(502).json({
+    const errorReason = sentResult.error?.message || 'ENGINE_AUDIO_FAILED';
+    await ctx.rollback('audio_ptt', errorReason);
+    return res.status(sentResult.error?.statusCode || 502).json({
       success: false,
-      code: 'SEND_FAILED',
-      message: sentResult.error || 'Error al enviar nota de voz en WhatsApp.',
-      details: sentResult.details
+      code: sentResult.error?.code || 'SEND_FAILED',
+      message: sentResult.error?.message || 'Error al enviar nota de voz en WhatsApp.',
+      details: sentResult.error?.details
     });
   } catch (error: any) {
     console.error('❌ [SendAudio Error]:', error.message);
@@ -234,10 +240,18 @@ router.post('/send-location', licensingMiddleware, async (req: LicensedRequest, 
   }
 
   try {
-    const sentResult = await EvolutionService.sendLocation(instanceName, number, name, address, lat, lon);
+    const engine = await engineRouter.getEngineForInstance(instanceName);
+    const sentResult = await engine.sendLocationMessage({
+      instanceName,
+      number,
+      name,
+      address,
+      latitude: lat,
+      longitude: lon
+    });
 
     if (sentResult.success) {
-      const msgId = sentResult.data?.key?.id;
+      const msgId = sentResult.messageId || sentResult.data?.key?.id;
       await ctx.confirmSuccess('location', msgId, {
         success: true,
         message: 'Ubicación geográfica enviada exitosamente a WhatsApp.',
@@ -251,12 +265,13 @@ router.post('/send-location', licensingMiddleware, async (req: LicensedRequest, 
       });
     }
 
-    await ctx.rollback('location', sentResult.error || 'EVOLUTION_LOCATION_FAILED');
-    return res.status(502).json({
+    const errorReason = sentResult.error?.message || 'ENGINE_LOCATION_FAILED';
+    await ctx.rollback('location', errorReason);
+    return res.status(sentResult.error?.statusCode || 502).json({
       success: false,
-      code: 'SEND_FAILED',
-      message: sentResult.error || 'Error al enviar ubicación en WhatsApp.',
-      details: sentResult.details
+      code: sentResult.error?.code || 'SEND_FAILED',
+      message: sentResult.error?.message || 'Error al enviar ubicación en WhatsApp.',
+      details: sentResult.error?.details
     });
   } catch (error: any) {
     console.error('❌ [SendLocation Error]:', error.message);
@@ -286,10 +301,15 @@ router.post('/send-contact', licensingMiddleware, async (req: LicensedRequest, r
   }
 
   try {
-    const sentResult = await EvolutionService.sendContact(instanceName, number, contact);
+    const engine = await engineRouter.getEngineForInstance(instanceName);
+    const sentResult = await engine.sendContactMessage({
+      instanceName,
+      number,
+      contact
+    });
 
     if (sentResult.success) {
-      const msgId = sentResult.data?.key?.id;
+      const msgId = sentResult.messageId || sentResult.data?.key?.id;
       await ctx.confirmSuccess('contact', msgId, {
         success: true,
         message: 'Contacto vCard enviado exitosamente a WhatsApp.',
@@ -303,12 +323,13 @@ router.post('/send-contact', licensingMiddleware, async (req: LicensedRequest, r
       });
     }
 
-    await ctx.rollback('contact', sentResult.error || 'EVOLUTION_CONTACT_FAILED');
-    return res.status(502).json({
+    const errorReason = sentResult.error?.message || 'ENGINE_CONTACT_FAILED';
+    await ctx.rollback('contact', errorReason);
+    return res.status(sentResult.error?.statusCode || 502).json({
       success: false,
-      code: 'SEND_FAILED',
-      message: sentResult.error || 'Error al enviar contacto en WhatsApp.',
-      details: sentResult.details
+      code: sentResult.error?.code || 'SEND_FAILED',
+      message: sentResult.error?.message || 'Error al enviar contacto en WhatsApp.',
+      details: sentResult.error?.details
     });
   } catch (error: any) {
     console.error('❌ [SendContact Error]:', error.message);
