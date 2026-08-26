@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import api from '../services/api';
 import {
   Key, Activity, Radio, BarChart3, Terminal, Shield, RefreshCw,
@@ -695,9 +696,9 @@ export const DeveloperPortal: React.FC<DeveloperPortalProps> = ({
       )}
 
       {/* Modal Nueva API Key */}
-      {newKeyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-fadeIn">
-          <div className="relative bg-white dark:bg-[#0E1524] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-7 max-w-lg w-full text-left shadow-2xl shadow-black/50 space-y-5 overflow-hidden">
+      {newKeyModal && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/60 dark:bg-black/75 backdrop-blur-md animate-fadeIn">
+          <div className="relative bg-white dark:bg-[#0E1524] border border-slate-200/90 dark:border-slate-800 rounded-3xl p-6 sm:p-7 max-w-lg w-full text-left shadow-2xl shadow-black/40 dark:shadow-black/70 space-y-5 overflow-hidden">
             <div className="flex items-center justify-between pb-1 border-b border-slate-100 dark:border-slate-800/80">
               <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
@@ -741,7 +742,7 @@ export const DeveloperPortal: React.FC<DeveloperPortalProps> = ({
                     >
                       <div className="flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                        <span>🟢 Live (Producción)</span>
+                        <span>Live (Producción)</span>
                       </div>
                       <div className="text-[10px] font-normal text-slate-400 mt-1 font-mono">Prefijo zc_live_</div>
                     </button>
@@ -755,8 +756,8 @@ export const DeveloperPortal: React.FC<DeveloperPortalProps> = ({
                       }`}
                     >
                       <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                        <span>🧪 Test (Sandbox)</span>
+                        <FlaskConical size={13} className="text-amber-500" />
+                        <span>Test (Sandbox)</span>
                       </div>
                       <div className="text-[10px] font-normal text-slate-400 mt-1 font-mono">Prefijo zc_test_</div>
                     </button>
@@ -792,14 +793,15 @@ export const DeveloperPortal: React.FC<DeveloperPortalProps> = ({
 
                 <button
                   onClick={() => setNewKeyModal(false)}
-                  className="w-full py-2.5 bg-slate-900 text-white hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 rounded-xl text-xs font-bold cursor-pointer transition-all shadow-md"
+                  className="w-full py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-xs font-bold transition-all cursor-pointer"
                 >
-                  He guardado mi clave de forma segura
+                  Listo, Guardé mi Clave
                 </button>
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ==================================================== */}
@@ -949,9 +951,9 @@ export const DeveloperPortal: React.FC<DeveloperPortalProps> = ({
           </div>
 
           {/* Drawer Detalle de Log */}
-          {selectedLog && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-fadeIn">
-              <div className="relative bg-white dark:bg-[#0E1524] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-7 max-w-2xl w-full text-left shadow-2xl shadow-black/50 space-y-5 max-h-[85vh] overflow-y-auto">
+          {selectedLog && createPortal(
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/60 dark:bg-black/75 backdrop-blur-md animate-fadeIn">
+              <div className="relative bg-white dark:bg-[#0E1524] border border-slate-200/90 dark:border-slate-800 rounded-3xl p-6 sm:p-7 max-w-2xl w-full text-left shadow-2xl shadow-black/40 dark:shadow-black/70 space-y-5 max-h-[85vh] overflow-y-auto">
                 <div className="flex items-center justify-between pb-1 border-b border-slate-100 dark:border-slate-800/80">
                   <div className="flex items-center gap-2.5 flex-wrap">
                     <span className="px-2.5 py-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl font-mono font-bold text-xs">
@@ -1014,7 +1016,8 @@ export const DeveloperPortal: React.FC<DeveloperPortalProps> = ({
                   </pre>
                 </div>
               </div>
-            </div>
+            </div>,
+            document.body
           )}
         </div>
       )}
@@ -1091,9 +1094,9 @@ export const DeveloperPortal: React.FC<DeveloperPortalProps> = ({
       )}
 
       {/* Modal Enviar Test Webhook */}
-      {testWebhookModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-fadeIn">
-          <div className="relative bg-white dark:bg-[#0E1524] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-7 max-w-lg w-full text-left shadow-2xl shadow-black/50 space-y-5 overflow-hidden">
+      {testWebhookModal && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/60 dark:bg-black/75 backdrop-blur-md animate-fadeIn">
+          <div className="relative bg-white dark:bg-[#0E1524] border border-slate-200/90 dark:border-slate-800 rounded-3xl p-6 sm:p-7 max-w-lg w-full text-left shadow-2xl shadow-black/40 dark:shadow-black/70 space-y-5 overflow-hidden">
             <div className="flex items-center justify-between pb-1 border-b border-slate-100 dark:border-slate-800/80">
               <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
@@ -1166,7 +1169,8 @@ export const DeveloperPortal: React.FC<DeveloperPortalProps> = ({
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ==================================================== */}

@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { AlertTriangle, Trash2, ShieldAlert, CheckCircle2, Info, X, Loader2 } from 'lucide-react';
 
 export type ConfirmationType = 'danger' | 'warning' | 'info' | 'success';
@@ -69,15 +70,15 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
   const currentConfig = typeConfig[type];
 
-  return (
+  return createPortal(
     <div 
-      className="fixed inset-0 z-[9990] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-fadeIn"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/60 dark:bg-black/75 backdrop-blur-md animate-fadeIn"
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-modal-title"
     >
       <div 
-        className="relative bg-white dark:bg-[#0E1524] border border-slate-200 dark:border-slate-800/90 rounded-3xl p-6 sm:p-7 max-w-md w-full text-left shadow-2xl shadow-black/40 overflow-hidden transition-all transform scale-100"
+        className="relative bg-white dark:bg-[#0E1524] border border-slate-200/90 dark:border-slate-800/90 rounded-3xl p-6 sm:p-7 max-w-md w-full text-left shadow-2xl shadow-black/40 dark:shadow-black/70 overflow-hidden transition-all transform scale-100"
       >
         {/* Glow de fondo */}
         <div className={`absolute -top-14 -right-14 w-36 h-36 rounded-full blur-3xl opacity-20 pointer-events-none ${
@@ -150,6 +151,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

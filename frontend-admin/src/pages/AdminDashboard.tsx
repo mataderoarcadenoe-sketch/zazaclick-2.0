@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../services/authContext';
 import { 
   Users, Smartphone, Settings, LogOut, 
@@ -1096,10 +1097,10 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* MODAL CREAR CLIENTE */}
-      {createUserModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-2xl animate-fadeIn">
-          <div className="surface-elevated rounded-3xl p-7 sm:p-8 max-w-md w-full text-left space-y-5">
-            <div className="flex items-center justify-between pb-2">
+      {createUserModal && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/60 dark:bg-black/75 backdrop-blur-md animate-fadeIn">
+          <div className="relative bg-white dark:bg-[#0E1524] border border-slate-200/90 dark:border-slate-800 rounded-3xl p-7 sm:p-8 max-w-md w-full text-left space-y-5 shadow-2xl shadow-black/40 dark:shadow-black/70">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800/80">
               <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">Crear Nuevo Cliente</h3>
               <button onClick={() => setCreateUserModal(false)} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg cursor-pointer"><X size={16} /></button>
             </div>
@@ -1165,14 +1166,15 @@ export default function AdminDashboardPage() {
               </button>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* MODAL EDITAR SUSCRIPCIÓN / LICENCIA */}
-      {editSubscriptionModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-2xl animate-fadeIn">
-          <div className="surface-elevated rounded-3xl p-7 sm:p-8 max-w-md w-full text-left space-y-5">
-            <div className="flex items-center justify-between pb-2">
+      {editSubscriptionModal.open && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/60 dark:bg-black/75 backdrop-blur-md animate-fadeIn">
+          <div className="relative bg-white dark:bg-[#0E1524] border border-slate-200/90 dark:border-slate-800 rounded-3xl p-7 sm:p-8 max-w-md w-full text-left space-y-5 shadow-2xl shadow-black/40 dark:shadow-black/70">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800/80">
               <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">Modificar Licencia y Cuota</h3>
               <button onClick={() => setEditSubscriptionModal({ open: false, user: null })} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg cursor-pointer"><X size={16} /></button>
             </div>
@@ -1240,14 +1242,15 @@ export default function AdminDashboardPage() {
               </button>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* MODAL REGISTRAR PAGO */}
-      {recordPaymentModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-2xl animate-fadeIn">
-          <div className="surface-elevated rounded-3xl p-7 sm:p-8 max-w-md w-full text-left space-y-5">
-            <div className="flex items-center justify-between pb-2">
+      {recordPaymentModal.open && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/60 dark:bg-black/75 backdrop-blur-md animate-fadeIn">
+          <div className="relative bg-white dark:bg-[#0E1524] border border-slate-200/90 dark:border-slate-800 rounded-3xl p-7 sm:p-8 max-w-md w-full text-left space-y-5 shadow-2xl shadow-black/40 dark:shadow-black/70">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800/80">
               <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">Registrar Pago y Renovar</h3>
               <button onClick={() => setRecordPaymentModal({ open: false, user: null })} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg cursor-pointer"><X size={16} /></button>
             </div>
@@ -1327,14 +1330,15 @@ export default function AdminDashboardPage() {
               </button>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* MODAL PLANES (CREAR / EDITAR) */}
-      {planModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-2xl animate-fadeIn">
-          <div className="surface-elevated rounded-3xl p-7 sm:p-8 max-w-md w-full text-left space-y-5">
-            <div className="flex items-center justify-between pb-2">
+      {planModal.open && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/60 dark:bg-black/75 backdrop-blur-md animate-fadeIn">
+          <div className="relative bg-white dark:bg-[#0E1524] border border-slate-200/90 dark:border-slate-800 rounded-3xl p-7 sm:p-8 max-w-md w-full text-left space-y-5 shadow-2xl shadow-black/40 dark:shadow-black/70">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800/80">
               <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
                 {planModal.plan?.id ? 'Editar Plan' : 'Crear Plan'}
               </h3>
@@ -1409,7 +1413,8 @@ export default function AdminDashboardPage() {
               </button>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Modal de Confirmación Premium */}

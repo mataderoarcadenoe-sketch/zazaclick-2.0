@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { Loader2, CheckCircle2, AlertCircle, Clock, RefreshCw, X } from 'lucide-react';
 
 export interface AsyncStep {
@@ -37,13 +38,13 @@ export const AsyncOperationModal: React.FC<AsyncOperationModalProps> = ({
 
   const isDone = status === 'success' || status === 'error' || status === 'timeout';
 
-  return (
+  return createPortal(
     <div 
       aria-live="polite"
       aria-busy={!isDone}
-      className="fixed inset-0 z-[9995] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fadeIn"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/60 dark:bg-black/75 backdrop-blur-md animate-fadeIn"
     >
-      <div className="bg-white dark:bg-[#0D131F] rounded-3xl p-6 sm:p-8 max-w-md w-full text-left space-y-6 transition-all">
+      <div className="bg-white dark:bg-[#0E1524] border border-slate-200/90 dark:border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full text-left space-y-6 transition-all shadow-2xl shadow-black/40 dark:shadow-black/70">
         
         {/* Encabezado con Icono de Estado */}
         <div className="flex items-start justify-between">
@@ -179,6 +180,7 @@ export const AsyncOperationModal: React.FC<AsyncOperationModalProps> = ({
         )}
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
