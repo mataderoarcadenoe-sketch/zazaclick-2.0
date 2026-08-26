@@ -1,30 +1,36 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '../services/authContext';
-import { 
-  ShieldCheck, Zap, Moon, Sun, Smartphone, 
-  CheckCircle2, Lock, Loader2, Server, Terminal, ArrowRight, ShieldAlert, Cpu
-} from 'lucide-react';
 import { useDarkMode } from '../hooks/useDarkMode';
 import api from '../services/api';
+import { 
+  Smartphone, ShieldAlert, Loader2, Moon, Sun, Lock, 
+  Terminal, Server, Cpu, ArrowRight, Zap, ShieldCheck, CheckCircle2
+} from 'lucide-react';
 
 declare global {
   interface Window {
-    google: any;
+    google?: any;
   }
 }
 
-export default function AuthPage() {
+export default function Auth() {
   const { refreshUser } = useAuth();
+  const { isDark, toggle: toggleDark } = useDarkMode();
   const [error, setError] = useState<string | null>(null);
   const [loadingGoogle, setLoadingGoogle] = useState(true);
   const [authenticating, setAuthenticating] = useState(false);
-  const { isDark, toggle: toggleDark } = useDarkMode();
   const googleBtnRef = useRef<HTMLDivElement>(null);
 
-  const handleGoogleLoginResponse = useCallback(async (response: any) => {
-    setError(null);
-    setAuthenticating(true);
+  const GOOGLE_CLIENT_ID = '6104299697-7dissi3tuvd84q94737nqmsi96nmh2d5.apps.googleusercontent.com';
+
+  const handleGoogleCallback = useCallback(async (response: any) => {
     try {
+      if (!response.credential) {
+        setError('No se recibió la credencial de Google.');
+        return;
+      }
+      setAuthenticating(true);
+      setError(null);
       const res = await api.post('/auth/google-login', { credential: response.credential });
       if (res.data?.success && res.data?.token) {
         localStorage.setItem('saas_auth_token', res.data.token);
@@ -33,7 +39,7 @@ export default function AuthPage() {
         setError(res.data?.error || 'No se pudo iniciar sesión con Google.');
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Error en la autenticación con Google. Inténtalo nuevamente.');
+      setError(err.response?.data?.error || 'Error al iniciar sesión con Google.');
     } finally {
       setAuthenticating(false);
     }
@@ -41,76 +47,72 @@ export default function AuthPage() {
 
   const renderGoogleButton = useCallback(() => {
     if (!window.google || !googleBtnRef.current) return;
-
+    
     try {
       window.google.accounts.id.initialize({
-        client_id: '6104299697-7dissi3tuvd84q94737nqmsi96nmh2d5.apps.googleusercontent.com',
-        callback: handleGoogleLoginResponse,
-        auto_select: false
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleCallback,
+        auto_select: false,
+        cancel_on_tap_outside: true,
       });
 
-      // Limpiar render previo
       googleBtnRef.current.innerHTML = '';
 
-      window.google.accounts.id.renderButton(
-        googleBtnRef.current,
-        { 
-          type: 'standard',
-          theme: isDark ? 'filled_black' : 'outline', 
-          size: 'large', 
-          width: '320',
-          text: 'signin_with',
-          shape: 'pill',
-          logo_alignment: 'left'
-        }
-      );
+      window.google.accounts.id.renderButton(googleBtnRef.current, {
+        theme: isDark ? 'filled_black' : 'outline',
+        size: 'large',
+        type: 'standard',
+        text: 'signin_with',
+        shape: 'pill',
+        logo_alignment: 'left',
+        width: 320,
+      });
+
       setLoadingGoogle(false);
     } catch (err) {
-      console.warn('Error al renderizar botón de Google:', err);
+      console.warn('Error inicializando Google Button:', err);
     }
-  }, [isDark, handleGoogleLoginResponse]);
+  }, [isDark, handleGoogleCallback]);
 
-  // Cargar Google SDK una sola vez de forma controlada
   useEffect(() => {
+    const existingScript = document.getElementById('google-gsi-client');
+    
     if (window.google) {
       renderGoogleButton();
-      return;
-    }
-
-    const SCRIPT_ID = 'google-gsi-client';
-    let script = document.getElementById(SCRIPT_ID) as HTMLScriptElement;
-
-    if (!script) {
-      script = document.createElement('script');
-      script.id = SCRIPT_ID;
+    } else if (!existingScript) {
+      const script = document.createElement('script');
+      script.id = 'google-gsi-client';
       script.src = 'https://accounts.google.com/gsi/client';
       script.async = true;
       script.defer = true;
       script.onload = () => {
         renderGoogleButton();
       };
-      document.body.appendChild(script);
-    } else {
-      script.addEventListener('load', renderGoogleButton);
-      return () => {
-        script.removeEventListener('load', renderGoogleButton);
+      script.onerror = () => {
+        setLoadingGoogle(false);
+        setError('No se pudo cargar el SDK de Google Sign-In.');
       };
+      document.head.appendChild(script);
+    } else {
+      existingScript.addEventListener('load', () => {
+        renderGoogleButton();
+      });
     }
   }, [renderGoogleButton]);
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center p-4 sm:p-6 lg:p-10 bg-[#F8FAFC] dark:bg-[#070B12] text-slate-900 dark:text-white overflow-hidden transition-colors duration-300 font-sans bg-grid-tech selection:bg-emerald-500 selection:text-white">
+    <div className="min-h-screen relative flex items-center justify-center p-4 sm:p-6 lg:p-10 bg-[#F8FAFC] dark:bg-[#070B12] text-slate-900 dark:text-white overflow-hidden transition-colors duration-250 font-sans bg-grid-tech selection:bg-emerald-500 selection:text-white">
       
-      {/* Layer 2: Multi-point Radial Glow Lighting Nodes */}
-      <div className="absolute -top-48 -left-48 w-[650px] h-[650px] rounded-full bg-emerald-500/12 dark:bg-emerald-500/18 blur-[160px] pointer-events-none animate-pulse-glow" />
-      <div className="absolute -bottom-48 -right-48 w-[650px] h-[650px] rounded-full bg-teal-500/12 dark:bg-teal-500/18 blur-[160px] pointer-events-none animate-pulse-glow" />
+      {/* Ambient Glow Lighting Nodes (Pure Surface Lights) */}
+      <div className="absolute -top-48 -left-48 w-[650px] h-[650px] rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 blur-[160px] pointer-events-none animate-pulse-glow" />
+      <div className="absolute -bottom-48 -right-48 w-[650px] h-[650px] rounded-full bg-teal-500/10 dark:bg-teal-500/15 blur-[160px] pointer-events-none animate-pulse-glow" />
       <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-cyan-500/5 dark:bg-cyan-500/8 blur-[180px] pointer-events-none" />
 
       {/* Floating Theme Button */}
       <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-50">
         <button
           onClick={toggleDark}
-          className="p-3 bg-white/90 dark:bg-[#111827]/90 backdrop-blur-md rounded-2xl border border-slate-200/90 dark:border-slate-800/90 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all shadow-sm text-slate-600 dark:text-slate-300 cursor-pointer active:scale-95 flex items-center gap-2"
+          className="p-3 bg-white dark:bg-[#111827] rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-300 cursor-pointer active:scale-95 flex items-center gap-2"
           aria-label="Cambiar tema"
         >
           {isDark ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-emerald-600" />}
@@ -119,12 +121,12 @@ export default function AuthPage() {
 
       <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center relative z-10 py-6">
         
-        {/* Layer 3 & 4: Left Hero Showcase, Visual Architecture & Live Badges */}
+        {/* Left Hero Showcase, Visual Architecture & Live Badges */}
         <div className="lg:col-span-7 space-y-8 text-left hidden lg:block animate-fadeIn">
           
           {/* Header Status Badge */}
           <div className="flex items-center gap-3">
-            <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold tracking-wide shadow-sm">
+            <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold tracking-wide">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -132,7 +134,7 @@ export default function AuthPage() {
               <span>WHATSAPP API ENTERPRISE SAAS GATEWAY · v2.0</span>
             </div>
 
-            <div className="hidden sm:inline-flex items-center px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-xs font-semibold">
+            <div className="hidden sm:inline-flex items-center px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold">
               <span>Multi-Inquilino</span>
             </div>
           </div>
@@ -152,9 +154,9 @@ export default function AuthPage() {
           </div>
 
           {/* Hero Visual: WhatsApp API Architecture Gateway Canvas */}
-          <div className="p-5 rounded-3xl bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800/90 shadow-xl relative overflow-hidden space-y-4">
+          <div className="p-6 rounded-3xl bg-white dark:bg-[#0D131F] relative overflow-hidden space-y-5">
             
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3">
+            <div className="flex items-center justify-between pb-3">
               <div className="flex items-center gap-2">
                 <Terminal size={16} className="text-emerald-500" />
                 <span className="text-xs font-bold text-slate-900 dark:text-white">Flujo de Arquitectura en Tiempo Real</span>
@@ -169,7 +171,7 @@ export default function AuthPage() {
             <div className="grid grid-cols-3 gap-3 text-center">
               
               {/* Node 1: Client App */}
-              <div className="p-3 bg-slate-50 dark:bg-[#1a2333] rounded-2xl border border-slate-200/60 dark:border-slate-800/60 space-y-1">
+              <div className="p-4 bg-slate-50 dark:bg-[#141D2E] rounded-2xl space-y-1">
                 <div className="w-8 h-8 mx-auto rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 flex items-center justify-center font-bold text-xs">
                   <Server size={16} />
                 </div>
@@ -178,11 +180,11 @@ export default function AuthPage() {
               </div>
 
               {/* Node 2: Zaza Core Gateway */}
-              <div className="p-3 bg-emerald-50/80 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/60 space-y-1 relative">
+              <div className="p-4 bg-emerald-50/80 dark:bg-emerald-950/40 rounded-2xl space-y-1 relative">
                 <div className="absolute -left-3 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600">
                   <ArrowRight size={14} />
                 </div>
-                <div className="w-8 h-8 mx-auto rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center font-bold text-xs shadow-md shadow-emerald-500/20">
+                <div className="w-8 h-8 mx-auto rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center font-bold text-xs">
                   <Cpu size={16} />
                 </div>
                 <h5 className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300">Zaza API Gateway</h5>
@@ -193,7 +195,7 @@ export default function AuthPage() {
               </div>
 
               {/* Node 3: WhatsApp Multi-Tenant Instances */}
-              <div className="p-3 bg-slate-50 dark:bg-[#1a2333] rounded-2xl border border-slate-200/60 dark:border-slate-800/60 space-y-1">
+              <div className="p-4 bg-slate-50 dark:bg-[#141D2E] rounded-2xl space-y-1">
                 <div className="w-8 h-8 mx-auto rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold text-xs">
                   <Smartphone size={16} />
                 </div>
@@ -204,7 +206,7 @@ export default function AuthPage() {
             </div>
 
             {/* Architecture Metrics Live Bar */}
-            <div className="grid grid-cols-3 gap-2 pt-1 border-t border-slate-100 dark:border-slate-800/60 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+            <div className="grid grid-cols-3 gap-2 pt-2 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 size={13} className="text-emerald-500" />
                 <span>Redis Queue Engine</span>
@@ -224,7 +226,7 @@ export default function AuthPage() {
           {/* Feature Highlights Strip */}
           <div className="grid grid-cols-2 gap-4 max-w-2xl">
             
-            <div className="p-4 rounded-2xl bg-white/60 dark:bg-[#111827]/60 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 space-y-1">
+            <div className="p-5 rounded-2xl bg-white dark:bg-[#0D131F] space-y-1.5">
               <div className="flex items-center gap-2 text-slate-900 dark:text-white text-xs font-bold">
                 <Zap size={16} className="text-emerald-500" />
                 <span>Alta Disponibilidad & Escala</span>
@@ -234,7 +236,7 @@ export default function AuthPage() {
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-white/60 dark:bg-[#111827]/60 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 space-y-1">
+            <div className="p-5 rounded-2xl bg-white dark:bg-[#0D131F] space-y-1.5">
               <div className="flex items-center gap-2 text-slate-900 dark:text-white text-xs font-bold">
                 <ShieldCheck size={16} className="text-teal-500" />
                 <span>Aislamiento Criptográfico</span>
@@ -248,15 +250,15 @@ export default function AuthPage() {
 
         </div>
 
-        {/* Layer 5 & 6: Right Column — Master Authentication Card */}
+        {/* Right Column — Master Authentication Card (Flat Minimalist Surface) */}
         <div className="lg:col-span-5 flex justify-center w-full animate-fadeIn">
-          <div className="w-full max-w-md bg-white/90 dark:bg-[#111827]/90 backdrop-blur-2xl border border-slate-200/90 dark:border-slate-800/90 p-8 sm:p-10 rounded-[32px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.25)] relative overflow-hidden transition-all hover:border-emerald-500/40">
+          <div className="w-full max-w-md bg-white dark:bg-[#0D131F] p-8 sm:p-10 rounded-[32px] relative overflow-hidden transition-all">
             
             {/* Brand Logo & Header */}
             <div className="space-y-4 text-center pb-6">
               
               <div className="flex items-center justify-center">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 flex items-center justify-center text-white shadow-xl shadow-emerald-500/25 transform hover:scale-105 transition-transform">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 flex items-center justify-center text-white transform hover:scale-105 transition-transform">
                   <Smartphone size={32} />
                 </div>
               </div>
@@ -277,7 +279,7 @@ export default function AuthPage() {
 
             {/* Error Message Card */}
             {error && (
-              <div className="p-4 mb-6 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-700 dark:text-rose-300 text-xs rounded-2xl text-left font-medium leading-relaxed flex items-start gap-3 animate-fadeIn shadow-sm">
+              <div className="p-4 mb-6 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs rounded-2xl text-left font-medium leading-relaxed flex items-start gap-3 animate-fadeIn">
                 <ShieldAlert size={18} className="text-rose-600 dark:text-rose-400 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-bold text-rose-900 dark:text-rose-200">Error de Autenticación</p>
@@ -298,7 +300,7 @@ export default function AuthPage() {
                 )}
 
                 {authenticating && (
-                  <div className="flex items-center gap-2.5 py-3.5 px-6 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-300 text-xs font-bold border border-emerald-200/60 dark:border-emerald-800/60 shadow-sm animate-pulse">
+                  <div className="flex items-center gap-2.5 py-3.5 px-6 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-300 text-xs font-bold animate-pulse">
                     <Loader2 size={16} className="animate-spin text-emerald-500" />
                     <span>Autenticando de forma segura...</span>
                   </div>
@@ -313,7 +315,7 @@ export default function AuthPage() {
               </div>
 
               {/* Security Footnote */}
-              <div className="pt-6 border-t border-slate-100 dark:border-slate-800/60 text-center space-y-2">
+              <div className="pt-6 text-center space-y-2">
                 <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                   <Lock size={13} className="text-emerald-500" />
                   <span>Cifrado TLS 1.3 de 256 bits · Acceso Multi-Tenant Aislado</span>

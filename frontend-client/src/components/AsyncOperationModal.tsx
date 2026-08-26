@@ -41,9 +41,9 @@ export const AsyncOperationModal: React.FC<AsyncOperationModalProps> = ({
     <div 
       aria-live="polite"
       aria-busy={!isDone}
-      className="fixed inset-0 z-[9995] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 z-[9995] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fadeIn"
     >
-      <div className="bg-white dark:bg-[#111827] rounded-3xl p-6 sm:p-8 max-w-md w-full text-left space-y-6 shadow-2xl transition-all">
+      <div className="bg-white dark:bg-[#0D131F] rounded-3xl p-6 sm:p-8 max-w-md w-full text-left space-y-6 transition-all">
         
         {/* Encabezado con Icono de Estado */}
         <div className="flex items-start justify-between">
@@ -92,7 +92,7 @@ export const AsyncOperationModal: React.FC<AsyncOperationModalProps> = ({
         </div>
 
         {/* Desglose de Hitos/Pasos Reales */}
-        <div className="space-y-3 bg-slate-50 dark:bg-[#1a2333] p-4 rounded-2xl">
+        <div className="space-y-3 bg-slate-50 dark:bg-[#141D2E] p-4 rounded-2xl">
           {steps.map((step, idx) => (
             <div key={step.id || idx} className="flex items-center gap-3">
               <div className="flex-shrink-0">
@@ -109,7 +109,7 @@ export const AsyncOperationModal: React.FC<AsyncOperationModalProps> = ({
                     <X size={14} />
                   </div>
                 ) : (
-                  <div className="w-5 h-5 rounded-full border-2 border-slate-300 dark:border-slate-700 flex items-center justify-center">
+                  <div className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
                     <span className="w-1.5 h-1.5 rounded-full bg-transparent" />
                   </div>
                 )}
@@ -139,13 +139,13 @@ export const AsyncOperationModal: React.FC<AsyncOperationModalProps> = ({
 
         {/* Mensajes de Resultado */}
         {status === 'success' && successMessage && (
-          <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 rounded-xl text-xs font-medium">
+          <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 rounded-2xl text-xs font-medium">
             {successMessage}
           </div>
         )}
 
         {(status === 'error' || status === 'timeout') && errorMessage && (
-          <div className="p-3 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 rounded-xl text-xs font-medium leading-relaxed">
+          <div className="p-3.5 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 rounded-2xl text-xs font-medium leading-relaxed">
             {errorMessage}
           </div>
         )}
@@ -157,7 +157,7 @@ export const AsyncOperationModal: React.FC<AsyncOperationModalProps> = ({
               <button
                 type="button"
                 onClick={onRetry}
-                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition-all cursor-pointer min-h-[44px] flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-2xl transition-all cursor-pointer min-h-[44px] flex items-center justify-center gap-2"
               >
                 <RefreshCw size={14} />
                 Reintentar
@@ -167,10 +167,10 @@ export const AsyncOperationModal: React.FC<AsyncOperationModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className={`flex-1 py-2.5 text-xs font-bold rounded-xl active:scale-[0.98] transition-all cursor-pointer min-h-[44px] ${
+              className={`flex-1 py-2.5 text-xs font-bold rounded-2xl active:scale-[0.98] transition-all cursor-pointer min-h-[44px] ${
                 status === 'success'
                   ? 'bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 text-white'
-                  : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                  : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
               }`}
             >
               {status === 'success' ? 'Entendido' : 'Cerrar'}

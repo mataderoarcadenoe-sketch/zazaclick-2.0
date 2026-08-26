@@ -20,7 +20,7 @@ export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notification, setNotification] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
-  // Máquina de Estados de Operaciones Asíncronas (Senior Full-Stack Architecture)
+  // Máquina de Estados de Operaciones Asíncronas
   const [asyncOp, setAsyncOp] = useState<{
     open: boolean;
     title: string;
@@ -162,7 +162,6 @@ export default function Dashboard() {
       return;
     }
 
-    // Prevenir peticiones duplicadas / doble submit
     if (asyncOp.open && asyncOp.status !== 'idle' && asyncOp.status !== 'error' && asyncOp.status !== 'timeout') {
       return;
     }
@@ -184,7 +183,6 @@ export default function Dashboard() {
       onRetry: () => handleCreateInstance()
     });
 
-    // Timeout preventivo de 25 segundos
     const timeoutId = setTimeout(() => {
       setAsyncOp(prev => {
         if (prev.status === 'success' || prev.status === 'error') return prev;
@@ -360,7 +358,6 @@ export default function Dashboard() {
     }
   };
 
-  // Navegación Minimalista - 100% API WhatsApp & SuperAdmin
   const menuItems = [
     ...(user?.role === 'admin' ? [
       { id: 'admin_overview', label: 'Resumen Global', icon: LayoutGrid },
@@ -457,14 +454,14 @@ echo $response;`;
   };
 
   return (
-    <div className="flex h-screen bg-[#F8FAFC] dark:bg-[#070B12] text-slate-900 dark:text-white transition-colors duration-300 font-sans overflow-hidden">
+    <div className="flex h-screen bg-[#F8FAFC] dark:bg-[#070B12] text-slate-900 dark:text-white transition-colors duration-250 font-sans overflow-hidden">
       
-      {/* Toast Notification */}
+      {/* Toast Notification (Flat Pill) */}
       {notification && (
-        <div className={`fixed top-5 right-5 z-50 px-4 py-3 rounded-2xl flex items-center gap-2.5 text-xs font-bold animate-fadeIn backdrop-blur-xl border shadow-xl ${
+        <div className={`fixed top-5 right-5 z-50 px-4 py-3 rounded-2xl flex items-center gap-2.5 text-xs font-bold animate-fadeIn ${
           notification.type === 'success'
-            ? 'bg-emerald-50/95 text-emerald-800 border-emerald-200 dark:bg-emerald-950/95 dark:text-emerald-300 dark:border-emerald-800'
-            : 'bg-rose-50/95 text-rose-800 border-rose-200 dark:bg-rose-950/95 dark:text-rose-300 dark:border-rose-800'
+            ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/90 dark:text-emerald-300'
+            : 'bg-rose-50 text-rose-800 dark:bg-rose-950/90 dark:text-rose-300'
         }`}>
           {notification.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <AlertCircle className="w-4 h-4 text-rose-500" />}
           <span>{notification.text}</span>
@@ -474,22 +471,22 @@ echo $response;`;
       {/* Sidebar Overlay (Mobile) */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-slate-950/40 dark:bg-black/60 z-40 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 bg-slate-950/50 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      {/* Sidebar Institutional */}
+      {/* Sidebar Institutional (Clean Flat Surface) */}
       <aside 
-        className={`bg-white/95 dark:bg-[#0B0F19]/95 backdrop-blur-2xl border-r border-slate-200/80 dark:border-slate-800/80 flex flex-col transition-all duration-300 z-50 fixed top-0 left-0 h-full ${
+        className={`bg-white dark:bg-[#0B0F19] flex flex-col transition-all duration-250 z-50 fixed top-0 left-0 h-full ${
           sidebarOpen ? 'w-64 translate-x-0' : 'w-20 -translate-x-full lg:translate-x-0'
         }`}
       >
         {/* Brand Header */}
-        <div className={`h-16 flex items-center ${sidebarOpen ? 'justify-between px-5' : 'justify-center'} border-b border-slate-100 dark:border-slate-800/80`}>
+        <div className={`h-16 flex items-center ${sidebarOpen ? 'justify-between px-5' : 'justify-center'}`}>
           {sidebarOpen && (
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
+              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 flex items-center justify-center text-white">
                 <Smartphone size={18} />
               </div>
               <div className="flex flex-col text-left">
@@ -526,7 +523,7 @@ echo $response;`;
                   sidebarOpen ? 'px-4 py-3 justify-start' : 'p-3 justify-center'
                 } rounded-2xl transition-all duration-200 relative cursor-pointer ${
                   active 
-                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-500/20 font-bold'
+                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white font-medium'
                 }`}
               >
@@ -548,12 +545,12 @@ echo $response;`;
         </nav>
 
         {/* Footer Logout */}
-        <div className="p-3 border-t border-slate-100 dark:border-slate-800/80 bg-white/50 dark:bg-slate-900/50">
+        <div className="p-3 bg-white dark:bg-[#0B0F19]">
           <button
             onClick={logout}
             className={`w-full group flex items-center ${
               sidebarOpen ? 'px-4 py-3 justify-start' : 'p-3 justify-center'
-            } rounded-2xl hover:bg-rose-50 dark:hover:bg-rose-950/30 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-all duration-200 cursor-pointer`}
+            } rounded-2xl hover:bg-rose-50 dark:hover:bg-rose-950/30 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer`}
             title="Cerrar Sesión"
           >
             <LogOut size={18} className="flex-shrink-0" />
@@ -571,8 +568,8 @@ echo $response;`;
       {/* Main Area Canvas */}
       <div className="flex-1 flex flex-col overflow-hidden lg:pl-20">
         
-        {/* Top Header */}
-        <header className="h-16 bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800/80 px-4 sm:px-8 flex items-center justify-between z-30 transition-colors duration-300">
+        {/* Top Header (Clean Surface Integration) */}
+        <header className="h-16 bg-white dark:bg-[#0B0F19] px-4 sm:px-8 flex items-center justify-between z-30 transition-colors duration-250">
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setSidebarOpen(true)}
@@ -592,26 +589,26 @@ echo $response;`;
 
           <div className="flex items-center gap-3.5">
             {/* Status Live Tag */}
-            <div className="hidden sm:inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/50">
+            <div className="hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 tracking-wider">GATEWAY OPERATIVO</span>
+              <span className="text-[10px] font-bold tracking-wider">GATEWAY OPERATIVO</span>
             </div>
 
             {/* Dark Mode Switcher */}
             <button
               onClick={toggleDark}
-              className="p-2.5 bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-slate-600 dark:text-slate-300 cursor-pointer"
+              className="p-2.5 bg-slate-100 dark:bg-slate-800 rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-slate-600 dark:text-slate-300 cursor-pointer"
               title="Cambiar Tema"
             >
               {isDark ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-emerald-600" />}
             </button>
 
             {/* Profile badge */}
-            <div className="flex items-center gap-2.5 pl-3 border-l border-slate-200 dark:border-slate-800">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center font-bold text-xs shadow-md shadow-emerald-500/20 uppercase">
+            <div className="flex items-center gap-2.5 pl-3">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center font-bold text-xs uppercase">
                 {(user?.email || 'A')[0].toUpperCase()}
               </div>
               <div className="hidden md:flex flex-col text-left">
@@ -630,11 +627,11 @@ echo $response;`;
             {activeTab === 'overview' && (
               <div className="space-y-8 animate-fadeIn text-left">
                 
-                {/* Hero Greeting Header Banner */}
-                <div className="p-6 sm:p-8 bg-white/85 dark:bg-[#111827]/85 backdrop-blur-2xl rounded-3xl border border-slate-200/90 dark:border-slate-800/90 shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+                {/* Hero Greeting Header Banner (Clean Surface Contrast) */}
+                <div className="p-6 sm:p-8 bg-white dark:bg-[#0D131F] rounded-3xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
                   
                   <div className="space-y-2 text-left relative z-10">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/80 dark:border-emerald-800/60 rounded-full text-[10px] font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/50 rounded-full text-[10px] font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
                       <span>Motor Evolution API v2 · Redis Core</span>
                     </div>
@@ -650,7 +647,7 @@ echo $response;`;
                     <button
                       type="button"
                       onClick={() => setActiveTab('instances')}
-                      className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs rounded-2xl shadow-lg shadow-emerald-500/20 flex items-center gap-2 transition-all cursor-pointer"
+                      className="px-5 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs rounded-2xl flex items-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
                     >
                       <Plus size={16} />
                       <span>Crear Línea</span>
@@ -658,7 +655,7 @@ echo $response;`;
                     <button
                       type="button"
                       onClick={() => setActiveTab('playground')}
-                      className="px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-2xl shadow-sm flex items-center gap-2 transition-all cursor-pointer"
+                      className="px-5 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-2xl flex items-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
                     >
                       <Play size={16} />
                       <span>Probar Envíos</span>
@@ -666,14 +663,14 @@ echo $response;`;
                   </div>
 
                   {/* Backdrop lights */}
-                  <div className="absolute right-0 top-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-[90px] pointer-events-none" />
+                  <div className="absolute right-0 top-0 w-64 h-64 bg-emerald-500/8 rounded-full blur-[90px] pointer-events-none" />
                 </div>
 
-                {/* KPI Metrics Telemetry Cards */}
+                {/* KPI Metrics Telemetry Cards (Flat Surfaces) */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                   
                   {/* Instancias Conectadas */}
-                  <div className="p-6 bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 rounded-3xl shadow-md space-y-2">
+                  <div className="p-6 bg-white dark:bg-[#0D131F] rounded-3xl space-y-2">
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Líneas Conectadas</span>
                     <div className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
                       {activeInstancesCount} <span className="text-base font-normal text-slate-400">/ {maxInstances === 99 ? '∞' : maxInstances}</span>
@@ -685,7 +682,7 @@ echo $response;`;
                   </div>
 
                   {/* Estado del Servicio */}
-                  <div className="p-6 bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 rounded-3xl shadow-md space-y-2">
+                  <div className="p-6 bg-white dark:bg-[#0D131F] rounded-3xl space-y-2">
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Estado del Gateway</span>
                     <div className="text-3xl sm:text-4xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
                       99.99%
@@ -696,7 +693,7 @@ echo $response;`;
                   </div>
 
                   {/* Base Endpoint URL */}
-                  <div className="p-6 bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 rounded-3xl shadow-md space-y-2 min-w-0">
+                  <div className="p-6 bg-white dark:bg-[#0D131F] rounded-3xl space-y-2 min-w-0">
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">URL Endpoint</span>
                     <div className="text-xs font-mono font-bold text-slate-900 dark:text-white truncate pt-1" title={currentBackendUrl}>
                       {currentBackendUrl}
@@ -711,10 +708,10 @@ echo $response;`;
                   </div>
 
                   {/* Documentación */}
-                  <div className="p-6 bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 rounded-3xl shadow-md space-y-2">
+                  <div className="p-6 bg-white dark:bg-[#0D131F] rounded-3xl space-y-2">
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Suscripción Activa</span>
                     <div className="text-lg font-black text-slate-900 dark:text-white uppercase truncate pt-1">
-                      {subscription?.plan_name || 'Plan Básico'}
+                      {subscription?.plan_name || 'Plan Developer'}
                     </div>
                     <button 
                       type="button" 
@@ -727,11 +724,11 @@ echo $response;`;
 
                 </div>
 
-                {/* Secciones de Acción Rápida */}
+                {/* Secciones de Acción Rápida (Flat Interactive Surfaces) */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
                   
                   {/* Instancias */}
-                  <div className="p-7 bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 rounded-3xl shadow-md space-y-4 text-left hover:border-emerald-500/40 transition-all group">
+                  <div className="p-7 bg-white dark:bg-[#0D131F] rounded-3xl space-y-4 text-left group">
                     <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold group-hover:scale-105 transition-transform">
                       <Smartphone size={22} />
                     </div>
@@ -744,7 +741,7 @@ echo $response;`;
                     <button
                       type="button"
                       onClick={() => setActiveTab('instances')}
-                      className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 text-xs font-bold rounded-2xl active:scale-[0.98] transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-sm"
+                      className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 text-xs font-bold rounded-2xl active:scale-[0.98] transition-all cursor-pointer inline-flex items-center gap-1.5"
                     >
                       <span>Gestionar Instancias</span>
                       <ArrowRight size={14} />
@@ -752,7 +749,7 @@ echo $response;`;
                   </div>
 
                   {/* Playground */}
-                  <div className="p-7 bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 rounded-3xl shadow-md space-y-4 text-left hover:border-teal-500/40 transition-all group">
+                  <div className="p-7 bg-white dark:bg-[#0D131F] rounded-3xl space-y-4 text-left group">
                     <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold group-hover:scale-105 transition-transform">
                       <Play size={22} />
                     </div>
@@ -765,7 +762,7 @@ echo $response;`;
                     <button
                       type="button"
                       onClick={() => setActiveTab('playground')}
-                      className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 text-xs font-bold rounded-2xl active:scale-[0.98] transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-sm"
+                      className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 text-xs font-bold rounded-2xl active:scale-[0.98] transition-all cursor-pointer inline-flex items-center gap-1.5"
                     >
                       <span>Probar Envíos</span>
                       <ArrowRight size={14} />
@@ -773,7 +770,7 @@ echo $response;`;
                   </div>
 
                   {/* Documentación */}
-                  <div className="p-7 bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 rounded-3xl shadow-md space-y-4 text-left hover:border-cyan-500/40 transition-all group">
+                  <div className="p-7 bg-white dark:bg-[#0D131F] rounded-3xl space-y-4 text-left group">
                     <div className="w-12 h-12 rounded-2xl bg-cyan-50 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400 flex items-center justify-center font-bold group-hover:scale-105 transition-transform">
                       <Terminal size={22} />
                     </div>
@@ -786,7 +783,7 @@ echo $response;`;
                     <button
                       type="button"
                       onClick={() => setActiveTab('docs')}
-                      className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 text-xs font-bold rounded-2xl active:scale-[0.98] transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-sm"
+                      className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 text-xs font-bold rounded-2xl active:scale-[0.98] transition-all cursor-pointer inline-flex items-center gap-1.5"
                     >
                       <span>Ver Ejemplos</span>
                       <ArrowRight size={14} />
@@ -807,8 +804,8 @@ echo $response;`;
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Crea nuevas conexiones de API o escanea el código QR para vincular tus líneas.</p>
                 </div>
 
-                {/* Formulario de Creación */}
-                <div className="p-6 sm:p-8 bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 rounded-3xl shadow-xl space-y-4">
+                {/* Formulario de Creación (Flat Input Surface) */}
+                <div className="p-6 sm:p-8 bg-white dark:bg-[#0D131F] rounded-3xl space-y-4">
                   <h3 className="text-sm font-bold text-slate-900 dark:text-white">Crear Nueva Instancia API</h3>
                   <form onSubmit={handleCreateInstance} className="flex flex-col sm:flex-row gap-3">
                     <input
@@ -816,12 +813,12 @@ echo $response;`;
                       value={newInstanceName}
                       onChange={(e) => setNewInstanceName(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                       placeholder="nombre_de_instancia (ej: ventas_lima)"
-                      className="flex-1 px-4 py-3 bg-slate-50 dark:bg-[#070B12] border border-slate-200/80 dark:border-slate-700/80 rounded-2xl text-xs font-mono font-bold text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                      className="flex-1 px-4 py-3 bg-slate-100 dark:bg-[#141D2E] rounded-2xl text-xs font-mono font-bold text-slate-900 dark:text-white focus:outline-none focus:bg-slate-200 dark:focus:bg-[#1A253A]"
                     />
                     <button
                       type="submit"
                       disabled={loadingInstances}
-                      className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold rounded-2xl active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[44px] shadow-lg shadow-emerald-500/20"
+                      className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold rounded-2xl active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[44px]"
                     >
                       <Plus size={16} />
                       <span>Crear Instancia</span>
@@ -834,8 +831,8 @@ echo $response;`;
                   <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tus Instancias ({instances.length})</h3>
 
                   {instances.length === 0 ? (
-                    <div className="p-12 bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 rounded-3xl text-center space-y-4 shadow-md">
-                      <div className="w-16 h-16 rounded-3xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-sm">
+                    <div className="p-12 bg-white dark:bg-[#0D131F] rounded-3xl text-center space-y-4">
+                      <div className="w-16 h-16 rounded-3xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
                         <Smartphone size={32} />
                       </div>
                       <div className="space-y-1">
@@ -846,7 +843,7 @@ echo $response;`;
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                       {instances.map((inst) => (
-                        <div key={inst.id || inst.instance_name} className="p-6 bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 rounded-3xl shadow-md space-y-5 text-left hover:border-emerald-500/40 transition-all">
+                        <div key={inst.id || inst.instance_name} className="p-6 bg-white dark:bg-[#0D131F] rounded-3xl space-y-5 text-left transition-all">
                           <div className="flex items-center justify-between">
                             <div className="space-y-0.5">
                               <h4 className="text-sm font-mono font-bold text-slate-900 dark:text-white">{inst.instance_name}</h4>
@@ -855,8 +852,8 @@ echo $response;`;
 
                             <span className={`px-3 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider ${
                               inst.status === 'connected' 
-                                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60' 
-                                : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60'
+                                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' 
+                                : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
                             }`}>
                               {inst.status === 'connected' ? '● CONECTADO' : '○ DESCONECTADO'}
                             </span>
@@ -865,12 +862,12 @@ echo $response;`;
                           {/* API Key */}
                           <div className="space-y-1.5">
                             <span className="text-[10px] font-bold text-slate-400 uppercase block">API Key de Instancia</span>
-                            <div className="flex items-center justify-between bg-slate-50 dark:bg-[#070B12] border border-slate-200/60 dark:border-slate-800/60 px-3.5 py-2.5 rounded-2xl">
+                            <div className="flex items-center justify-between bg-slate-50 dark:bg-[#141D2E] px-3.5 py-2.5 rounded-2xl">
                               <code className="text-xs font-mono font-bold text-slate-800 dark:text-slate-200 truncate mr-2">{inst.api_key}</code>
                               <button
                                 type="button"
                                 onClick={() => copyToClipboard(inst.api_key)}
-                                className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl text-slate-500 hover:text-emerald-600 transition-colors"
+                                className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl text-slate-500 hover:text-emerald-600 transition-colors cursor-pointer"
                                 title="Copiar API Key"
                               >
                                 <Copy size={14} />
@@ -884,7 +881,7 @@ echo $response;`;
                               <button
                                 type="button"
                                 onClick={() => handleDisconnectInstance(inst.instance_name)}
-                                className="flex-1 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 text-xs font-bold rounded-2xl transition-all cursor-pointer"
+                                className="flex-1 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:text-rose-300 text-xs font-bold rounded-2xl transition-colors cursor-pointer"
                               >
                                 Desconectar Línea
                               </button>
@@ -892,7 +889,7 @@ echo $response;`;
                               <button
                                 type="button"
                                 onClick={() => handleGetQrCode(inst.instance_name)}
-                                className="flex-1 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold rounded-2xl active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 shadow-md shadow-emerald-500/20"
+                                className="flex-1 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold rounded-2xl active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
                               >
                                 <Smartphone size={15} />
                                 <span>Escanear Código QR</span>
@@ -925,7 +922,7 @@ echo $response;`;
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Simula el envío de mensajes de WhatsApp mediante peticiones HTTP POST reales.</p>
                 </div>
 
-                <div className="p-6 sm:p-8 bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 rounded-3xl shadow-xl space-y-6">
+                <div className="p-6 sm:p-8 bg-white dark:bg-[#0D131F] rounded-3xl space-y-6">
                   <form onSubmit={handleTestSend} className="space-y-5">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                       <div className="space-y-1.5">
@@ -933,7 +930,7 @@ echo $response;`;
                         <select
                           value={playgroundInstance}
                           onChange={(e) => setPlaygroundInstance(e.target.value)}
-                          className="w-full px-4 py-3 bg-slate-50 dark:bg-[#070B12] border border-slate-200/80 dark:border-slate-700/80 rounded-2xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                          className="w-full px-4 py-3 bg-slate-100 dark:bg-[#141D2E] rounded-2xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:bg-slate-200 dark:focus:bg-[#1A253A]"
                         >
                           {instances.length === 0 && <option value="">Sin instancias creadas</option>}
                           {instances.map(i => (
@@ -949,7 +946,7 @@ echo $response;`;
                           value={playgroundPhone}
                           onChange={(e) => setPlaygroundPhone(e.target.value.replace(/[^0-9]/g, ''))}
                           placeholder="ej: 51912345678"
-                          className="w-full px-4 py-3 bg-slate-50 dark:bg-[#070B12] border border-slate-200/80 dark:border-slate-700/80 rounded-2xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                          className="w-full px-4 py-3 bg-slate-100 dark:bg-[#141D2E] rounded-2xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:bg-slate-200 dark:focus:bg-[#1A253A]"
                         />
                       </div>
                     </div>
@@ -960,25 +957,25 @@ echo $response;`;
                         rows={3}
                         value={playgroundMessage}
                         onChange={(e) => setPlaygroundMessage(e.target.value)}
-                        className="w-full px-4 py-3 bg-slate-50 dark:bg-[#070B12] border border-slate-200/80 dark:border-slate-700/80 rounded-2xl text-xs font-normal text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                        className="w-full px-4 py-3 bg-slate-100 dark:bg-[#141D2E] rounded-2xl text-xs font-normal text-slate-900 dark:text-white focus:outline-none focus:bg-slate-200 dark:focus:bg-[#1A253A]"
                       />
                     </div>
 
                     <button
                       type="submit"
                       disabled={playgroundLoading || instances.length === 0}
-                      className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold rounded-2xl active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[44px] disabled:opacity-50 shadow-lg shadow-emerald-500/20"
+                      className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold rounded-2xl active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[44px] disabled:opacity-50"
                     >
                       <Send size={15} />
                       <span>{playgroundLoading ? 'Enviando petición...' : 'Ejecutar Envío de Prueba'}</span>
                     </button>
                   </form>
 
-                  {/* Respuesta HTTP */}
+                  {/* Respuesta HTTP (Flat Dark Canvas) */}
                   {playgroundResponse && (
                     <div className="space-y-2 pt-4">
                       <span className="text-xs font-bold text-slate-400 uppercase block">Respuesta HTTP de la API:</span>
-                      <pre className="p-5 bg-[#090D16] text-emerald-400 rounded-3xl text-xs font-mono overflow-x-auto border border-emerald-500/20">
+                      <pre className="p-5 bg-slate-100 dark:bg-[#070B12] text-emerald-600 dark:text-emerald-400 rounded-3xl text-xs font-mono overflow-x-auto">
                         {JSON.stringify(playgroundResponse, null, 2)}
                       </pre>
                     </div>
@@ -995,7 +992,7 @@ echo $response;`;
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Integra el envío y recepción de WhatsApp en tu software propio mediante peticiones HTTP estándar.</p>
                 </div>
 
-                <div className="p-6 sm:p-8 bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 rounded-3xl shadow-xl space-y-6">
+                <div className="p-6 sm:p-8 bg-white dark:bg-[#0D131F] rounded-3xl space-y-6">
                   {/* Lenguajes */}
                   <div className="flex items-center gap-2">
                     {(['curl', 'js', 'python', 'php'] as const).map(lang => (
@@ -1005,7 +1002,7 @@ echo $response;`;
                         onClick={() => setDocLang(lang)}
                         className={`px-4 py-2 text-xs font-bold uppercase rounded-2xl transition-all cursor-pointer ${
                           docLang === lang 
-                            ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-500/20' 
+                            ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white' 
                             : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200'
                         }`}
                       >
@@ -1027,7 +1024,7 @@ echo $response;`;
                         <span>Copiar Código</span>
                       </button>
                     </div>
-                    <pre className="p-5 bg-[#090D16] text-slate-100 rounded-3xl text-xs font-mono overflow-x-auto leading-relaxed border border-slate-800">
+                    <pre className="p-5 bg-slate-100 dark:bg-[#070B12] text-slate-800 dark:text-slate-200 rounded-3xl text-xs font-mono overflow-x-auto leading-relaxed">
                       {getDocCode()}
                     </pre>
                   </div>
@@ -1043,19 +1040,19 @@ echo $response;`;
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Consulta los detalles de tu plan contratado e instancias autorizadas.</p>
                 </div>
 
-                <div className="p-6 sm:p-8 bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 rounded-3xl shadow-xl space-y-6">
+                <div className="p-6 sm:p-8 bg-white dark:bg-[#0D131F] rounded-3xl space-y-6">
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center justify-between py-3">
                       <span className="text-xs font-bold text-slate-500">Plan Contratado</span>
-                      <span className="text-sm font-black text-slate-900 dark:text-white uppercase">{subscription?.plan_name || 'Plan Básico'}</span>
+                      <span className="text-sm font-black text-slate-900 dark:text-white uppercase">{subscription?.plan_name || 'Plan Developer'}</span>
                     </div>
-                    <div className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center justify-between py-3">
                       <span className="text-xs font-bold text-slate-500">Capacidad de Instancias</span>
                       <span className="text-xs font-bold text-slate-800 dark:text-white">{activeInstancesCount} / {maxInstances === 99 ? 'ILIMITADO' : maxInstances} Líneas</span>
                     </div>
-                    <div className="flex items-center justify-between py-2">
+                    <div className="flex items-center justify-between py-3">
                       <span className="text-xs font-bold text-slate-500">Estado del Servicio</span>
-                      <span className="px-3 py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[10px] font-bold rounded-full uppercase border border-emerald-200 dark:border-emerald-800/60">
+                      <span className="px-3 py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[10px] font-bold rounded-full uppercase">
                         ● LICENCIA ACTIVA
                       </span>
                     </div>
@@ -1068,7 +1065,7 @@ echo $response;`;
             {user?.role === 'admin' && activeTab === 'admin_overview' && (
               <div className="space-y-8 animate-fadeIn text-left">
                 
-                {/* Hero Editorial Admin */}
+                {/* Hero Admin */}
                 <div className="space-y-1.5">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[11px] font-bold rounded-full">
                     <Shield size={12} />
@@ -1084,19 +1081,19 @@ echo $response;`;
 
                 {/* Métricas KPI Admin */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-                  <div className="p-7 bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 rounded-3xl shadow-md space-y-2">
+                  <div className="p-7 bg-white dark:bg-[#0D131F] rounded-3xl space-y-2">
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Clientes / Empresas</span>
                     <div className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">{adminUsers.length}</div>
                     <p className="text-xs font-medium text-slate-400 pt-1">Usuarios corporativos activos</p>
                   </div>
                   
-                  <div className="p-7 bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 rounded-3xl shadow-md space-y-2">
+                  <div className="p-7 bg-white dark:bg-[#0D131F] rounded-3xl space-y-2">
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Líneas Registradas</span>
                     <div className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">{adminInstances.length}</div>
                     <p className="text-xs font-medium text-slate-400 pt-1">Instancias totales en sistema</p>
                   </div>
 
-                  <div className="p-7 bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 rounded-3xl shadow-md space-y-2">
+                  <div className="p-7 bg-white dark:bg-[#0D131F] rounded-3xl space-y-2">
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Líneas Conectadas</span>
                     <div className="text-3xl sm:text-4xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
                       {adminInstances.filter(i => i.status === 'connected').length}
@@ -1112,10 +1109,10 @@ echo $response;`;
         </main>
       </div>
 
-      {/* Modal QR Code */}
+      {/* Modal QR Code (Clean Surface Modal) */}
       {qrCodeModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white dark:bg-[#111827] rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center space-y-4 border border-slate-200/80 dark:border-slate-800/80 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fadeIn">
+          <div className="bg-white dark:bg-[#0D131F] rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">Escanear Código QR</h3>
               <button onClick={() => setQrCodeModal({ open: false, instanceName: '', qrCode: null })} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-400 cursor-pointer">
@@ -1123,7 +1120,7 @@ echo $response;`;
               </button>
             </div>
             
-            <div className="p-4 bg-white rounded-2xl flex items-center justify-center min-h-[220px] border border-slate-100">
+            <div className="p-4 bg-white rounded-2xl flex items-center justify-center min-h-[220px]">
               {qrCodeModal.qrCode ? (
                 <img src={qrCodeModal.qrCode} alt="WhatsApp QR Code" className="w-56 h-56 object-contain" />
               ) : (
@@ -1139,10 +1136,10 @@ echo $response;`;
         </div>
       )}
 
-      {/* Modal de Confirmación Personalizado (Reemplazo total de window.confirm) */}
+      {/* Modal de Confirmación Personalizado (Clean Flat Modal) */}
       {confirmModal.open && (
-        <div className="fixed inset-0 z-[9990] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white dark:bg-[#111827] rounded-3xl p-6 sm:p-8 max-w-sm w-full text-left space-y-5 border border-slate-200/80 dark:border-slate-800/80 shadow-2xl">
+        <div className="fixed inset-0 z-[9990] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fadeIn">
+          <div className="bg-white dark:bg-[#0D131F] rounded-3xl p-6 sm:p-8 max-w-sm w-full text-left space-y-5">
             <div className="flex items-center justify-between">
               <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold ${
                 confirmModal.type === 'danger'
@@ -1172,7 +1169,7 @@ echo $response;`;
               <button
                 type="button"
                 onClick={() => setConfirmModal(prev => ({ ...prev, open: false }))}
-                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-2xl transition-all cursor-pointer min-h-[44px]"
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-2xl transition-colors cursor-pointer min-h-[44px]"
               >
                 {confirmModal.cancelText || 'Cancelar'}
               </button>

@@ -5,39 +5,22 @@ import AdminDashboardPage from './pages/AdminDashboard';
 import { Smartphone } from 'lucide-react';
 
 const AppContent: React.FC = () => {
-  const { isAuthenticated, user, loading, logout } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center space-y-4">
-        {/* Glowing loader */}
-        <div className="w-16 h-16 bg-zinc-500/10 border border-zinc-500/20 text-zinc-400 rounded-3xl flex items-center justify-center shadow-xl animate-pulseGlow">
+      <div className="min-h-screen bg-[#070B12] flex flex-col items-center justify-center space-y-4">
+        {/* Flat Minimalist Loader */}
+        <div className="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-3xl flex items-center justify-center animate-pulseGlow">
           <Smartphone className="w-8 h-8 animate-spinSlow" />
         </div>
-        <p className="text-gray-400 text-xs font-semibold uppercase tracking-widest animate-pulse">Cargando Zaza.click 2.0 Admin...</p>
+        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest animate-pulse">Cargando Admin Zaza.click 2.0...</p>
       </div>
     );
   }
 
   if (!isAuthenticated) {
     return <AuthPage />;
-  }
-
-  // Reject access to non-admin accounts in the admin subdomain/portal
-  if (user?.role !== 'admin') {
-    return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center space-y-4 text-center p-4">
-        <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl text-xs font-bold">
-          ⚠️ Acceso Denegado: Esta cuenta no es de administrador.
-        </div>
-        <button
-          onClick={logout}
-          className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl text-xs text-gray-300 transition-all border border-white/5 cursor-pointer"
-        >
-          Cerrar Sesión
-        </button>
-      </div>
-    );
   }
 
   return <AdminDashboardPage />;

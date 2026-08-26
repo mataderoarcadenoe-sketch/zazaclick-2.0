@@ -21,12 +21,13 @@
     padding: 0;
     box-sizing: border-box;
     font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+    box-shadow: none !important;
   }
 
   body {
     background-color: #F8FAFC;
     color: #0F172A;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    transition: background-color 0.25s ease, color 0.25s ease;
     overflow-x: hidden;
   }
 
@@ -35,20 +36,20 @@
     color: #F8FAFC;
   }
 
-  /* Scrollbars */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  /* Scrollbars - Minimalist Flat */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 9999px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.5); }
+  ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.25); border-radius: 9999px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.45); }
 
-  body.dark ::-webkit-scrollbar-thumb { background: rgba(71, 85, 105, 0.4); }
-  body.dark ::-webkit-scrollbar-thumb:hover { background: rgba(71, 85, 105, 0.6); }
+  body.dark ::-webkit-scrollbar-thumb { background: rgba(71, 85, 105, 0.3); }
+  body.dark ::-webkit-scrollbar-thumb:hover { background: rgba(71, 85, 105, 0.5); }
 }
 
 @layer utilities {
   .mesh-gradient {
     background: #F8FAFC;
-    transition: background 0.3s ease;
+    transition: background 0.25s ease;
   }
 
   body.dark .mesh-gradient {
@@ -65,39 +66,39 @@
   }
 
   .bg-grid-tech {
-    background-image: radial-gradient(rgba(148, 163, 184, 0.15) 1px, transparent 1px);
+    background-image: radial-gradient(rgba(148, 163, 184, 0.12) 1px, transparent 1px);
     background-size: 24px 24px;
   }
 
   .dark .bg-grid-tech {
-    background-image: radial-gradient(rgba(51, 65, 85, 0.25) 1px, transparent 1px);
+    background-image: radial-gradient(rgba(51, 65, 85, 0.2) 1px, transparent 1px);
     background-size: 24px 24px;
   }
 }
 
 /* Animations keyframes */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes floatSlow {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
+  50% { transform: translateY(-6px); }
 }
 
 @keyframes floatSlowDelayed {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
+  50% { transform: translateY(-4px); }
 }
 
 @keyframes pulseGlow {
-  0%, 100% { opacity: 0.4; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.05); }
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.04); }
 }
 
 .animate-fadeIn {
-  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-float {
