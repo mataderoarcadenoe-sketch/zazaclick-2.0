@@ -10,11 +10,14 @@ export interface InteractiveGravityMeshProps {
   enablePulses?: boolean;
   enableRipples?: boolean;
   enableMouseInteraction?: boolean;
+  enableTelemetryHUD?: boolean;
+  enableRadarSweep?: boolean;
 }
 
 export interface InteractiveGravityMeshRef {
   triggerPulse: (sourceIdx?: number, targetIdx?: number) => void;
   triggerRipple: (x: number, y: number) => void;
+  triggerBurst: (nodeId?: number) => void;
   emitEvent: (event: { type: string; payload?: any }) => void;
 }
 
@@ -52,6 +55,10 @@ interface Spark {
 
 interface NetworkNode {
   id: number;
+  name: string;
+  role: string;
+  latency: number;
+  throughput: number;
   anchorX: number;
   anchorY: number;
   x: number;
@@ -81,6 +88,7 @@ interface NetworkConnection {
   ctrlX: number;
   ctrlY: number;
   tier: 'TRUNK' | 'BRANCH' | 'FEEDER';
+  routerAngle: number;
 }
 
 interface DataPacket {
@@ -124,8 +132,8 @@ const PRESETS: Record<MeshVariant, {
     dustCount: 40,
     minDist: 60,
     maxDist: 190,
-    maxPackets: 8,
-    trunkOpacity: 0.7,
+    maxPackets: 9,
+    trunkOpacity: 0.72,
     branchOpacity: 0.45,
     feederOpacity: 0.25,
     enableTriangles: true,
@@ -136,7 +144,7 @@ const PRESETS: Record<MeshVariant, {
     dustCount: 45,
     minDist: 60,
     maxDist: 200,
-    maxPackets: 9,
+    maxPackets: 10,
     trunkOpacity: 0.75,
     branchOpacity: 0.48,
     feederOpacity: 0.28,
@@ -148,8 +156,8 @@ const PRESETS: Record<MeshVariant, {
     dustCount: 35,
     minDist: 60,
     maxDist: 185,
-    maxPackets: 7,
-    trunkOpacity: 0.65,
+    maxPackets: 8,
+    trunkOpacity: 0.68,
     branchOpacity: 0.4,
     feederOpacity: 0.22,
     enableTriangles: true,
@@ -160,8 +168,8 @@ const PRESETS: Record<MeshVariant, {
     dustCount: 40,
     minDist: 60,
     maxDist: 190,
-    maxPackets: 8,
-    trunkOpacity: 0.7,
+    maxPackets: 9,
+    trunkOpacity: 0.72,
     branchOpacity: 0.45,
     feederOpacity: 0.25,
     enableTriangles: true,
@@ -172,7 +180,7 @@ const PRESETS: Record<MeshVariant, {
     dustCount: 50,
     minDist: 55,
     maxDist: 210,
-    maxPackets: 11,
+    maxPackets: 12,
     trunkOpacity: 0.8,
     branchOpacity: 0.52,
     feederOpacity: 0.3,
@@ -202,6 +210,8 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
       enablePulses = true,
       enableRipples = true,
       enableMouseInteraction = true,
+      enableTelemetryHUD = true,
+      enableRadarSweep = true,
     },
     ref
   ) => {
@@ -215,6 +225,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
     const wavesRef = useRef<SignalWave[]>([]);
     const dustRef = useRef<Stardust[]>([]);
     const sparksRef = useRef<Spark[]>([]);
+    const hoveredNodeRef = useRef<NetworkNode | null>(null);
     const mouseRef = useRef({
       x: -3000,
       y: -3000,
@@ -222,6 +233,38 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
       targetY: -3000,
       isActive: false,
     });
+
+    const triggerBurstAtNode = (nodeId?: number) => {
+      const nodes = nodesRef.current;
+      const conns = connectionsRef.current;
+      const packets = packetsRef.current;
+      if (nodes.length === 0 || conns.length === 0) return;
+
+      const targetNodeId = nodeId ?? (nodes.find(n => n.tier === 'CORE')?.id ?? 0);
+      const relevantConns = conns.filter(c => c.source === targetNodeId || c.target === targetNodeId);
+
+      relevantConns.forEach((c) => {
+        const available = packets.find(p => !p.active);
+        if (available) {
+          available.active = true;
+          available.source = c.source === targetNodeId ? c.source : c.target;
+          available.target = c.source === targetNodeId ? c.target : c.source;
+          available.progress = 0;
+          available.speed = 0.045;
+          available.color = isDark ? '#67E8F9' : '#0284C7';
+          available.headRadius = 3.8;
+          available.ctrlX = c.ctrlX;
+          available.ctrlY = c.ctrlY;
+          available.sparkCooldown = 0;
+        }
+      });
+
+      const nodeObj = nodes.find(n => n.id === targetNodeId);
+      if (nodeObj) {
+        nodeObj.activity = 1.0;
+        nodeObj.haloPulse = 1.0;
+      }
+    };
 
     useImperativeHandle(ref, () => ({
       triggerPulse: (sourceIdx, targetIdx) => {
@@ -247,7 +290,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           available.source = src;
           available.target = tgt;
           available.progress = 0;
-          available.speed = 0.035;
+          available.speed = 0.038;
           available.color = pColor;
           available.headRadius = 3.6;
           available.ctrlX = conn.ctrlX;
@@ -278,13 +321,15 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           });
         }
       },
+      triggerBurst: (nodeId) => {
+        triggerBurstAtNode(nodeId);
+      },
       emitEvent: () => {
         const nodes = nodesRef.current;
         const cores = nodes.filter(n => n.tier === 'CORE' || n.tier === 'HUB');
         if (cores.length > 0) {
           const randNode = cores[Math.floor(Math.random() * cores.length)];
-          randNode.activity = 1.0;
-          randNode.haloPulse = 1.0;
+          triggerBurstAtNode(randNode.id);
         }
       },
     }));
@@ -314,11 +359,16 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
         branchLine: 'rgba(6, 182, 212, ',
         feederLine: 'rgba(20, 184, 166, ',
         mouseLine: 'rgba(103, 232, 249, ',
+        hudText: '#A7F3D0',
+        hudSub: '#67E8F9',
+        hudBg: 'rgba(7, 11, 18, 0.82)',
+        hudBorder: 'rgba(16, 185, 129, 0.35)',
         triangleFill: 'rgba(16, 185, 129, 0.035)',
         triangleStroke: 'rgba(6, 182, 212, 0.12)',
         dustColor: 'rgba(167, 243, 208, ',
         packetColor: '#A7F3D0',
         waveColor: 'rgba(52, 211, 153, ',
+        radarSweep: 'rgba(16, 185, 129, 0.06)',
       };
 
       const lightPalette = {
@@ -334,16 +384,21 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
         branchLine: 'rgba(14, 116, 144, ',
         feederLine: 'rgba(15, 118, 110, ',
         mouseLine: 'rgba(14, 116, 144, ',
+        hudText: '#047857',
+        hudSub: '#0E7490',
+        hudBg: 'rgba(255, 255, 255, 0.9)',
+        hudBorder: 'rgba(4, 120, 87, 0.3)',
         triangleFill: 'rgba(4, 120, 87, 0.025)',
         triangleStroke: 'rgba(14, 116, 144, 0.09)',
         dustColor: 'rgba(15, 118, 110, ',
         packetColor: '#047857',
         waveColor: 'rgba(4, 120, 87, ',
+        radarSweep: 'rgba(4, 120, 87, 0.04)',
       };
 
       const theme = isDark ? darkPalette : lightPalette;
 
-      // ARQUITECTURA TOPOLÓGICA ESPACIAL EQUILIBRADA
+      // Generación de Topología Inteligente con Telemetría
       const initTopology = () => {
         const isMobile = width < 640;
         const isTablet = width >= 640 && width < 1024;
@@ -357,52 +412,59 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
         const nodes: NetworkNode[] = [];
         let idCounter = 0;
 
-        // Distribución estructurada en malla hexagonal / celdas espaciales
+        const gatewayNames = ['GW-PROD-US', 'GW-LATAM-01', 'AUTH-QR-CORE', 'RATE-LIMIT-X'];
+        const hubNames = ['WEBHOOK-RT', 'SESSION-MGR', 'SOCKET-PIPELINE', 'TOKEN-VAULT', 'MSG-DISPATCH'];
+        let gwIdx = 0;
+        let hubIdx = 0;
+
         for (let r = 0; r < rows; r++) {
           for (let c = 0; c < cols; c++) {
-            // Desplazamiento hexagonal alternado
             const offsetX = (r % 2 === 1) ? cellW * 0.5 : 0;
             const baseX = c * cellW + cellW * 0.5 + offsetX;
             const baseY = r * cellH + cellH * 0.5;
 
-            // Ignorar nodos que salgan de los bordes laterales
             if (baseX < 30 || baseX > width - 30 || baseY < 30 || baseY > height - 30) continue;
 
-            // Dispersión sutil dentro de su celda
             const jitterX = (Math.random() - 0.5) * (cellW * 0.45);
             const jitterY = (Math.random() - 0.5) * (cellH * 0.45);
 
             const anchorX = baseX + jitterX;
             const anchorY = baseY + jitterY;
 
-            // Asignación de Jerarquía basada en posición espacial armónica
             let tier: HierarchyTier = 'EDGE';
             let radius = isDark ? 2.3 : 2.0;
             let color = theme.edge;
             let glowColor = theme.relayHalo;
+            let name = `NODE-${idCounter + 10}`;
+            let role = 'SATELLITE INSTANCE';
 
-            const isCentral = (r >= 1 && r <= rows - 2) && (c >= 1 && c <= cols - 2);
             const isGatewayPos = (r === 1 && c === 2) || (r === 2 && c === Math.floor(cols / 2)) || (r === rows - 2 && c === cols - 3);
             const isHubPos = (r % 2 === 1 && c % 2 === 1) && !isGatewayPos;
 
             if (isGatewayPos) {
               tier = 'CORE';
-              radius = isDark ? 6.6 : 5.6;
+              radius = isDark ? 6.8 : 5.8;
               color = theme.core;
               glowColor = theme.coreHalo;
-            } else if (isHubPos || (isCentral && Math.random() < 0.35)) {
+              name = gatewayNames[gwIdx % gatewayNames.length];
+              role = 'PRIMARY API GATEWAY';
+              gwIdx++;
+            } else if (isHubPos) {
               tier = 'HUB';
-              radius = isDark ? 4.5 : 3.9;
+              radius = isDark ? 4.6 : 4.0;
               color = theme.hub;
               glowColor = theme.hubHalo;
+              name = hubNames[hubIdx % hubNames.length];
+              role = 'MICROSERVICE ROUTER';
+              hubIdx++;
             } else if (Math.random() < 0.4) {
               tier = 'RELAY';
               radius = isDark ? 3.2 : 2.8;
               color = theme.relay;
               glowColor = theme.relayHalo;
+              role = 'WEBHOOK WORKER';
             }
 
-            // Satélites para Core y Hubs
             const satellites: Satellite[] = [];
             if (tier === 'CORE' || tier === 'HUB') {
               const satCount = tier === 'CORE' ? 2 : 1;
@@ -418,6 +480,10 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
 
             nodes.push({
               id: idCounter++,
+              name,
+              role,
+              latency: Math.floor(Math.random() * 12 + 8),
+              throughput: Math.floor(Math.random() * 800 + 400),
               anchorX,
               anchorY,
               x: anchorX,
@@ -444,7 +510,6 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
 
         nodesRef.current = nodes;
 
-        // Polvo Estelar de Fondo
         const dustCount = isMobile ? 20 : preset.dustCount;
         const dust: Stardust[] = [];
         for (let d = 0; d < dustCount; d++) {
@@ -461,7 +526,6 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
         }
         dustRef.current = dust;
 
-        // Pool de Chispas
         const sparks: Spark[] = [];
         for (let sp = 0; sp < 40; sp++) {
           sparks.push({
@@ -478,7 +542,6 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
         }
         sparksRef.current = sparks;
 
-        // Paquetes de Datos
         const initialPackets: DataPacket[] = [];
         for (let p = 0; p < preset.maxPackets; p++) {
           initialPackets.push({
@@ -514,36 +577,55 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
         mouseRef.current.targetX = e.clientX;
         mouseRef.current.targetY = e.clientY;
         mouseRef.current.isActive = true;
+
+        // Detección de Nodo bajo el cursor para HUD Interactivo
+        const nodes = nodesRef.current;
+        let foundNode: NetworkNode | null = null;
+        for (let i = 0; i < nodes.length; i++) {
+          const n = nodes[i];
+          const dist = Math.hypot(e.clientX - n.x, e.clientY - n.y);
+          if (dist < 28) {
+            foundNode = n;
+            break;
+          }
+        }
+        hoveredNodeRef.current = foundNode;
       };
 
       const handleMouseLeave = () => {
         mouseRef.current.isActive = false;
         mouseRef.current.targetX = -3000;
         mouseRef.current.targetY = -3000;
+        hoveredNodeRef.current = null;
       };
 
       const handleClick = (e: MouseEvent) => {
-        if (!enableRipples) return;
-        const waves = wavesRef.current;
-        const available = waves.find(w => !w.active);
-        if (available) {
-          available.active = true;
-          available.x = e.clientX;
-          available.y = e.clientY;
-          available.radius = 10;
-          available.maxRadius = 280;
-          available.intensity = 1.0;
-          available.speed = 5.0;
-        } else if (waves.length < 6) {
-          waves.push({
-            active: true,
-            x: e.clientX,
-            y: e.clientY,
-            radius: 10,
-            maxRadius: 280,
-            intensity: 1.0,
-            speed: 5.0,
-          });
+        const hovered = hoveredNodeRef.current;
+        if (hovered) {
+          // Disparo de ráfaga de tráfico desde el nodo tocado
+          triggerBurstAtNode(hovered.id);
+        } else if (enableRipples) {
+          const waves = wavesRef.current;
+          const available = waves.find(w => !w.active);
+          if (available) {
+            available.active = true;
+            available.x = e.clientX;
+            available.y = e.clientY;
+            available.radius = 10;
+            available.maxRadius = 280;
+            available.intensity = 1.0;
+            available.speed = 5.0;
+          } else if (waves.length < 6) {
+            waves.push({
+              active: true,
+              x: e.clientX,
+              y: e.clientY,
+              radius: 10,
+              maxRadius: 280,
+              intensity: 1.0,
+              speed: 5.0,
+            });
+          }
         }
       };
 
@@ -553,6 +635,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
       window.addEventListener('click', handleClick, { passive: true });
 
       let time = 0;
+      let radarX = 0;
       const minDist = preset.minDist;
       const maxDistSq = maxDistance * maxDistance;
       const minDistSq = minDist * minDist;
@@ -565,11 +648,35 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
         mouse.x += (mouse.targetX - mouse.x) * 0.18;
         mouse.y += (mouse.targetY - mouse.y) * 0.18;
 
+        // Radar Sweep Horizontal
+        if (enableRadarSweep) {
+          radarX += 3.5;
+          if (radarX > width + 200) radarX = -200;
+        }
+
         ctx.save();
         ctx.scale(dpr, dpr);
         ctx.clearRect(0, 0, width, height);
 
-        // 1. POLVO CÓSMICO DE FONDO
+        // 1. HAZ DE RADAR CUÁNTICO (RADAR SWEEP)
+        if (enableRadarSweep && radarX > -100 && radarX < width + 100) {
+          const radarGrad = ctx.createLinearGradient(radarX - 120, 0, radarX, 0);
+          radarGrad.addColorStop(0, 'rgba(16, 185, 129, 0)');
+          radarGrad.addColorStop(0.8, theme.radarSweep);
+          radarGrad.addColorStop(1, isDark ? 'rgba(103, 232, 249, 0.12)' : 'rgba(14, 116, 144, 0.08)');
+
+          ctx.fillStyle = radarGrad;
+          ctx.fillRect(radarX - 120, 0, 120, height);
+
+          ctx.beginPath();
+          ctx.moveTo(radarX, 0);
+          ctx.lineTo(radarX, height);
+          ctx.strokeStyle = isDark ? 'rgba(103, 232, 249, 0.25)' : 'rgba(14, 116, 144, 0.18)';
+          ctx.lineWidth = 1.0;
+          ctx.stroke();
+        }
+
+        // 2. POLVO CÓSMICO DE FONDO
         const dust = dustRef.current;
         for (let d = 0; d < dust.length; d++) {
           const p = dust[d];
@@ -593,27 +700,25 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
         const nodes = nodesRef.current;
         const nodeCount = nodes.length;
 
-        // 2. ACTUALIZACIÓN DE FÍSICA ARMÓNICA CON ANCLAJE ESPACIAL
+        // 3. FÍSICA ARMÓNICA CON ANCLAJE ESPACIAL Y REPULSIÓN
         for (let i = 0; i < nodeCount; i++) {
           const n = nodes[i];
 
-          // 2.1 Posición armónica ideal alrededor del ancla (Lissajous Orbital Sway)
           const targetX = n.anchorX + Math.cos(time * n.driftSpeedX + n.phase) * n.driftRadius;
           const targetY = n.anchorY + Math.sin(time * n.driftSpeedY + n.phase * 1.3) * n.driftRadius;
 
-          // 2.2 Fuerza de resorte elástico hacia su ancla
           const springK = 0.04;
           n.vx += (targetX - n.x) * springK;
           n.vy += (targetY - n.y) * springK;
 
-          // 2.3 Fuerza de Repulsión Electrostática entre nodos cercanos (Anti-Clumping)
+          // Repulsión electrostática (Anti-clumping)
           for (let j = i + 1; j < nodeCount; j++) {
             const other = nodes[j];
             const dx = n.x - other.x;
             const dy = n.y - other.y;
             const dSq = dx * dx + dy * dy;
 
-            if (dSq < 3600 && dSq > 0.1) { // Menos de 60px
+            if (dSq < 3600 && dSq > 0.1) {
               const d = Math.sqrt(dSq);
               const repelForce = (1 - d / 60) * 0.8;
               const nx = dx / d;
@@ -626,16 +731,19 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             }
           }
 
-          // 2.4 Amortiguación
           n.vx *= 0.88;
           n.vy *= 0.88;
 
           n.x += n.vx;
           n.y += n.vy;
 
-          // 2.5 Decaimiento de actividad
           if (n.activity > 0) n.activity = Math.max(0, n.activity - 0.015);
           if (n.haloPulse > 0) n.haloPulse = Math.max(0, n.haloPulse - 0.012);
+
+          // Fluctuación sutil de latencia en telemetría
+          if (time % 60 === 0 && Math.random() < 0.3) {
+            n.latency = Math.max(6, Math.min(24, n.latency + (Math.random() > 0.5 ? 1 : -1)));
+          }
 
           if (n.tier === 'CORE') {
             n.sonarRadius += 0.45;
@@ -646,7 +754,11 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             n.satellites[s].angle += n.satellites[s].speed;
           }
 
-          // 2.6 Interacción del Ratón
+          // Activación al paso del haz de radar
+          if (enableRadarSweep && Math.abs(n.x - radarX) < 15) {
+            n.activity = Math.max(n.activity, 0.65);
+          }
+
           if (mouse.isActive && enableMouseInteraction) {
             const dx = mouse.x - n.x;
             const dy = mouse.y - n.y;
@@ -660,7 +772,6 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             }
           }
 
-          // 2.7 Ondas de Choque
           const waves = wavesRef.current;
           for (let w = 0; w < waves.length; w++) {
             const wave = waves[w];
@@ -681,7 +792,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           }
         }
 
-        // 3. CONEXIONES ESTRUCTURADAS LIMPIAS (SIN LÍNEAS DUPLICADAS NI AMONTONAMIENTO)
+        // 4. CONEXIONES ESTRUCTURADAS
         const connections: NetworkConnection[] = [];
         const maxConnsPerNode = 4;
         const connCounts = new Uint8Array(nodeCount);
@@ -698,7 +809,6 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             const dy = n1.y - n2.y;
             const distSq = dx * dx + dy * dy;
 
-            // Rango estrictamente delimitado para evitar marañas
             if (distSq < maxDistSq && distSq > minDistSq) {
               const dist = Math.sqrt(distSq);
               let tier: 'TRUNK' | 'BRANCH' | 'FEEDER' = 'FEEDER';
@@ -730,6 +840,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
                 ctrlX: midX,
                 ctrlY: midY,
                 tier,
+                routerAngle: (i + j) * 0.4,
               });
 
               connCounts[i]++;
@@ -741,7 +852,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
 
         connectionsRef.current = connections;
 
-        // 4. FACETAS GEOMÉTRICAS TRIANGULARES ESTRUCTURADAS
+        // 5. FACETAS GEOMÉTRICAS TRIANGULARES
         if (preset.enableTriangles && connections.length >= 3) {
           ctx.fillStyle = theme.triangleFill;
           ctx.strokeStyle = theme.triangleStroke;
@@ -777,7 +888,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           }
         }
 
-        // 5. FILAMENTOS DE FIBRA ÓPTICA LUMINOSA (GRADIENT BÉZIER FILAMENTS)
+        // 6. FILAMENTOS DE FIBRA ÓPTICA LUMINOSA (GRADIENT BÉZIER FILAMENTS)
         for (let c = 0; c < connections.length; c++) {
           const conn = connections[c];
           const p1 = nodes[conn.source];
@@ -810,9 +921,20 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           ctx.moveTo(p1.x, p1.y);
           ctx.quadraticCurveTo(conn.ctrlX, conn.ctrlY, p2.x, p2.y);
           ctx.stroke();
+
+          // Micro-nodo router hexagonal en líneas troncales principales
+          if (conn.tier === 'TRUNK' && distRatio > 0.4) {
+            ctx.save();
+            ctx.translate(conn.ctrlX, conn.ctrlY);
+            ctx.rotate(time * 0.02 + conn.routerAngle);
+            ctx.strokeStyle = isDark ? 'rgba(103, 232, 249, 0.4)' : 'rgba(14, 116, 144, 0.3)';
+            ctx.lineWidth = 1.0;
+            ctx.strokeRect(-2.5, -2.5, 5, 5);
+            ctx.restore();
+          }
         }
 
-        // 6. RETÍCULA Y FILAMENTOS MAGNÉTICOS DEL RATÓN
+        // 7. RETÍCULA Y FILAMENTOS MAGNÉTICOS DEL RATÓN
         if (mouse.isActive && enableMouseInteraction) {
           const focusRing = 18 + Math.sin(time * 0.08) * 3;
           ctx.beginPath();
@@ -841,7 +963,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           }
         }
 
-        // 7. PAQUETES DE DATOS CUÁNTICOS
+        // 8. PAQUETES DE DATOS CUÁNTICOS
         if (enablePulses && connections.length > 0) {
           const packets = packetsRef.current;
           const sparks = sparksRef.current;
@@ -951,7 +1073,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           }
         }
 
-        // 8. ONDAS DE CHOQUE
+        // 9. ONDAS DE CHOQUE
         if (enableRipples) {
           const waves = wavesRef.current;
           for (let w = 0; w < waves.length; w++) {
@@ -980,7 +1102,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           }
         }
 
-        // 9. DIBUJAR NODOS, SONAR RINGS Y MICRO-SATÉLITES
+        // 10. DIBUJAR NODOS, SONAR RINGS, MICRO-SATÉLITES Y HUD TELEMETRY
         for (let i = 0; i < nodeCount; i++) {
           const n = nodes[i];
           const nodeAlpha = (0.85 + n.activity * 0.15) * n.depth;
@@ -1010,6 +1132,17 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             ctx.strokeStyle = `${theme.trunkLine}${(0.48 + n.activity * 0.45).toFixed(3)})`;
             ctx.lineWidth = 1.3;
             ctx.stroke();
+
+            // HUD Flotante sobre Core Gateways
+            if (enableTelemetryHUD && width > 768) {
+              ctx.font = 'bold 8.5px "JetBrains Mono", Consolas, monospace';
+              ctx.fillStyle = theme.hudText;
+              ctx.fillText(`${n.name} [${n.latency}ms]`, n.x + 12, n.y - 10);
+
+              ctx.font = '7.5px "JetBrains Mono", Consolas, monospace';
+              ctx.fillStyle = isDark ? 'rgba(103, 232, 249, 0.7)' : 'rgba(14, 116, 144, 0.7)';
+              ctx.fillText(`OK • ${n.throughput} req/s`, n.x + 12, n.y);
+            }
           }
 
           if (n.tier === 'HUB') {
@@ -1019,6 +1152,12 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             ctx.strokeStyle = `${theme.branchLine}${(0.38 + n.activity * 0.4).toFixed(3)})`;
             ctx.lineWidth = 1.1;
             ctx.stroke();
+
+            if (enableTelemetryHUD && width > 1024) {
+              ctx.font = '8px "JetBrains Mono", Consolas, monospace';
+              ctx.fillStyle = isDark ? 'rgba(6, 182, 212, 0.85)' : 'rgba(14, 116, 144, 0.85)';
+              ctx.fillText(n.name, n.x + 10, n.y - 6);
+            }
           }
 
           for (let s = 0; s < n.satellites.length; s++) {
@@ -1054,6 +1193,57 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           }
         }
 
+        // 11. INSPECTOR HUD EN TIEMPO REAL (AL PASAR EL RATÓN SOBRE CUALQUIER NODO)
+        const hovered = hoveredNodeRef.current;
+        if (hovered && enableTelemetryHUD) {
+          // Corchete de enfoque $[ \quad ]$
+          const brkSize = hovered.radius + 12;
+          ctx.strokeStyle = isDark ? '#67E8F9' : '#0284C7';
+          ctx.lineWidth = 1.4;
+
+          // Esquinas del corchete
+          ctx.beginPath();
+          ctx.moveTo(hovered.x - brkSize, hovered.y - brkSize + 5);
+          ctx.lineTo(hovered.x - brkSize, hovered.y - brkSize);
+          ctx.lineTo(hovered.x - brkSize + 5, hovered.y - brkSize);
+
+          ctx.moveTo(hovered.x + brkSize - 5, hovered.y - brkSize);
+          ctx.lineTo(hovered.x + brkSize, hovered.y - brkSize);
+          ctx.lineTo(hovered.x + brkSize, hovered.y - brkSize + 5);
+
+          ctx.moveTo(hovered.x - brkSize, hovered.y + brkSize - 5);
+          ctx.lineTo(hovered.x - brkSize, hovered.y + brkSize);
+          ctx.lineTo(hovered.x - brkSize + 5, hovered.y + brkSize);
+
+          ctx.moveTo(hovered.x + brkSize - 5, hovered.y + brkSize);
+          ctx.lineTo(hovered.x + brkSize, hovered.y + brkSize);
+          ctx.lineTo(hovered.x + brkSize, hovered.y + brkSize - 5);
+          ctx.stroke();
+
+          // Tarjeta flotante de telemetría
+          const cardW = 150;
+          const cardH = 50;
+          const cardX = Math.min(width - cardW - 10, hovered.x + brkSize + 8);
+          const cardY = Math.max(10, hovered.y - cardH * 0.5);
+
+          ctx.fillStyle = theme.hudBg;
+          ctx.strokeStyle = theme.hudBorder;
+          ctx.lineWidth = 1.0;
+          ctx.beginPath();
+          ctx.roundRect(cardX, cardY, cardW, cardH, 6);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.font = 'bold 9px "JetBrains Mono", Consolas, monospace';
+          ctx.fillStyle = theme.hudText;
+          ctx.fillText(`● ${hovered.name}`, cardX + 10, cardY + 16);
+
+          ctx.font = '8px "JetBrains Mono", Consolas, monospace';
+          ctx.fillStyle = theme.hudSub;
+          ctx.fillText(`ROLE: ${hovered.role}`, cardX + 10, cardY + 29);
+          ctx.fillText(`PING: ${hovered.latency}ms  THRU: ${hovered.throughput}/s`, cardX + 10, cardY + 41);
+        }
+
         ctx.restore();
         animationFrameId = requestAnimationFrame(render);
       };
@@ -1067,7 +1257,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
         window.removeEventListener('mouseleave', handleMouseLeave);
         window.removeEventListener('click', handleClick);
       };
-    }, [maxDistance, isDark, enablePulses, enableRipples, enableMouseInteraction, variant]);
+    }, [maxDistance, isDark, enablePulses, enableRipples, enableMouseInteraction, enableTelemetryHUD, enableRadarSweep, variant]);
 
     return (
       <canvas
