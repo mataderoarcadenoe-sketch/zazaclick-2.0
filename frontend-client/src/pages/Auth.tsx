@@ -286,45 +286,30 @@ export default function AuthPage() {
               </div>
             )}
 
-            {/* Google Authentication Button Container (Diseño Premium sin correos expuestos) */}
+            {/* Google Authentication Button Container */}
             <div className="space-y-5 pt-2">
               
-              <div className="flex flex-col items-center justify-center min-h-[52px] relative w-full max-w-[340px] mx-auto">
+              <div className="flex flex-col items-center justify-center min-h-[50px] relative w-full">
                 {loadingGoogle && !authenticating && (
-                  <div className="flex items-center gap-2.5 py-3.5 px-6 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 text-xs font-medium animate-pulse w-full justify-center">
+                  <div className="flex items-center gap-2.5 py-3.5 px-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 text-xs font-medium animate-pulse">
                     <Loader2 size={16} className="animate-spin text-emerald-500" />
                     <span>Cargando autenticación segura...</span>
                   </div>
                 )}
 
                 {authenticating && (
-                  <div className="flex items-center gap-2.5 py-3.5 px-6 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-300 text-xs font-bold border border-emerald-200/60 dark:border-emerald-800/60 shadow-sm animate-pulse w-full justify-center">
+                  <div className="flex items-center gap-2.5 py-3.5 px-6 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-300 text-xs font-bold border border-emerald-200/60 dark:border-emerald-800/60 shadow-sm animate-pulse">
                     <Loader2 size={16} className="animate-spin text-emerald-500" />
                     <span>Autenticando de forma segura...</span>
                   </div>
                 )}
 
-                {/* Botón Custom Elegante Zaza.click */}
-                <div className={`relative w-full ${loadingGoogle || authenticating ? 'hidden' : 'block'}`}>
-                  <button
-                    type="button"
-                    className="w-full py-3.5 px-6 rounded-2xl bg-white dark:bg-[#1a2333] border border-slate-200/90 dark:border-slate-700/80 hover:border-emerald-500/50 hover:shadow-md hover:shadow-emerald-500/5 text-slate-800 dark:text-white font-bold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-3 transition-all cursor-pointer group"
-                  >
-                    <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
-                      <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
-                      <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.24v3.15C3.26 21.36 7.34 24 12 24z"/>
-                      <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.24C.45 8.16 0 9.97 0 12s.45 3.84 1.24 5.42l4.04-3.15z"/>
-                      <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.24 6.58l4.04 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
-                    </svg>
-                    <span className="tracking-tight">Continuar con Google</span>
-                  </button>
-
-                  {/* Overlay Invisible del SDK de Google para capturar el clic y abrir el selector nativo */}
-                  <div 
-                    ref={googleBtnRef} 
-                    className="absolute inset-0 w-full h-full opacity-0 overflow-hidden cursor-pointer z-10 [&>div]:w-full [&>div]:h-full [&_iframe]:w-full [&_iframe]:h-full [&_iframe]:scale-150"
-                  />
-                </div>
+                <div 
+                  ref={googleBtnRef} 
+                  className={`w-full flex justify-center transform active:scale-[0.99] transition-all ${
+                    loadingGoogle || authenticating ? 'hidden' : 'block'
+                  }`} 
+                />
               </div>
 
               {/* Security Footnote */}
