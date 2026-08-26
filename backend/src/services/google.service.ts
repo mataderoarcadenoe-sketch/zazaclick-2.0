@@ -3,9 +3,14 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
-const CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '782722800100-4j8107m9nn2r0ngt6b4e17r2s2166l19.apps.googleusercontent.com';
+const OFFICIAL_CLIENT_ID = '782722800100-4j8107m9nn2r0ngt6b4e17r2s2166l19.apps.googleusercontent.com';
+const ALLOWED_CLIENT_IDS = Array.from(new Set([
+  OFFICIAL_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_ID,
+  '6104299697-7dissi3tuvd84q94737nqmsi96nmh2d5.apps.googleusercontent.com'
+].filter(Boolean) as string[]));
 
-const client = new OAuth2Client(CLIENT_ID);
+const client = new OAuth2Client();
 
 export class GoogleService {
   /**
@@ -15,7 +20,7 @@ export class GoogleService {
     try {
       const ticket = await client.verifyIdToken({
         idToken: token,
-        audience: CLIENT_ID,
+        audience: ALLOWED_CLIENT_IDS,
       });
 
       const payload = ticket.getPayload();
