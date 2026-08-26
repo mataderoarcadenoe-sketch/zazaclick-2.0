@@ -55,10 +55,11 @@ export default function AuthPage() {
       window.google.accounts.id.renderButton(
         googleBtnRef.current,
         { 
-          theme: isDark ? 'filled_dark' : 'outline', 
+          type: 'standard',
+          theme: isDark ? 'filled_black' : 'outline', 
           size: 'large', 
           width: '320',
-          text: 'continue_with',
+          text: 'signin_with',
           shape: 'pill',
           logo_alignment: 'left'
         }
