@@ -1452,11 +1452,11 @@ echo $response;`;
 
       {/* Modal QR Code */}
       {qrCodeModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-2xl animate-fadeIn">
-          <div className="surface-elevated rounded-3xl p-7 max-w-sm w-full text-center space-y-4">
-            <div className="flex items-center justify-between pb-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-fadeIn">
+          <div className="relative bg-white dark:bg-[#0E1524] border border-slate-200 dark:border-slate-800 rounded-3xl p-7 max-w-sm w-full text-center space-y-4 shadow-2xl shadow-black/50 overflow-hidden">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800/80">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">Escanear Código QR</h3>
-              <button onClick={() => setQrCodeModal({ open: false, instanceName: '', qrCode: null })} className="p-1.5 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 rounded-xl text-slate-400 cursor-pointer">
+              <button onClick={() => setQrCodeModal({ open: false, instanceName: '', qrCode: null })} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800/60 rounded-xl text-slate-400 cursor-pointer">
                 <X size={16} />
               </button>
             </div>

@@ -4,7 +4,7 @@ import {
   Key, Activity, Radio, BarChart3, Terminal, Shield, RefreshCw,
   Copy, CheckCircle2, XCircle, Play,
   ExternalLink, Layers, ArrowUpRight,
-  Send, Check, HelpCircle, Code
+  Send, Check, HelpCircle, Code, X
 } from 'lucide-react';
 
 interface DeveloperPortalProps {
@@ -694,14 +694,22 @@ export const DeveloperPortal: React.FC<DeveloperPortalProps> = ({
 
       {/* Modal Nueva API Key */}
       {newKeyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="surface-panel p-6 rounded-2xl border border-slate-200 dark:border-slate-800 max-w-lg w-full space-y-5">
-            <div className="flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-fadeIn">
+          <div className="relative bg-white dark:bg-[#0E1524] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-7 max-w-lg w-full text-left shadow-2xl shadow-black/50 space-y-5 overflow-hidden">
+            <div className="flex items-center justify-between pb-1 border-b border-slate-100 dark:border-slate-800/80">
               <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Key size={18} className="text-emerald-500" />
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                  <Key size={16} />
+                </div>
                 <span>{createdSecret ? '¡API Key Generada con Éxito!' : 'Crear Nueva API Key'}</span>
               </h3>
-              <button onClick={() => setNewKeyModal(false)} className="text-slate-400 hover:text-slate-600">✕</button>
+              <button 
+                onClick={() => setNewKeyModal(false)} 
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
+                aria-label="Cerrar modal"
+              >
+                <X size={18} />
+              </button>
             </div>
 
             {!createdSecret ? (
@@ -713,7 +721,7 @@ export const DeveloperPortal: React.FC<DeveloperPortalProps> = ({
                     value={newKeyName}
                     onChange={(e) => setNewKeyName(e.target.value)}
                     placeholder="Ej. ERP Facturación SAP / Odoo"
-                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs text-slate-900 dark:text-white"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                   />
                 </div>
 
@@ -723,48 +731,55 @@ export const DeveloperPortal: React.FC<DeveloperPortalProps> = ({
                     <button
                       type="button"
                       onClick={() => setNewKeyEnv('live')}
-                      className={`p-3 rounded-xl border text-xs font-bold text-left transition-all ${
+                      className={`p-3 rounded-2xl border text-xs font-bold text-left transition-all cursor-pointer ${
                         newKeyEnv === 'live'
-                          ? 'border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                          : 'border-slate-200 dark:border-slate-800 text-slate-500'
+                          ? 'border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                          : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 text-slate-500 hover:border-slate-300 dark:hover:border-slate-700'
                       }`}
                     >
-                      <div>🟢 Live (Producción)</div>
-                      <div className="text-[10px] font-normal text-slate-400 mt-1">Prefijo zc_live_</div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span>🟢 Live (Producción)</span>
+                      </div>
+                      <div className="text-[10px] font-normal text-slate-400 mt-1 font-mono">Prefijo zc_live_</div>
                     </button>
                     <button
                       type="button"
                       onClick={() => setNewKeyEnv('test')}
-                      className={`p-3 rounded-xl border text-xs font-bold text-left transition-all ${
+                      className={`p-3 rounded-2xl border text-xs font-bold text-left transition-all cursor-pointer ${
                         newKeyEnv === 'test'
-                          ? 'border-amber-500 bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                          : 'border-slate-200 dark:border-slate-800 text-slate-500'
+                          ? 'border-amber-500 bg-amber-500/10 text-amber-600 dark:text-amber-400 shadow-sm'
+                          : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 text-slate-500 hover:border-slate-300 dark:hover:border-slate-700'
                       }`}
                     >
-                      <div>🧪 Test (Sandbox)</div>
-                      <div className="text-[10px] font-normal text-slate-400 mt-1">Prefijo zc_test_</div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                        <span>🧪 Test (Sandbox)</span>
+                      </div>
+                      <div className="text-[10px] font-normal text-slate-400 mt-1 font-mono">Prefijo zc_test_</div>
                     </button>
                   </div>
                 </div>
 
                 <button
                   onClick={handleCreateKey}
-                  className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all cursor-pointer"
+                  className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-lg shadow-emerald-600/20"
                 >
                   Generar Clave Secreta
                 </button>
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200">
+                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200">
                   ⚠️ <strong>Copia este secreto inmediatamente.</strong> No se volverá a mostrar nunca más por políticas estrictas de seguridad.
                 </div>
 
-                <div className="p-3.5 bg-slate-950 text-emerald-400 font-mono text-xs rounded-xl flex items-center justify-between break-all">
+                <div className="p-4 bg-slate-950 text-emerald-400 font-mono text-xs rounded-2xl border border-slate-800 flex items-center justify-between break-all shadow-inner">
                   <span>{createdSecret}</span>
                   <button
                     onClick={() => copyText(createdSecret, 'secret-modal')}
-                    className="p-1.5 hover:bg-slate-800 rounded text-slate-300 ml-2"
+                    className="p-2 hover:bg-slate-800 rounded-xl text-slate-300 ml-2 transition-colors cursor-pointer"
+                    title="Copiar secreto"
                   >
                     {copiedKey === 'secret-modal' ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
                   </button>
@@ -772,7 +787,7 @@ export const DeveloperPortal: React.FC<DeveloperPortalProps> = ({
 
                 <button
                   onClick={() => setNewKeyModal(false)}
-                  className="w-full py-2 bg-slate-900 text-white dark:bg-slate-800 rounded-xl text-xs font-bold cursor-pointer"
+                  className="w-full py-2.5 bg-slate-900 text-white hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 rounded-xl text-xs font-bold cursor-pointer transition-all shadow-md"
                 >
                   He guardado mi clave de forma segura
                 </button>
@@ -930,37 +945,67 @@ export const DeveloperPortal: React.FC<DeveloperPortalProps> = ({
 
           {/* Drawer Detalle de Log */}
           {selectedLog && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
-              <div className="surface-panel p-6 rounded-2xl border border-slate-200 dark:border-slate-800 max-w-2xl w-full space-y-4 max-h-[85vh] overflow-y-auto">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 bg-blue-500/10 text-blue-600 rounded font-mono font-bold text-xs">{selectedLog.method}</span>
-                    <span className="font-mono text-xs font-bold text-slate-900 dark:text-white">{selectedLog.endpoint}</span>
-                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${selectedLog.statusCode < 300 ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-600'}`}>
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-fadeIn">
+              <div className="relative bg-white dark:bg-[#0E1524] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-7 max-w-2xl w-full text-left shadow-2xl shadow-black/50 space-y-5 max-h-[85vh] overflow-y-auto">
+                <div className="flex items-center justify-between pb-1 border-b border-slate-100 dark:border-slate-800/80">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <span className="px-2.5 py-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl font-mono font-bold text-xs">
+                      {selectedLog.method}
+                    </span>
+                    <span className="font-mono text-xs font-bold text-slate-900 dark:text-white">
+                      {selectedLog.endpoint}
+                    </span>
+                    <span className={`px-2.5 py-1 rounded-xl text-xs font-bold ${
+                      selectedLog.statusCode < 300
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                        : selectedLog.statusCode < 400
+                        ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20'
+                        : selectedLog.statusCode < 500
+                        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                        : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
+                    }`}>
                       HTTP {selectedLog.statusCode}
                     </span>
                   </div>
-                  <button onClick={() => setSelectedLog(null)} className="text-slate-400 hover:text-slate-600">✕</button>
+                  <button 
+                    onClick={() => setSelectedLog(null)} 
+                    className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
+                    aria-label="Cerrar modal"
+                  >
+                    <X size={18} />
+                  </button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 dark:bg-slate-900 p-3 rounded-xl">
-                  <div><strong>Request ID:</strong> <code className="font-mono text-[11px]">{selectedLog.requestId}</code></div>
-                  <div><strong>Latencia:</strong> {selectedLog.latencyMs} ms</div>
-                  <div><strong>IP Cliente:</strong> {selectedLog.ipAddress}</div>
-                  <div><strong>Fecha:</strong> {new Date(selectedLog.createdAt).toLocaleString()}</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-slate-50 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 p-4 rounded-2xl">
+                  <div className="space-y-0.5">
+                    <span className="text-[11px] font-semibold text-slate-500">Request ID:</span>
+                    <code className="font-mono text-xs text-slate-900 dark:text-slate-200 block truncate font-bold">{selectedLog.requestId || 'zc_req_auto'}</code>
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="text-[11px] font-semibold text-slate-500">Latencia:</span>
+                    <span className="font-mono text-xs text-slate-900 dark:text-slate-200 block font-bold">{selectedLog.latencyMs} ms</span>
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="text-[11px] font-semibold text-slate-500">IP Cliente:</span>
+                    <span className="font-mono text-xs text-slate-900 dark:text-slate-200 block font-bold">{selectedLog.ipAddress || '127.0.0.1'}</span>
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="text-[11px] font-semibold text-slate-500">Fecha & Hora:</span>
+                    <span className="text-xs text-slate-900 dark:text-slate-200 block font-semibold">{new Date(selectedLog.createdAt).toLocaleString()}</span>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
-                  <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300">Cuerpo de la Petición (Request Body)</h4>
-                  <pre className="p-3 bg-slate-950 text-slate-200 rounded-xl text-xs font-mono overflow-x-auto">
-                    {JSON.stringify(selectedLog.requestBody, null, 2)}
+                  <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[11px]">Cuerpo de la Petición (Request Body)</h4>
+                  <pre className="p-4 bg-slate-950 text-emerald-400 border border-slate-800 rounded-2xl text-xs font-mono overflow-x-auto shadow-inner">
+                    {JSON.stringify(selectedLog.requestBody, null, 2) || '{}'}
                   </pre>
                 </div>
 
                 <div className="space-y-2">
-                  <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300">Respuesta Devuelta (Response Body)</h4>
-                  <pre className="p-3 bg-slate-950 text-slate-200 rounded-xl text-xs font-mono overflow-x-auto">
-                    {JSON.stringify(selectedLog.responseBody, null, 2)}
+                  <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[11px]">Respuesta Devuelta (Response Body)</h4>
+                  <pre className="p-4 bg-slate-950 text-slate-200 border border-slate-800 rounded-2xl text-xs font-mono overflow-x-auto shadow-inner">
+                    {JSON.stringify(selectedLog.responseBody, null, 2) || '{}'}
                   </pre>
                 </div>
               </div>
@@ -1042,23 +1087,31 @@ export const DeveloperPortal: React.FC<DeveloperPortalProps> = ({
 
       {/* Modal Enviar Test Webhook */}
       {testWebhookModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
-          <div className="surface-panel p-6 rounded-2xl border border-slate-200 dark:border-slate-800 max-w-lg w-full space-y-4">
-            <div className="flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-fadeIn">
+          <div className="relative bg-white dark:bg-[#0E1524] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-7 max-w-lg w-full text-left shadow-2xl shadow-black/50 space-y-5 overflow-hidden">
+            <div className="flex items-center justify-between pb-1 border-b border-slate-100 dark:border-slate-800/80">
               <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Play size={18} className="text-amber-500" />
+                <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                  <Play size={16} />
+                </div>
                 <span>Enviar Evento de Prueba a tu ERP</span>
               </h3>
-              <button onClick={() => setTestWebhookModal(false)} className="text-slate-400 hover:text-slate-600">✕</button>
+              <button 
+                onClick={() => setTestWebhookModal(false)} 
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
+                aria-label="Cerrar modal"
+              >
+                <X size={18} />
+              </button>
             </div>
 
-            <div className="space-y-3">
-              <div className="space-y-1">
+            <div className="space-y-4">
+              <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Seleccionar Instancia</label>
                 <select
                   value={testInstance}
                   onChange={(e) => setTestInstance(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50"
                 >
                   {instances.map(i => (
                     <option key={i.instance_name} value={i.instance_name}>{i.instance_name}</option>
@@ -1066,12 +1119,12 @@ export const DeveloperPortal: React.FC<DeveloperPortalProps> = ({
                 </select>
               </div>
 
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Tipo de Evento</label>
                 <select
                   value={testEventType}
                   onChange={(e) => setTestEventType(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50"
                 >
                   <option value="MESSAGE_RECEIVED">MESSAGE_RECEIVED (Mensaje Entrante)</option>
                   <option value="CONNECTION_UPDATE">CONNECTION_UPDATE (Estado de Conexión)</option>
@@ -1083,14 +1136,14 @@ export const DeveloperPortal: React.FC<DeveloperPortalProps> = ({
               <button
                 onClick={handleTestWebhook}
                 disabled={testingWebhook}
-                className="w-full py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2"
+                className="w-full py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-amber-600/20"
               >
                 {testingWebhook ? <RefreshCw size={14} className="animate-spin" /> : <Send size={14} />}
                 <span>{testingWebhook ? 'Despachando evento firmado...' : 'Despachar Evento Firmado con HMAC'}</span>
               </button>
 
               {testResult && (
-                <div className={`p-4 rounded-xl border text-xs space-y-2 ${
+                <div className={`p-4 rounded-2xl border text-xs space-y-2 ${
                   testResult.success ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-900 dark:text-emerald-200' : 'bg-rose-500/10 border-rose-500/30 text-rose-900 dark:text-rose-200'
                 }`}>
                   <div className="font-bold flex items-center gap-1.5">
@@ -1098,10 +1151,10 @@ export const DeveloperPortal: React.FC<DeveloperPortalProps> = ({
                     <span>{testResult.message || (testResult.success ? 'Evento Entregado' : 'Fallo en Entrega')}</span>
                   </div>
                   {testResult.data && (
-                    <div className="text-[11px] space-y-1 font-mono">
+                    <div className="text-[11px] space-y-1 font-mono bg-slate-950/20 p-2.5 rounded-xl">
                       <div>Status: HTTP {testResult.data.httpStatus} ({testResult.data.latencyMs}ms)</div>
-                      <div>URL: {testResult.data.targetUrl}</div>
-                      <div>Firma: {testResult.data.signatureHeader}</div>
+                      <div className="truncate">URL: {testResult.data.targetUrl}</div>
+                      <div className="truncate">Firma: {testResult.data.signatureHeader}</div>
                     </div>
                   )}
                 </div>
