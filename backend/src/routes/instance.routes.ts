@@ -298,6 +298,42 @@ router.post('/logout/:instanceName', authMiddleware, logoutHandler);
 router.post('/:instanceName/logout', authMiddleware, logoutHandler);
 
 /**
+ * GET /status/:instanceName y GET /:instanceName/status - Consultar estado de conexión en tiempo real
+ */
+const getStatusHandler = async (req: AuthenticatedRequest, res: Response) => {
+  const { instanceName } = req.params;
+  try {
+    const verifyRes = await pool.query('SELECT id, status FROM instances WHERE user_id = $1 AND instance_name = $2', [req.userId, instanceName]);
+    if (verifyRes.rows.length === 0) {
+      return res.status(403).json({ success: false, error: 'Acceso no autorizado.' });
+    }
+
+    const state = await EvolutionService.getConnectionState(instanceName);
+    const isConnected = state === 'open' || state === 'connected';
+
+    if (isConnected && verifyRes.rows[0].status !== 'connected') {
+      console.log(`✅ [StatusCheck] Instancia "${instanceName}" vinculada con éxito. Actualizando BD a connected.`);
+      await pool.query(
+        "UPDATE instances SET status = 'connected', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1",
+        [instanceName]
+      );
+    }
+
+    res.json({
+      success: true,
+      instanceName,
+      state,
+      isConnected
+    });
+  } catch (err: any) {
+    console.error('[StatusCheck] Error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+router.get('/status/:instanceName', authMiddleware, getStatusHandler);
+router.get('/:instanceName/status', authMiddleware, getStatusHandler);
+
+/**
  * DELETE /delete/:instanceName y DELETE /:instanceName - Eliminar instancia
  */
 const deleteInstanceHandler = async (req: AuthenticatedRequest, res: Response) => {

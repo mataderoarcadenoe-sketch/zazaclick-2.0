@@ -111,6 +111,29 @@ export default function Dashboard() {
     }
   }, [fetchInstances, fetchSubscription, fetchAdminData, user?.role]);
 
+  // Auto-detectar la conexión de WhatsApp mientras el modal de QR esté abierto
+  useEffect(() => {
+    if (!qrCodeModal.open || !qrCodeModal.instanceName) return;
+
+    console.log(`🔄 [QR Polling] Iniciando monitoreo de conexión para: ${qrCodeModal.instanceName}`);
+
+    const intervalId = setInterval(async () => {
+      try {
+        const res = await api.get(`/instances/${qrCodeModal.instanceName}/status`);
+        if (res.data?.success && res.data.isConnected) {
+          console.log(`✅ [QR Polling] Conexión detectada exitosamente para ${qrCodeModal.instanceName}`);
+          setQrCodeModal({ open: false, instanceName: '', qrCode: null });
+          showNotification('¡Línea WhatsApp vinculada exitosamente!', 'success');
+          fetchInstances();
+        }
+      } catch (err: any) {
+        console.warn('Error verificando estado de conexión QR:', err.message);
+      }
+    }, 2000);
+
+    return () => clearInterval(intervalId);
+  }, [qrCodeModal.open, qrCodeModal.instanceName, fetchInstances]);
+
   // Manejadores de Instancias WhatsApp
   const handleCreateInstance = async (e: React.FormEvent) => {
     e.preventDefault();
