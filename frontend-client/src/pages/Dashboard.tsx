@@ -9,6 +9,8 @@ import {
   Moon, Sun, Menu, X, Play, Shield, Globe, Activity, ArrowRight, Building, Users, Server
 } from 'lucide-react';
 
+import { AsyncOperationModal, type AsyncStep, type AsyncStatus } from '../components/AsyncOperationModal';
+
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const { isDark, toggle: toggleDark } = useDarkMode();
@@ -17,6 +19,23 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<string>(user?.role === 'admin' ? 'admin_overview' : 'overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notification, setNotification] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
+  // Máquina de Estados de Operaciones Asíncronas (Senior Full-Stack Architecture)
+  const [asyncOp, setAsyncOp] = useState<{
+    open: boolean;
+    title: string;
+    subtitle?: string;
+    status: AsyncStatus;
+    steps: AsyncStep[];
+    errorMessage?: string | null;
+    successMessage?: string | null;
+    onRetry?: () => void;
+  }>({
+    open: false,
+    title: '',
+    status: 'idle',
+    steps: []
+  });
 
   // Instancias / Líneas WhatsApp
   const [instances, setInstances] = useState<any[]>([]);
@@ -134,26 +153,97 @@ export default function Dashboard() {
     return () => clearInterval(intervalId);
   }, [qrCodeModal.open, qrCodeModal.instanceName, fetchInstances]);
 
-  // Manejadores de Instancias WhatsApp
-  const handleCreateInstance = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newInstanceName.trim()) {
+  // Manejadores de Instancias WhatsApp con Máquina de Estados Operacional
+  const handleCreateInstance = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const instanceName = newInstanceName.trim();
+    if (!instanceName) {
       showNotification('Ingresa un nombre para la línea/instancia', 'error');
       return;
     }
 
+    // Prevenir peticiones duplicadas / doble submit
+    if (asyncOp.open && asyncOp.status !== 'idle' && asyncOp.status !== 'error' && asyncOp.status !== 'timeout') {
+      return;
+    }
+
+    const initialSteps: AsyncStep[] = [
+      { id: '1', label: 'Enviando solicitud de creación al servidor', status: 'active' },
+      { id: '2', label: 'Inicializando motor WhatsApp API (Evolution Engine)', status: 'pending' },
+      { id: '3', label: 'Guardando credenciales y generador de API Key en PostgreSQL', status: 'pending' }
+    ];
+
+    setAsyncOp({
+      open: true,
+      title: `Creando Instancia "${instanceName}"`,
+      subtitle: 'Por favor espera mientras configuramos tu nueva línea WhatsApp API.',
+      status: 'submitting',
+      steps: initialSteps,
+      errorMessage: null,
+      successMessage: null,
+      onRetry: () => handleCreateInstance()
+    });
+
+    // Timeout preventivo de 25 segundos
+    const timeoutId = setTimeout(() => {
+      setAsyncOp(prev => {
+        if (prev.status === 'success' || prev.status === 'error') return prev;
+        return {
+          ...prev,
+          status: 'timeout',
+          errorMessage: 'La operación está tomando más tiempo del habitual. La instancia se está configurando en segundo plano en el servidor.',
+          steps: prev.steps.map(s => s.status === 'active' ? { ...s, status: 'failed' } : s)
+        };
+      });
+    }, 25000);
+
     try {
       setLoadingInstances(true);
-      const res = await api.post('/instances', { instanceName: newInstanceName.trim() });
+
+      // Simular avance del primer hito al enviar a la API
+      setAsyncOp(prev => ({
+        ...prev,
+        status: 'processing',
+        steps: [
+          { ...prev.steps[0], status: 'completed' },
+          { ...prev.steps[1], status: 'active', detail: 'Conectando con el clúster de Evolution API...' },
+          prev.steps[2]
+        ]
+      }));
+
+      const res = await api.post('/instances', { instanceName });
+      clearTimeout(timeoutId);
+
       if (res.data?.success) {
-        showNotification('Línea WhatsApp creada exitosamente');
+        setAsyncOp(prev => ({
+          ...prev,
+          status: 'success',
+          steps: [
+            { ...prev.steps[0], status: 'completed' },
+            { ...prev.steps[1], status: 'completed' },
+            { ...prev.steps[2], status: 'completed' }
+          ],
+          successMessage: `¡La línea "${instanceName}" ha sido creada exitosamente! Puedes generar su código QR para conectar WhatsApp.`
+        }));
+
         setNewInstanceName('');
         fetchInstances();
       } else {
-        showNotification(res.data?.error || 'No se pudo crear la instancia', 'error');
+        setAsyncOp(prev => ({
+          ...prev,
+          status: 'error',
+          steps: prev.steps.map(s => s.status === 'active' ? { ...s, status: 'failed' } : s),
+          errorMessage: res.data?.error || 'No se pudo crear la instancia de WhatsApp.'
+        }));
       }
     } catch (err: any) {
-      showNotification(err.response?.data?.error || 'Error al crear la instancia', 'error');
+      clearTimeout(timeoutId);
+      setAsyncOp(prev => ({
+        ...prev,
+        status: 'error',
+        steps: prev.steps.map(s => s.status === 'active' ? { ...s, status: 'failed' } : s),
+        errorMessage: err.response?.data?.error || err.message || 'Error al comunicarse con el servidor.'
+      }));
     } finally {
       setLoadingInstances(false);
     }
@@ -1181,6 +1271,19 @@ echo $response;`;
           </div>
         </div>
       )}
+
+      {/* Modal de Operaciones Asíncronas con Máquina de Estados */}
+      <AsyncOperationModal
+        open={asyncOp.open}
+        title={asyncOp.title}
+        subtitle={asyncOp.subtitle}
+        status={asyncOp.status}
+        steps={asyncOp.steps}
+        errorMessage={asyncOp.errorMessage}
+        successMessage={asyncOp.successMessage}
+        onClose={() => setAsyncOp(prev => ({ ...prev, open: false, status: 'idle' }))}
+        onRetry={asyncOp.onRetry}
+      />
 
     </div>
   );
