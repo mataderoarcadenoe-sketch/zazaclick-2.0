@@ -884,12 +884,13 @@ export default function AdminDashboardPage() {
                             <div className="text-[10px] font-normal text-slate-400 font-sans">{inst.phone || 'Sin número'}</div>
                           </td>
                           <td className="px-6 py-4">
-                            <span className={`px-2.5 py-1 text-[10px] font-bold rounded-lg uppercase ${
+                            <span className={`px-2.5 py-1 text-[10px] font-bold rounded-lg uppercase flex items-center gap-1 w-fit ${
                               inst.engine_type === 'evolution_go'
                                 ? 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20'
                                 : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20'
                             }`}>
-                              {inst.engine_type === 'evolution_go' ? '⚡ Evolution Go' : '● Evolution API'}
+                              {inst.engine_type === 'evolution_go' ? <Zap size={10} className="text-indigo-600 dark:text-indigo-400" /> : null}
+                              <span>{inst.engine_type === 'evolution_go' ? 'Evolution Go' : 'Evolution API'}</span>
                             </span>
                           </td>
                           <td className="px-6 py-4 font-bold text-slate-700 dark:text-slate-300">

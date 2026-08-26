@@ -4,7 +4,8 @@ import {
   Key, Activity, Radio, BarChart3, Terminal, Shield, RefreshCw,
   Copy, CheckCircle2, XCircle, Play,
   ExternalLink, Layers, ArrowUpRight,
-  Send, Check, HelpCircle, Code, X
+  Send, Check, HelpCircle, Code, X,
+  Zap, FlaskConical, Lightbulb, AlertTriangle
 } from 'lucide-react';
 
 interface DeveloperPortalProps {
@@ -424,25 +425,25 @@ export const DeveloperPortal: React.FC<DeveloperPortalProps> = ({
         <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-900/80 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800">
           <button
             onClick={() => setEnvironment('live')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
               environment === 'live'
                 ? 'bg-emerald-600 text-white shadow-sm'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            🟢 LIVE MODE
+            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span>LIVE MODE</span>
           </button>
           <button
             onClick={() => setEnvironment('test')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
               environment === 'test'
                 ? 'bg-amber-600 text-white shadow-sm'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <span className="w-2 h-2 rounded-full bg-amber-300"></span>
-            🧪 TEST MODE
+            <FlaskConical size={13} className={environment === 'test' ? 'text-white' : 'text-amber-500'} />
+            <span>TEST MODE</span>
           </button>
         </div>
       </div>
@@ -525,8 +526,9 @@ export const DeveloperPortal: React.FC<DeveloperPortalProps> = ({
                 <span>{overview?.instances?.connected || instances.length || 1}</span>
                 <span className="text-xs text-slate-500 font-normal">/ {overview?.instances?.total || instances.length || 1} Activas</span>
               </div>
-              <div className="text-[11px] text-slate-500">
-                Multi-Engine: Evolution API + Go ⚡
+              <div className="text-[11px] text-slate-500 flex items-center gap-1">
+                <span>Multi-Engine: Evolution API + Go</span>
+                <Zap size={11} className="text-amber-500" />
               </div>
             </div>
 
@@ -770,8 +772,11 @@ export const DeveloperPortal: React.FC<DeveloperPortalProps> = ({
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200">
-                  ⚠️ <strong>Copia este secreto inmediatamente.</strong> No se volverá a mostrar nunca más por políticas estrictas de seguridad.
+                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2">
+                  <AlertTriangle size={16} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                  <div>
+                    <strong>Copia este secreto inmediatamente.</strong> No se volverá a mostrar nunca más por políticas estrictas de seguridad.
+                  </div>
                 </div>
 
                 <div className="p-4 bg-slate-950 text-emerald-400 font-mono text-xs rounded-2xl border border-slate-800 flex items-center justify-between break-all shadow-inner">
@@ -1318,8 +1323,9 @@ export const DeveloperPortal: React.FC<DeveloperPortalProps> = ({
                 <div key={err.code} className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-2">
                   <div className="font-mono text-xs font-bold text-rose-600 dark:text-rose-400">{err.code}</div>
                   <p className="text-xs text-slate-600 dark:text-slate-400">{err.desc}</p>
-                  <div className="text-[11px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 p-2 rounded-lg">
-                    💡 <strong>Solución:</strong> {err.fix}
+                  <div className="text-[11px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 p-2 rounded-lg flex items-start gap-1.5">
+                    <Lightbulb size={14} className="shrink-0 mt-0.5" />
+                    <span><strong>Solución:</strong> {err.fix}</span>
                   </div>
                 </div>
               ))}

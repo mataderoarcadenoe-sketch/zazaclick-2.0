@@ -1092,7 +1092,7 @@ echo json_encode(['received' => true]);
                   <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-2">
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                      <h3 className="text-sm font-bold text-slate-900 dark:text-white">Evolution Go (whatsmeow ⚡)</h3>
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-white">Evolution Go (whatsmeow / Golang)</h3>
                     </div>
                     <p className="text-xs text-slate-500 leading-relaxed">
                       Motor de alto rendimiento compilado en <strong>Go 1.24</strong>. Máxima velocidad de throughput, mínimo consumo de memoria RAM y latencias de envío ultrabajas.

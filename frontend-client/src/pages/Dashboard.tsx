@@ -7,7 +7,7 @@ import {
   LogOut, RefreshCw, Plus, Key, Trash2, Smartphone, CheckCircle2, 
   AlertCircle, Copy, Send, LayoutGrid, Terminal, 
   Moon, Sun, Menu, X, Play, Shield, Building, Image, Mic, MapPin, UserPlus, ArrowRight,
-  Activity, Globe, CreditCard, AlertTriangle, Code
+  Activity, Globe, CreditCard, AlertTriangle, Code, Zap
 } from 'lucide-react';
 
 import { AsyncOperationModal, type AsyncStep, type AsyncStatus } from '../components/AsyncOperationModal';
@@ -198,7 +198,7 @@ export default function Dashboard() {
       return;
     }
 
-    const engineName = selectedEngine === 'evolution_go' ? 'Evolution Go ⚡' : 'Evolution API 2.4.0-rc2';
+    const engineName = selectedEngine === 'evolution_go' ? 'Evolution Go (Fast Engine)' : 'Evolution API 2.4.0-rc2';
     const initialSteps: AsyncStep[] = [
       { id: '1', label: 'Enviando solicitud de creación al servidor', status: 'active' },
       { id: '2', label: `Inicializando motor WhatsApp API (${engineName})`, status: 'pending' },
@@ -920,13 +920,14 @@ echo $response;`;
                       <button
                         type="button"
                         onClick={() => setSelectedEngine('evolution_go')}
-                        className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                        className={`px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                           selectedEngine === 'evolution_go'
                             ? 'bg-indigo-600 text-white font-bold shadow-sm'
                             : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'
                         }`}
                       >
-                        ⚡ Evolution Go
+                        <Zap size={13} className={selectedEngine === 'evolution_go' ? 'text-amber-300' : 'text-slate-400'} />
+                        <span>Evolution Go</span>
                       </button>
                     </div>
                   </div>
@@ -974,12 +975,13 @@ echo $response;`;
                             <div className="space-y-0.5">
                               <div className="flex items-center gap-2">
                                 <h4 className="text-sm font-mono font-bold text-slate-900 dark:text-white">{inst.instance_name}</h4>
-                                <span className={`px-2 py-0.5 text-[9px] font-bold rounded-md uppercase ${
+                                <span className={`px-2 py-0.5 text-[9px] font-bold rounded-md uppercase flex items-center gap-1 ${
                                   inst.engine_type === 'evolution_go'
                                     ? 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300'
                                     : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
                                 }`}>
-                                  {inst.engine_type === 'evolution_go' ? '⚡ Go' : '● API v2'}
+                                  {inst.engine_type === 'evolution_go' ? <Zap size={10} className="text-indigo-600 dark:text-indigo-400" /> : null}
+                                  <span>{inst.engine_type === 'evolution_go' ? 'Go Engine' : 'API v2'}</span>
                                 </span>
                               </div>
                               <span className="text-xs text-slate-500 dark:text-slate-400 font-normal block">{inst.phone || 'Sin número vinculado'}</span>
