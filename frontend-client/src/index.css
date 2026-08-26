@@ -7,11 +7,10 @@
   --font-sans: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   
-  /* Brand colors */
+  /* Brand functional hierarchy */
   --color-brand-primary: #10B981;
-  --color-brand-secondary: #0F172A;
-  --color-brand-accent: #14B8A6;
-  --color-brand-cyan: #06B6D4;
+  --color-brand-secondary: #14B8A6;
+  --color-brand-accent: #06B6D4;
 }
 
 @layer base {
@@ -23,110 +22,162 @@
   }
 
   body {
-    background-color: #F8FAFC;
+    background-color: #F0F4F8;
     color: #0F172A;
-    transition: background-color 0.25s ease, color 0.25s ease;
+    transition: background-color 0.3s ease, color 0.3s ease;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.05) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(6, 182, 212, 0.04) 0px, transparent 50%),
+      radial-gradient(at 50% 100%, rgba(20, 184, 166, 0.04) 0px, transparent 50%);
+    background-attachment: fixed;
   }
 
   body.dark {
-    background-color: #070B12;
+    background-color: #070B10;
     color: #F8FAFC;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.07) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(6, 182, 212, 0.05) 0px, transparent 50%),
+      radial-gradient(at 50% 100%, rgba(13, 20, 28, 0.8) 0px, transparent 60%);
+    background-attachment: fixed;
   }
 
-  /* Scrollbars - Minimalist Tech */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  /* Minimalist Tech Scrollbar (No borders) */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 9999px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.5); }
+  ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.25); border-radius: 9999px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.45); }
 
-  body.dark ::-webkit-scrollbar-thumb { background: rgba(51, 65, 85, 0.5); }
-  body.dark ::-webkit-scrollbar-thumb:hover { background: rgba(71, 85, 105, 0.7); }
+  body.dark ::-webkit-scrollbar-thumb { background: rgba(51, 65, 85, 0.4); }
+  body.dark ::-webkit-scrollbar-thumb:hover { background: rgba(71, 85, 105, 0.6); }
 }
 
 @layer utilities {
-  /* Tech Card System */
-  .card-saas {
+  /* ═══════════════════════════════════════════════════════════════════
+     ✦  NO-BORDER / NO-SHADOW SURFACE SYSTEM
+     ═══════════════════════════════════════════════════════════════════ */
+
+  /* Level 1: Translucent Panel Atmosphere */
+  .surface-panel {
+    background-color: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+  .dark .surface-panel {
+    background-color: rgba(10, 16, 23, 0.75);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+
+  /* Level 2: Elevated Interactive Surface */
+  .surface-elevated {
+    background-color: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+  .dark .surface-elevated {
+    background-color: rgba(13, 20, 28, 0.90);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  /* Level 3: Focus & Input Surface */
+  .surface-focus {
     background-color: #FFFFFF;
-    border: 1px solid rgba(226, 232, 240, 0.9);
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
+  }
+  .dark .surface-focus {
+    background-color: #111A23;
   }
 
-  .dark .card-saas {
-    background-color: #0D131F;
-    border: 1px solid rgba(30, 41, 59, 0.8);
-    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
+  /* Level 4: Soft Interactive Container with Luminosity Hover */
+  .surface-interactive {
+    background-color: rgba(226, 232, 240, 0.45);
+    transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s ease;
+  }
+  .surface-interactive:hover {
+    background-color: rgba(255, 255, 255, 0.85);
+  }
+  .dark .surface-interactive {
+    background-color: rgba(13, 20, 28, 0.6);
+  }
+  .dark .surface-interactive:hover {
+    background-color: rgba(17, 26, 35, 0.9);
   }
 
-  .card-saas-hover {
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Semantic Atmospheric Accents */
+  .surface-accent-emerald {
+    background-color: rgba(16, 185, 129, 0.08);
+  }
+  .dark .surface-accent-emerald {
+    background-color: rgba(16, 185, 129, 0.12);
   }
 
-  .card-saas-hover:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  .surface-accent-cyan {
+    background-color: rgba(6, 182, 212, 0.08);
+  }
+  .dark .surface-accent-cyan {
+    background-color: rgba(6, 182, 212, 0.12);
   }
 
-  .dark .card-saas-hover:hover {
-    box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.6), 0 0 15px -3px rgba(16, 185, 129, 0.15);
+  .surface-accent-teal {
+    background-color: rgba(20, 184, 166, 0.08);
+  }
+  .dark .surface-accent-teal {
+    background-color: rgba(20, 184, 166, 0.12);
   }
 
-  /* Status Badges & Glows */
-  .glow-emerald {
-    box-shadow: 0 0 15px -2px rgba(16, 185, 129, 0.35);
+  .surface-accent-amber {
+    background-color: rgba(245, 158, 11, 0.08);
+  }
+  .dark .surface-accent-amber {
+    background-color: rgba(245, 158, 11, 0.12);
   }
 
-  .glow-cyan {
-    box-shadow: 0 0 15px -2px rgba(6, 182, 212, 0.35);
+  .surface-accent-rose {
+    background-color: rgba(244, 63, 94, 0.08);
+  }
+  .dark .surface-accent-rose {
+    background-color: rgba(244, 63, 94, 0.12);
   }
 
-  .glow-amber {
-    box-shadow: 0 0 15px -2px rgba(245, 158, 11, 0.35);
-  }
-
-  .glow-rose {
-    box-shadow: 0 0 15px -2px rgba(244, 63, 94, 0.35);
-  }
-
-  /* Tech Grid Background */
+  /* Subtle Ambient Mesh Grid */
   .bg-grid-tech {
-    background-image: radial-gradient(rgba(148, 163, 184, 0.15) 1px, transparent 1px);
-    background-size: 28px 28px;
+    background-image: radial-gradient(rgba(148, 163, 184, 0.12) 1px, transparent 1px);
+    background-size: 32px 32px;
   }
-
   .dark .bg-grid-tech {
-    background-image: radial-gradient(rgba(51, 65, 85, 0.25) 1px, transparent 1px);
-    background-size: 28px 28px;
+    background-image: radial-gradient(rgba(51, 65, 85, 0.20) 1px, transparent 1px);
+    background-size: 32px 32px;
   }
 
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
 }
 
-/* Animations keyframes */
+/* Fluid Keyframe Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes pulseGlow {
-  0%, 100% { opacity: 0.4; transform: scale(1); }
-  50% { opacity: 0.9; transform: scale(1.03); }
+@keyframes pulseBeacon {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.15); opacity: 1; }
 }
 
 .animate-fadeIn {
   animation: fadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.animate-pulse-glow {
-  animation: pulseGlow 4s ease-in-out infinite;
+.animate-beacon {
+  animation: pulseBeacon 2.5s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -124,7 +124,7 @@ export default function Auth() {
       <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-50">
         <button
           onClick={toggleDark}
-          className="p-3 bg-white/90 dark:bg-[#0D1829]/90 backdrop-blur-md rounded-2xl hover:bg-white dark:hover:bg-[#132238] transition-all text-slate-700 dark:text-slate-200 cursor-pointer active:scale-95 flex items-center gap-2 shadow-lg shadow-emerald-950/5 dark:shadow-black/40 border border-emerald-500/10 dark:border-emerald-500/20"
+          className="p-3 surface-interactive rounded-2xl transition-all text-slate-700 dark:text-slate-200 cursor-pointer active:scale-95 flex items-center gap-2"
           aria-label="Cambiar tema"
         >
           {isDark ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-emerald-600" />}
@@ -138,7 +138,7 @@ export default function Auth() {
           
           {/* Header Status Badge */}
           <div className="flex items-center gap-3">
-            <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold tracking-wide">
+            <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full surface-accent-emerald text-emerald-700 dark:text-emerald-300 text-xs font-bold tracking-wide">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -146,7 +146,7 @@ export default function Auth() {
               <span>WHATSAPP API ENTERPRISE SAAS GATEWAY · v2.0</span>
             </div>
 
-            <div className="hidden sm:inline-flex items-center px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold">
+            <div className="hidden sm:inline-flex items-center px-3 py-1 rounded-full surface-interactive text-slate-600 dark:text-slate-300 text-xs font-semibold">
               <span>Multi-Inquilino</span>
             </div>
           </div>
@@ -161,19 +161,19 @@ export default function Auth() {
               a Nivel Empresarial.
             </h1>
             <p className="text-slate-600 dark:text-slate-400 text-sm md:text-base leading-relaxed max-w-2xl font-normal">
-              La plataforma SaaS especializada para conectar instancias de WhatsApp ilimitadas, emitir credenciales seguras <code className="text-emerald-600 dark:text-emerald-400 font-bold">x-api-key</code> y procesar millones de mensajes con latencia sub-segundo.
+              La plataforma SaaS especializada para conectar instancias de WhatsApp ilimitadas, emitir credenciales seguras <code className="text-emerald-600 dark:text-emerald-400 font-bold px-1 py-0.5 rounded bg-emerald-500/10">x-api-key</code> y procesar millones de mensajes con latencia sub-segundo.
             </p>
           </div>
 
           {/* Hero Visual: WhatsApp API Architecture Gateway Canvas */}
-          <div className="p-6 rounded-3xl bg-white/75 dark:bg-[#0D1829]/75 backdrop-blur-xl relative overflow-hidden space-y-5 border border-emerald-500/10 dark:border-white/5 shadow-xl shadow-emerald-950/5 dark:shadow-black/50">
+          <div className="p-6 rounded-3xl surface-panel relative overflow-hidden space-y-5">
             
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/80">
+            <div className="flex items-center justify-between pb-3">
               <div className="flex items-center gap-2">
                 <Terminal size={16} className="text-emerald-500" />
                 <span className="text-xs font-bold text-slate-900 dark:text-white">Flujo de Arquitectura en Tiempo Real</span>
               </div>
-              <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-full">
+              <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 surface-accent-emerald px-2.5 py-0.5 rounded-full">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
                 <span>ONLINE · 99.99% SLA</span>
               </div>
@@ -183,7 +183,7 @@ export default function Auth() {
             <div className="grid grid-cols-3 gap-3 text-center">
               
               {/* Node 1: Client App */}
-              <div className="p-4 bg-slate-50/80 dark:bg-[#141D2E]/80 rounded-2xl space-y-1 border border-slate-100 dark:border-slate-800/50">
+              <div className="p-4 surface-interactive rounded-2xl space-y-1">
                 <div className="w-8 h-8 mx-auto rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 flex items-center justify-center font-bold text-xs">
                   <Server size={16} />
                 </div>
@@ -192,7 +192,7 @@ export default function Auth() {
               </div>
 
               {/* Node 2: Zaza Core Gateway */}
-              <div className="p-4 bg-emerald-50/70 dark:bg-emerald-950/40 rounded-2xl space-y-1 relative border border-emerald-500/15">
+              <div className="p-4 surface-accent-emerald rounded-2xl space-y-1 relative">
                 <div className="absolute -left-3 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600">
                   <ArrowRight size={14} />
                 </div>
@@ -207,7 +207,7 @@ export default function Auth() {
               </div>
 
               {/* Node 3: WhatsApp Multi-Tenant Instances */}
-              <div className="p-4 bg-slate-50/80 dark:bg-[#141D2E]/80 rounded-2xl space-y-1 border border-slate-100 dark:border-slate-800/50">
+              <div className="p-4 surface-interactive rounded-2xl space-y-1">
                 <div className="w-8 h-8 mx-auto rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold text-xs">
                   <Smartphone size={16} />
                 </div>
@@ -238,7 +238,7 @@ export default function Auth() {
           {/* Feature Highlights Cards */}
           <div className="grid grid-cols-2 gap-4 max-w-2xl">
             
-            <div className="p-5 rounded-2xl bg-white/75 dark:bg-[#0D1829]/75 backdrop-blur-md space-y-1.5 border border-emerald-500/10 dark:border-white/5 shadow-md">
+            <div className="p-5 rounded-2xl surface-panel space-y-1.5">
               <div className="flex items-center gap-2 text-slate-900 dark:text-white text-xs font-bold">
                 <Zap size={16} className="text-emerald-500" />
                 <span>API REST Directa</span>
@@ -248,7 +248,7 @@ export default function Auth() {
               </p>
             </div>
 
-            <div className="p-5 rounded-2xl bg-white/75 dark:bg-[#0D1829]/75 backdrop-blur-md space-y-1.5 border border-emerald-500/10 dark:border-white/5 shadow-md">
+            <div className="p-5 rounded-2xl surface-panel space-y-1.5">
               <div className="flex items-center gap-2 text-slate-900 dark:text-white text-xs font-bold">
                 <ShieldCheck size={16} className="text-teal-500" />
                 <span>Aislamiento Criptográfico</span>
@@ -262,9 +262,9 @@ export default function Auth() {
 
         </div>
 
-        {/* Right Column — Master Authentication Card (Flat Minimalist Surface) */}
+        {/* Right Column — Master Authentication Card */}
         <div className="lg:col-span-5 flex justify-center w-full animate-fadeIn">
-          <div className="w-full max-w-md bg-white/80 dark:bg-[#0D1829]/80 backdrop-blur-2xl p-8 sm:p-10 rounded-[32px] relative overflow-hidden transition-all border border-emerald-500/15 dark:border-white/5 shadow-2xl shadow-emerald-950/10 dark:shadow-black/70">
+          <div className="w-full max-w-md surface-elevated p-8 sm:p-10 rounded-[32px] relative overflow-hidden transition-all">
             
             {/* Brand Logo & Header */}
             <div className="space-y-4 text-center pb-6">
@@ -276,7 +276,7 @@ export default function Auth() {
               </div>
 
               <div className="space-y-1">
-                <div className="inline-flex items-center px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-bold uppercase tracking-wider">
+                <div className="inline-flex items-center px-3 py-1 rounded-full surface-interactive text-slate-700 dark:text-slate-300 text-[11px] font-bold uppercase tracking-wider">
                   <span>Zaza.click 2.0</span>
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight pt-1">
@@ -291,7 +291,7 @@ export default function Auth() {
 
             {/* Error Message Card */}
             {error && (
-              <div className="p-4 mb-6 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs rounded-2xl text-left font-medium leading-relaxed flex items-start gap-3 animate-fadeIn">
+              <div className="p-4 mb-6 surface-accent-rose text-rose-700 dark:text-rose-300 text-xs rounded-2xl text-left font-medium leading-relaxed flex items-start gap-3 animate-fadeIn">
                 <ShieldAlert size={18} className="text-rose-600 dark:text-rose-400 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-bold text-rose-900 dark:text-rose-200">Error de Autenticación</p>
@@ -305,14 +305,14 @@ export default function Auth() {
               
               <div className="flex flex-col items-center justify-center min-h-[50px] relative w-full">
                 {loadingGoogle && !authenticating && (
-                  <div className="flex items-center gap-2.5 py-3.5 px-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 text-xs font-medium animate-pulse">
+                  <div className="flex items-center gap-2.5 py-3.5 px-6 rounded-full surface-interactive text-slate-400 text-xs font-medium animate-pulse">
                     <Loader2 size={16} className="animate-spin text-emerald-500" />
                     <span>Cargando autenticación segura...</span>
                   </div>
                 )}
 
                 {authenticating && (
-                  <div className="flex items-center gap-2.5 py-3.5 px-6 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-300 text-xs font-bold animate-pulse">
+                  <div className="flex items-center gap-2.5 py-3.5 px-6 rounded-full surface-accent-emerald text-emerald-600 dark:text-emerald-300 text-xs font-bold animate-pulse">
                     <Loader2 size={16} className="animate-spin text-emerald-500" />
                     <span>Autenticando de forma segura...</span>
                   </div>

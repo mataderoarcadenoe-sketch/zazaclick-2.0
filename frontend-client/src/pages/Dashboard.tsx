@@ -519,15 +519,15 @@ echo $response;`;
       <InteractiveGravityMesh 
         variant="client"
         isDark={isDark}
-        className="fixed inset-0 pointer-events-none z-0 opacity-35 dark:opacity-50"
+        className="fixed inset-0 pointer-events-none z-0 opacity-40 dark:opacity-60"
       />
 
-      {/* Toast Notification (Flat Pill) */}
+      {/* Toast Notification (Atmospheric Pill) */}
       {notification && (
-        <div className={`fixed top-5 right-5 z-50 px-4 py-3 rounded-2xl flex items-center gap-2.5 text-xs font-bold animate-fadeIn ${
+        <div className={`fixed top-5 right-5 z-50 px-4 py-3 rounded-2xl flex items-center gap-2.5 text-xs font-bold animate-fadeIn backdrop-blur-xl ${
           notification.type === 'success'
-            ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/90 dark:text-emerald-300'
-            : 'bg-rose-50 text-rose-800 dark:bg-rose-950/90 dark:text-rose-300'
+            ? 'bg-emerald-500/20 text-emerald-900 dark:text-emerald-200'
+            : 'bg-rose-500/20 text-rose-900 dark:text-rose-200'
         }`}>
           {notification.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <AlertCircle className="w-4 h-4 text-rose-500" />}
           <span>{notification.text}</span>
@@ -537,14 +537,14 @@ echo $response;`;
       {/* Sidebar Overlay (Mobile) */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-slate-950/50 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      {/* Sidebar Institutional (Clean Flat Surface) */}
+      {/* Sidebar Institutional (Atmospheric Translucent Surface) */}
       <aside 
-        className={`bg-slate-900 dark:bg-[#0B0F19] border-r border-slate-800 flex flex-col transition-all duration-250 z-50 fixed top-0 left-0 h-full ${
+        className={`surface-panel flex flex-col transition-all duration-250 z-50 fixed top-0 left-0 h-full ${
           sidebarOpen ? 'w-64 translate-x-0' : 'w-20 -translate-x-full lg:translate-x-0'
         }`}
       >
@@ -556,16 +556,16 @@ echo $response;`;
                 <Smartphone size={18} />
               </div>
               <div className="flex flex-col text-left">
-                <span className="font-black text-white text-sm tracking-tight">
-                  Zaza.click <span className="text-emerald-400">2.0</span>
+                <span className="font-black text-slate-900 dark:text-white text-sm tracking-tight">
+                  Zaza.click <span className="text-emerald-500">2.0</span>
                 </span>
-                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">WhatsApp API</span>
+                <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">WhatsApp API</span>
               </div>
             </div>
           )}
           <button 
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 hover:bg-slate-800 rounded-xl transition-colors text-slate-400 cursor-pointer"
+            className="p-2 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 rounded-xl transition-colors text-slate-500 dark:text-slate-400 cursor-pointer"
             aria-label="Alternar barra lateral"
           >
             {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
@@ -589,19 +589,22 @@ echo $response;`;
                   sidebarOpen ? 'px-4 py-2.5 justify-start' : 'p-3 justify-center'
                 } rounded-xl transition-all duration-200 relative cursor-pointer ${
                   active 
-                    ? 'bg-slate-800/80 text-white font-semibold border-l-[3px] border-emerald-400'
-                    : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 font-medium'
+                    ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 font-bold'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/40 dark:hover:bg-slate-800/40 hover:text-slate-900 dark:hover:text-white font-medium'
                 }`}
               >
+                {active && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mr-2.5 flex-shrink-0" />
+                )}
                 <Icon 
                   size={18} 
-                  className={`flex-shrink-0 transition-colors ${active ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`}
+                  className={`flex-shrink-0 transition-colors ${active ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200'}`}
                   strokeWidth={active ? 2.2 : 1.8}
                 />
                 {sidebarOpen ? (
-                  <span className="ml-3.5 text-xs tracking-tight">{item.label}</span>
+                  <span className="ml-3 text-xs tracking-tight">{item.label}</span>
                 ) : (
-                  <span className="absolute left-full ml-3 px-3 py-1.5 bg-slate-900 text-white text-xs font-semibold rounded-xl whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 pointer-events-none">
+                  <span className="absolute left-full ml-3 px-3 py-1.5 surface-elevated text-slate-900 dark:text-white text-xs font-semibold rounded-xl whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 pointer-events-none">
                     {item.label}
                   </span>
                 )}
@@ -611,19 +614,19 @@ echo $response;`;
         </nav>
 
         {/* Footer Logout */}
-        <div className="p-3 border-t border-slate-800">
+        <div className="p-3">
           <button
             onClick={logout}
             className={`w-full group flex items-center ${
               sidebarOpen ? 'px-4 py-2.5 justify-start' : 'p-3 justify-center'
-            } rounded-xl hover:bg-rose-950/40 text-slate-500 hover:text-rose-400 transition-colors cursor-pointer`}
+            } rounded-xl hover:bg-rose-500/15 text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer`}
             title="Cerrar Sesión"
           >
             <LogOut size={18} className="flex-shrink-0" />
             {sidebarOpen ? (
               <span className="ml-3 text-xs font-medium">Cerrar Sesión</span>
             ) : (
-              <span className="absolute left-full ml-3 px-3 py-1.5 bg-slate-900 text-white text-xs font-semibold rounded-xl whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 pointer-events-none">
+              <span className="absolute left-full ml-3 px-3 py-1.5 surface-elevated text-slate-900 dark:text-white text-xs font-semibold rounded-xl whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 pointer-events-none">
                 Cerrar Sesión
               </span>
             )}
@@ -635,11 +638,11 @@ echo $response;`;
       <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-250 ${sidebarOpen ? 'lg:pl-64' : 'lg:pl-20'}`}>
         
         {/* Top Header */}
-        <header className="h-16 bg-white/95 dark:bg-[#0B0F19]/95 backdrop-blur-md px-4 sm:px-8 lg:px-12 flex items-center justify-between z-30 transition-colors duration-250 border-b border-slate-200/80 dark:border-slate-800/80 sticky top-0">
+        <header className="h-16 surface-panel px-4 sm:px-8 lg:px-12 flex items-center justify-between z-30 transition-colors duration-250 sticky top-0">
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-600 dark:text-slate-300 cursor-pointer lg:hidden"
+              className="p-2 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-xl transition-colors text-slate-600 dark:text-slate-300 cursor-pointer lg:hidden"
             >
               <Menu size={20} />
             </button>
@@ -652,7 +655,7 @@ echo $response;`;
                   v2.4.0
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 font-normal leading-none mt-0.5 hidden sm:block">
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 font-normal leading-none mt-0.5 hidden sm:block">
                 Gateway REST, enrutamiento multi-inquilino y webhooks en tiempo real.
               </p>
             </div>
@@ -664,7 +667,7 @@ echo $response;`;
                 href="https://zaza-click-admin-production.up.railway.app"
                 target="_blank"
                 rel="noreferrer"
-                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 dark:bg-emerald-600 hover:bg-slate-800 dark:hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 dark:bg-emerald-600 hover:bg-slate-800 dark:hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer"
               >
                 <Shield size={13} />
                 <span>Panel SuperAdmin ➔</span>
@@ -672,7 +675,7 @@ echo $response;`;
             )}
 
             {/* Live Gateway Telemetry Pill */}
-            <div className="hidden md:inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+            <div className="hidden md:inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -682,7 +685,7 @@ echo $response;`;
 
             <button
               onClick={toggleDark}
-              className="p-2.5 bg-slate-100 dark:bg-slate-800/80 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-slate-600 dark:text-slate-300 cursor-pointer border border-transparent dark:border-slate-700/50"
+              className="p-2.5 surface-interactive rounded-xl text-slate-600 dark:text-slate-300 cursor-pointer"
               title="Cambiar Tema"
             >
               {isDark ? <Sun size={17} className="text-amber-400" /> : <Moon size={17} className="text-emerald-600" />}
@@ -690,14 +693,14 @@ echo $response;`;
 
             <button
               onClick={fetchInstances}
-              className="p-2.5 bg-slate-100 dark:bg-slate-800/80 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-slate-600 dark:text-slate-300 cursor-pointer border border-transparent dark:border-slate-700/50"
+              className="p-2.5 surface-interactive rounded-xl text-slate-600 dark:text-slate-300 cursor-pointer"
               title="Sincronizar datos"
             >
               <RefreshCw size={17} className={loadingInstances ? 'animate-spin text-emerald-500' : ''} />
             </button>
 
-            <div className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center font-bold text-xs uppercase shadow-sm">
+            <div className="flex items-center gap-2 pl-2">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center font-bold text-xs uppercase">
                 {(user?.email || 'A')[0].toUpperCase()}
               </div>
               <div className="hidden lg:flex flex-col text-left">
@@ -709,27 +712,27 @@ echo $response;`;
         </header>
 
         {/* Content Body Canvas */}
-        <main className="flex-1 bg-[#F8FAFC] dark:bg-[#070B12] bg-grid-tech relative overflow-y-auto">
+        <main className="flex-1 bg-grid-tech relative overflow-y-auto">
           <div className="w-full px-4 sm:px-8 lg:px-12 py-8 space-y-8 max-w-[1920px] mx-auto">
             
             {/* DASHBOARD API OVERVIEW */}
             {activeTab === 'overview' && (
               <div className="space-y-6 animate-fadeIn text-left">
                 
-                {/* Hero Header Card */}
-                <div className="card-saas card-saas-hover p-6 sm:p-7 rounded-2xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
-                  <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+                {/* Hero Atmosphere Section */}
+                <div className="surface-panel p-7 sm:p-9 rounded-3xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+                  <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 dark:bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
                   
-                  <div className="space-y-2 text-left relative z-10">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                  <div className="space-y-2.5 text-left relative z-10">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 rounded-full text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
                       <span>Motor Evolution API 2.4.0-rc2 · Redis Queue Engine</span>
                     </div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
-                      Dashboard de WhatsApp API SaaS
+                    <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                      Infraestructura de WhatsApp API SaaS
                     </h1>
-                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl leading-relaxed font-normal">
-                      Envía mensajes de texto, imágenes, audios PTT, videos, PDFs y contactos mediante tu <code className="text-emerald-600 dark:text-emerald-400 font-bold font-mono px-1 py-0.5 bg-emerald-500/10 rounded">x-api-key</code>.
+                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-xl leading-relaxed font-normal">
+                      Envía mensajes de texto, imágenes, audios PTT, videos, PDFs y contactos mediante tu <code className="text-emerald-600 dark:text-emerald-400 font-bold font-mono px-1.5 py-0.5 bg-emerald-500/10 rounded">x-api-key</code> de alta velocidad.
                     </p>
                   </div>
 
@@ -737,7 +740,7 @@ echo $response;`;
                     <button
                       type="button"
                       onClick={() => setActiveTab('instances')}
-                      className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center gap-2 shadow-sm shadow-emerald-600/20 transition-all active:scale-[0.98] cursor-pointer"
+                      className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
                     >
                       <Plus size={15} />
                       <span>Crear Línea</span>
@@ -745,7 +748,7 @@ echo $response;`;
                     <button
                       type="button"
                       onClick={() => setActiveTab('playground')}
-                      className="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs rounded-xl flex items-center gap-2 transition-all active:scale-[0.98] cursor-pointer border border-slate-200/80 dark:border-slate-700/80"
+                      className="px-5 py-2.5 surface-interactive text-slate-800 dark:text-slate-200 font-semibold text-xs rounded-xl flex items-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
                     >
                       <Play size={15} />
                       <span>Probar Envíos API</span>
@@ -755,7 +758,7 @@ echo $response;`;
 
                 {/* Alerta de Estado de Licencia si está vencido */}
                 {subscription?.is_expired && (
-                  <div className="p-4 bg-rose-50 dark:bg-rose-950/60 rounded-xl border border-rose-200 dark:border-rose-900/50 flex items-center justify-between text-xs font-semibold text-rose-800 dark:text-rose-200 shadow-sm">
+                  <div className="p-4 surface-accent-rose rounded-2xl flex items-center justify-between text-xs font-semibold text-rose-800 dark:text-rose-200">
                     <div className="flex items-center gap-2">
                       <AlertTriangle size={17} className="text-rose-600" />
                       <span>Tu suscripción ha vencido. Las llamadas a la API de WhatsApp están bloqueadas. Contacta al administrador para renovar.</span>
@@ -764,53 +767,53 @@ echo $response;`;
                   </div>
                 )}
 
-                {/* KPI Metrics con escala de elevación tecnológica */}
+                {/* KPI Metrics — Composición Editorial por Tono & Tipografía */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="card-saas card-saas-hover p-5 rounded-2xl border-l-4 border-orange-500">
+                  <div className="surface-panel p-6 rounded-2xl space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Consumo de Cuota</span>
-                      <div className="w-8 h-8 rounded-xl bg-orange-50 dark:bg-orange-950/40 flex items-center justify-center"><Activity size={15} className="text-orange-500" /></div>
+                      <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Consumo de Cuota</span>
+                      <div className="w-8 h-8 rounded-xl surface-accent-amber flex items-center justify-center"><Activity size={15} className="text-amber-500" /></div>
                     </div>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white mt-2 font-mono">
+                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono">
                       {subscription?.messages_used || 0} <span className="text-xs font-normal text-slate-400 font-sans">/ {subscription?.messages_limit || 1000}</span>
                     </div>
-                    <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mt-2">
+                    <div className="w-full h-1.5 bg-slate-200/80 dark:bg-slate-800/80 rounded-full overflow-hidden mt-2">
                       <div 
                         className={`h-full rounded-full transition-all duration-500 ${Number(subscription?.consumption_percentage || 0) > 85 ? 'bg-rose-500' : 'bg-emerald-500'}`}
                         style={{ width: `${Math.min(100, Number(subscription?.consumption_percentage || 0))}%` }}
                       />
                     </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                       {subscription?.consumption_percentage || 0}% consumido ({subscription?.available_messages || 0} libres)
                     </p>
                   </div>
 
-                  <div className="card-saas card-saas-hover p-5 rounded-2xl border-l-4 border-emerald-500">
+                  <div className="surface-panel p-6 rounded-2xl space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Líneas Conectadas</span>
-                      <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center"><Smartphone size={15} className="text-emerald-500" /></div>
+                      <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Líneas Conectadas</span>
+                      <div className="w-8 h-8 rounded-xl surface-accent-emerald flex items-center justify-center"><Smartphone size={15} className="text-emerald-500" /></div>
                     </div>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white mt-2 font-mono">
+                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono">
                       {activeInstancesCount} <span className="text-xs font-normal text-slate-400 font-sans">/ {maxInstances === 99 ? '∞' : maxInstances}</span>
                     </div>
-                    <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mt-2 flex items-center gap-1.5">
+                    <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 pt-1">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                       <span>{activeInstancesCount > 0 ? 'Conexión activa con WhatsApp' : 'Sin líneas vinculadas'}</span>
                     </p>
                   </div>
 
-                  <div className="card-saas card-saas-hover p-5 rounded-2xl border-l-4 border-blue-500 min-w-0">
+                  <div className="surface-panel p-6 rounded-2xl space-y-2 min-w-0">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">URL Endpoint</span>
-                      <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center"><Globe size={15} className="text-blue-500" /></div>
+                      <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">URL Endpoint</span>
+                      <div className="w-8 h-8 rounded-xl surface-accent-cyan flex items-center justify-center"><Globe size={15} className="text-cyan-500" /></div>
                     </div>
-                    <div className="text-xs font-mono font-bold text-slate-900 dark:text-white truncate mt-2 px-2 py-1 bg-slate-50 dark:bg-slate-900/60 rounded-lg border border-slate-200/60 dark:border-slate-800" title={currentBackendUrl}>
+                    <div className="text-xs font-mono font-bold text-slate-900 dark:text-white truncate px-2.5 py-1.5 surface-interactive rounded-xl" title={currentBackendUrl}>
                       {currentBackendUrl}
                     </div>
                     <button 
                       type="button" 
                       onClick={() => copyToClipboard(currentBackendUrl, 'base-url')} 
-                      className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline mt-2 flex items-center gap-1 cursor-pointer"
+                      className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer pt-1"
                     >
                       {copiedId === 'base-url' ? (
                         <>
@@ -823,21 +826,21 @@ echo $response;`;
                     </button>
                   </div>
 
-                  <div className="card-saas card-saas-hover p-5 rounded-2xl border-l-4 border-violet-500">
+                  <div className="surface-panel p-6 rounded-2xl space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Plan y Vencimiento</span>
-                      <div className="w-8 h-8 rounded-xl bg-violet-50 dark:bg-violet-950/40 flex items-center justify-center"><CreditCard size={15} className="text-violet-500" /></div>
+                      <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Plan y Vencimiento</span>
+                      <div className="w-8 h-8 rounded-xl surface-accent-teal flex items-center justify-center"><CreditCard size={15} className="text-teal-500" /></div>
                     </div>
-                    <div className="text-base font-black text-slate-900 dark:text-white uppercase truncate mt-2">
+                    <div className="text-base font-black text-slate-900 dark:text-white uppercase truncate">
                       {subscription?.plan_name || 'Plan Developer'}
                     </div>
-                    <div className="mt-2">
+                    <div className="pt-1">
                       {subscription?.is_expired ? (
-                        <span className="px-2.5 py-0.5 bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 text-[10px] font-bold rounded-full uppercase">
+                        <span className="px-2.5 py-1 bg-rose-500/10 text-rose-700 dark:text-rose-300 text-[10px] font-bold rounded-full uppercase">
                           🔴 VENCIDO
                         </span>
                       ) : (
-                        <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[10px] font-bold rounded-full uppercase">
+                        <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold rounded-full uppercase">
                           ● {subscription?.days_remaining || 0} DÍAS RESTANTES
                         </span>
                       )}
@@ -852,7 +855,7 @@ echo $response;`;
             {activeTab === 'instances' && (
               <div className="space-y-6 animate-fadeIn text-left">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/20 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-xl surface-accent-emerald text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                     <Smartphone size={19} />
                   </div>
                   <div className="space-y-0.5">
@@ -861,7 +864,7 @@ echo $response;`;
                   </div>
                 </div>
 
-                <div className="card-saas p-5 sm:p-6 rounded-2xl space-y-3">
+                <div className="surface-panel p-6 rounded-2xl space-y-3">
                   <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Crear Nueva Instancia API</h3>
                   <form onSubmit={handleCreateInstance} className="flex flex-col sm:flex-row gap-3">
                     <input
@@ -869,12 +872,12 @@ echo $response;`;
                       value={newInstanceName}
                       onChange={(e) => setNewInstanceName(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                       placeholder="nombre_de_instancia (ej: ventas_lima)"
-                      className="flex-1 px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-mono font-semibold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition-all"
+                      className="flex-1 px-4 py-2.5 surface-interactive rounded-xl text-xs font-mono font-semibold text-slate-900 dark:text-white focus:outline-none transition-colors"
                     />
                     <button
                       type="submit"
                       disabled={loadingInstances}
-                      className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm shadow-emerald-600/20 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
+                      className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
                     >
                       <Plus size={15} />
                       <span>Crear Instancia</span>
@@ -886,8 +889,8 @@ echo $response;`;
                   <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tus Instancias ({instances.length})</h3>
 
                   {instances.length === 0 ? (
-                    <div className="card-saas p-10 rounded-2xl text-center space-y-3">
-                      <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
+                    <div className="surface-panel p-10 rounded-2xl text-center space-y-3">
+                      <div className="w-12 h-12 rounded-xl surface-accent-emerald text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
                         <Smartphone size={24} />
                       </div>
                       <div className="space-y-1">
@@ -900,9 +903,7 @@ echo $response;`;
                       {instances.map((inst) => (
                         <div 
                           key={inst.id || inst.instance_name} 
-                          className={`card-saas card-saas-hover p-5 rounded-2xl border-l-4 space-y-4 text-left ${
-                            inst.status === 'connected' ? 'border-emerald-500' : 'border-rose-400'
-                          }`}
+                          className="surface-panel p-6 rounded-2xl space-y-4 text-left"
                         >
                           <div className="flex items-center justify-between">
                             <div className="space-y-0.5">
@@ -912,8 +913,8 @@ echo $response;`;
 
                             <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase ${
                               inst.status === 'connected' 
-                                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' 
-                                : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
+                                ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' 
+                                : 'bg-rose-500/15 text-rose-700 dark:text-rose-300'
                             }`}>
                               {inst.status === 'connected' ? '● CONECTADO' : '○ DESCONECTADO'}
                             </span>
@@ -921,12 +922,12 @@ echo $response;`;
 
                           <div className="space-y-1.5">
                             <span className="text-[10px] font-semibold text-slate-400 uppercase block">API Key de Instancia</span>
-                            <div className="flex items-center justify-between bg-slate-50 dark:bg-[#141D2E] px-3 py-2 rounded-xl border border-slate-200/60 dark:border-slate-800">
+                            <div className="flex items-center justify-between surface-interactive px-3 py-2 rounded-xl">
                               <code className="text-xs font-mono font-bold text-slate-800 dark:text-slate-200 truncate mr-2">{inst.api_key}</code>
                               <button
                                 type="button"
                                 onClick={() => copyToClipboard(inst.api_key, `inst-${inst.instance_name}`)}
-                                className="p-1 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-500 hover:text-emerald-600 transition-colors cursor-pointer flex items-center gap-1"
+                                className="p-1 hover:bg-slate-300/50 dark:hover:bg-slate-700/50 rounded-lg text-slate-500 hover:text-emerald-600 transition-colors cursor-pointer flex items-center gap-1"
                                 title="Copiar API Key"
                               >
                                 {copiedId === `inst-${inst.instance_name}` ? (
@@ -943,7 +944,7 @@ echo $response;`;
                               <button
                                 type="button"
                                 onClick={() => handleDisconnectInstance(inst.instance_name)}
-                                className="flex-1 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:text-rose-300 text-xs font-bold rounded-xl transition-colors cursor-pointer border border-rose-200/50 dark:border-rose-900/30"
+                                className="flex-1 py-2 bg-rose-500/15 hover:bg-rose-500/25 text-rose-700 dark:text-rose-300 text-xs font-bold rounded-xl transition-colors cursor-pointer"
                               >
                                 Desconectar Línea
                               </button>
@@ -951,7 +952,7 @@ echo $response;`;
                               <button
                                 type="button"
                                 onClick={() => handleGetQrCode(inst.instance_name)}
-                                className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm shadow-emerald-600/20"
+                                className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5"
                               >
                                 <Smartphone size={14} />
                                 <span>Escanear QR</span>
@@ -961,7 +962,7 @@ echo $response;`;
                             <button
                               type="button"
                               onClick={() => handleDeleteInstance(inst.instance_name)}
-                              className="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer border border-transparent dark:border-slate-800"
+                              className="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
                               title="Eliminar Instancia"
                             >
                               <Trash2 size={15} />
@@ -980,7 +981,7 @@ echo $response;`;
             {activeTab === 'playground' && (
               <div className="space-y-6 animate-fadeIn text-left">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400 ring-1 ring-violet-500/20 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-xl surface-accent-teal text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
                     <Terminal size={19} />
                   </div>
                   <div className="space-y-0.5">
@@ -1005,10 +1006,10 @@ echo $response;`;
                         key={t.id}
                         type="button"
                         onClick={() => setPlaygroundType(t.id as any)}
-                        className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                        className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
                           active
-                            ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20'
-                            : 'card-saas text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                            ? 'bg-emerald-600 text-white font-bold'
+                            : 'surface-interactive text-slate-700 dark:text-slate-300'
                         }`}
                       >
                         <Icon size={13} />
@@ -1018,7 +1019,7 @@ echo $response;`;
                   })}
                 </div>
 
-                <div className="card-saas p-5 sm:p-6 rounded-2xl space-y-5">
+                <div className="surface-panel p-6 sm:p-7 rounded-2xl space-y-5">
                   <form onSubmit={handleTestSend} className="space-y-4">
                     
                     {/* Campos Base (Instancia y Teléfono) */}
@@ -1045,7 +1046,7 @@ echo $response;`;
                           value={playgroundPhone}
                           onChange={(e) => setPlaygroundPhone(e.target.value.replace(/[^0-9]/g, ''))}
                           placeholder="ej: 51912345678"
-                          className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-semibold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition-all"
+                          className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none transition-colors"
                         />
                       </div>
                     </div>
@@ -1058,7 +1059,7 @@ echo $response;`;
                           rows={3}
                           value={playgroundMessage}
                           onChange={(e) => setPlaygroundMessage(e.target.value)}
-                          className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition-all"
+                          className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none transition-colors"
                         />
                       </div>
                     )}
@@ -1092,7 +1093,7 @@ echo $response;`;
                               type="text"
                               value={playgroundMimeType}
                               onChange={(e) => setPlaygroundMimeType(e.target.value)}
-                              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-mono text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none"
+                              className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs font-mono text-slate-900 dark:text-white focus:outline-none"
                             />
                           </div>
                         </div>
@@ -1104,7 +1105,7 @@ echo $response;`;
                             value={playgroundMedia}
                             onChange={(e) => setPlaygroundMedia(e.target.value)}
                             placeholder="https://... o Base64 puro"
-                            className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-mono text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none"
+                            className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs font-mono text-slate-900 dark:text-white focus:outline-none"
                           />
                         </div>
 
@@ -1115,7 +1116,7 @@ echo $response;`;
                               type="text"
                               value={playgroundCaption}
                               onChange={(e) => setPlaygroundCaption(e.target.value)}
-                              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none"
+                              className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none"
                             />
                           </div>
 
@@ -1126,7 +1127,7 @@ echo $response;`;
                                 type="text"
                                 value={playgroundFileName}
                                 onChange={(e) => setPlaygroundFileName(e.target.value)}
-                                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none"
+                                className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none"
                               />
                             </div>
                           )}
@@ -1142,7 +1143,7 @@ echo $response;`;
                           value={playgroundAudio}
                           onChange={(e) => setPlaygroundAudio(e.target.value)}
                           placeholder="https://.../audio.mp3"
-                          className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-mono text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none"
+                          className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs font-mono text-slate-900 dark:text-white focus:outline-none"
                         />
                         <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium pt-1">
                           ● Se enviará codificado como Nota de Voz real de WhatsApp (PTT).
@@ -1159,7 +1160,7 @@ echo $response;`;
                               type="text"
                               value={playgroundLocName}
                               onChange={(e) => setPlaygroundLocName(e.target.value)}
-                              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none"
+                              className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none"
                             />
                           </div>
                           <div className="space-y-1">
@@ -1168,7 +1169,7 @@ echo $response;`;
                               type="text"
                               value={playgroundLocAddress}
                               onChange={(e) => setPlaygroundLocAddress(e.target.value)}
-                              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none"
+                              className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none"
                             />
                           </div>
                         </div>
@@ -1181,7 +1182,7 @@ echo $response;`;
                               step="any"
                               value={playgroundLatitude}
                               onChange={(e) => setPlaygroundLatitude(parseFloat(e.target.value))}
-                              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-mono text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none"
+                              className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs font-mono text-slate-900 dark:text-white focus:outline-none"
                             />
                           </div>
                           <div className="space-y-1">
@@ -1191,7 +1192,7 @@ echo $response;`;
                               step="any"
                               value={playgroundLongitude}
                               onChange={(e) => setPlaygroundLongitude(parseFloat(e.target.value))}
-                              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-mono text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none"
+                              className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs font-mono text-slate-900 dark:text-white focus:outline-none"
                             />
                           </div>
                         </div>
@@ -1206,7 +1207,7 @@ echo $response;`;
                             type="text"
                             value={playgroundContactName}
                             onChange={(e) => setPlaygroundContactName(e.target.value)}
-                            className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none"
+                            className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none"
                           />
                         </div>
                         <div className="space-y-1">
@@ -1215,7 +1216,7 @@ echo $response;`;
                             type="text"
                             value={playgroundContactPhone}
                             onChange={(e) => setPlaygroundContactPhone(e.target.value)}
-                            className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-mono text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none"
+                            className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs font-mono text-slate-900 dark:text-white focus:outline-none"
                           />
                         </div>
                       </div>
@@ -1224,14 +1225,14 @@ echo $response;`;
                     <button
                       type="submit"
                       disabled={playgroundLoading || instances.length === 0}
-                      className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm shadow-emerald-600/20 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                      className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                       <Send size={14} />
                       <span>{playgroundLoading ? 'Enviando petición a WhatsApp...' : `Ejecutar Envío de ${playgroundType.toUpperCase()}`}</span>
                     </button>
                   </form>
 
-                  {/* Respuesta HTTP */}
+                  {/* Respuesta HTTP en consola digital */}
                   {playgroundResponse && (
                     <div className="space-y-2 pt-2">
                       <div className="flex items-center justify-between">
@@ -1254,7 +1255,7 @@ echo $response;`;
                           )}
                         </button>
                       </div>
-                      <pre className="p-4 bg-slate-900 text-emerald-400 rounded-xl text-xs font-mono overflow-x-auto border border-slate-800 shadow-inner">
+                      <pre className="p-4 bg-[#070B10] text-emerald-400 rounded-xl text-xs font-mono overflow-x-auto">
                         {JSON.stringify(playgroundResponse, null, 2)}
                       </pre>
                     </div>
@@ -1267,12 +1268,12 @@ echo $response;`;
             {activeTab === 'docs' && (
               <div className="space-y-6 animate-fadeIn text-left">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 ring-1 ring-blue-500/20 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-xl surface-accent-cyan text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0">
                     <LayoutGrid size={19} />
                   </div>
                   <div className="space-y-0.5">
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Documentación de la API REST</h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Integra el envío y recepción de WhatsApp en tu software mediante llamadas HTTP estándar con <code className="text-emerald-600 dark:text-emerald-400 font-bold font-mono px-1 py-0.5 bg-emerald-500/10 rounded">x-api-key</code>.</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Integra el envío y recepción de WhatsApp en tu software mediante llamadas HTTP estándar con <code className="text-emerald-600 dark:text-emerald-400 font-bold font-mono px-1.5 py-0.5 bg-emerald-500/10 rounded">x-api-key</code>.</p>
                   </div>
                 </div>
 
@@ -1289,10 +1290,10 @@ echo $response;`;
                       key={e.id}
                       type="button"
                       onClick={() => setDocEndpoint(e.id as any)}
-                      className={`px-3 py-1.5 text-xs font-mono font-semibold rounded-xl transition-all cursor-pointer ${
+                      className={`px-3.5 py-1.5 text-xs font-mono font-semibold rounded-xl transition-all cursor-pointer ${
                         docEndpoint === e.id
-                          ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm'
-                          : 'card-saas text-slate-600 dark:text-slate-300 hover:bg-slate-50'
+                          ? 'bg-slate-900 text-white dark:bg-emerald-600 font-bold'
+                          : 'surface-interactive text-slate-600 dark:text-slate-300'
                       }`}
                     >
                       {e.label}
@@ -1300,7 +1301,7 @@ echo $response;`;
                   ))}
                 </div>
 
-                <div className="card-saas p-5 sm:p-6 rounded-2xl space-y-4">
+                <div className="surface-panel p-6 rounded-2xl space-y-4">
                   {/* Lenguajes */}
                   <div className="flex items-center gap-2">
                     {(['curl', 'js', 'python', 'php'] as const).map(lang => (
@@ -1310,8 +1311,8 @@ echo $response;`;
                         onClick={() => setDocLang(lang)}
                         className={`px-3 py-1.5 text-xs font-bold uppercase rounded-lg transition-all cursor-pointer ${
                           docLang === lang 
-                            ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20' 
-                            : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200'
+                            ? 'bg-emerald-600 text-white' 
+                            : 'surface-interactive text-slate-600 dark:text-slate-400'
                         }`}
                       >
                         {lang}
@@ -1350,7 +1351,7 @@ echo $response;`;
                         )}
                       </button>
                     </div>
-                    <pre className="p-4 bg-slate-900 text-slate-200 rounded-xl text-xs font-mono overflow-x-auto leading-relaxed border border-slate-800 shadow-inner">
+                    <pre className="p-5 bg-[#070B10] text-slate-200 rounded-2xl text-xs font-mono overflow-x-auto leading-relaxed">
                       {getDocCode()}
                     </pre>
                   </div>
@@ -1362,7 +1363,7 @@ echo $response;`;
             {activeTab === 'subscription' && (
               <div className="space-y-6 animate-fadeIn text-left">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 ring-1 ring-amber-500/20 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-xl surface-accent-amber text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                     <CreditCard size={19} />
                   </div>
                   <div className="space-y-0.5">
@@ -1371,51 +1372,49 @@ echo $response;`;
                   </div>
                 </div>
 
-                <div className="card-saas p-6 rounded-2xl border-l-4 border-amber-500 space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between py-2.5 border-b border-slate-100 dark:border-slate-800">
-                      <span className="text-xs font-semibold text-slate-500">Plan Contratado</span>
-                      <span className="text-sm font-bold text-slate-900 dark:text-white uppercase">{subscription?.plan_name || 'Plan Developer'}</span>
-                    </div>
+                <div className="surface-panel p-7 rounded-2xl space-y-3">
+                  <div className="flex items-center justify-between py-3 px-4 surface-interactive rounded-xl">
+                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Plan Contratado</span>
+                    <span className="text-sm font-bold text-slate-900 dark:text-white uppercase">{subscription?.plan_name || 'Plan Developer'}</span>
+                  </div>
 
-                    <div className="flex items-center justify-between py-2.5 border-b border-slate-100 dark:border-slate-800">
-                      <span className="text-xs font-semibold text-slate-500">Cuota de Mensajes Mensual</span>
-                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 font-mono">
-                        {subscription?.messages_used || 0} / {subscription?.messages_limit || 1000} ({subscription?.consumption_percentage || 0}%)
+                  <div className="flex items-center justify-between py-3 px-4 surface-interactive rounded-xl">
+                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Cuota de Mensajes Mensual</span>
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 font-mono">
+                      {subscription?.messages_used || 0} / {subscription?.messages_limit || 1000} ({subscription?.consumption_percentage || 0}%)
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between py-3 px-4 surface-interactive rounded-xl">
+                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Capacidad de Instancias</span>
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{activeInstancesCount} / {maxInstances === 99 ? 'ILIMITADO' : maxInstances} Líneas</span>
+                  </div>
+
+                  <div className="flex items-center justify-between py-3 px-4 surface-interactive rounded-xl">
+                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Fecha de Inicio</span>
+                    <span className="text-xs font-mono font-semibold text-slate-800 dark:text-slate-200">
+                      {subscription?.start_date ? new Date(subscription.start_date).toLocaleDateString() : 'N/A'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between py-3 px-4 surface-interactive rounded-xl">
+                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Fecha de Vencimiento</span>
+                    <span className="text-xs font-mono font-semibold text-slate-800 dark:text-slate-200">
+                      {subscription?.end_date ? new Date(subscription.end_date).toLocaleDateString() : 'N/A'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between py-3 px-4 surface-interactive rounded-xl">
+                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Estado de la Licencia</span>
+                    {subscription?.is_expired ? (
+                      <span className="px-2.5 py-0.5 bg-rose-500/15 text-rose-700 dark:text-rose-300 text-[10px] font-bold rounded-full uppercase">
+                        🔴 LICENCIA VENCIDA
                       </span>
-                    </div>
-
-                    <div className="flex items-center justify-between py-2.5 border-b border-slate-100 dark:border-slate-800">
-                      <span className="text-xs font-semibold text-slate-500">Capacidad de Instancias</span>
-                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{activeInstancesCount} / {maxInstances === 99 ? 'ILIMITADO' : maxInstances} Líneas</span>
-                    </div>
-
-                    <div className="flex items-center justify-between py-2.5 border-b border-slate-100 dark:border-slate-800">
-                      <span className="text-xs font-semibold text-slate-500">Fecha de Inicio</span>
-                      <span className="text-xs font-mono font-semibold text-slate-800 dark:text-slate-200">
-                        {subscription?.start_date ? new Date(subscription.start_date).toLocaleDateString() : 'N/A'}
+                    ) : (
+                      <span className="px-2.5 py-0.5 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold rounded-full uppercase">
+                        ● {subscription?.days_remaining || 0} DÍAS RESTANTES
                       </span>
-                    </div>
-
-                    <div className="flex items-center justify-between py-2.5 border-b border-slate-100 dark:border-slate-800">
-                      <span className="text-xs font-semibold text-slate-500">Fecha de Vencimiento</span>
-                      <span className="text-xs font-mono font-semibold text-slate-800 dark:text-slate-200">
-                        {subscription?.end_date ? new Date(subscription.end_date).toLocaleDateString() : 'N/A'}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-2">
-                      <span className="text-xs font-semibold text-slate-500">Estado de la Licencia</span>
-                      {subscription?.is_expired ? (
-                        <span className="px-2.5 py-0.5 bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 text-[10px] font-bold rounded-full uppercase">
-                          🔴 LICENCIA VENCIDA
-                        </span>
-                      ) : (
-                        <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[10px] font-bold rounded-full uppercase">
-                          ● {subscription?.days_remaining || 0} DÍAS RESTANTES
-                        </span>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1425,7 +1424,7 @@ echo $response;`;
             {user?.role === 'admin' && activeTab === 'admin_overview' && (
               <div className="space-y-6 animate-fadeIn text-left">
                 <div className="space-y-1">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[10px] font-bold rounded-full">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold rounded-full">
                     <Shield size={11} />
                     <span>Panel de Control Global SaaS</span>
                   </span>
@@ -1438,21 +1437,21 @@ echo $response;`;
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="card-saas card-saas-hover p-5 rounded-2xl border-l-4 border-violet-500 space-y-1">
+                  <div className="surface-panel p-6 rounded-2xl space-y-1">
                     <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Clientes</span>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white font-mono">{adminUsers.length}</div>
+                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono">{adminUsers.length}</div>
                     <p className="text-xs text-slate-400 font-medium">Usuarios corporativos</p>
                   </div>
                   
-                  <div className="card-saas card-saas-hover p-5 rounded-2xl border-l-4 border-blue-500 space-y-1">
+                  <div className="surface-panel p-6 rounded-2xl space-y-1">
                     <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Líneas Registradas</span>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white font-mono">{adminInstances.length}</div>
+                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono">{adminInstances.length}</div>
                     <p className="text-xs text-slate-400 font-medium">Instancias en sistema</p>
                   </div>
 
-                  <div className="card-saas card-saas-hover p-5 rounded-2xl border-l-4 border-emerald-500 space-y-1">
+                  <div className="surface-panel p-6 rounded-2xl space-y-1">
                     <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Líneas Conectadas</span>
-                    <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
+                    <div className="text-3xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
                       {adminInstances.filter(i => i.status === 'connected').length}
                     </div>
                     <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Gateway en línea</p>
@@ -1467,16 +1466,16 @@ echo $response;`;
 
       {/* Modal QR Code */}
       {qrCodeModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fadeIn">
-          <div className="bg-white dark:bg-[#0D131F] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 max-w-sm w-full text-center space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-2xl animate-fadeIn">
+          <div className="surface-elevated rounded-3xl p-7 max-w-sm w-full text-center space-y-4">
+            <div className="flex items-center justify-between pb-2">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">Escanear Código QR</h3>
-              <button onClick={() => setQrCodeModal({ open: false, instanceName: '', qrCode: null })} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 cursor-pointer">
+              <button onClick={() => setQrCodeModal({ open: false, instanceName: '', qrCode: null })} className="p-1.5 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 rounded-xl text-slate-400 cursor-pointer">
                 <X size={16} />
               </button>
             </div>
             
-            <div className="p-3 bg-white rounded-xl flex items-center justify-center min-h-[220px] ring-1 ring-slate-200 shadow-inner">
+            <div className="p-4 bg-white rounded-2xl flex items-center justify-center min-h-[220px]">
               {qrCodeModal.qrCode ? (
                 <img src={qrCodeModal.qrCode} alt="WhatsApp QR Code" className="w-52 h-52 object-contain" />
               ) : (
@@ -1494,21 +1493,21 @@ echo $response;`;
 
       {/* Modal de Confirmación Personalizado */}
       {confirmModal.open && (
-        <div className="fixed inset-0 z-[9990] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fadeIn">
-          <div className="bg-white dark:bg-[#0D131F] rounded-3xl border border-slate-100 dark:border-slate-800/50 shadow-sm p-6 sm:p-8 max-w-sm w-full text-left space-y-5">
+        <div className="fixed inset-0 z-[9990] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-2xl animate-fadeIn">
+          <div className="surface-elevated rounded-3xl p-7 sm:p-8 max-w-sm w-full text-left space-y-5">
             <div className="flex items-center justify-between">
               <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold ${
                 confirmModal.type === 'danger'
-                  ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400'
+                  ? 'surface-accent-rose text-rose-600 dark:text-rose-400'
                   : confirmModal.type === 'warning'
-                  ? 'bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400'
-                  : 'bg-sky-50 text-sky-600 dark:bg-sky-950/60 dark:text-sky-400'
+                  ? 'surface-accent-amber text-amber-600 dark:text-amber-400'
+                  : 'surface-accent-cyan text-cyan-600 dark:text-cyan-400'
               }`}>
                 <AlertCircle size={20} />
               </div>
               <button 
                 onClick={() => setConfirmModal(prev => ({ ...prev, open: false }))} 
-                className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-400 cursor-pointer"
+                className="p-1.5 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 rounded-xl text-slate-400 cursor-pointer"
               >
                 <X size={16} />
               </button>
@@ -1525,7 +1524,7 @@ echo $response;`;
               <button
                 type="button"
                 onClick={() => setConfirmModal(prev => ({ ...prev, open: false }))}
-                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-2xl transition-colors cursor-pointer min-h-[44px]"
+                className="flex-1 py-2.5 surface-interactive text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition-colors cursor-pointer min-h-[42px]"
               >
                 {confirmModal.cancelText || 'Cancelar'}
               </button>
@@ -1533,10 +1532,10 @@ echo $response;`;
               <button
                 type="button"
                 onClick={confirmModal.onConfirm}
-                className={`flex-1 py-2.5 text-xs font-bold rounded-2xl active:scale-[0.98] transition-all cursor-pointer min-h-[44px] ${
+                className={`flex-1 py-2.5 text-xs font-bold rounded-xl active:scale-[0.98] transition-all cursor-pointer min-h-[42px] ${
                   confirmModal.type === 'danger'
-                    ? 'bg-rose-600 hover:bg-rose-700 text-white'
-                    : 'bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 text-white'
+                    ? 'bg-rose-600 hover:bg-rose-500 text-white'
+                    : 'bg-emerald-600 hover:bg-emerald-500 text-white'
                 }`}
               >
                 {confirmModal.confirmText || 'Confirmar'}
@@ -1546,7 +1545,7 @@ echo $response;`;
         </div>
       )}
 
-      {/* Modal de Operaciones Asíncronas con Máquina de Estados */}
+      {/* Modal de Operaciones Asíncronas */}
       <AsyncOperationModal
         open={asyncOp.open}
         title={asyncOp.title}

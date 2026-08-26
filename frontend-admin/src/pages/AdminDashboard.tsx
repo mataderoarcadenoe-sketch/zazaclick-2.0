@@ -242,19 +242,19 @@ export default function AdminDashboardPage() {
 
       {/* Toast Notification */}
       {notification && (
-        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-2xl flex items-center gap-2.5 text-xs font-bold animate-fadeIn ${
+        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-2xl flex items-center gap-2.5 text-xs font-bold animate-fadeIn backdrop-blur-xl ${
           notification.type === 'success' 
-            ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/90 dark:text-emerald-300' 
-            : 'bg-rose-50 text-rose-800 dark:bg-rose-950/90 dark:text-rose-300'
+            ? 'bg-emerald-500/20 text-emerald-900 dark:text-emerald-200' 
+            : 'bg-rose-500/20 text-rose-900 dark:text-rose-200'
         }`}>
           {notification.type === 'success' ? <CheckCircle2 size={16} className="text-emerald-500" /> : <AlertCircle size={16} className="text-rose-500" />}
           <span>{notification.text}</span>
         </div>
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar (Atmospheric Translucent Surface) */}
       <aside 
-        className={`bg-slate-900 dark:bg-[#0B0F19] border-r border-slate-800 flex flex-col transition-all duration-250 z-40 fixed top-0 left-0 h-full ${
+        className={`surface-panel flex flex-col transition-all duration-250 z-40 fixed top-0 left-0 h-full ${
           sidebarOpen ? 'w-64 translate-x-0' : 'w-20 -translate-x-full lg:translate-x-0'
         }`}
       >
@@ -265,16 +265,16 @@ export default function AdminDashboardPage() {
                 <Shield size={18} className="text-white" />
               </div>
               <div className="flex flex-col text-left">
-                <span className="font-black text-white text-sm tracking-tight">
-                  Zaza Admin <span className="text-emerald-400">2.0</span>
+                <span className="font-black text-slate-900 dark:text-white text-sm tracking-tight">
+                  Zaza Admin <span className="text-emerald-500">2.0</span>
                 </span>
-                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">SuperAdmin Core</span>
+                <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">SuperAdmin Core</span>
               </div>
             </div>
           )}
           <button 
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 hover:bg-slate-800 rounded-xl transition-colors text-slate-400 cursor-pointer"
+            className="p-2 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 rounded-xl transition-colors text-slate-500 dark:text-slate-400 cursor-pointer"
           >
             {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
@@ -296,23 +296,26 @@ export default function AdminDashboardPage() {
                   sidebarOpen ? 'px-4 py-2.5 justify-start' : 'p-3 justify-center'
                 } rounded-xl transition-all duration-200 relative cursor-pointer ${
                   active 
-                    ? 'bg-slate-800/80 text-white font-semibold border-l-[3px] border-emerald-400'
-                    : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 font-medium'
+                    ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 font-bold'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/40 dark:hover:bg-slate-800/40 hover:text-slate-900 dark:hover:text-white font-medium'
                 }`}
               >
-                <Icon size={18} className="flex-shrink-0" />
-                {sidebarOpen && <span className="ml-3.5 text-xs tracking-tight">{item.label}</span>}
+                {active && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mr-2.5 flex-shrink-0" />
+                )}
+                <Icon size={18} className={`flex-shrink-0 transition-colors ${active ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200'}`} />
+                {sidebarOpen && <span className="ml-3 text-xs tracking-tight">{item.label}</span>}
               </button>
             );
           })}
         </nav>
 
-        <div className="p-3 border-t border-slate-800">
+        <div className="p-3">
           <button
             onClick={logout}
             className={`w-full group flex items-center ${
               sidebarOpen ? 'px-4 py-2.5 justify-start' : 'p-3 justify-center'
-            } rounded-xl hover:bg-rose-950/40 text-slate-500 hover:text-rose-400 transition-colors cursor-pointer`}
+            } rounded-xl hover:bg-rose-500/15 text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer`}
           >
             <LogOut size={18} className="flex-shrink-0" />
             {sidebarOpen && <span className="ml-3 text-xs font-medium">Cerrar Sesión</span>}
@@ -324,9 +327,9 @@ export default function AdminDashboardPage() {
       <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-250 ${sidebarOpen ? 'lg:pl-64' : 'lg:pl-20'}`}>
         
         {/* Header */}
-        <header className="h-16 bg-white/95 dark:bg-[#0B0F19]/95 backdrop-blur-md px-4 sm:px-8 lg:px-12 flex items-center justify-between z-30 transition-colors duration-250 border-b border-slate-200/80 dark:border-slate-800/80 sticky top-0">
+        <header className="h-16 surface-panel px-4 sm:px-8 lg:px-12 flex items-center justify-between z-30 transition-colors duration-250 sticky top-0">
           <div className="flex items-center gap-3">
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-600 dark:text-slate-300 lg:hidden cursor-pointer">
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-xl text-slate-600 dark:text-slate-300 lg:hidden cursor-pointer">
               <Menu size={20} />
             </button>
             <div className="flex flex-col text-left">
@@ -338,13 +341,13 @@ export default function AdminDashboardPage() {
                   SUPERADMIN
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 font-normal leading-none mt-0.5 hidden sm:block">Control maestro de licenciamiento, cuotas atómicas y facturación.</p>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 font-normal leading-none mt-0.5 hidden sm:block">Control maestro de licenciamiento, cuotas atómicas y facturación.</p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             {/* Live Gateway Telemetry Pill */}
-            <div className="hidden md:inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+            <div className="hidden md:inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -354,21 +357,21 @@ export default function AdminDashboardPage() {
 
             <button
               onClick={toggleDark}
-              className="p-2.5 bg-slate-100 dark:bg-slate-800/80 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-slate-600 dark:text-slate-300 cursor-pointer border border-transparent dark:border-slate-700/50"
+              className="p-2.5 surface-interactive rounded-xl text-slate-600 dark:text-slate-300 cursor-pointer"
               title="Cambiar Tema"
             >
               {isDark ? <Sun size={17} className="text-amber-400" /> : <Moon size={17} className="text-emerald-600" />}
             </button>
             <button
               onClick={fetchAdminData}
-              className="p-2.5 bg-slate-100 dark:bg-slate-800/80 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-slate-600 dark:text-slate-300 cursor-pointer border border-transparent dark:border-slate-700/50"
+              className="p-2.5 surface-interactive rounded-xl text-slate-600 dark:text-slate-300 cursor-pointer"
               title="Actualizar datos"
             >
               <RefreshCw size={17} className={loading ? 'animate-spin text-emerald-500' : ''} />
             </button>
 
-            <div className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center font-bold text-xs uppercase shadow-sm">
+            <div className="flex items-center gap-2 pl-2">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center font-bold text-xs uppercase">
                 {(user?.email || 'A')[0].toUpperCase()}
               </div>
               <div className="hidden lg:flex flex-col text-left">
@@ -380,7 +383,7 @@ export default function AdminDashboardPage() {
         </header>
 
         {/* Content Body */}
-        <main className="flex-1 bg-[#F8FAFC] dark:bg-[#070B12] bg-grid-tech relative overflow-y-auto">
+        <main className="flex-1 bg-grid-tech relative overflow-y-auto">
           <div className="w-full px-4 sm:px-8 lg:px-12 py-8 space-y-8 max-w-[1920px] mx-auto">
             
             {/* OVERVIEW GLOBAL DASHBOARD */}
@@ -389,42 +392,42 @@ export default function AdminDashboardPage() {
                 
                 {/* Alertas Operativas */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="card-saas card-saas-hover p-4 rounded-2xl border-l-4 border-amber-400">
+                  <div className="surface-panel p-5 rounded-2xl space-y-1">
                     <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-xs font-semibold">
                       <Clock size={15} />
                       <span>Próximos a Vencer (3d)</span>
                     </div>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white mt-1 font-mono">
+                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono">
                       {stats?.subscriptions?.expiring_soon || 0}
                     </div>
                   </div>
 
-                  <div className="card-saas card-saas-hover p-4 rounded-2xl border-l-4 border-rose-400">
+                  <div className="surface-panel p-5 rounded-2xl space-y-1">
                     <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 text-xs font-semibold">
                       <AlertTriangle size={15} />
                       <span>Suscripciones Vencidas</span>
                     </div>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white mt-1 font-mono">
+                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono">
                       {stats?.subscriptions?.expired_subscriptions || 0}
                     </div>
                   </div>
 
-                  <div className="card-saas card-saas-hover p-4 rounded-2xl border-l-4 border-sky-400">
-                    <div className="flex items-center gap-2 text-sky-600 dark:text-sky-400 text-xs font-semibold">
+                  <div className="surface-panel p-5 rounded-2xl space-y-1">
+                    <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400 text-xs font-semibold">
                       <CreditCard size={15} />
                       <span>Pagos Pendientes</span>
                     </div>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white mt-1 font-mono">
+                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono">
                       {stats?.financial?.pending_payments || 0}
                     </div>
                   </div>
 
-                  <div className="card-saas card-saas-hover p-4 rounded-2xl border-l-4 border-emerald-400">
+                  <div className="surface-panel p-5 rounded-2xl space-y-1">
                     <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
                       <DollarSign size={15} />
                       <span>Ingresos Totales</span>
                     </div>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white mt-1 font-mono">
+                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono">
                       ${Number(stats?.financial?.total_revenue || 0).toFixed(2)}
                     </div>
                   </div>
@@ -432,41 +435,41 @@ export default function AdminDashboardPage() {
 
                 {/* Métricas Principales */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                  <div className="card-saas card-saas-hover p-6 rounded-2xl border-l-4 border-violet-500">
+                  <div className="surface-panel p-6 rounded-2xl space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Clientes Totales</span>
-                      <div className="w-8 h-8 rounded-xl bg-violet-50 dark:bg-violet-950/40 flex items-center justify-center"><Users size={16} className="text-violet-500" /></div>
+                      <div className="w-8 h-8 rounded-xl surface-accent-teal flex items-center justify-center"><Users size={16} className="text-teal-500" /></div>
                     </div>
-                    <div className="text-3xl font-black text-slate-900 dark:text-white mt-2 font-mono">
+                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono">
                       {stats?.users?.total_users || 0}
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                       ● {stats?.users?.active_users || 0} activos · {stats?.users?.suspended_users || 0} suspendidos
                     </p>
                   </div>
 
-                  <div className="card-saas card-saas-hover p-6 rounded-2xl border-l-4 border-emerald-500">
+                  <div className="surface-panel p-6 rounded-2xl space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Líneas WhatsApp</span>
-                      <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center"><Smartphone size={16} className="text-emerald-500" /></div>
+                      <div className="w-8 h-8 rounded-xl surface-accent-emerald flex items-center justify-center"><Smartphone size={16} className="text-emerald-500" /></div>
                     </div>
-                    <div className="text-3xl font-black text-slate-900 dark:text-white mt-2 font-mono">
+                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono">
                       {stats?.instances?.connected_instances || 0} <span className="text-sm font-normal text-slate-400 font-sans">/ {stats?.instances?.total_instances || 0}</span>
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                       {stats?.instances?.disabled_instances || 0} deshabilitadas por administración
                     </p>
                   </div>
 
-                  <div className="card-saas card-saas-hover p-6 rounded-2xl border-l-4 border-cyan-500">
+                  <div className="surface-panel p-6 rounded-2xl space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Mensajes Procesados</span>
-                      <div className="w-8 h-8 rounded-xl bg-cyan-50 dark:bg-cyan-950/40 flex items-center justify-center"><Activity size={16} className="text-cyan-500" /></div>
+                      <div className="w-8 h-8 rounded-xl surface-accent-cyan flex items-center justify-center"><Activity size={16} className="text-cyan-500" /></div>
                     </div>
-                    <div className="text-3xl font-black text-slate-900 dark:text-white mt-2 font-mono">
+                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono">
                       {stats?.traffic?.total_messages || 0}
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                       ✓ {stats?.traffic?.successful_messages || 0} entregados exitosamente
                     </p>
                   </div>
@@ -480,7 +483,7 @@ export default function AdminDashboardPage() {
               <div className="space-y-6 animate-fadeIn text-left">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400 ring-1 ring-violet-500/20 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl surface-accent-teal text-teal-600 dark:text-teal-400 flex items-center justify-center">
                       <Users size={19} />
                     </div>
                     <div className="space-y-0.5">
@@ -491,7 +494,7 @@ export default function AdminDashboardPage() {
 
                   <button
                     onClick={() => setCreateUserModal(true)}
-                    className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all cursor-pointer"
                   >
                     <Plus size={15} />
                     <span>Crear Nuevo Cliente</span>
@@ -506,16 +509,16 @@ export default function AdminDashboardPage() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Buscar por correo, empresa o ID de cliente..."
-                    className="w-full pl-11 pr-4 py-2.5 bg-white dark:bg-[#0D131F] rounded-xl text-xs font-medium text-slate-900 dark:text-white ring-1 ring-slate-200/80 dark:ring-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition-all shadow-sm"
+                    className="w-full pl-11 pr-4 py-2.5 surface-interactive rounded-xl text-xs font-medium text-slate-900 dark:text-white focus:outline-none transition-colors"
                   />
                 </div>
 
                 {/* Tabla de Clientes */}
-                <div className="card-saas rounded-2xl overflow-hidden shadow-sm">
+                <div className="surface-panel rounded-2xl overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs">
                       <thead>
-                        <tr className="bg-slate-50/80 dark:bg-[#111827]/75 border-b border-slate-200/80 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase font-semibold text-[10px] tracking-wider font-mono">
+                        <tr className="text-slate-400 dark:text-slate-500 uppercase font-semibold text-[10px] tracking-wider font-mono">
                           <th className="px-6 py-3.5">Cliente / Empresa</th>
                           <th className="px-6 py-3.5">Plan Actual</th>
                           <th className="px-6 py-3.5">Estado Cuenta</th>
@@ -525,9 +528,9 @@ export default function AdminDashboardPage() {
                           <th className="px-6 py-3.5 text-right">Acciones</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 font-medium">
+                      <tbody className="font-medium">
                         {filteredUsers.map((u) => (
-                          <tr key={u.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                          <tr key={u.id} className="hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors">
                             <td className="px-6 py-4">
                               <div className="font-bold text-slate-900 dark:text-white">{u.email}</div>
                               <div className="text-[11px] text-slate-400 font-normal">{u.company_name || 'Sin empresa'} {u.phone ? `· ${u.phone}` : ''}</div>
@@ -540,10 +543,10 @@ export default function AdminDashboardPage() {
                             <td className="px-6 py-4">
                               <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase ${
                                 u.user_status === 'active' 
-                                  ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' 
+                                  ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' 
                                   : u.user_status === 'suspended'
-                                  ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
-                                  : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
+                                  ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300'
+                                  : 'bg-rose-500/15 text-rose-700 dark:text-rose-300'
                               }`}>
                                 ● {u.user_status}
                               </span>
@@ -563,7 +566,7 @@ export default function AdminDashboardPage() {
                               <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300 font-mono">
                                 {u.messages_used || 0} / {u.messages_limit || 1000} msgs
                               </div>
-                              <div className="w-24 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                              <div className="w-24 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
                                 <div 
                                   className={`h-full rounded-full transition-all duration-300 ${u.consumption_percentage > 90 ? 'bg-rose-500' : 'bg-emerald-500'}`}
                                   style={{ width: `${u.consumption_percentage || 0}%` }}
@@ -586,7 +589,7 @@ export default function AdminDashboardPage() {
                                   });
                                   setEditSubscriptionModal({ open: true, user: u });
                                 }}
-                                className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-semibold text-[11px] transition-colors cursor-pointer border border-slate-200/60 dark:border-slate-750"
+                                className="px-2.5 py-1 surface-interactive text-slate-700 dark:text-slate-300 rounded-lg font-semibold text-[11px] transition-colors cursor-pointer"
                                 title="Cambiar Plan / Extender"
                               >
                                 Licencia
@@ -604,7 +607,7 @@ export default function AdminDashboardPage() {
                                   });
                                   setRecordPaymentModal({ open: true, user: u });
                                 }}
-                                className="px-2.5 py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 hover:bg-emerald-100 rounded-lg font-semibold text-[11px] transition-colors cursor-pointer border border-emerald-200/50 dark:border-emerald-900/40"
+                                className="px-2.5 py-1 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/25 rounded-lg font-semibold text-[11px] transition-colors cursor-pointer"
                                 title="Registrar Pago"
                               >
                                 + Pago
@@ -614,8 +617,8 @@ export default function AdminDashboardPage() {
                                 onClick={() => handleUpdateUserStatus(u.id, u.user_status === 'active' ? 'suspended' : 'active')}
                                 className={`px-2.5 py-1 rounded-lg font-semibold text-[11px] transition-colors cursor-pointer ${
                                   u.user_status === 'active'
-                                    ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 hover:bg-amber-100 border border-amber-200/50'
-                                    : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 hover:bg-emerald-100 border border-emerald-200/50'
+                                    ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 hover:bg-amber-500/25'
+                                    : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/25'
                                 }`}
                               >
                                 {u.user_status === 'active' ? 'Suspender' : 'Activar'}
@@ -642,7 +645,7 @@ export default function AdminDashboardPage() {
             {activeTab === 'instances' && (
               <div className="space-y-6 animate-fadeIn text-left">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/20 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl surface-accent-emerald text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                     <Smartphone size={19} />
                   </div>
                   <div className="space-y-0.5">
@@ -651,10 +654,10 @@ export default function AdminDashboardPage() {
                   </div>
                 </div>
 
-                <div className="card-saas rounded-2xl overflow-hidden shadow-sm">
+                <div className="surface-panel rounded-2xl overflow-hidden">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="bg-slate-50/80 dark:bg-[#111827]/75 border-b border-slate-200/80 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase font-semibold text-[10px] tracking-wider font-mono">
+                      <tr className="text-slate-400 dark:text-slate-500 uppercase font-semibold text-[10px] tracking-wider font-mono">
                         <th className="px-6 py-3.5">Instancia</th>
                         <th className="px-6 py-3.5">Propietario</th>
                         <th className="px-6 py-3.5">Conexión WhatsApp</th>
@@ -663,9 +666,9 @@ export default function AdminDashboardPage() {
                         <th className="px-6 py-3.5 text-right">Acción</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 font-medium">
+                    <tbody className="font-medium">
                       {instancesList.map(inst => (
-                        <tr key={inst.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                        <tr key={inst.id} className="hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors">
                           <td className="px-6 py-4 font-mono font-bold text-slate-900 dark:text-white">
                             {inst.instance_name}
                             <div className="text-[10px] font-normal text-slate-400 font-sans">{inst.phone || 'Sin número'}</div>
@@ -675,14 +678,14 @@ export default function AdminDashboardPage() {
                           </td>
                           <td className="px-6 py-4">
                             <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase ${
-                              inst.connection_status === 'connected' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
+                              inst.connection_status === 'connected' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'bg-rose-500/15 text-rose-700 dark:text-rose-300'
                             }`}>
                               {inst.connection_status === 'connected' ? '● CONECTADO' : '○ DESCONECTADO'}
                             </span>
                           </td>
                           <td className="px-6 py-4">
                             <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase ${
-                              inst.is_enabled !== false ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
+                              inst.is_enabled !== false ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'bg-amber-500/15 text-amber-700 dark:text-amber-300'
                             }`}>
                               {inst.is_enabled !== false ? 'HABILITADA' : 'DESHABILITADA'}
                             </span>
@@ -694,7 +697,7 @@ export default function AdminDashboardPage() {
                             <button
                               onClick={() => handleToggleInstance(inst.id, inst.is_enabled !== false)}
                               className={`px-3 py-1.5 rounded-lg font-semibold text-[11px] transition-colors cursor-pointer ${
-                                inst.is_enabled !== false ? 'bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/50 dark:text-rose-300' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:text-emerald-300'
+                                inst.is_enabled !== false ? 'bg-rose-500/15 text-rose-700 hover:bg-rose-500/25 dark:text-rose-300' : 'bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 dark:text-emerald-300'
                               }`}
                             >
                               {inst.is_enabled !== false ? 'Deshabilitar' : 'Habilitar'}
@@ -713,7 +716,7 @@ export default function AdminDashboardPage() {
               <div className="space-y-6 animate-fadeIn text-left">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 ring-1 ring-amber-500/20 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl surface-accent-amber text-amber-600 dark:text-amber-400 flex items-center justify-center">
                       <CreditCard size={19} />
                     </div>
                     <div className="space-y-0.5">
@@ -726,7 +729,7 @@ export default function AdminDashboardPage() {
                       setPlanFormData({ id: '', name: '', maxInstances: 1, price: 15, durationMonths: 1, maxMessages: 1000, isTrial: false, trialDays: 7, trialMessages: 100, description: '' });
                       setPlanModal({ open: true, plan: null });
                     }}
-                    className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center gap-2 shadow-sm shadow-emerald-600/20 transition-all cursor-pointer"
+                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all cursor-pointer"
                   >
                     <Plus size={15} />
                     <span>Crear Plan</span>
@@ -735,10 +738,10 @@ export default function AdminDashboardPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                   {plansList.map(plan => (
-                    <div key={plan.id} className="card-saas card-saas-hover p-5 rounded-2xl space-y-4 text-left border-l-4 border-amber-500">
+                    <div key={plan.id} className="surface-panel p-6 rounded-2xl space-y-4 text-left">
                       <div className="flex items-center justify-between">
                         <span className={`px-2.5 py-0.5 text-[9px] font-bold rounded-full uppercase ${
-                          plan.is_trial ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300' : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
+                          plan.is_trial ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300' : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
                         }`}>
                           {plan.is_trial ? 'PLAN TRIAL' : 'PLAN COMERCIAL'}
                         </span>
@@ -750,7 +753,7 @@ export default function AdminDashboardPage() {
                         <p className="text-xs text-slate-500 dark:text-slate-400">{plan.description || 'Sin descripción'}</p>
                       </div>
 
-                      <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      <div className="space-y-1.5 pt-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
                         <div className="flex items-center gap-1.5"><span className="text-emerald-500">✓</span> {plan.max_instances === 99 ? 'Instancias Ilimitadas' : `${plan.max_instances} Instancia(s)`}</div>
                         <div className="flex items-center gap-1.5"><span className="text-emerald-500">✓</span> {plan.max_messages?.toLocaleString()} Mensajes / mes</div>
                         {plan.is_trial && <div className="flex items-center gap-1.5"><span className="text-amber-500">⏱</span> Duración: {plan.trial_days} días</div>}
@@ -772,7 +775,7 @@ export default function AdminDashboardPage() {
                           });
                           setPlanModal({ open: true, plan });
                         }}
-                        className="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl font-semibold text-xs transition-colors cursor-pointer border border-slate-200/60 dark:border-slate-700"
+                        className="w-full py-2 surface-interactive text-slate-800 dark:text-slate-200 rounded-xl font-semibold text-xs transition-colors cursor-pointer"
                       >
                         Editar Plan
                       </button>
@@ -786,7 +789,7 @@ export default function AdminDashboardPage() {
             {activeTab === 'payments' && (
               <div className="space-y-6 animate-fadeIn text-left">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 ring-1 ring-cyan-500/20 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl surface-accent-cyan text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
                     <DollarSign size={19} />
                   </div>
                   <div className="space-y-0.5">
@@ -795,10 +798,10 @@ export default function AdminDashboardPage() {
                   </div>
                 </div>
 
-                <div className="card-saas rounded-2xl overflow-hidden shadow-sm">
+                <div className="surface-panel rounded-2xl overflow-hidden">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="bg-slate-50/80 dark:bg-[#111827]/75 border-b border-slate-200/80 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase font-semibold text-[10px] tracking-wider font-mono">
+                      <tr className="text-slate-400 dark:text-slate-500 uppercase font-semibold text-[10px] tracking-wider font-mono">
                         <th className="px-6 py-3.5">Fecha</th>
                         <th className="px-6 py-3.5">Cliente</th>
                         <th className="px-6 py-3.5">Monto</th>
@@ -807,15 +810,15 @@ export default function AdminDashboardPage() {
                         <th className="px-6 py-3.5">Notas</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 font-medium">
+                    <tbody className="font-medium">
                       {paymentsList.map(pay => (
-                        <tr key={pay.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                        <tr key={pay.id} className="hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors">
                           <td className="px-6 py-4 text-slate-500 font-mono">{new Date(pay.created_at).toLocaleDateString()}</td>
                           <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">{pay.user_email}</td>
                           <td className="px-6 py-4 font-black text-emerald-600 font-mono">${Number(pay.amount).toFixed(2)} {pay.currency}</td>
                           <td className="px-6 py-4 text-slate-700 dark:text-slate-300">{pay.payment_method} {pay.reference ? `(${pay.reference})` : ''}</td>
                           <td className="px-6 py-4">
-                            <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[10px] font-bold rounded-full uppercase">
+                            <span className="px-2.5 py-1 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold rounded-full uppercase">
                               ● {pay.status}
                             </span>
                           </td>
@@ -832,7 +835,7 @@ export default function AdminDashboardPage() {
             {activeTab === 'audit' && (
               <div className="space-y-6 animate-fadeIn text-left">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 ring-1 ring-rose-500/20 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl surface-accent-rose text-rose-600 dark:text-rose-400 flex items-center justify-center">
                     <FileText size={19} />
                   </div>
                   <div className="space-y-0.5">
@@ -841,10 +844,10 @@ export default function AdminDashboardPage() {
                   </div>
                 </div>
 
-                <div className="card-saas rounded-2xl overflow-hidden shadow-sm">
+                <div className="surface-panel rounded-2xl overflow-hidden">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="bg-slate-50/80 dark:bg-[#111827]/75 border-b border-slate-200/80 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase font-semibold text-[10px] tracking-wider font-mono">
+                      <tr className="text-slate-400 dark:text-slate-500 uppercase font-semibold text-[10px] tracking-wider font-mono">
                         <th className="px-6 py-3.5">Fecha / Hora</th>
                         <th className="px-6 py-3.5">Administrador</th>
                         <th className="px-6 py-3.5">Acción</th>
@@ -852,9 +855,9 @@ export default function AdminDashboardPage() {
                         <th className="px-6 py-3.5">Detalles</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 font-medium font-mono text-[11px]">
+                    <tbody className="font-medium font-mono text-[11px]">
                       {auditLogs.map(log => (
-                        <tr key={log.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                        <tr key={log.id} className="hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors">
                           <td className="px-6 py-4 text-slate-500">{new Date(log.created_at).toLocaleString()}</td>
                           <td className="px-6 py-4 font-bold text-slate-900 dark:text-white font-sans">{log.admin_email}</td>
                           <td className="px-6 py-4 font-bold text-emerald-600">{log.action}</td>
@@ -874,9 +877,9 @@ export default function AdminDashboardPage() {
 
       {/* MODAL CREAR CLIENTE */}
       {createUserModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fadeIn">
-          <div className="bg-white dark:bg-[#0D131F] rounded-2xl p-6 sm:p-7 max-w-md w-full text-left space-y-5 border border-slate-200 dark:border-slate-800 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-2xl animate-fadeIn">
+          <div className="surface-elevated rounded-3xl p-7 sm:p-8 max-w-md w-full text-left space-y-5">
+            <div className="flex items-center justify-between pb-2">
               <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">Crear Nuevo Cliente</h3>
               <button onClick={() => setCreateUserModal(false)} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg cursor-pointer"><X size={16} /></button>
             </div>
@@ -889,7 +892,7 @@ export default function AdminDashboardPage() {
                   required
                   value={newUserData.email}
                   onChange={e => setNewUserData({ ...newUserData, email: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-semibold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition-all"
+                  className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none transition-colors"
                 />
               </div>
 
@@ -900,7 +903,7 @@ export default function AdminDashboardPage() {
                   required
                   value={newUserData.password}
                   onChange={e => setNewUserData({ ...newUserData, password: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-semibold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition-all"
+                  className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none transition-colors"
                 />
               </div>
 
@@ -911,7 +914,7 @@ export default function AdminDashboardPage() {
                     type="text"
                     value={newUserData.companyName}
                     onChange={e => setNewUserData({ ...newUserData, companyName: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-semibold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition-all"
+                    className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none transition-colors"
                   />
                 </div>
                 <div className="space-y-1">
@@ -920,7 +923,7 @@ export default function AdminDashboardPage() {
                     type="text"
                     value={newUserData.phone}
                     onChange={e => setNewUserData({ ...newUserData, phone: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-semibold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition-all"
+                    className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none transition-colors"
                   />
                 </div>
               </div>
@@ -936,7 +939,7 @@ export default function AdminDashboardPage() {
 
               <button
                 type="submit"
-                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm shadow-emerald-600/20 transition-all cursor-pointer mt-2"
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer mt-2"
               >
                 Crear Cliente y Activar Cuenta
               </button>
@@ -947,9 +950,9 @@ export default function AdminDashboardPage() {
 
       {/* MODAL EDITAR SUSCRIPCIÓN / LICENCIA */}
       {editSubscriptionModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fadeIn">
-          <div className="bg-white dark:bg-[#0D131F] rounded-2xl p-6 sm:p-7 max-w-md w-full text-left space-y-5 border border-slate-200 dark:border-slate-800 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-2xl animate-fadeIn">
+          <div className="surface-elevated rounded-3xl p-7 sm:p-8 max-w-md w-full text-left space-y-5">
+            <div className="flex items-center justify-between pb-2">
               <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">Modificar Licencia y Cuota</h3>
               <button onClick={() => setEditSubscriptionModal({ open: false, user: null })} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg cursor-pointer"><X size={16} /></button>
             </div>
@@ -1004,14 +1007,14 @@ export default function AdminDashboardPage() {
                   type="checkbox"
                   checked={subFormData.resetQuota}
                   onChange={e => setSubFormData({ ...subFormData, resetQuota: e.target.checked })}
-                  className="rounded text-emerald-600 focus:ring-emerald-500"
+                  className="rounded text-emerald-600"
                 />
                 <span>Resetear cuota de mensajes consumidos a 0</span>
               </label>
 
               <button
                 type="submit"
-                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm shadow-emerald-600/20 transition-all cursor-pointer mt-2"
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer mt-2"
               >
                 Aplicar Cambios de Suscripción
               </button>
@@ -1022,9 +1025,9 @@ export default function AdminDashboardPage() {
 
       {/* MODAL REGISTRAR PAGO */}
       {recordPaymentModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fadeIn">
-          <div className="bg-white dark:bg-[#0D131F] rounded-2xl p-6 sm:p-7 max-w-md w-full text-left space-y-5 border border-slate-200 dark:border-slate-800 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-2xl animate-fadeIn">
+          <div className="surface-elevated rounded-3xl p-7 sm:p-8 max-w-md w-full text-left space-y-5">
+            <div className="flex items-center justify-between pb-2">
               <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">Registrar Pago y Renovar</h3>
               <button onClick={() => setRecordPaymentModal({ open: false, user: null })} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg cursor-pointer"><X size={16} /></button>
             </div>
@@ -1043,7 +1046,7 @@ export default function AdminDashboardPage() {
                     required
                     value={paymentFormData.amount}
                     onChange={e => setPaymentFormData({ ...paymentFormData, amount: parseFloat(e.target.value) })}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-semibold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition-all"
+                    className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none transition-colors"
                   />
                 </div>
                 <div className="space-y-1">
@@ -1067,7 +1070,7 @@ export default function AdminDashboardPage() {
                   value={paymentFormData.paymentMethod}
                   onChange={e => setPaymentFormData({ ...paymentFormData, paymentMethod: e.target.value })}
                   placeholder="ej: Transferencia BCP, Stripe, Efectivo"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-semibold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition-all"
+                  className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none transition-colors"
                 />
               </div>
 
@@ -1078,7 +1081,7 @@ export default function AdminDashboardPage() {
                   value={paymentFormData.reference}
                   onChange={e => setPaymentFormData({ ...paymentFormData, reference: e.target.value })}
                   placeholder="ej: OP-84920482"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-mono text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition-all"
+                  className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs font-mono text-slate-900 dark:text-white focus:outline-none transition-colors"
                 />
               </div>
 
@@ -1098,7 +1101,7 @@ export default function AdminDashboardPage() {
 
               <button
                 type="submit"
-                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm shadow-emerald-600/20 transition-all cursor-pointer mt-2"
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer mt-2"
               >
                 Confirmar Pago y Reactivar Servicio
               </button>
@@ -1109,9 +1112,9 @@ export default function AdminDashboardPage() {
 
       {/* MODAL PLANES (CREAR / EDITAR) */}
       {planModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fadeIn">
-          <div className="bg-white dark:bg-[#0D131F] rounded-2xl p-6 sm:p-7 max-w-md w-full text-left space-y-5 border border-slate-200 dark:border-slate-800 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-2xl animate-fadeIn">
+          <div className="surface-elevated rounded-3xl p-7 sm:p-8 max-w-md w-full text-left space-y-5">
+            <div className="flex items-center justify-between pb-2">
               <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
                 {planModal.plan?.id ? 'Editar Plan' : 'Crear Plan'}
               </h3>
@@ -1127,7 +1130,7 @@ export default function AdminDashboardPage() {
                     required
                     value={planFormData.id}
                     onChange={e => setPlanFormData({ ...planFormData, id: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-mono text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition-all"
+                    className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs font-mono text-slate-900 dark:text-white focus:outline-none transition-colors"
                   />
                 </div>
               )}
@@ -1139,7 +1142,7 @@ export default function AdminDashboardPage() {
                   required
                   value={planFormData.name}
                   onChange={e => setPlanFormData({ ...planFormData, name: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-semibold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition-all"
+                  className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none transition-colors"
                 />
               </div>
 
@@ -1152,7 +1155,7 @@ export default function AdminDashboardPage() {
                     required
                     value={planFormData.price}
                     onChange={e => setPlanFormData({ ...planFormData, price: parseFloat(e.target.value) })}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-semibold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition-all"
+                    className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none transition-colors"
                   />
                 </div>
                 <div className="space-y-1">
@@ -1162,7 +1165,7 @@ export default function AdminDashboardPage() {
                     required
                     value={planFormData.maxInstances}
                     onChange={e => setPlanFormData({ ...planFormData, maxInstances: parseInt(e.target.value) })}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-semibold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition-all"
+                    className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none transition-colors"
                   />
                 </div>
               </div>
@@ -1174,13 +1177,13 @@ export default function AdminDashboardPage() {
                   required
                   value={planFormData.maxMessages}
                   onChange={e => setPlanFormData({ ...planFormData, maxMessages: parseInt(e.target.value) })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-semibold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition-all"
+                  className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none transition-colors"
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm shadow-emerald-600/20 transition-all cursor-pointer mt-2"
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer mt-2"
               >
                 Guardar Configuración de Plan
               </button>
