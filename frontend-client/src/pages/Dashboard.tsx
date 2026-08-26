@@ -159,23 +159,51 @@ export default function Dashboard() {
     }
   };
 
-  const handleDeleteInstance = async (instanceName: string) => {
-    if (!window.confirm(`¿Estás seguro de eliminar la instancia "${instanceName}"?`)) return;
+  // Modal de Confirmación Personalizado (Sin diálogos nativos de navegador)
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean;
+    title: string;
+    message: string;
+    type?: 'danger' | 'warning' | 'info';
+    confirmText?: string;
+    cancelText?: string;
+    onConfirm: () => void;
+  }>({
+    open: false,
+    title: '',
+    message: '',
+    type: 'danger',
+    confirmText: 'Confirmar',
+    cancelText: 'Cancelar',
+    onConfirm: () => {}
+  });
 
-    try {
-      setLoadingInstances(true);
-      const res = await api.delete(`/instances/${instanceName}`);
-      if (res.data?.success) {
-        showNotification('Instancia eliminada correctamente');
-        fetchInstances();
-      } else {
-        showNotification(res.data?.error || 'No se pudo eliminar la instancia', 'error');
+  const handleDeleteInstance = (instanceName: string) => {
+    setConfirmModal({
+      open: true,
+      title: 'Eliminar Instancia',
+      message: `¿Estás seguro de que deseas eliminar la instancia "${instanceName}"? Esta acción eliminará permanentemente la conexión de WhatsApp y no se podrá deshacer.`,
+      type: 'danger',
+      confirmText: 'Eliminar Instancia',
+      cancelText: 'Cancelar',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, open: false }));
+        try {
+          setLoadingInstances(true);
+          const res = await api.delete(`/instances/${instanceName}`);
+          if (res.data?.success) {
+            showNotification('Instancia eliminada correctamente', 'success');
+            fetchInstances();
+          } else {
+            showNotification(res.data?.error || 'No se pudo eliminar la instancia', 'error');
+          }
+        } catch (err: any) {
+          showNotification(err.response?.data?.error || 'Error al eliminar la instancia', 'error');
+        } finally {
+          setLoadingInstances(false);
+        }
       }
-    } catch (err: any) {
-      showNotification(err.response?.data?.error || 'Error al eliminar la instancia', 'error');
-    } finally {
-      setLoadingInstances(false);
-    }
+    });
   };
 
   const handleGetQrCode = async (instanceName: string) => {
@@ -1096,6 +1124,60 @@ echo $response;`;
             </div>
 
             <p className="text-xs text-slate-400 font-normal">Abre WhatsApp en tu teléfono ➔ Dispositivos vinculados ➔ Vincular un dispositivo.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmación Personalizado (Reemplazo total de window.confirm) */}
+      {confirmModal.open && (
+        <div className="fixed inset-0 z-[9990] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white dark:bg-[#111827] rounded-3xl p-6 sm:p-8 max-w-sm w-full text-left space-y-5">
+            <div className="flex items-center justify-between">
+              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold ${
+                confirmModal.type === 'danger'
+                  ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400'
+                  : confirmModal.type === 'warning'
+                  ? 'bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400'
+                  : 'bg-sky-50 text-sky-600 dark:bg-sky-950/60 dark:text-sky-400'
+              }`}>
+                <AlertCircle size={20} />
+              </div>
+              <button 
+                onClick={() => setConfirmModal(prev => ({ ...prev, open: false }))} 
+                className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">{confirmModal.title}</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-normal">
+                {confirmModal.message}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setConfirmModal(prev => ({ ...prev, open: false }))}
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition-all cursor-pointer min-h-[44px]"
+              >
+                {confirmModal.cancelText || 'Cancelar'}
+              </button>
+
+              <button
+                type="button"
+                onClick={confirmModal.onConfirm}
+                className={`flex-1 py-2.5 text-xs font-bold rounded-xl active:scale-[0.98] transition-all cursor-pointer min-h-[44px] ${
+                  confirmModal.type === 'danger'
+                    ? 'bg-rose-600 hover:bg-rose-700 text-white'
+                    : 'bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 text-white'
+                }`}
+              >
+                {confirmModal.confirmText || 'Confirmar'}
+              </button>
+            </div>
           </div>
         </div>
       )}
