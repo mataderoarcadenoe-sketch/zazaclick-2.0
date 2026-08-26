@@ -8,91 +8,6 @@ import * as path from 'path';
 
 const router = Router();
 
-import axios from 'axios';
-
-router.get('/test-send/:instanceName', async (req, res) => {
-  const { instanceName } = req.params;
-  const { number, text } = req.query;
-  try {
-    const dbInst = await pool.query('SELECT * FROM instances WHERE instance_name = $1', [instanceName]);
-    const evUrl = process.env.EVOLUTION_API_URL;
-    const evKey = process.env.EVOLUTION_API_KEY;
-
-    let connectionState = null;
-    try {
-      const response = await axios.get(`${evUrl}/instance/connectionState/${instanceName}`, {
-        headers: { apikey: evKey }
-      });
-      connectionState = response.data;
-    } catch (e: any) {
-      connectionState = { error: e.message, status: e.response?.status, data: e.response?.data };
-    }
-
-    let sendTestResult = null;
-    if (number && text) {
-      try {
-        let cleanNumber = (number as string).replace(/\D/g, '');
-        if (cleanNumber.length === 9 && cleanNumber.startsWith('9')) {
-          cleanNumber = `51${cleanNumber}`;
-        }
-        const sendResponse = await axios.post(`${evUrl}/message/sendText/${instanceName}`, {
-          number: cleanNumber,
-          text: text as string
-        }, {
-          headers: { apikey: evKey, 'Content-Type': 'application/json' }
-        });
-        sendTestResult = { success: true, status: sendResponse.status, data: sendResponse.data };
-      } catch (e: any) {
-        sendTestResult = { 
-          success: false, 
-          error: e.message, 
-          status: e.response?.status, 
-          data: e.response?.data,
-          config: {
-            url: e.config?.url,
-            headers: e.config?.headers,
-            data: e.config?.data
-          }
-        };
-      }
-    }
-
-    res.json({
-      instanceName,
-      dbInstance: dbInst.rows[0] || 'NOT_FOUND_IN_DB',
-      evolutionUrl: evUrl,
-      evolutionKeyConfigured: !!evKey,
-      connectionState,
-      sendTestResult
-    });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message, stack: err.stack });
-  }
-});
-
-router.post('/test-media/:instanceName', async (req, res) => {
-  const { instanceName } = req.params;
-  const { messageKey, messageContent } = req.body;
-  try {
-    const result = await EvolutionService.getMediaMessageBase64(instanceName, messageKey, messageContent);
-    res.json({
-      success: result.success,
-      data: result.data || null,
-      error: result.error || null,
-      env: {
-        EVOLUTION_API_URL: process.env.EVOLUTION_API_URL,
-        EVOLUTION_API_KEY_EXISTS: !!process.env.EVOLUTION_API_KEY
-      }
-    });
-  } catch (err: any) {
-    res.status(500).json({
-      success: false,
-      error: err.message,
-      stack: err.stack
-    });
-  }
-});
-
 /**
  * Generar ID aleatorio
  */
@@ -378,52 +293,7 @@ router.delete('/delete/:instanceName', authMiddleware, deleteInstanceHandler);
 router.delete('/:instanceName', authMiddleware, deleteInstanceHandler);
 
 
-/**
- * POST /send - Endpoint público para enviar mensajes utilizando API Key del cliente
- */
-router.post('/send', async (req, res) => {
-  const { instanceName, apiKey, number, text } = req.body;
 
-  if (!instanceName || !apiKey || !number || !text) {
-    return res.status(400).json({ success: false, error: 'Faltan parámetros requeridos (instanceName, apiKey, number, text)' });
-  }
-
-  try {
-    // Validar las credenciales contra la BD de Zaza
-    const instanceCheck = await pool.query(
-      'SELECT id, status FROM instances WHERE instance_name = $1 AND api_key = $2',
-      [instanceName, apiKey]
-    );
-
-    if (instanceCheck.rows.length === 0) {
-      return res.status(401).json({ success: false, error: 'Credenciales de API inválidas (Nombre de instancia o API Key incorrecta)' });
-    }
-
-    // Verificar si la instancia está conectada
-    const liveState = await EvolutionService.getConnectionState(instanceName);
-    const isConnected = liveState === 'open' || liveState === 'connected';
-
-    if (!isConnected) {
-      return res.status(400).json({ success: false, error: 'La instancia de WhatsApp no está conectada. Escanea el código QR primero.' });
-    }
-
-    // Enviar el mensaje
-    const sentResult = await EvolutionService.sendTextMessage(instanceName, number, text);
-
-    if (sentResult.success) {
-      return res.json({ success: true, message: 'Mensaje enviado exitosamente.' });
-    }
-    res.status(555).json({ 
-      success: false, 
-      error: `Error en el servidor al enviar el mensaje de WhatsApp: ${sentResult.error || ''}`,
-      details: sentResult.details
-    });
-
-  } catch (error: any) {
-    console.error('[Instance] Error en POST /send:', error.message);
-    res.status(500).json({ success: false, error: 'Error interno en el servidor.' });
-  }
-});
 
 /**
  * GET /chats/:instanceName - Obtener chats activos del usuario

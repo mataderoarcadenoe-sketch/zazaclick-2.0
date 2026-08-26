@@ -9,6 +9,7 @@ import instanceRoutes from './routes/instance.routes';
 import adminRoutes from './routes/admin.routes';
 import webhookRoutes from './routes/webhook.routes';
 import { EvolutionService } from './services/evolution.service';
+import { startSubscriptionScheduler } from './jobs/subscription-scheduler.job';
 
 dotenv.config();
 
@@ -108,6 +109,8 @@ async function startServer() {
     
     server.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Servidor Express + Socket.io ejecutándose exitosamente en http://0.0.0.0:${PORT}`);
+      // Iniciar scheduler de sincronización de vencimientos
+      startSubscriptionScheduler();
       // Configurar automáticamente los webhooks para todas las instancias existentes
       configureAllWebhooks();
     });

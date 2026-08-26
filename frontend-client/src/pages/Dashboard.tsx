@@ -718,26 +718,43 @@ echo $response;`;
                   </div>
                 </div>
 
+                {/* Alerta de Estado de Licencia si está vencido o por vencer */}
+                {subscription?.is_expired && (
+                  <div className="p-4 bg-rose-50 dark:bg-rose-950/60 rounded-2xl flex items-center justify-between text-xs font-bold text-rose-800 dark:text-rose-200">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle size={18} className="text-rose-600" />
+                      <span>Tu suscripción ha vencido. Las llamadas a la API de WhatsApp están bloqueadas. Contacta al administrador para renovar.</span>
+                    </div>
+                    <button onClick={() => setActiveTab('subscription')} className="underline">Renovar Licencia</button>
+                  </div>
+                )}
+
                 {/* KPI Metrics */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                   <div className="p-6 bg-white dark:bg-[#0D131F] rounded-3xl space-y-2">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Líneas Conectadas</span>
-                    <div className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-                      {activeInstancesCount} <span className="text-base font-normal text-slate-400">/ {maxInstances === 99 ? '∞' : maxInstances}</span>
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Consumo de Cuota</span>
+                    <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                      {subscription?.messages_used || 0} <span className="text-sm font-normal text-slate-400">/ {subscription?.messages_limit || 1000} msgs</span>
                     </div>
-                    <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 pt-1 flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                      <span>{activeInstancesCount > 0 ? 'Conexión activa con WhatsApp' : 'Sin líneas vinculadas'}</span>
+                    <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full rounded-full ${Number(subscription?.consumption_percentage || 0) > 90 ? 'bg-rose-500' : 'bg-emerald-500'}`}
+                        style={{ width: `${Math.min(100, Number(subscription?.consumption_percentage || 0))}%` }}
+                      />
+                    </div>
+                    <p className="text-[11px] font-bold text-slate-400">
+                      {subscription?.consumption_percentage || 0}% consumido ({subscription?.available_messages || 0} disponibles)
                     </p>
                   </div>
 
                   <div className="p-6 bg-white dark:bg-[#0D131F] rounded-3xl space-y-2">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Endpoints Soportados</span>
-                    <div className="text-3xl sm:text-4xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
-                      5 REST
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Líneas Conectadas</span>
+                    <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                      {activeInstancesCount} <span className="text-sm font-normal text-slate-400">/ {maxInstances === 99 ? '∞' : maxInstances}</span>
                     </div>
-                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400 pt-1">
-                      Texto, Media, Audio, GPS, Contacto
+                    <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 pt-1 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                      <span>{activeInstancesCount > 0 ? 'Conexión activa con WhatsApp' : 'Sin líneas vinculadas'}</span>
                     </p>
                   </div>
 
@@ -756,17 +773,21 @@ echo $response;`;
                   </div>
 
                   <div className="p-6 bg-white dark:bg-[#0D131F] rounded-3xl space-y-2">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Suscripción Activa</span>
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Plan y Vencimiento</span>
                     <div className="text-lg font-black text-slate-900 dark:text-white uppercase truncate pt-1">
                       {subscription?.plan_name || 'Plan Developer'}
                     </div>
-                    <button 
-                      type="button" 
-                      onClick={() => setActiveTab('subscription')} 
-                      className="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline pt-1 block cursor-pointer"
-                    >
-                      Ver Detalle de Licencia ➔
-                    </button>
+                    <div className="pt-1">
+                      {subscription?.is_expired ? (
+                        <span className="px-2.5 py-1 bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 text-[10px] font-black rounded-full uppercase">
+                          🔴 VENCIDO
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[10px] font-bold rounded-full uppercase">
+                          ● {subscription?.days_remaining || 0} DÍAS RESTANTES
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -1229,24 +1250,53 @@ echo $response;`;
               <div className="space-y-8 animate-fadeIn text-left">
                 <div className="space-y-1">
                   <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Planes y Licencia Activa</h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Consulta los detalles de tu plan contratado e instancias autorizadas.</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Consulta los detalles de tu plan contratado, límites de cuota y fechas de vigencia.</p>
                 </div>
 
                 <div className="p-6 sm:p-8 bg-white dark:bg-[#0D131F] rounded-3xl space-y-6">
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between py-3">
+                    <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-800">
                       <span className="text-xs font-bold text-slate-500">Plan Contratado</span>
                       <span className="text-sm font-black text-slate-900 dark:text-white uppercase">{subscription?.plan_name || 'Plan Developer'}</span>
                     </div>
-                    <div className="flex items-center justify-between py-3">
+
+                    <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-800">
+                      <span className="text-xs font-bold text-slate-500">Cuota de Mensajes Mensual</span>
+                      <span className="text-xs font-bold text-slate-800 dark:text-white">
+                        {subscription?.messages_used || 0} / {subscription?.messages_limit || 1000} ({subscription?.consumption_percentage || 0}%)
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-800">
                       <span className="text-xs font-bold text-slate-500">Capacidad de Instancias</span>
                       <span className="text-xs font-bold text-slate-800 dark:text-white">{activeInstancesCount} / {maxInstances === 99 ? 'ILIMITADO' : maxInstances} Líneas</span>
                     </div>
-                    <div className="flex items-center justify-between py-3">
-                      <span className="text-xs font-bold text-slate-500">Estado del Servicio</span>
-                      <span className="px-3 py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[10px] font-bold rounded-full uppercase">
-                        ● LICENCIA ACTIVA
+
+                    <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-800">
+                      <span className="text-xs font-bold text-slate-500">Fecha de Inicio</span>
+                      <span className="text-xs font-mono font-bold text-slate-800 dark:text-white">
+                        {subscription?.start_date ? new Date(subscription.start_date).toLocaleDateString() : 'N/A'}
                       </span>
+                    </div>
+
+                    <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-800">
+                      <span className="text-xs font-bold text-slate-500">Fecha de Vencimiento</span>
+                      <span className="text-xs font-mono font-bold text-slate-800 dark:text-white">
+                        {subscription?.end_date ? new Date(subscription.end_date).toLocaleDateString() : 'N/A'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between py-3">
+                      <span className="text-xs font-bold text-slate-500">Estado de la Licencia</span>
+                      {subscription?.is_expired ? (
+                        <span className="px-3 py-1 bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 text-[10px] font-black rounded-full uppercase">
+                          🔴 LICENCIA VENCIDA
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[10px] font-bold rounded-full uppercase">
+                          ● {subscription?.days_remaining || 0} DÍAS RESTANTES
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
