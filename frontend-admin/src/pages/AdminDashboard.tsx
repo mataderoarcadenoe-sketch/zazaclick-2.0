@@ -254,7 +254,7 @@ export default function AdminDashboardPage() {
 
       {/* Sidebar */}
       <aside 
-        className={`bg-white dark:bg-[#0B0F19] flex flex-col transition-all duration-250 z-40 fixed top-0 left-0 h-full ${
+        className={`bg-white dark:bg-[#0B0F19] border-r border-slate-100 dark:border-slate-800/40 flex flex-col transition-all duration-250 z-40 fixed top-0 left-0 h-full ${
           sidebarOpen ? 'w-64 translate-x-0' : 'w-20 -translate-x-full lg:translate-x-0'
         }`}
       >
@@ -466,9 +466,14 @@ export default function AdminDashboardPage() {
             {activeTab === 'users' && (
               <div className="space-y-6 animate-fadeIn text-left">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="space-y-1">
-                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Directorio de Clientes y Licenciamiento</h2>
-                    <p className="text-xs text-slate-500 font-normal">Supervisa vencimientos, consumo de cuotas y autorizaciones de API.</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
+                      <Users size={20} className="text-white" />
+                    </div>
+                    <div className="space-y-1">
+                      <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Directorio de Clientes y Licenciamiento</h2>
+                      <p className="text-xs text-slate-500 font-normal">Supervisa vencimientos, consumo de cuotas y autorizaciones de API.</p>
+                    </div>
                   </div>
 
                   <button
@@ -493,11 +498,11 @@ export default function AdminDashboardPage() {
                 </div>
 
                 {/* Tabla de Clientes */}
-                <div className="bg-white dark:bg-[#0D131F] rounded-3xl overflow-hidden">
+                <div className="bg-white dark:bg-[#0D131F] rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800/50 shadow-sm">
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs">
                       <thead>
-                        <tr className="border-b border-slate-100 dark:border-slate-800/60 text-slate-400 uppercase font-bold text-[10px] tracking-wider">
+                        <tr className="bg-violet-50 dark:bg-violet-950/30 border-b border-violet-100 dark:border-violet-900/40 text-violet-600 dark:text-violet-300 uppercase font-bold text-[10px] tracking-wider">
                           <th className="px-6 py-4">Cliente / Empresa</th>
                           <th className="px-6 py-4">Plan Actual</th>
                           <th className="px-6 py-4">Estado Cuenta</th>
@@ -623,15 +628,20 @@ export default function AdminDashboardPage() {
             {/* INSTANCIAS TOTALES */}
             {activeTab === 'instances' && (
               <div className="space-y-6 animate-fadeIn text-left">
-                <div className="space-y-1">
-                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Líneas de WhatsApp en la Plataforma</h2>
-                  <p className="text-xs text-slate-500 font-normal">Control de activación y supervisión de todas las instancias del clúster.</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/25">
+                    <Smartphone size={20} className="text-white" />
+                  </div>
+                  <div className="space-y-1">
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Líneas de WhatsApp en la Plataforma</h2>
+                    <p className="text-xs text-slate-500 font-normal">Control de activación y supervisión de todas las instancias del clúster.</p>
+                  </div>
                 </div>
 
-                <div className="bg-white dark:bg-[#0D131F] rounded-3xl overflow-hidden">
+                <div className="bg-white dark:bg-[#0D131F] rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800/50 shadow-sm">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="border-b border-slate-100 dark:border-slate-800/60 text-slate-400 uppercase font-bold text-[10px] tracking-wider">
+                      <tr className="bg-emerald-50 dark:bg-emerald-950/30 border-b border-emerald-100 dark:border-emerald-900/40 text-emerald-600 dark:text-emerald-300 uppercase font-bold text-[10px] tracking-wider">
                         <th className="px-6 py-4">Instancia</th>
                         <th className="px-6 py-4">Propietario</th>
                         <th className="px-6 py-4">Conexión WhatsApp</th>
@@ -689,9 +699,14 @@ export default function AdminDashboardPage() {
             {activeTab === 'plans' && (
               <div className="space-y-6 animate-fadeIn text-left">
                 <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Planes y Precios del SaaS</h2>
-                    <p className="text-xs text-slate-500 font-normal">Configura precios, límites de instancias y cuotas de mensajes.</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/25">
+                      <CreditCard size={20} className="text-white" />
+                    </div>
+                    <div className="space-y-1">
+                      <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Planes y Precios del SaaS</h2>
+                      <p className="text-xs text-slate-500 font-normal">Configura precios, límites de instancias y cuotas de mensajes.</p>
+                    </div>
                   </div>
                   <button
                     onClick={() => {
@@ -707,7 +722,7 @@ export default function AdminDashboardPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {plansList.map(plan => (
-                    <div key={plan.id} className="p-6 bg-white dark:bg-[#0D131F] rounded-3xl space-y-4 text-left">
+                    <div key={plan.id} className="p-6 bg-white dark:bg-[#0D131F] rounded-3xl space-y-4 text-left border border-slate-100 dark:border-slate-800/50 hover:border-amber-300 dark:hover:border-amber-700 hover:shadow-lg hover:shadow-amber-500/10 transition-all duration-300">
                       <div className="flex items-center justify-between">
                         <span className={`px-2.5 py-0.5 text-[9px] font-bold rounded-full uppercase ${
                           plan.is_trial ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'
@@ -757,15 +772,20 @@ export default function AdminDashboardPage() {
             {/* HISTORIAL DE PAGOS */}
             {activeTab === 'payments' && (
               <div className="space-y-6 animate-fadeIn text-left">
-                <div className="space-y-1">
-                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Registro de Pagos y Facturación</h2>
-                  <p className="text-xs text-slate-500 font-normal">Historial de renovaciones y pagos registrados en el sistema.</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/25">
+                    <DollarSign size={20} className="text-white" />
+                  </div>
+                  <div className="space-y-1">
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Registro de Pagos y Facturación</h2>
+                    <p className="text-xs text-slate-500 font-normal">Historial de renovaciones y pagos registrados en el sistema.</p>
+                  </div>
                 </div>
 
-                <div className="bg-white dark:bg-[#0D131F] rounded-3xl overflow-hidden">
+                <div className="bg-white dark:bg-[#0D131F] rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800/50 shadow-sm">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="border-b border-slate-100 dark:border-slate-800/60 text-slate-400 uppercase font-bold text-[10px]">
+                      <tr className="bg-cyan-50 dark:bg-cyan-950/30 border-b border-cyan-100 dark:border-cyan-900/40 text-cyan-600 dark:text-cyan-300 uppercase font-bold text-[10px] tracking-wider">
                         <th className="px-6 py-4">Fecha</th>
                         <th className="px-6 py-4">Cliente</th>
                         <th className="px-6 py-4">Monto</th>
@@ -798,15 +818,20 @@ export default function AdminDashboardPage() {
             {/* BITÁCORA DE AUDITORÍA */}
             {activeTab === 'audit' && (
               <div className="space-y-6 animate-fadeIn text-left">
-                <div className="space-y-1">
-                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Bitácora de Auditoría Administrativa</h2>
-                  <p className="text-xs text-slate-500 font-normal">Trazabilidad de cambios de planes, suspensiones, extensiones y pagos.</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-lg shadow-rose-500/25">
+                    <FileText size={20} className="text-white" />
+                  </div>
+                  <div className="space-y-1">
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Bitácora de Auditoría Administrativa</h2>
+                    <p className="text-xs text-slate-500 font-normal">Trazabilidad de cambios de planes, suspensiones, extensiones y pagos.</p>
+                  </div>
                 </div>
 
-                <div className="bg-white dark:bg-[#0D131F] rounded-3xl overflow-hidden">
+                <div className="bg-white dark:bg-[#0D131F] rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800/50 shadow-sm">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="border-b border-slate-100 dark:border-slate-800/60 text-slate-400 uppercase font-bold text-[10px]">
+                      <tr className="bg-rose-50 dark:bg-rose-950/30 border-b border-rose-100 dark:border-rose-900/40 text-rose-600 dark:text-rose-300 uppercase font-bold text-[10px] tracking-wider">
                         <th className="px-6 py-4">Fecha / Hora</th>
                         <th className="px-6 py-4">Administrador</th>
                         <th className="px-6 py-4">Acción</th>

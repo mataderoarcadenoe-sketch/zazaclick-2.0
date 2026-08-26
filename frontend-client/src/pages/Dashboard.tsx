@@ -697,16 +697,16 @@ echo $response;`;
             {activeTab === 'overview' && (
               <div className="space-y-8 animate-fadeIn text-left">
                 
-                <div className="p-6 sm:p-8 bg-white dark:bg-[#0D131F] rounded-3xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="p-6 sm:p-8 bg-gradient-to-r from-slate-900 to-slate-800 dark:from-[#0D131F] dark:to-[#131B2E] rounded-3xl relative overflow-hidden border border-slate-700/30 dark:border-slate-700/20 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div className="space-y-2 text-left relative z-10">
                     <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/50 rounded-full text-[10px] font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
                       <span>Motor Evolution API 2.4.0-rc2 · Redis Queue Engine</span>
                     </div>
-                    <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                    <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
                       Dashboard de WhatsApp API SaaS
                     </h1>
-                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl leading-relaxed font-normal">
+                    <p className="text-xs sm:text-sm text-slate-300 dark:text-slate-400 max-w-xl leading-relaxed font-normal">
                       Envía mensajes de texto, imágenes, audios PTT, videos, PDFs y contactos mediante tu <code className="text-emerald-600 dark:text-emerald-400 font-bold">x-api-key</code>.
                     </p>
                   </div>
@@ -838,12 +838,17 @@ echo $response;`;
             {/* INSTANCIAS / LÍNEAS WHATSAPP */}
             {activeTab === 'instances' && (
               <div className="space-y-8 animate-fadeIn text-left">
-                <div className="space-y-1">
-                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Instancias y Conexiones WhatsApp</h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Crea nuevas conexiones de API o escanea el código QR para vincular tus líneas.</p>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/25 shrink-0">
+                    <Smartphone size={24} className="text-white" />
+                  </div>
+                  <div className="space-y-1">
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Instancias y Conexiones WhatsApp</h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Crea nuevas conexiones de API o escanea el código QR para vincular tus líneas.</p>
+                  </div>
                 </div>
 
-                <div className="p-6 sm:p-8 bg-white dark:bg-[#0D131F] rounded-3xl space-y-4">
+                <div className="p-6 sm:p-8 bg-white dark:bg-[#0D131F] rounded-3xl border border-slate-100 dark:border-slate-800/50 shadow-sm space-y-4">
                   <h3 className="text-sm font-bold text-slate-900 dark:text-white">Crear Nueva Instancia API</h3>
                   <form onSubmit={handleCreateInstance} className="flex flex-col sm:flex-row gap-3">
                     <input
@@ -851,7 +856,7 @@ echo $response;`;
                       value={newInstanceName}
                       onChange={(e) => setNewInstanceName(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                       placeholder="nombre_de_instancia (ej: ventas_lima)"
-                      className="flex-1 px-4 py-3 bg-slate-100 dark:bg-[#141D2E] rounded-2xl text-xs font-mono font-bold text-slate-900 dark:text-white focus:outline-none focus:bg-slate-200 dark:focus:bg-[#1A253A]"
+                      className="flex-1 px-4 py-3 bg-slate-100 dark:bg-[#141D2E] rounded-2xl text-xs font-mono font-bold text-slate-900 dark:text-white focus:outline-none focus:bg-white dark:focus:bg-[#0D131F] focus:ring-2 focus:ring-violet-500/30 focus:border-transparent border border-transparent dark:border-slate-700/50 transition-all"
                     />
                     <button
                       type="submit"
@@ -868,7 +873,7 @@ echo $response;`;
                   <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tus Instancias ({instances.length})</h3>
 
                   {instances.length === 0 ? (
-                    <div className="p-12 bg-white dark:bg-[#0D131F] rounded-3xl text-center space-y-4">
+                    <div className="p-12 bg-white dark:bg-[#0D131F] rounded-3xl border border-slate-100 dark:border-slate-800/50 shadow-sm text-center space-y-4">
                       <div className="w-16 h-16 rounded-3xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
                         <Smartphone size={32} />
                       </div>
@@ -880,7 +885,7 @@ echo $response;`;
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                       {instances.map((inst) => (
-                        <div key={inst.id || inst.instance_name} className="p-6 bg-white dark:bg-[#0D131F] rounded-3xl space-y-5 text-left transition-all">
+                        <div key={inst.id || inst.instance_name} className="p-6 bg-white dark:bg-[#0D131F] rounded-3xl border border-slate-100 dark:border-slate-800/50 shadow-sm space-y-5 text-left border border-slate-100 dark:border-slate-800/50 hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-300">
                           <div className="flex items-center justify-between">
                             <div className="space-y-0.5">
                               <h4 className="text-sm font-mono font-bold text-slate-900 dark:text-white">{inst.instance_name}</h4>
@@ -952,9 +957,14 @@ echo $response;`;
             {/* TESTER DE API MULTI-TIPO (PLAYGROUND) */}
             {activeTab === 'playground' && (
               <div className="space-y-8 animate-fadeIn text-left">
-                <div className="space-y-1">
-                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Tester Interactivo de API</h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Prueba el envío de Texto, Multimedia, Notas de Voz PTT, Ubicación y Contactos.</p>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/25 shrink-0">
+                    <Terminal size={24} className="text-white" />
+                  </div>
+                  <div className="space-y-1">
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Tester Interactivo de API</h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Prueba el envío de Texto, Multimedia, Notas de Voz PTT, Ubicación y Contactos.</p>
+                  </div>
                 </div>
 
                 {/* Selector de Tipo de Envío */}
@@ -986,7 +996,7 @@ echo $response;`;
                   })}
                 </div>
 
-                <div className="p-6 sm:p-8 bg-white dark:bg-[#0D131F] rounded-3xl space-y-6">
+                <div className="p-6 sm:p-8 bg-white dark:bg-[#0D131F] rounded-3xl border border-slate-100 dark:border-slate-800/50 shadow-sm space-y-6">
                   <form onSubmit={handleTestSend} className="space-y-5">
                     
                     {/* Campos Base (Instancia y Teléfono) */}
@@ -1013,7 +1023,7 @@ echo $response;`;
                           value={playgroundPhone}
                           onChange={(e) => setPlaygroundPhone(e.target.value.replace(/[^0-9]/g, ''))}
                           placeholder="ej: 51912345678"
-                          className="w-full px-4 py-3 bg-slate-100 dark:bg-[#141D2E] rounded-2xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:bg-slate-200 dark:focus:bg-[#1A253A]"
+                          className="w-full px-4 py-3 bg-slate-100 dark:bg-[#141D2E] rounded-2xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:bg-white dark:focus:bg-[#0D131F] focus:ring-2 focus:ring-violet-500/30 focus:border-transparent border border-transparent dark:border-slate-700/50 transition-all"
                         />
                       </div>
                     </div>
@@ -1026,7 +1036,7 @@ echo $response;`;
                           rows={3}
                           value={playgroundMessage}
                           onChange={(e) => setPlaygroundMessage(e.target.value)}
-                          className="w-full px-4 py-3 bg-slate-100 dark:bg-[#141D2E] rounded-2xl text-xs font-normal text-slate-900 dark:text-white focus:outline-none focus:bg-slate-200 dark:focus:bg-[#1A253A]"
+                          className="w-full px-4 py-3 bg-slate-100 dark:bg-[#141D2E] rounded-2xl text-xs font-normal text-slate-900 dark:text-white focus:outline-none focus:bg-white dark:focus:bg-[#0D131F] focus:ring-2 focus:ring-violet-500/30 focus:border-transparent border border-transparent dark:border-slate-700/50 transition-all"
                         />
                       </div>
                     )}
@@ -1203,7 +1213,7 @@ echo $response;`;
                   {playgroundResponse && (
                     <div className="space-y-2 pt-4">
                       <span className="text-xs font-bold text-slate-400 uppercase block">Respuesta HTTP de la API (Evolution 2.4.0-rc2):</span>
-                      <pre className="p-5 bg-slate-100 dark:bg-[#070B12] text-emerald-600 dark:text-emerald-400 rounded-3xl text-xs font-mono overflow-x-auto">
+                      <pre className="p-5 bg-slate-100 dark:bg-[#070B12] text-emerald-600 dark:text-emerald-400 rounded-3xl text-xs font-mono overflow-x-auto border-2 border-violet-500/20 dark:border-violet-500/10 shadow-inner">
                         {JSON.stringify(playgroundResponse, null, 2)}
                       </pre>
                     </div>
@@ -1215,9 +1225,14 @@ echo $response;`;
             {/* DOCUMENTACIÓN API */}
             {activeTab === 'docs' && (
               <div className="space-y-8 animate-fadeIn text-left">
-                <div className="space-y-1">
-                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Documentación de la API REST</h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Integra el envío y recepción de WhatsApp en tu software mediante llamadas HTTP estándar con <code className="text-emerald-600 dark:text-emerald-400 font-bold">x-api-key</code>.</p>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/25 shrink-0">
+                    <LayoutGrid size={24} className="text-white" />
+                  </div>
+                  <div className="space-y-1">
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Documentación de la API REST</h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Integra el envío y recepción de WhatsApp en tu software mediante llamadas HTTP estándar con <code className="text-emerald-600 dark:text-emerald-400 font-bold">x-api-key</code>.</p>
+                  </div>
                 </div>
 
                 {/* Sub-Tabs de Endpoints */}
@@ -1244,7 +1259,7 @@ echo $response;`;
                   ))}
                 </div>
 
-                <div className="p-6 sm:p-8 bg-white dark:bg-[#0D131F] rounded-3xl space-y-6">
+                <div className="p-6 sm:p-8 bg-white dark:bg-[#0D131F] rounded-3xl border border-slate-100 dark:border-slate-800/50 shadow-sm space-y-6">
                   {/* Lenguajes */}
                   <div className="flex items-center gap-2">
                     {(['curl', 'js', 'python', 'php'] as const).map(lang => (
@@ -1289,12 +1304,17 @@ echo $response;`;
             {/* PLANES Y SUSCRIPCIÓN */}
             {activeTab === 'subscription' && (
               <div className="space-y-8 animate-fadeIn text-left">
-                <div className="space-y-1">
-                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Planes y Licencia Activa</h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Consulta los detalles de tu plan contratado, límites de cuota y fechas de vigencia.</p>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/25 shrink-0">
+                    <CreditCard size={24} className="text-white" />
+                  </div>
+                  <div className="space-y-1">
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Planes y Licencia Activa</h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Consulta los detalles de tu plan contratado, límites de cuota y fechas de vigencia.</p>
+                  </div>
                 </div>
 
-                <div className="p-6 sm:p-8 bg-white dark:bg-[#0D131F] rounded-3xl space-y-6">
+                <div className="p-6 sm:p-8 bg-gradient-to-br from-amber-50/50 to-orange-50/50 dark:from-[#16120C] dark:to-[#18110B] rounded-3xl space-y-6 border border-amber-200/50 dark:border-amber-900/30 shadow-xl shadow-amber-500/10">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-800">
                       <span className="text-xs font-bold text-slate-500">Plan Contratado</span>
@@ -1352,7 +1372,7 @@ echo $response;`;
                     <Shield size={12} />
                     <span>Panel de Control Global SaaS</span>
                   </span>
-                  <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                  <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
                     Resumen Global de la Plataforma
                   </h1>
                   <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-2xl font-normal leading-relaxed">
@@ -1361,19 +1381,19 @@ echo $response;`;
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-                  <div className="p-7 bg-white dark:bg-[#0D131F] rounded-3xl space-y-2">
+                  <div className="p-7 bg-white dark:bg-[#0D131F] rounded-3xl border border-slate-100 dark:border-slate-800/50 shadow-sm space-y-2">
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Clientes / Empresas</span>
                     <div className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">{adminUsers.length}</div>
                     <p className="text-xs font-medium text-slate-400 pt-1">Usuarios corporativos activos</p>
                   </div>
                   
-                  <div className="p-7 bg-white dark:bg-[#0D131F] rounded-3xl space-y-2">
+                  <div className="p-7 bg-white dark:bg-[#0D131F] rounded-3xl border border-slate-100 dark:border-slate-800/50 shadow-sm space-y-2">
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Líneas Registradas</span>
                     <div className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">{adminInstances.length}</div>
                     <p className="text-xs font-medium text-slate-400 pt-1">Instancias totales en sistema</p>
                   </div>
 
-                  <div className="p-7 bg-white dark:bg-[#0D131F] rounded-3xl space-y-2">
+                  <div className="p-7 bg-white dark:bg-[#0D131F] rounded-3xl border border-slate-100 dark:border-slate-800/50 shadow-sm space-y-2">
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Líneas Conectadas</span>
                     <div className="text-3xl sm:text-4xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
                       {adminInstances.filter(i => i.status === 'connected').length}
@@ -1391,7 +1411,7 @@ echo $response;`;
       {/* Modal QR Code */}
       {qrCodeModal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fadeIn">
-          <div className="bg-white dark:bg-[#0D131F] rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center space-y-4">
+          <div className="bg-white dark:bg-[#0D131F] rounded-3xl border border-slate-100 dark:border-slate-800/50 shadow-sm p-6 sm:p-8 max-w-sm w-full text-center space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">Escanear Código QR</h3>
               <button onClick={() => setQrCodeModal({ open: false, instanceName: '', qrCode: null })} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-400 cursor-pointer">
@@ -1418,7 +1438,7 @@ echo $response;`;
       {/* Modal de Confirmación Personalizado */}
       {confirmModal.open && (
         <div className="fixed inset-0 z-[9990] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fadeIn">
-          <div className="bg-white dark:bg-[#0D131F] rounded-3xl p-6 sm:p-8 max-w-sm w-full text-left space-y-5">
+          <div className="bg-white dark:bg-[#0D131F] rounded-3xl border border-slate-100 dark:border-slate-800/50 shadow-sm p-6 sm:p-8 max-w-sm w-full text-left space-y-5">
             <div className="flex items-center justify-between">
               <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold ${
                 confirmModal.type === 'danger'
