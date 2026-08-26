@@ -17,11 +17,44 @@ const app = express();
 // Default to 3000 to match Railway default target port or process.env.PORT
 const PORT = parseInt(process.env.PORT || '3000', 10);
 
-// Middlewares
+// Configuración de orígenes autorizados para desarrollo y producción en Railway
+const allowedOrigins = [
+  'https://zaza-click-frontend-production.up.railway.app',
+  'https://zaza-click-20-production.up.railway.app',
+  process.env.FRONTEND_URL,
+  process.env.CLIENT_URL,
+  process.env.CORS_ORIGIN
+].filter(Boolean);
+
 app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-tenant-id']
+  origin: (origin, callback) => {
+    // Permitir solicitudes sin origin (como cURL, Postman o backend-to-backend)
+    if (!origin) return callback(null, true);
+
+    if (
+      allowedOrigins.includes(origin) ||
+      origin.includes('localhost') ||
+      origin.includes('127.0.0.1') ||
+      origin.includes('railway.app')
+    ) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`Origen no permitido por política CORS: ${origin}`));
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'x-api-key',
+    'X-API-KEY',
+    'x-tenant-id',
+    'Accept',
+    'X-Requested-With'
+  ],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  credentials: true,
+  optionsSuccessStatus: 200
 }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
