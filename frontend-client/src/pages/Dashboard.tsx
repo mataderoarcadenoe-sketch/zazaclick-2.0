@@ -384,19 +384,11 @@ export default function Dashboard() {
   };
 
   const menuItems = [
-    ...(user?.role === 'admin' ? [
-      { id: 'admin_overview', label: 'Resumen Global', icon: LayoutGrid },
-      { id: 'admin_users', label: 'Empresas / Clientes', icon: Building },
-      { id: 'admin_instances', label: 'Líneas Totales', icon: Smartphone },
-    ] : []),
-
-    ...(user?.role !== 'admin' ? [
-      { id: 'overview', label: 'Dashboard API', icon: LayoutGrid },
-      { id: 'instances', label: 'Instancias / QR', icon: Smartphone },
-      { id: 'playground', label: 'Tester de API', icon: Play },
-      { id: 'docs', label: 'Documentación API', icon: Terminal },
-      { id: 'subscription', label: 'Planes y Suscripción', icon: Key },
-    ] : [])
+    { id: 'overview', label: 'Dashboard API', icon: LayoutGrid },
+    { id: 'instances', label: 'Instancias / QR', icon: Smartphone },
+    { id: 'playground', label: 'Tester de API', icon: Play },
+    { id: 'docs', label: 'Documentación API', icon: Terminal },
+    { id: 'subscription', label: 'Planes y Suscripción', icon: Key },
   ];
 
   const currentBackendUrl = window.location.origin.includes('localhost') 
@@ -648,7 +640,19 @@ echo $response;`;
           </div>
 
           <div className="flex items-center gap-3.5">
-            <div className="hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300">
+            {user?.role === 'admin' && (
+              <a
+                href="https://zaza-click-admin-production.up.railway.app"
+                target="_blank"
+                rel="noreferrer"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 dark:bg-emerald-600 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+              >
+                <Shield size={14} />
+                <span>Panel SuperAdmin ➔</span>
+              </a>
+            )}
+
+            <div className="hidden md:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
