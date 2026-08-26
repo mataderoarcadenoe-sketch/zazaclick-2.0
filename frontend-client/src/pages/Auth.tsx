@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '../services/authContext';
 import { useDarkMode } from '../hooks/useDarkMode';
+import { InteractiveGravityMesh } from '../components/InteractiveGravityMesh';
 import api from '../services/api';
 import { 
   Smartphone, ShieldAlert, Loader2, Moon, Sun, Lock, 
@@ -101,28 +102,37 @@ export default function Auth() {
   }, [renderGoogleButton]);
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center p-4 sm:p-6 lg:p-10 bg-[#F8FAFC] dark:bg-[#070B12] text-slate-900 dark:text-white overflow-hidden transition-colors duration-250 font-sans bg-grid-tech selection:bg-emerald-500 selection:text-white">
+    <div className="min-h-screen relative flex items-center justify-center p-4 sm:p-6 lg:p-12 bg-gradient-to-br from-emerald-50/50 via-slate-50 to-teal-50/40 dark:from-[#050C1A] dark:via-[#071322] dark:to-[#041D1A] text-slate-900 dark:text-white overflow-hidden transition-colors duration-300 font-sans selection:bg-emerald-500 selection:text-white">
       
-      {/* Ambient Glow Lighting Nodes (Pure Surface Lights) */}
-      <div className="absolute -top-48 -left-48 w-[650px] h-[650px] rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 blur-[160px] pointer-events-none animate-pulse-glow" />
-      <div className="absolute -bottom-48 -right-48 w-[650px] h-[650px] rounded-full bg-teal-500/10 dark:bg-teal-500/15 blur-[160px] pointer-events-none animate-pulse-glow" />
-      <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-cyan-500/5 dark:bg-cyan-500/8 blur-[180px] pointer-events-none" />
+      {/* Interactive Gravity Mesh Background (Antigravity Signature Physics) */}
+      <InteractiveGravityMesh 
+        particleCount={70} 
+        maxDistance={140} 
+        gravityRadius={170} 
+        isDark={isDark} 
+        className="absolute inset-0 pointer-events-auto z-0"
+      />
+
+      {/* Dynamic Colorful Glow Orbs */}
+      <div className="absolute -top-32 -left-32 w-[650px] h-[650px] rounded-full bg-gradient-to-br from-emerald-500/15 to-teal-500/10 dark:from-emerald-500/20 dark:to-teal-500/15 blur-[140px] pointer-events-none animate-pulse-glow" />
+      <div className="absolute -bottom-32 -right-32 w-[650px] h-[650px] rounded-full bg-gradient-to-tr from-teal-500/15 to-cyan-500/10 dark:from-teal-500/15 dark:to-cyan-500/15 blur-[140px] pointer-events-none animate-pulse-glow" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-emerald-500/5 dark:bg-emerald-400/5 blur-[180px] pointer-events-none" />
 
       {/* Floating Theme Button */}
       <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-50">
         <button
           onClick={toggleDark}
-          className="p-3 bg-white dark:bg-[#111827] rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-300 cursor-pointer active:scale-95 flex items-center gap-2"
+          className="p-3 bg-white/90 dark:bg-[#0D1829]/90 backdrop-blur-md rounded-2xl hover:bg-white dark:hover:bg-[#132238] transition-all text-slate-700 dark:text-slate-200 cursor-pointer active:scale-95 flex items-center gap-2 shadow-lg shadow-emerald-950/5 dark:shadow-black/40 border border-emerald-500/10 dark:border-emerald-500/20"
           aria-label="Cambiar tema"
         >
           {isDark ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-emerald-600" />}
         </button>
       </div>
 
-      <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center relative z-10 py-6">
+      <div className="w-full max-w-7xl grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-14 items-center relative z-10 py-6">
         
         {/* Left Hero Showcase, Visual Architecture & Live Badges */}
-        <div className="lg:col-span-7 space-y-8 text-left hidden lg:block animate-fadeIn">
+        <div className="md:col-span-6 lg:col-span-7 space-y-8 text-left hidden md:block animate-fadeIn">
           
           {/* Header Status Badge */}
           <div className="flex items-center gap-3">

@@ -7,6 +7,7 @@ import {
   LockKeyhole
 } from 'lucide-react';
 import { useDarkMode } from '../hooks/useDarkMode';
+import { InteractiveGravityMesh } from '../components/InteractiveGravityMesh';
 import api from '../services/api';
 
 declare global {
@@ -105,9 +106,18 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4 sm:p-6 lg:p-12 bg-gradient-to-br from-emerald-50/50 via-slate-50 to-teal-50/40 dark:from-[#050C1A] dark:via-[#071322] dark:to-[#041D1A] text-slate-900 dark:text-white overflow-hidden transition-colors duration-300 font-sans selection:bg-emerald-500 selection:text-white">
       
+      {/* Interactive Gravity Mesh Background (Antigravity Signature Physics) */}
+      <InteractiveGravityMesh 
+        particleCount={70} 
+        maxDistance={140} 
+        gravityRadius={170} 
+        isDark={isDark} 
+        className="absolute inset-0 pointer-events-auto z-0"
+      />
+
       {/* Dynamic Colorful Glow Orbs */}
-      <div className="absolute -top-32 -left-32 w-[650px] h-[650px] rounded-full bg-gradient-to-br from-emerald-500/20 to-teal-500/10 dark:from-emerald-500/25 dark:to-teal-500/15 blur-[140px] pointer-events-none animate-pulse-glow" />
-      <div className="absolute -bottom-32 -right-32 w-[650px] h-[650px] rounded-full bg-gradient-to-tr from-teal-500/20 to-cyan-500/15 dark:from-teal-500/20 dark:to-cyan-500/20 blur-[140px] pointer-events-none animate-pulse-glow" />
+      <div className="absolute -top-32 -left-32 w-[650px] h-[650px] rounded-full bg-gradient-to-br from-emerald-500/15 to-teal-500/10 dark:from-emerald-500/20 dark:to-teal-500/15 blur-[140px] pointer-events-none animate-pulse-glow" />
+      <div className="absolute -bottom-32 -right-32 w-[650px] h-[650px] rounded-full bg-gradient-to-tr from-teal-500/15 to-cyan-500/10 dark:from-teal-500/15 dark:to-cyan-500/15 blur-[140px] pointer-events-none animate-pulse-glow" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-emerald-500/5 dark:bg-emerald-400/5 blur-[180px] pointer-events-none" />
 
       {/* Floating Theme Button */}
