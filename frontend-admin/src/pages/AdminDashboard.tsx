@@ -254,33 +254,33 @@ export default function AdminDashboardPage() {
 
       {/* Sidebar */}
       <aside 
-        className={`bg-white dark:bg-[#0B0F19] border-r border-slate-100 dark:border-slate-800/40 flex flex-col transition-all duration-250 z-40 fixed top-0 left-0 h-full ${
+        className={`bg-slate-900 dark:bg-[#0B0F19] border-r border-slate-800 flex flex-col transition-all duration-250 z-40 fixed top-0 left-0 h-full ${
           sidebarOpen ? 'w-64 translate-x-0' : 'w-20 -translate-x-full lg:translate-x-0'
         }`}
       >
         <div className={`h-16 flex items-center ${sidebarOpen ? 'justify-between px-5' : 'justify-center'}`}>
           {sidebarOpen && (
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 dark:from-emerald-600 dark:to-teal-800 flex items-center justify-center text-white">
-                <Shield size={18} className="text-emerald-400" />
+              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                <Shield size={18} className="text-white" />
               </div>
               <div className="flex flex-col text-left">
-                <span className="font-black text-slate-900 dark:text-white text-sm tracking-tight">
-                  Zaza Admin <span className="bg-gradient-to-r from-emerald-500 to-teal-400 bg-clip-text text-transparent">2.0</span>
+                <span className="font-black text-white text-sm tracking-tight">
+                  Zaza Admin <span className="text-emerald-400">2.0</span>
                 </span>
-                <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">SuperAdmin Core</span>
+                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">SuperAdmin Core</span>
               </div>
             </div>
           )}
           <button 
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-500 dark:text-slate-400 cursor-pointer"
+            className="p-2 hover:bg-slate-800 rounded-xl transition-colors text-slate-400 cursor-pointer"
           >
             {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
         </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto scrollbar-hide">
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto scrollbar-hide">
           {menuItems.map(item => {
             const Icon = item.icon;
             const active = activeTab === item.id;
@@ -293,29 +293,29 @@ export default function AdminDashboardPage() {
                   if (window.innerWidth < 1024) setSidebarOpen(false);
                 }}
                 className={`w-full group flex items-center ${
-                  sidebarOpen ? 'px-4 py-3 justify-start' : 'p-3 justify-center'
-                } rounded-2xl transition-all duration-200 relative cursor-pointer ${
+                  sidebarOpen ? 'px-4 py-2.5 justify-start' : 'p-3 justify-center'
+                } rounded-xl transition-all duration-200 relative cursor-pointer ${
                   active 
-                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white font-medium'
+                    ? 'bg-slate-800/80 text-white font-semibold border-l-[3px] border-emerald-400'
+                    : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 font-medium'
                 }`}
               >
-                <Icon size={19} className="flex-shrink-0" />
+                <Icon size={18} className="flex-shrink-0" />
                 {sidebarOpen && <span className="ml-3.5 text-xs tracking-tight">{item.label}</span>}
               </button>
             );
           })}
         </nav>
 
-        <div className="p-3 bg-white dark:bg-[#0B0F19]">
+        <div className="p-3 border-t border-slate-800">
           <button
             onClick={logout}
             className={`w-full group flex items-center ${
-              sidebarOpen ? 'px-4 py-3 justify-start' : 'p-3 justify-center'
-            } rounded-2xl hover:bg-rose-50 dark:hover:bg-rose-950/30 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer`}
+              sidebarOpen ? 'px-4 py-2.5 justify-start' : 'p-3 justify-center'
+            } rounded-xl hover:bg-rose-950/40 text-slate-500 hover:text-rose-400 transition-colors cursor-pointer`}
           >
             <LogOut size={18} className="flex-shrink-0" />
-            {sidebarOpen && <span className="ml-3 text-xs font-bold">Cerrar Sesión</span>}
+            {sidebarOpen && <span className="ml-3 text-xs font-medium">Cerrar Sesión</span>}
           </button>
         </div>
       </aside>
@@ -363,99 +363,87 @@ export default function AdminDashboardPage() {
               <div className="space-y-8 animate-fadeIn text-left">
                 
                 {/* Alertas Operativas */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                  <div className="p-5 bg-amber-50 dark:bg-amber-950/40 rounded-3xl space-y-1">
-                    <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 text-xs font-bold">
-                      <Clock size={16} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="p-4 bg-white dark:bg-[#0D131F] rounded-2xl border-l-4 border-amber-400 ring-1 ring-slate-100 dark:ring-slate-800">
+                    <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-xs font-semibold">
+                      <Clock size={15} />
                       <span>Próximos a Vencer (3d)</span>
                     </div>
-                    <div className="text-2xl font-black text-amber-800 dark:text-amber-200">
+                    <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">
                       {stats?.subscriptions?.expiring_soon || 0}
                     </div>
                   </div>
 
-                  <div className="p-5 bg-rose-50 dark:bg-rose-950/40 rounded-3xl space-y-1">
-                    <div className="flex items-center gap-2 text-rose-700 dark:text-rose-300 text-xs font-bold">
-                      <AlertTriangle size={16} />
+                  <div className="p-4 bg-white dark:bg-[#0D131F] rounded-2xl border-l-4 border-rose-400 ring-1 ring-slate-100 dark:ring-slate-800">
+                    <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 text-xs font-semibold">
+                      <AlertTriangle size={15} />
                       <span>Suscripciones Vencidas</span>
                     </div>
-                    <div className="text-2xl font-black text-rose-800 dark:text-rose-200">
+                    <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">
                       {stats?.subscriptions?.expired_subscriptions || 0}
                     </div>
                   </div>
 
-                  <div className="p-5 bg-sky-50 dark:bg-sky-950/40 rounded-3xl space-y-1">
-                    <div className="flex items-center gap-2 text-sky-700 dark:text-sky-300 text-xs font-bold">
-                      <CreditCard size={16} />
+                  <div className="p-4 bg-white dark:bg-[#0D131F] rounded-2xl border-l-4 border-sky-400 ring-1 ring-slate-100 dark:ring-slate-800">
+                    <div className="flex items-center gap-2 text-sky-600 dark:text-sky-400 text-xs font-semibold">
+                      <CreditCard size={15} />
                       <span>Pagos Pendientes</span>
                     </div>
-                    <div className="text-2xl font-black text-sky-800 dark:text-sky-200">
+                    <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">
                       {stats?.financial?.pending_payments || 0}
                     </div>
                   </div>
 
-                  <div className="p-5 bg-emerald-50 dark:bg-emerald-950/40 rounded-3xl space-y-1">
-                    <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
-                      <DollarSign size={16} />
+                  <div className="p-4 bg-white dark:bg-[#0D131F] rounded-2xl border-l-4 border-emerald-400 ring-1 ring-slate-100 dark:ring-slate-800">
+                    <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
+                      <DollarSign size={15} />
                       <span>Ingresos Totales</span>
                     </div>
-                    <div className="text-2xl font-black text-emerald-800 dark:text-emerald-200">
+                    <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">
                       ${Number(stats?.financial?.total_revenue || 0).toFixed(2)}
                     </div>
                   </div>
                 </div>
 
                 {/* Métricas Principales */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  <div className="p-7 bg-gradient-to-br from-violet-500 to-purple-700 dark:from-violet-600 dark:to-purple-900 rounded-3xl space-y-2 relative overflow-hidden shadow-lg shadow-violet-500/20 dark:shadow-violet-900/30">
-                    <div className="absolute -right-4 -top-4 w-24 h-24 rounded-full bg-white/10" />
-                    <div className="absolute -right-1 -top-1 w-12 h-12 rounded-full bg-white/10" />
-                    <div className="relative z-10">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center"><Users size={16} className="text-white" /></div>
-                        <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Clientes Totales</span>
-                      </div>
-                      <div className="text-4xl font-black text-white">
-                        {stats?.users?.total_users || 0}
-                      </div>
-                      <p className="text-xs text-white/70 font-bold">
-                        ● {stats?.users?.active_users || 0} Activos · {stats?.users?.suspended_users || 0} Suspendidos
-                      </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                  <div className="p-6 bg-white dark:bg-[#0D131F] rounded-2xl border-l-4 border-violet-500 ring-1 ring-slate-100 dark:ring-slate-800 hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Clientes Totales</span>
+                      <div className="w-8 h-8 rounded-xl bg-violet-50 dark:bg-violet-950/40 flex items-center justify-center"><Users size={16} className="text-violet-500" /></div>
                     </div>
+                    <div className="text-3xl font-black text-slate-900 dark:text-white mt-2">
+                      {stats?.users?.total_users || 0}
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
+                      ● {stats?.users?.active_users || 0} activos · {stats?.users?.suspended_users || 0} suspendidos
+                    </p>
                   </div>
 
-                  <div className="p-7 bg-gradient-to-br from-emerald-500 to-teal-700 dark:from-emerald-600 dark:to-teal-900 rounded-3xl space-y-2 relative overflow-hidden shadow-lg shadow-emerald-500/20 dark:shadow-emerald-900/30">
-                    <div className="absolute -right-4 -top-4 w-24 h-24 rounded-full bg-white/10" />
-                    <div className="absolute -right-1 -top-1 w-12 h-12 rounded-full bg-white/10" />
-                    <div className="relative z-10">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center"><Smartphone size={16} className="text-white" /></div>
-                        <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Líneas WhatsApp</span>
-                      </div>
-                      <div className="text-4xl font-black text-white">
-                        {stats?.instances?.connected_instances || 0} <span className="text-base text-white/60">/ {stats?.instances?.total_instances || 0}</span>
-                      </div>
-                      <p className="text-xs text-white/70 font-medium">
-                        {stats?.instances?.disabled_instances || 0} deshabilitadas por administración
-                      </p>
+                  <div className="p-6 bg-white dark:bg-[#0D131F] rounded-2xl border-l-4 border-emerald-500 ring-1 ring-slate-100 dark:ring-slate-800 hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Líneas WhatsApp</span>
+                      <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center"><Smartphone size={16} className="text-emerald-500" /></div>
                     </div>
+                    <div className="text-3xl font-black text-slate-900 dark:text-white mt-2">
+                      {stats?.instances?.connected_instances || 0} <span className="text-sm font-normal text-slate-400">/ {stats?.instances?.total_instances || 0}</span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
+                      {stats?.instances?.disabled_instances || 0} deshabilitadas por administración
+                    </p>
                   </div>
 
-                  <div className="p-7 bg-gradient-to-br from-cyan-500 to-blue-700 dark:from-cyan-600 dark:to-blue-900 rounded-3xl space-y-2 relative overflow-hidden shadow-lg shadow-cyan-500/20 dark:shadow-cyan-900/30">
-                    <div className="absolute -right-4 -top-4 w-24 h-24 rounded-full bg-white/10" />
-                    <div className="absolute -right-1 -top-1 w-12 h-12 rounded-full bg-white/10" />
-                    <div className="relative z-10">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center"><Activity size={16} className="text-white" /></div>
-                        <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Mensajes Procesados</span>
-                      </div>
-                      <div className="text-4xl font-black text-white">
-                        {stats?.traffic?.total_messages || 0}
-                      </div>
-                      <p className="text-xs text-white/70 font-medium">
-                        ✓ {stats?.traffic?.successful_messages || 0} entregados exitosamente
-                      </p>
+                  <div className="p-6 bg-white dark:bg-[#0D131F] rounded-2xl border-l-4 border-cyan-500 ring-1 ring-slate-100 dark:ring-slate-800 hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Mensajes Procesados</span>
+                      <div className="w-8 h-8 rounded-xl bg-cyan-50 dark:bg-cyan-950/40 flex items-center justify-center"><Activity size={16} className="text-cyan-500" /></div>
                     </div>
+                    <div className="text-3xl font-black text-slate-900 dark:text-white mt-2">
+                      {stats?.traffic?.total_messages || 0}
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
+                      ✓ {stats?.traffic?.successful_messages || 0} entregados exitosamente
+                    </p>
                   </div>
                 </div>
 
@@ -467,54 +455,54 @@ export default function AdminDashboardPage() {
               <div className="space-y-6 animate-fadeIn text-left">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
-                      <Users size={20} className="text-white" />
+                    <div className="w-10 h-10 rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400 ring-1 ring-violet-500/20 flex items-center justify-center">
+                      <Users size={19} />
                     </div>
-                    <div className="space-y-1">
-                      <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Directorio de Clientes y Licenciamiento</h2>
-                      <p className="text-xs text-slate-500 font-normal">Supervisa vencimientos, consumo de cuotas y autorizaciones de API.</p>
+                    <div className="space-y-0.5">
+                      <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Directorio de Clientes y Licenciamiento</h2>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Supervisa vencimientos, consumo de cuotas y autorizaciones de API.</p>
                     </div>
                   </div>
 
                   <button
                     onClick={() => setCreateUserModal(true)}
-                    className="px-5 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 text-white font-bold text-xs rounded-2xl flex items-center gap-2 cursor-pointer"
+                    className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center gap-2 shadow-sm transition-all cursor-pointer"
                   >
-                    <Plus size={16} />
+                    <Plus size={15} />
                     <span>Crear Nuevo Cliente</span>
                   </button>
                 </div>
 
                 {/* Buscador */}
                 <div className="relative">
-                  <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Buscar por correo, empresa o ID de cliente..."
-                    className="w-full pl-11 pr-4 py-3 bg-white dark:bg-[#0D131F] rounded-2xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none"
+                    className="w-full pl-11 pr-4 py-2.5 bg-white dark:bg-[#0D131F] rounded-xl text-xs font-medium text-slate-900 dark:text-white ring-1 ring-slate-200/80 dark:ring-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition-all shadow-sm"
                   />
                 </div>
 
                 {/* Tabla de Clientes */}
-                <div className="bg-white dark:bg-[#0D131F] rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800/50 shadow-sm">
+                <div className="bg-white dark:bg-[#0D131F] rounded-2xl overflow-hidden ring-1 ring-slate-200/80 dark:ring-slate-800 shadow-sm">
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs">
                       <thead>
-                        <tr className="bg-violet-50 dark:bg-violet-950/30 border-b border-violet-100 dark:border-violet-900/40 text-violet-600 dark:text-violet-300 uppercase font-bold text-[10px] tracking-wider">
-                          <th className="px-6 py-4">Cliente / Empresa</th>
-                          <th className="px-6 py-4">Plan Actual</th>
-                          <th className="px-6 py-4">Estado Cuenta</th>
-                          <th className="px-6 py-4">Días Restantes</th>
-                          <th className="px-6 py-4">Consumo de Cuota</th>
-                          <th className="px-6 py-4">Líneas</th>
-                          <th className="px-6 py-4 text-right">Acciones</th>
+                        <tr className="bg-slate-50/80 dark:bg-[#111827]/75 border-b border-slate-200/80 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase font-semibold text-[10px] tracking-wider">
+                          <th className="px-6 py-3.5">Cliente / Empresa</th>
+                          <th className="px-6 py-3.5">Plan Actual</th>
+                          <th className="px-6 py-3.5">Estado Cuenta</th>
+                          <th className="px-6 py-3.5">Días Restantes</th>
+                          <th className="px-6 py-3.5">Consumo de Cuota</th>
+                          <th className="px-6 py-3.5">Líneas</th>
+                          <th className="px-6 py-3.5 text-right">Acciones</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 font-medium">
                         {filteredUsers.map((u) => (
-                          <tr key={u.id} className="hover:bg-slate-50/50 dark:hover:bg-[#141D2E]/40 transition-colors">
+                          <tr key={u.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition-colors">
                             <td className="px-6 py-4">
                               <div className="font-bold text-slate-900 dark:text-white">{u.email}</div>
                               <div className="text-[11px] text-slate-400">{u.company_name || 'Sin empresa'} {u.phone ? `· ${u.phone}` : ''}</div>
@@ -547,7 +535,7 @@ export default function AdminDashboardPage() {
                             </td>
 
                             <td className="px-6 py-4 space-y-1">
-                              <div className="text-[11px] font-bold">
+                              <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
                                 {u.messages_used || 0} / {u.messages_limit || 1000} msgs
                               </div>
                               <div className="w-24 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
@@ -558,11 +546,11 @@ export default function AdminDashboardPage() {
                               </div>
                             </td>
 
-                            <td className="px-6 py-4 font-bold">
+                            <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-200">
                               {u.connected_instances_count || 0} / {u.max_instances || 1}
                             </td>
 
-                            <td className="px-6 py-4 text-right space-x-2">
+                            <td className="px-6 py-4 text-right space-x-1.5">
                               <button
                                 onClick={() => {
                                   setSubFormData({
@@ -573,7 +561,7 @@ export default function AdminDashboardPage() {
                                   });
                                   setEditSubscriptionModal({ open: true, user: u });
                                 }}
-                                className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 hover:text-emerald-600 rounded-xl font-bold text-[11px] transition-colors cursor-pointer"
+                                className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-semibold text-[11px] transition-colors cursor-pointer"
                                 title="Cambiar Plan / Extender"
                               >
                                 Licencia
@@ -591,7 +579,7 @@ export default function AdminDashboardPage() {
                                   });
                                   setRecordPaymentModal({ open: true, user: u });
                                 }}
-                                className="px-3 py-1.5 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 rounded-xl font-bold text-[11px] transition-colors cursor-pointer"
+                                className="px-2.5 py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 hover:bg-emerald-100 rounded-lg font-semibold text-[11px] transition-colors cursor-pointer"
                                 title="Registrar Pago"
                               >
                                 + Pago
@@ -599,10 +587,10 @@ export default function AdminDashboardPage() {
 
                               <button
                                 onClick={() => handleUpdateUserStatus(u.id, u.user_status === 'active' ? 'suspended' : 'active')}
-                                className={`px-3 py-1.5 rounded-xl font-bold text-[11px] transition-colors cursor-pointer ${
+                                className={`px-2.5 py-1 rounded-lg font-semibold text-[11px] transition-colors cursor-pointer ${
                                   u.user_status === 'active'
-                                    ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
-                                    : 'bg-emerald-50 text-emerald-700'
+                                    ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 hover:bg-amber-100'
+                                    : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 hover:bg-emerald-100'
                                 }`}
                               >
                                 {u.user_status === 'active' ? 'Suspender' : 'Activar'}
@@ -610,10 +598,10 @@ export default function AdminDashboardPage() {
 
                               <button
                                 onClick={() => handleDeleteUser(u.id, u.email)}
-                                className="p-1.5 text-slate-400 hover:text-rose-600 rounded-xl"
+                                className="p-1 text-slate-400 hover:text-rose-600 rounded-lg"
                                 title="Eliminar cliente"
                               >
-                                <Trash2 size={15} />
+                                <Trash2 size={14} />
                               </button>
                             </td>
                           </tr>
@@ -629,30 +617,30 @@ export default function AdminDashboardPage() {
             {activeTab === 'instances' && (
               <div className="space-y-6 animate-fadeIn text-left">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/25">
-                    <Smartphone size={20} className="text-white" />
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/20 flex items-center justify-center">
+                    <Smartphone size={19} />
                   </div>
-                  <div className="space-y-1">
-                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Líneas de WhatsApp en la Plataforma</h2>
-                    <p className="text-xs text-slate-500 font-normal">Control de activación y supervisión de todas las instancias del clúster.</p>
+                  <div className="space-y-0.5">
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Líneas de WhatsApp en la Plataforma</h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Control de activación y supervisión de todas las instancias del clúster.</p>
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-[#0D131F] rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800/50 shadow-sm">
+                <div className="bg-white dark:bg-[#0D131F] rounded-2xl overflow-hidden ring-1 ring-slate-200/80 dark:ring-slate-800 shadow-sm">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="bg-emerald-50 dark:bg-emerald-950/30 border-b border-emerald-100 dark:border-emerald-900/40 text-emerald-600 dark:text-emerald-300 uppercase font-bold text-[10px] tracking-wider">
-                        <th className="px-6 py-4">Instancia</th>
-                        <th className="px-6 py-4">Propietario</th>
-                        <th className="px-6 py-4">Conexión WhatsApp</th>
-                        <th className="px-6 py-4">Licencia Zaza</th>
-                        <th className="px-6 py-4">Mensajes Enviados</th>
-                        <th className="px-6 py-4 text-right">Acción</th>
+                      <tr className="bg-slate-50/80 dark:bg-[#111827]/75 border-b border-slate-200/80 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase font-semibold text-[10px] tracking-wider">
+                        <th className="px-6 py-3.5">Instancia</th>
+                        <th className="px-6 py-3.5">Propietario</th>
+                        <th className="px-6 py-3.5">Conexión WhatsApp</th>
+                        <th className="px-6 py-3.5">Licencia Zaza</th>
+                        <th className="px-6 py-3.5">Mensajes Enviados</th>
+                        <th className="px-6 py-3.5 text-right">Acción</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 font-medium">
                       {instancesList.map(inst => (
-                        <tr key={inst.id} className="hover:bg-slate-50/50 dark:hover:bg-[#141D2E]/40">
+                        <tr key={inst.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition-colors">
                           <td className="px-6 py-4 font-mono font-bold text-slate-900 dark:text-white">
                             {inst.instance_name}
                             <div className="text-[10px] font-normal text-slate-400">{inst.phone || 'Sin número'}</div>
@@ -661,27 +649,27 @@ export default function AdminDashboardPage() {
                             {inst.owner_email}
                           </td>
                           <td className="px-6 py-4">
-                            <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full uppercase ${
-                              inst.connection_status === 'connected' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
+                            <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase ${
+                              inst.connection_status === 'connected' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
                             }`}>
                               {inst.connection_status === 'connected' ? '● CONECTADO' : '○ DESCONECTADO'}
                             </span>
                           </td>
                           <td className="px-6 py-4">
-                            <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full uppercase ${
-                              inst.is_enabled !== false ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
+                            <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase ${
+                              inst.is_enabled !== false ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
                             }`}>
                               {inst.is_enabled !== false ? 'HABILITADA' : 'DESHABILITADA'}
                             </span>
                           </td>
-                          <td className="px-6 py-4 font-bold">
+                          <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-200">
                             {inst.messages_sent || 0} msgs
                           </td>
                           <td className="px-6 py-4 text-right">
                             <button
                               onClick={() => handleToggleInstance(inst.id, inst.is_enabled !== false)}
-                              className={`px-3 py-1.5 rounded-xl font-bold text-[11px] cursor-pointer ${
-                                inst.is_enabled !== false ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'
+                              className={`px-3 py-1.5 rounded-lg font-semibold text-[11px] transition-colors cursor-pointer ${
+                                inst.is_enabled !== false ? 'bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/50 dark:text-rose-300' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:text-emerald-300'
                               }`}
                             >
                               {inst.is_enabled !== false ? 'Deshabilitar' : 'Habilitar'}
@@ -700,12 +688,12 @@ export default function AdminDashboardPage() {
               <div className="space-y-6 animate-fadeIn text-left">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/25">
-                      <CreditCard size={20} className="text-white" />
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 ring-1 ring-amber-500/20 flex items-center justify-center">
+                      <CreditCard size={19} />
                     </div>
-                    <div className="space-y-1">
-                      <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Planes y Precios del SaaS</h2>
-                      <p className="text-xs text-slate-500 font-normal">Configura precios, límites de instancias y cuotas de mensajes.</p>
+                    <div className="space-y-0.5">
+                      <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Planes y Precios del SaaS</h2>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Configura precios, límites de instancias y cuotas de mensajes.</p>
                     </div>
                   </div>
                   <button
@@ -713,34 +701,34 @@ export default function AdminDashboardPage() {
                       setPlanFormData({ id: '', name: '', maxInstances: 1, price: 15, durationMonths: 1, maxMessages: 1000, isTrial: false, trialDays: 7, trialMessages: 100, description: '' });
                       setPlanModal({ open: true, plan: null });
                     }}
-                    className="px-5 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-xs rounded-2xl flex items-center gap-2 cursor-pointer"
+                    className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center gap-2 shadow-sm transition-all cursor-pointer"
                   >
-                    <Plus size={16} />
+                    <Plus size={15} />
                     <span>Crear Plan</span>
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                   {plansList.map(plan => (
-                    <div key={plan.id} className="p-6 bg-white dark:bg-[#0D131F] rounded-3xl space-y-4 text-left border border-slate-100 dark:border-slate-800/50 hover:border-amber-300 dark:hover:border-amber-700 hover:shadow-lg hover:shadow-amber-500/10 transition-all duration-300">
+                    <div key={plan.id} className="p-5 bg-white dark:bg-[#0D131F] rounded-2xl space-y-4 text-left ring-1 ring-slate-200/80 dark:ring-slate-800 hover:ring-2 hover:ring-emerald-500/30 hover:shadow-md transition-all">
                       <div className="flex items-center justify-between">
                         <span className={`px-2.5 py-0.5 text-[9px] font-bold rounded-full uppercase ${
-                          plan.is_trial ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'
+                          plan.is_trial ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300' : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
                         }`}>
                           {plan.is_trial ? 'PLAN TRIAL' : 'PLAN COMERCIAL'}
                         </span>
-                        <span className="text-lg font-black text-slate-900 dark:text-white">${plan.price}/m</span>
+                        <span className="text-lg font-black text-slate-900 dark:text-white">${plan.price}<span className="text-xs text-slate-400 font-normal">/mes</span></span>
                       </div>
 
                       <div className="space-y-1">
                         <h4 className="text-base font-black text-slate-900 dark:text-white">{plan.name}</h4>
-                        <p className="text-xs text-slate-500">{plan.description || 'Sin descripción'}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">{plan.description || 'Sin descripción'}</p>
                       </div>
 
-                      <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300">
-                        <div>● {plan.max_instances === 99 ? 'Instancias Ilimitadas' : `${plan.max_instances} Instancia(s)`}</div>
-                        <div>● {plan.max_messages?.toLocaleString()} Mensajes / mes</div>
-                        {plan.is_trial && <div>● Duración: {plan.trial_days} días</div>}
+                      <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        <div className="flex items-center gap-1.5"><span className="text-emerald-500">✓</span> {plan.max_instances === 99 ? 'Instancias Ilimitadas' : `${plan.max_instances} Instancia(s)`}</div>
+                        <div className="flex items-center gap-1.5"><span className="text-emerald-500">✓</span> {plan.max_messages?.toLocaleString()} Mensajes / mes</div>
+                        {plan.is_trial && <div className="flex items-center gap-1.5"><span className="text-amber-500">⏱</span> Duración: {plan.trial_days} días</div>}
                       </div>
 
                       <button
@@ -759,7 +747,7 @@ export default function AdminDashboardPage() {
                           });
                           setPlanModal({ open: true, plan });
                         }}
-                        className="w-full py-2 bg-slate-100 dark:bg-slate-800 rounded-xl font-bold text-xs hover:bg-slate-200 cursor-pointer"
+                        className="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl font-semibold text-xs transition-colors cursor-pointer"
                       >
                         Editar Plan
                       </button>
@@ -773,36 +761,36 @@ export default function AdminDashboardPage() {
             {activeTab === 'payments' && (
               <div className="space-y-6 animate-fadeIn text-left">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/25">
-                    <DollarSign size={20} className="text-white" />
+                  <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 ring-1 ring-cyan-500/20 flex items-center justify-center">
+                    <DollarSign size={19} />
                   </div>
-                  <div className="space-y-1">
-                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Registro de Pagos y Facturación</h2>
-                    <p className="text-xs text-slate-500 font-normal">Historial de renovaciones y pagos registrados en el sistema.</p>
+                  <div className="space-y-0.5">
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Registro de Pagos y Facturación</h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Historial de renovaciones y pagos registrados en el sistema.</p>
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-[#0D131F] rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800/50 shadow-sm">
+                <div className="bg-white dark:bg-[#0D131F] rounded-2xl overflow-hidden ring-1 ring-slate-200/80 dark:ring-slate-800 shadow-sm">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="bg-cyan-50 dark:bg-cyan-950/30 border-b border-cyan-100 dark:border-cyan-900/40 text-cyan-600 dark:text-cyan-300 uppercase font-bold text-[10px] tracking-wider">
-                        <th className="px-6 py-4">Fecha</th>
-                        <th className="px-6 py-4">Cliente</th>
-                        <th className="px-6 py-4">Monto</th>
-                        <th className="px-6 py-4">Método / Ref</th>
-                        <th className="px-6 py-4">Estado</th>
-                        <th className="px-6 py-4">Notas</th>
+                      <tr className="bg-slate-50/80 dark:bg-[#111827]/75 border-b border-slate-200/80 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase font-semibold text-[10px] tracking-wider">
+                        <th className="px-6 py-3.5">Fecha</th>
+                        <th className="px-6 py-3.5">Cliente</th>
+                        <th className="px-6 py-3.5">Monto</th>
+                        <th className="px-6 py-3.5">Método / Ref</th>
+                        <th className="px-6 py-3.5">Estado</th>
+                        <th className="px-6 py-3.5">Notas</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 font-medium">
                       {paymentsList.map(pay => (
-                        <tr key={pay.id} className="hover:bg-slate-50/50 dark:hover:bg-[#141D2E]/40">
+                        <tr key={pay.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition-colors">
                           <td className="px-6 py-4 text-slate-500">{new Date(pay.created_at).toLocaleDateString()}</td>
                           <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">{pay.user_email}</td>
                           <td className="px-6 py-4 font-black text-emerald-600">${Number(pay.amount).toFixed(2)} {pay.currency}</td>
-                          <td className="px-6 py-4">{pay.payment_method} {pay.reference ? `(${pay.reference})` : ''}</td>
+                          <td className="px-6 py-4 text-slate-700 dark:text-slate-300">{pay.payment_method} {pay.reference ? `(${pay.reference})` : ''}</td>
                           <td className="px-6 py-4">
-                            <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-full uppercase">
+                            <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[10px] font-bold rounded-full uppercase">
                               ● {pay.status}
                             </span>
                           </td>
@@ -819,33 +807,33 @@ export default function AdminDashboardPage() {
             {activeTab === 'audit' && (
               <div className="space-y-6 animate-fadeIn text-left">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-lg shadow-rose-500/25">
-                    <FileText size={20} className="text-white" />
+                  <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 ring-1 ring-rose-500/20 flex items-center justify-center">
+                    <FileText size={19} />
                   </div>
-                  <div className="space-y-1">
-                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Bitácora de Auditoría Administrativa</h2>
-                    <p className="text-xs text-slate-500 font-normal">Trazabilidad de cambios de planes, suspensiones, extensiones y pagos.</p>
+                  <div className="space-y-0.5">
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Bitácora de Auditoría Administrativa</h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Trazabilidad de cambios de planes, suspensiones, extensiones y pagos.</p>
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-[#0D131F] rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800/50 shadow-sm">
+                <div className="bg-white dark:bg-[#0D131F] rounded-2xl overflow-hidden ring-1 ring-slate-200/80 dark:ring-slate-800 shadow-sm">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="bg-rose-50 dark:bg-rose-950/30 border-b border-rose-100 dark:border-rose-900/40 text-rose-600 dark:text-rose-300 uppercase font-bold text-[10px] tracking-wider">
-                        <th className="px-6 py-4">Fecha / Hora</th>
-                        <th className="px-6 py-4">Administrador</th>
-                        <th className="px-6 py-4">Acción</th>
-                        <th className="px-6 py-4">Entidad Afectada</th>
-                        <th className="px-6 py-4">Detalles</th>
+                      <tr className="bg-slate-50/80 dark:bg-[#111827]/75 border-b border-slate-200/80 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase font-semibold text-[10px] tracking-wider">
+                        <th className="px-6 py-3.5">Fecha / Hora</th>
+                        <th className="px-6 py-3.5">Administrador</th>
+                        <th className="px-6 py-3.5">Acción</th>
+                        <th className="px-6 py-3.5">Entidad Afectada</th>
+                        <th className="px-6 py-3.5">Detalles</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 font-medium font-mono text-[11px]">
                       {auditLogs.map(log => (
-                        <tr key={log.id} className="hover:bg-slate-50/50 dark:hover:bg-[#141D2E]/40">
+                        <tr key={log.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition-colors">
                           <td className="px-6 py-4 text-slate-500">{new Date(log.created_at).toLocaleString()}</td>
                           <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">{log.admin_email}</td>
                           <td className="px-6 py-4 font-bold text-emerald-600">{log.action}</td>
-                          <td className="px-6 py-4 uppercase">{log.entity} ({log.entity_id})</td>
+                          <td className="px-6 py-4 uppercase text-slate-700 dark:text-slate-300">{log.entity} ({log.entity_id})</td>
                           <td className="px-6 py-4 text-slate-400">{JSON.stringify(log.details)}</td>
                         </tr>
                       ))}
@@ -861,59 +849,59 @@ export default function AdminDashboardPage() {
 
       {/* MODAL CREAR CLIENTE */}
       {createUserModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fadeIn">
-          <div className="bg-white dark:bg-[#0D131F] rounded-3xl p-6 sm:p-8 max-w-md w-full text-left space-y-5">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Crear Nuevo Cliente</h3>
-              <button onClick={() => setCreateUserModal(false)} className="p-1.5 text-slate-400"><X size={16} /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white dark:bg-[#0D131F] rounded-2xl p-6 sm:p-7 max-w-md w-full text-left space-y-5 ring-1 ring-slate-200 dark:ring-slate-800 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">Crear Nuevo Cliente</h3>
+              <button onClick={() => setCreateUserModal(false)} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg"><X size={16} /></button>
             </div>
 
             <form onSubmit={handleCreateUser} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-400">Correo Electrónico</label>
+                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Correo Electrónico</label>
                 <input
                   type="email"
                   required
                   value={newUserData.email}
                   onChange={e => setNewUserData({ ...newUserData, email: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-slate-100 dark:bg-[#141D2E] rounded-xl text-xs font-bold"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-semibold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition-all"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-400">Contraseña Inicial</label>
+                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Contraseña Inicial</label>
                 <input
                   type="password"
                   required
                   value={newUserData.password}
                   onChange={e => setNewUserData({ ...newUserData, password: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-slate-100 dark:bg-[#141D2E] rounded-xl text-xs font-bold"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-semibold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition-all"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-400">Empresa (Opcional)</label>
+                  <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Empresa (Opcional)</label>
                   <input
                     type="text"
                     value={newUserData.companyName}
                     onChange={e => setNewUserData({ ...newUserData, companyName: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-slate-100 dark:bg-[#141D2E] rounded-xl text-xs"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-semibold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition-all"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-400">Teléfono (Opcional)</label>
+                  <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Teléfono (Opcional)</label>
                   <input
                     type="text"
                     value={newUserData.phone}
                     onChange={e => setNewUserData({ ...newUserData, phone: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-slate-100 dark:bg-[#141D2E] rounded-xl text-xs"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-semibold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition-all"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-400">Plan Inicial</label>
+                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Plan Inicial</label>
                 <CustomSelect
                   value={newUserData.planId}
                   onChange={val => setNewUserData({ ...newUserData, planId: val })}
@@ -923,7 +911,7 @@ export default function AdminDashboardPage() {
 
               <button
                 type="submit"
-                className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-xs rounded-2xl cursor-pointer"
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer mt-2"
               >
                 Crear Cliente y Activar Cuenta
               </button>
@@ -934,20 +922,20 @@ export default function AdminDashboardPage() {
 
       {/* MODAL EDITAR SUSCRIPCIÓN / LICENCIA */}
       {editSubscriptionModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fadeIn">
-          <div className="bg-white dark:bg-[#0D131F] rounded-3xl p-6 sm:p-8 max-w-md w-full text-left space-y-5">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Modificar Licencia y Cuota</h3>
-              <button onClick={() => setEditSubscriptionModal({ open: false, user: null })} className="p-1.5 text-slate-400"><X size={16} /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white dark:bg-[#0D131F] rounded-2xl p-6 sm:p-7 max-w-md w-full text-left space-y-5 ring-1 ring-slate-200 dark:ring-slate-800 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">Modificar Licencia y Cuota</h3>
+              <button onClick={() => setEditSubscriptionModal({ open: false, user: null })} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg"><X size={16} /></button>
             </div>
 
-            <div className="text-xs text-slate-400">
+            <div className="text-xs text-slate-500 dark:text-slate-400">
               Cliente: <span className="font-bold text-slate-900 dark:text-white">{editSubscriptionModal.user?.email}</span>
             </div>
 
             <form onSubmit={handleUpdateSubscription} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-400">Plan Asignado</label>
+                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Plan Asignado</label>
                 <CustomSelect
                   value={subFormData.planId}
                   onChange={val => setSubFormData({ ...subFormData, planId: val })}
@@ -957,7 +945,7 @@ export default function AdminDashboardPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-400">Extender Días</label>
+                  <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Extender Días</label>
                   <CustomSelect
                     value={String(subFormData.durationDays)}
                     onChange={val => setSubFormData({ ...subFormData, durationDays: parseInt(val, 10) })}
@@ -972,7 +960,7 @@ export default function AdminDashboardPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-400">Estado de Licencia</label>
+                  <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Estado de Licencia</label>
                   <CustomSelect
                     value={subFormData.status}
                     onChange={val => setSubFormData({ ...subFormData, status: val })}
@@ -986,19 +974,19 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              <label className="flex items-center gap-2 text-xs font-bold cursor-pointer pt-2">
+              <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer pt-1">
                 <input
                   type="checkbox"
                   checked={subFormData.resetQuota}
                   onChange={e => setSubFormData({ ...subFormData, resetQuota: e.target.checked })}
-                  className="rounded"
+                  className="rounded text-emerald-600 focus:ring-emerald-500"
                 />
                 <span>Resetear cuota de mensajes consumidos a 0</span>
               </label>
 
               <button
                 type="submit"
-                className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-xs rounded-2xl cursor-pointer"
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer mt-2"
               >
                 Aplicar Cambios de Suscripción
               </button>
@@ -1009,32 +997,32 @@ export default function AdminDashboardPage() {
 
       {/* MODAL REGISTRAR PAGO */}
       {recordPaymentModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fadeIn">
-          <div className="bg-white dark:bg-[#0D131F] rounded-3xl p-6 sm:p-8 max-w-md w-full text-left space-y-5">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Registrar Pago y Renovar</h3>
-              <button onClick={() => setRecordPaymentModal({ open: false, user: null })} className="p-1.5 text-slate-400"><X size={16} /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white dark:bg-[#0D131F] rounded-2xl p-6 sm:p-7 max-w-md w-full text-left space-y-5 ring-1 ring-slate-200 dark:ring-slate-800 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">Registrar Pago y Renovar</h3>
+              <button onClick={() => setRecordPaymentModal({ open: false, user: null })} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg"><X size={16} /></button>
             </div>
 
-            <div className="text-xs text-slate-400">
+            <div className="text-xs text-slate-500 dark:text-slate-400">
               Cliente: <span className="font-bold text-slate-900 dark:text-white">{recordPaymentModal.user?.email}</span>
             </div>
 
             <form onSubmit={handleRecordPayment} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-400">Monto Pagado</label>
+                  <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Monto Pagado</label>
                   <input
                     type="number"
                     step="0.01"
                     required
                     value={paymentFormData.amount}
                     onChange={e => setPaymentFormData({ ...paymentFormData, amount: parseFloat(e.target.value) })}
-                    className="w-full px-4 py-2.5 bg-slate-100 dark:bg-[#141D2E] rounded-xl text-xs font-black"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-semibold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition-all"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-400">Moneda</label>
+                  <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Moneda</label>
                   <CustomSelect
                     value={paymentFormData.currency}
                     onChange={val => setPaymentFormData({ ...paymentFormData, currency: val })}
@@ -1048,29 +1036,29 @@ export default function AdminDashboardPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-400">Método de Pago</label>
+                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Método de Pago</label>
                 <input
                   type="text"
                   value={paymentFormData.paymentMethod}
                   onChange={e => setPaymentFormData({ ...paymentFormData, paymentMethod: e.target.value })}
                   placeholder="ej: Transferencia BCP, Stripe, Efectivo"
-                  className="w-full px-4 py-2.5 bg-slate-100 dark:bg-[#141D2E] rounded-xl text-xs"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-semibold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition-all"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-400">Referencia / Nro Operación</label>
+                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Referencia / Nro Operación</label>
                 <input
                   type="text"
                   value={paymentFormData.reference}
                   onChange={e => setPaymentFormData({ ...paymentFormData, reference: e.target.value })}
                   placeholder="ej: OP-84920482"
-                  className="w-full px-4 py-2.5 bg-slate-100 dark:bg-[#141D2E] rounded-xl text-xs font-mono"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-mono text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition-all"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-400">Meses a Renovar</label>
+                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Meses a Renovar</label>
                 <CustomSelect
                   value={String(paymentFormData.renewMonths)}
                   onChange={val => setPaymentFormData({ ...paymentFormData, renewMonths: parseInt(val, 10) })}
@@ -1085,7 +1073,7 @@ export default function AdminDashboardPage() {
 
               <button
                 type="submit"
-                className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-xs rounded-2xl cursor-pointer"
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer mt-2"
               >
                 Confirmar Pago y Reactivar Servicio
               </button>
@@ -1096,78 +1084,78 @@ export default function AdminDashboardPage() {
 
       {/* MODAL PLANES (CREAR / EDITAR) */}
       {planModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fadeIn">
-          <div className="bg-white dark:bg-[#0D131F] rounded-3xl p-6 sm:p-8 max-w-md w-full text-left space-y-5">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white dark:bg-[#0D131F] rounded-2xl p-6 sm:p-7 max-w-md w-full text-left space-y-5 ring-1 ring-slate-200 dark:ring-slate-800 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
                 {planModal.plan?.id ? 'Editar Plan' : 'Crear Plan'}
               </h3>
-              <button onClick={() => setPlanModal({ open: false, plan: null })} className="p-1.5 text-slate-400"><X size={16} /></button>
+              <button onClick={() => setPlanModal({ open: false, plan: null })} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg"><X size={16} /></button>
             </div>
 
             <form onSubmit={handleSavePlan} className="space-y-4">
               {!planModal.plan?.id && (
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-400">ID Único (ej: plan_pro)</label>
+                  <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">ID Único (ej: plan_pro)</label>
                   <input
                     type="text"
                     required
                     value={planFormData.id}
                     onChange={e => setPlanFormData({ ...planFormData, id: e.target.value })}
-                    className="w-full px-4 py-2 bg-slate-100 dark:bg-[#141D2E] rounded-xl text-xs font-mono"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-mono text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition-all"
                   />
                 </div>
               )}
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-400">Nombre del Plan</label>
+                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Nombre del Plan</label>
                 <input
                   type="text"
                   required
                   value={planFormData.name}
-                  onChange={e => setPlanFormData({ ...planFormData, name: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-100 dark:bg-[#141D2E] rounded-xl text-xs font-bold"
+                  onChange={e => setNewPlanFormData ? setNewPlanFormData({ ...planFormData, name: e.target.value }) : setPlanFormData({ ...planFormData, name: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-semibold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition-all"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-400">Precio Mensual ($)</label>
+                  <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Precio Mensual ($)</label>
                   <input
                     type="number"
                     step="0.01"
                     required
                     value={planFormData.price}
                     onChange={e => setPlanFormData({ ...planFormData, price: parseFloat(e.target.value) })}
-                    className="w-full px-4 py-2 bg-slate-100 dark:bg-[#141D2E] rounded-xl text-xs font-black"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-semibold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition-all"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-400">Máx. Instancias</label>
+                  <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Máx. Instancias</label>
                   <input
                     type="number"
                     required
                     value={planFormData.maxInstances}
                     onChange={e => setPlanFormData({ ...planFormData, maxInstances: parseInt(e.target.value) })}
-                    className="w-full px-4 py-2 bg-slate-100 dark:bg-[#141D2E] rounded-xl text-xs"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-semibold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition-all"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-400">Límite de Mensajes / Mes</label>
+                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Límite de Mensajes / Mes</label>
                 <input
                   type="number"
                   required
                   value={planFormData.maxMessages}
                   onChange={e => setPlanFormData({ ...planFormData, maxMessages: parseInt(e.target.value) })}
-                  className="w-full px-4 py-2 bg-slate-100 dark:bg-[#141D2E] rounded-xl text-xs"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#141D2E] rounded-xl text-xs font-semibold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 transition-all"
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-xs rounded-2xl cursor-pointer"
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer mt-2"
               >
                 Guardar Configuración de Plan
               </button>
