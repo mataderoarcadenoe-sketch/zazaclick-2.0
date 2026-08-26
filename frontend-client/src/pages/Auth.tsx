@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../services/authContext';
 import { 
   ShieldCheck, Zap, Moon, Sun, Smartphone, 
@@ -19,42 +19,9 @@ export default function AuthPage() {
   const [loadingGoogle, setLoadingGoogle] = useState(true);
   const [authenticating, setAuthenticating] = useState(false);
   const { isDark, toggle: toggleDark } = useDarkMode();
+  const googleBtnRef = useRef<HTMLDivElement>(null);
 
-  // Dynamically load Google SDK on mount
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
-      if (window.google) {
-        window.google.accounts.id.initialize({
-          client_id: '6104299697-7dissi3tuvd84q94737nqmsi96nmh2d5.apps.googleusercontent.com',
-          callback: handleGoogleLoginResponse,
-          auto_select: false
-        });
-        window.google.accounts.id.renderButton(
-          document.getElementById('google-btn'),
-          { 
-            theme: isDark ? 'filled_dark' : 'outline', 
-            size: 'large', 
-            width: '360',
-            text: 'continue_with',
-            shape: 'pill',
-            logo_alignment: 'left'
-          }
-        );
-        setLoadingGoogle(false);
-      }
-    };
-    document.body.appendChild(script);
-
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, [isDark]); // Re-render button theme when isDark changes
-
-  const handleGoogleLoginResponse = async (response: any) => {
+  const handleGoogleLoginResponse = useCallback(async (response: any) => {
     setError(null);
     setAuthenticating(true);
     try {
@@ -70,7 +37,65 @@ export default function AuthPage() {
     } finally {
       setAuthenticating(false);
     }
-  };
+  }, [refreshUser]);
+
+  const renderGoogleButton = useCallback(() => {
+    if (!window.google || !googleBtnRef.current) return;
+
+    try {
+      window.google.accounts.id.initialize({
+        client_id: '6104299697-7dissi3tuvd84q94737nqmsi96nmh2d5.apps.googleusercontent.com',
+        callback: handleGoogleLoginResponse,
+        auto_select: false
+      });
+
+      // Limpiar render previo
+      googleBtnRef.current.innerHTML = '';
+
+      window.google.accounts.id.renderButton(
+        googleBtnRef.current,
+        { 
+          theme: isDark ? 'filled_dark' : 'outline', 
+          size: 'large', 
+          width: '320',
+          text: 'continue_with',
+          shape: 'pill',
+          logo_alignment: 'left'
+        }
+      );
+      setLoadingGoogle(false);
+    } catch (err) {
+      console.warn('Error al renderizar botón de Google:', err);
+    }
+  }, [isDark, handleGoogleLoginResponse]);
+
+  // Cargar Google SDK una sola vez de forma controlada
+  useEffect(() => {
+    if (window.google) {
+      renderGoogleButton();
+      return;
+    }
+
+    const SCRIPT_ID = 'google-gsi-client';
+    let script = document.getElementById(SCRIPT_ID) as HTMLScriptElement;
+
+    if (!script) {
+      script = document.createElement('script');
+      script.id = SCRIPT_ID;
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        renderGoogleButton();
+      };
+      document.body.appendChild(script);
+    } else {
+      script.addEventListener('load', renderGoogleButton);
+      return () => {
+        script.removeEventListener('load', renderGoogleButton);
+      };
+    }
+  }, [renderGoogleButton]);
 
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4 sm:p-6 md:p-10 bg-[#F8FAFC] dark:bg-[#0B0F17] text-slate-900 dark:text-white overflow-hidden transition-colors duration-300 font-sans">
@@ -214,23 +239,30 @@ export default function AuthPage() {
               </div>
             )}
 
-            {/* Google Authentication Button Container */}
+            {/* Google Authentication Button Container (Permanente en DOM para evitar null en SDK) */}
             <div className="space-y-4 pt-2">
               
               <div className="flex flex-col items-center justify-center min-h-[50px] relative">
-                {loadingGoogle ? (
+                {loadingGoogle && !authenticating && (
                   <div className="flex items-center gap-2.5 py-3 px-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 text-xs font-medium animate-pulse">
                     <Loader2 size={16} className="animate-spin text-emerald-500" />
                     <span>Cargando autenticación segura...</span>
                   </div>
-                ) : authenticating ? (
+                )}
+
+                {authenticating && (
                   <div className="flex items-center gap-2.5 py-3 px-6 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-300 text-xs font-bold border border-emerald-200/60 dark:border-emerald-800/60">
                     <Loader2 size={16} className="animate-spin text-emerald-500" />
                     <span>Autenticando con Google...</span>
                   </div>
-                ) : (
-                  <div id="google-btn" className="w-full flex justify-center transform active:scale-[0.99] transition-transform" />
                 )}
+
+                <div 
+                  ref={googleBtnRef} 
+                  className={`w-full flex justify-center transform active:scale-[0.99] transition-transform ${
+                    loadingGoogle || authenticating ? 'hidden' : 'block'
+                  }`} 
+                />
               </div>
 
               {/* Security Footnote */}
