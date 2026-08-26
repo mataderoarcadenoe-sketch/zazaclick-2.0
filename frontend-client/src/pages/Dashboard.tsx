@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 
 import { AsyncOperationModal, type AsyncStep, type AsyncStatus } from '../components/AsyncOperationModal';
+import { CustomSelect } from '../components/CustomSelect';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -930,16 +931,17 @@ echo $response;`;
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                       <div className="space-y-1.5">
                         <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block">Instancia WhatsApp</label>
-                        <select
+                        <CustomSelect
                           value={playgroundInstance}
-                          onChange={(e) => setPlaygroundInstance(e.target.value)}
-                          className="w-full px-4 py-3 bg-slate-100 dark:bg-[#141D2E] rounded-2xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:bg-slate-200 dark:focus:bg-[#1A253A]"
-                        >
-                          {instances.length === 0 && <option value="">Sin instancias creadas</option>}
-                          {instances.map(i => (
-                            <option key={i.instance_name} value={i.instance_name}>{i.instance_name} ({i.status})</option>
-                          ))}
-                        </select>
+                          onChange={(val) => setPlaygroundInstance(val)}
+                          placeholder="Seleccionar instancia..."
+                          options={instances.map(i => ({
+                            value: i.instance_name,
+                            label: i.instance_name,
+                            sublabel: i.phone ? `Tel: ${i.phone}` : 'Sin número vinculado',
+                            badge: i.status === 'connected' ? 'ONLINE' : 'OFFLINE'
+                          }))}
+                        />
                       </div>
 
                       <div className="space-y-1.5">
@@ -972,23 +974,22 @@ echo $response;`;
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div className="space-y-1.5">
                             <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block">Tipo de Medio (mediatype)</label>
-                            <select
+                            <CustomSelect
                               value={playgroundMediaType}
-                              onChange={(e) => {
-                                const val = e.target.value as any;
-                                setPlaygroundMediaType(val);
+                              onChange={(val) => {
+                                setPlaygroundMediaType(val as any);
                                 if (val === 'image') setPlaygroundMimeType('image/jpeg');
                                 if (val === 'document') setPlaygroundMimeType('application/pdf');
                                 if (val === 'video') setPlaygroundMimeType('video/mp4');
                                 if (val === 'audio') setPlaygroundMimeType('audio/mpeg');
                               }}
-                              className="w-full px-4 py-3 bg-slate-100 dark:bg-[#141D2E] rounded-2xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none"
-                            >
-                              <option value="image">Imagen (JPG, PNG, WEBP)</option>
-                              <option value="document">Documento (PDF, DOCX, XLSX)</option>
-                              <option value="video">Video (MP4)</option>
-                              <option value="audio">Audio como Archivo (MP3)</option>
-                            </select>
+                              options={[
+                                { value: 'image', label: 'Imagen (JPG, PNG, WEBP)' },
+                                { value: 'document', label: 'Documento (PDF, DOCX, XLSX)' },
+                                { value: 'video', label: 'Video (MP4)' },
+                                { value: 'audio', label: 'Audio como Archivo (MP3)' }
+                              ]}
+                            />
                           </div>
 
                           <div className="space-y-1.5">

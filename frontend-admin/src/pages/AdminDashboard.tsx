@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useDarkMode } from '../hooks/useDarkMode';
 import api from '../services/api';
+import { CustomSelect } from '../components/CustomSelect';
 
 export default function AdminDashboardPage() {
   const { user, logout } = useAuth();
@@ -630,15 +631,17 @@ export default function AdminDashboardPage() {
             <form onSubmit={handleUpdateUserPlan} className="space-y-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block">Seleccionar Plan</label>
-                <select
+                <CustomSelect
                   value={selectedPlanId}
-                  onChange={(e) => setSelectedPlanId(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-100 dark:bg-[#141D2E] rounded-2xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:bg-slate-200 dark:focus:bg-[#1A253A]"
-                >
-                  {plansList.map(p => (
-                    <option key={p.id} value={p.id}>{p.name} ({p.max_instances === 99 ? 'Ilimitado' : `${p.max_instances} líneas`}) - ${p.price}/m</option>
-                  ))}
-                </select>
+                  onChange={(val) => setSelectedPlanId(val)}
+                  placeholder="Seleccionar plan..."
+                  options={plansList.map(p => ({
+                    value: p.id,
+                    label: p.name,
+                    sublabel: `${p.max_instances === 99 ? 'Ilimitado' : `${p.max_instances} líneas`} · $${p.price}/mes`,
+                    badge: `$${p.price}/m`
+                  }))}
+                />
               </div>
 
               <div className="flex items-center gap-3 pt-2">
