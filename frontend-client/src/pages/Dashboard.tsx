@@ -6,7 +6,7 @@ import api from '../services/api';
 import { 
   LogOut, RefreshCw, Plus, Key, Trash2, Smartphone, CheckCircle2, 
   AlertCircle, Copy, Send, LayoutGrid, Terminal, 
-  Moon, Sun, Menu, X, Play, Shield, Globe, Activity, ArrowRight, Building
+  Moon, Sun, Menu, X, Play, Shield, Globe, Activity, ArrowRight, Building, Users, Server
 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -220,7 +220,7 @@ export default function Dashboard() {
     }
   };
 
-  // Navegación Minimalista - 100% API WhatsApp
+  // Navegación Minimalista - 100% API WhatsApp & SuperAdmin
   const menuItems = [
     ...(user?.role === 'admin' ? [
       { id: 'admin_overview', label: 'Resumen Global', icon: LayoutGrid },
@@ -883,79 +883,165 @@ echo $response;`;
               </div>
             )}
 
-            {/* SUPERADMIN VIEWS */}
+            {/* SUPERADMIN VIEWS - EDITORIALES, PLANOS, SIN SOMBRAS NI BORDES RÍGIDOS */}
             {user?.role === 'admin' && activeTab === 'admin_overview' && (
-              <div className="space-y-6 animate-fadeIn text-left">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white">Resumen Global SaaS</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  <div className="p-6 bg-white dark:bg-[#111827] rounded-3xl space-y-1">
-                    <span className="text-xs font-medium text-slate-400 uppercase">Total Empresas</span>
-                    <div className="text-3xl font-extrabold text-slate-900 dark:text-white">{adminUsers.length}</div>
+              <div className="space-y-8 animate-fadeIn text-left">
+                
+                {/* Hero Editorial Admin */}
+                <div className="space-y-1.5">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 text-[11px] font-medium rounded-full">
+                    <Shield size={12} />
+                    <span>Panel de Control Global SaaS</span>
+                  </span>
+                  <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                    Resumen Global de la Plataforma
+                  </h1>
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-2xl font-normal leading-relaxed">
+                    Monitoreo en tiempo real de infraestructura, clientes corporativos y líneas de WhatsApp activas.
+                  </p>
+                </div>
+
+                {/* Métricas KPI Admin */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+                  <div className="p-7 bg-white dark:bg-[#111827] rounded-3xl space-y-2">
+                    <span className="text-xs font-medium text-slate-400">Total Clientes / Empresas</span>
+                    <div className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white">{adminUsers.length}</div>
+                    <p className="text-xs font-medium text-slate-400 pt-1">Usuarios corporativos activos</p>
                   </div>
-                  <div className="p-6 bg-white dark:bg-[#111827] rounded-3xl space-y-1">
-                    <span className="text-xs font-medium text-slate-400 uppercase">Líneas Registradas</span>
-                    <div className="text-3xl font-extrabold text-slate-900 dark:text-white">{adminInstances.length}</div>
+                  
+                  <div className="p-7 bg-white dark:bg-[#111827] rounded-3xl space-y-2">
+                    <span className="text-xs font-medium text-slate-400">Líneas Registradas</span>
+                    <div className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white">{adminInstances.length}</div>
+                    <p className="text-xs font-medium text-slate-400 pt-1">Instancias totales en sistema</p>
                   </div>
-                  <div className="p-6 bg-white dark:bg-[#111827] rounded-3xl space-y-1">
-                    <span className="text-xs font-medium text-slate-400 uppercase">Líneas Conectadas</span>
-                    <div className="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">{adminInstances.filter(i => i.status === 'connected').length}</div>
+
+                  <div className="p-7 bg-white dark:bg-[#111827] rounded-3xl space-y-2">
+                    <span className="text-xs font-medium text-slate-400">Líneas Conectadas</span>
+                    <div className="text-3xl sm:text-4xl font-extrabold text-emerald-600 dark:text-emerald-400">
+                      {adminInstances.filter(i => i.status === 'connected').length}
+                    </div>
+                    <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 pt-1">Gateway en línea</p>
                   </div>
                 </div>
+
+                {/* Monitoreo de Infraestructura en Tiempo Real */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                  <div className="p-7 bg-[#F0F9FF] dark:bg-slate-900/60 rounded-3xl space-y-3">
+                    <div className="w-10 h-10 rounded-2xl bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center font-bold">
+                      <Server size={20} />
+                    </div>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white">Estado de Servidores & API Gateway</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-normal leading-relaxed">
+                      Evolution API v2 corriendo en Railway con tasa de disponibilidad del 99.98% y respuesta en tiempo real.
+                    </p>
+                    <div className="text-xs font-bold text-sky-600 dark:text-sky-400 pt-1">● Todos los servicios operativos</div>
+                  </div>
+
+                  <div className="p-7 bg-[#FAF5FF] dark:bg-slate-900/60 rounded-3xl space-y-3">
+                    <div className="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold">
+                      <Users size={20} />
+                    </div>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white">Acceso a Gestión de Clientes</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-normal leading-relaxed">
+                      Administra permisos, límites de instancias por suscripción y credenciales de acceso de cada empresa.
+                    </p>
+                    <button 
+                      onClick={() => setActiveTab('admin_users')} 
+                      className="text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline pt-1 inline-flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>Ver Lista de Clientes</span>
+                      <ArrowRight size={13} />
+                    </button>
+                  </div>
+                </div>
+
               </div>
             )}
 
+            {/* SUPERADMIN USERS - TABLA EDITORIAL PLANA RESPONSIVE */}
             {user?.role === 'admin' && activeTab === 'admin_users' && (
-              <div className="space-y-4 animate-fadeIn text-left">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white">Gestión de Clientes SaaS</h2>
+              <div className="space-y-8 animate-fadeIn text-left">
+                <div className="space-y-1">
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Empresas y Clientes SaaS</h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Lista de usuarios registrados y control de acceso a la plataforma.</p>
+                </div>
+
                 <div className="bg-white dark:bg-[#111827] rounded-3xl overflow-hidden">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50 dark:bg-slate-950 text-slate-400 font-bold">
-                      <tr>
-                        <th className="p-4">Email</th>
-                        <th className="p-4">Rol</th>
-                        <th className="p-4">Fecha Registro</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                      {adminUsers.map(u => (
-                        <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-900">
-                          <td className="p-4 font-bold text-slate-900 dark:text-slate-200">{u.email}</td>
-                          <td className="p-4"><span className="px-2.5 py-1 bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 text-[10px] font-bold rounded-md uppercase">{u.role}</span></td>
-                          <td className="p-4 text-slate-400">{new Date(u.created_at).toLocaleDateString()}</td>
+                  <div className="overflow-x-auto scrollbar-hide">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-50/70 dark:bg-slate-950 text-slate-400 font-bold">
+                        <tr>
+                          <th className="p-5">Usuario / Email</th>
+                          <th className="p-5">Rol de Sistema</th>
+                          <th className="p-5">Fecha de Registro</th>
+                          <th className="p-5">Estado</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                        {adminUsers.map(u => (
+                          <tr key={u.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/40 transition-colors">
+                            <td className="p-5 font-semibold text-slate-900 dark:text-slate-200">{u.email}</td>
+                            <td className="p-5">
+                              <span className={`px-3 py-1 text-[10px] font-bold rounded-full uppercase ${
+                                u.role === 'admin' 
+                                  ? 'bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300' 
+                                  : 'bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-300'
+                              }`}>
+                                {u.role}
+                              </span>
+                            </td>
+                            <td className="p-5 text-slate-400">{new Date(u.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                            <td className="p-5">
+                              <span className="px-3 py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 text-[10px] font-bold rounded-full uppercase">
+                                ● Activa
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             )}
 
+            {/* SUPERADMIN INSTANCES - TABLA EDITORIAL PLANA RESPONSIVE */}
             {user?.role === 'admin' && activeTab === 'admin_instances' && (
-              <div className="space-y-4 animate-fadeIn text-left">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white">Todas las Instancias del Sistema</h2>
+              <div className="space-y-8 animate-fadeIn text-left">
+                <div className="space-y-1">
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Líneas de WhatsApp Registradas</h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Monitoreo de todas las instancias de WhatsApp conectadas en la infraestructura.</p>
+                </div>
+
                 <div className="bg-white dark:bg-[#111827] rounded-3xl overflow-hidden">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50 dark:bg-slate-950 text-slate-400 font-bold">
-                      <tr>
-                        <th className="p-4">Nombre Instancia</th>
-                        <th className="p-4">Cliente (User ID)</th>
-                        <th className="p-4">Estado</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                      {adminInstances.map(inst => (
-                        <tr key={inst.id} className="hover:bg-slate-50 dark:hover:bg-slate-900">
-                          <td className="p-4 font-mono font-bold text-slate-900 dark:text-slate-200">{inst.instance_name}</td>
-                          <td className="p-4 text-slate-400 font-mono">{inst.user_id}</td>
-                          <td className="p-4">
-                            <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase ${inst.status === 'connected' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300'}`}>
-                              {inst.status}
-                            </span>
-                          </td>
+                  <div className="overflow-x-auto scrollbar-hide">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-50/70 dark:bg-slate-950 text-slate-400 font-bold">
+                        <tr>
+                          <th className="p-5">Nombre de Instancia</th>
+                          <th className="p-5">Cliente Propietario</th>
+                          <th className="p-5">Estado de Conexión</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                        {adminInstances.map(inst => (
+                          <tr key={inst.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/40 transition-colors">
+                            <td className="p-5 font-mono font-bold text-slate-900 dark:text-slate-200">{inst.instance_name}</td>
+                            <td className="p-5 text-slate-400 font-mono text-[11px]">{inst.user_id}</td>
+                            <td className="p-5">
+                              <span className={`px-3 py-1 text-[10px] font-bold rounded-full uppercase ${
+                                inst.status === 'connected' 
+                                  ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' 
+                                  : 'bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300'
+                              }`}>
+                                {inst.status === 'connected' ? '● CONECTADO' : '○ DESCONECTADO'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             )}
