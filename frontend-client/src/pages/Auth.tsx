@@ -67,10 +67,11 @@ export default function Auth() {
         theme: isDark ? 'filled_black' : 'outline',
         size: 'large',
         type: 'standard',
-        text: 'signin_with',
+        text: 'continue_with',
         shape: 'pill',
         logo_alignment: 'left',
         width: 320,
+        locale: 'es',
       });
 
       setLoadingGoogle(false);
