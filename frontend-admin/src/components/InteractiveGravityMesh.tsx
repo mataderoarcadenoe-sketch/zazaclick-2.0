@@ -10,7 +10,6 @@ export interface InteractiveGravityMeshProps {
   enablePulses?: boolean;
   enableRipples?: boolean;
   enableMouseInteraction?: boolean;
-  enableTelemetryHUD?: boolean;
   enableRadarSweep?: boolean;
 }
 
@@ -55,10 +54,6 @@ interface Spark {
 
 interface NetworkNode {
   id: number;
-  name: string;
-  role: string;
-  latency: number;
-  throughput: number;
   anchorX: number;
   anchorY: number;
   x: number;
@@ -210,7 +205,6 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
       enablePulses = true,
       enableRipples = true,
       enableMouseInteraction = true,
-      enableTelemetryHUD = true,
       enableRadarSweep = true,
     },
     ref
@@ -225,7 +219,6 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
     const wavesRef = useRef<SignalWave[]>([]);
     const dustRef = useRef<Stardust[]>([]);
     const sparksRef = useRef<Spark[]>([]);
-    const hoveredNodeRef = useRef<NetworkNode | null>(null);
     const mouseRef = useRef({
       x: -3000,
       y: -3000,
@@ -359,10 +352,6 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
         branchLine: 'rgba(6, 182, 212, ',
         feederLine: 'rgba(20, 184, 166, ',
         mouseLine: 'rgba(103, 232, 249, ',
-        hudText: '#A7F3D0',
-        hudSub: '#67E8F9',
-        hudBg: 'rgba(7, 11, 18, 0.82)',
-        hudBorder: 'rgba(16, 185, 129, 0.35)',
         triangleFill: 'rgba(16, 185, 129, 0.035)',
         triangleStroke: 'rgba(6, 182, 212, 0.12)',
         dustColor: 'rgba(167, 243, 208, ',
@@ -384,10 +373,6 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
         branchLine: 'rgba(14, 116, 144, ',
         feederLine: 'rgba(15, 118, 110, ',
         mouseLine: 'rgba(14, 116, 144, ',
-        hudText: '#047857',
-        hudSub: '#0E7490',
-        hudBg: 'rgba(255, 255, 255, 0.9)',
-        hudBorder: 'rgba(4, 120, 87, 0.3)',
         triangleFill: 'rgba(4, 120, 87, 0.025)',
         triangleStroke: 'rgba(14, 116, 144, 0.09)',
         dustColor: 'rgba(15, 118, 110, ',
@@ -398,7 +383,6 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
 
       const theme = isDark ? darkPalette : lightPalette;
 
-      // Generación de Topología Inteligente con Telemetría
       const initTopology = () => {
         const isMobile = width < 640;
         const isTablet = width >= 640 && width < 1024;
@@ -411,11 +395,6 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
 
         const nodes: NetworkNode[] = [];
         let idCounter = 0;
-
-        const gatewayNames = ['GW-PROD-US', 'GW-LATAM-01', 'AUTH-QR-CORE', 'RATE-LIMIT-X'];
-        const hubNames = ['WEBHOOK-RT', 'SESSION-MGR', 'SOCKET-PIPELINE', 'TOKEN-VAULT', 'MSG-DISPATCH'];
-        let gwIdx = 0;
-        let hubIdx = 0;
 
         for (let r = 0; r < rows; r++) {
           for (let c = 0; c < cols; c++) {
@@ -435,8 +414,6 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             let radius = isDark ? 2.3 : 2.0;
             let color = theme.edge;
             let glowColor = theme.relayHalo;
-            let name = `NODE-${idCounter + 10}`;
-            let role = 'SATELLITE INSTANCE';
 
             const isGatewayPos = (r === 1 && c === 2) || (r === 2 && c === Math.floor(cols / 2)) || (r === rows - 2 && c === cols - 3);
             const isHubPos = (r % 2 === 1 && c % 2 === 1) && !isGatewayPos;
@@ -446,23 +423,16 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
               radius = isDark ? 6.8 : 5.8;
               color = theme.core;
               glowColor = theme.coreHalo;
-              name = gatewayNames[gwIdx % gatewayNames.length];
-              role = 'PRIMARY API GATEWAY';
-              gwIdx++;
             } else if (isHubPos) {
               tier = 'HUB';
               radius = isDark ? 4.6 : 4.0;
               color = theme.hub;
               glowColor = theme.hubHalo;
-              name = hubNames[hubIdx % hubNames.length];
-              role = 'MICROSERVICE ROUTER';
-              hubIdx++;
             } else if (Math.random() < 0.4) {
               tier = 'RELAY';
               radius = isDark ? 3.2 : 2.8;
               color = theme.relay;
               glowColor = theme.relayHalo;
-              role = 'WEBHOOK WORKER';
             }
 
             const satellites: Satellite[] = [];
@@ -480,10 +450,6 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
 
             nodes.push({
               id: idCounter++,
-              name,
-              role,
-              latency: Math.floor(Math.random() * 12 + 8),
-              throughput: Math.floor(Math.random() * 800 + 400),
               anchorX,
               anchorY,
               x: anchorX,
@@ -577,33 +543,29 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
         mouseRef.current.targetX = e.clientX;
         mouseRef.current.targetY = e.clientY;
         mouseRef.current.isActive = true;
-
-        // Detección de Nodo bajo el cursor para HUD Interactivo
-        const nodes = nodesRef.current;
-        let foundNode: NetworkNode | null = null;
-        for (let i = 0; i < nodes.length; i++) {
-          const n = nodes[i];
-          const dist = Math.hypot(e.clientX - n.x, e.clientY - n.y);
-          if (dist < 28) {
-            foundNode = n;
-            break;
-          }
-        }
-        hoveredNodeRef.current = foundNode;
       };
 
       const handleMouseLeave = () => {
         mouseRef.current.isActive = false;
         mouseRef.current.targetX = -3000;
         mouseRef.current.targetY = -3000;
-        hoveredNodeRef.current = null;
       };
 
       const handleClick = (e: MouseEvent) => {
-        const hovered = hoveredNodeRef.current;
-        if (hovered) {
-          // Disparo de ráfaga de tráfico desde el nodo tocado
-          triggerBurstAtNode(hovered.id);
+        // Buscar si se hizo clic cerca de algún nodo para disparar ráfaga
+        const nodes = nodesRef.current;
+        let clickedNodeId: number | null = null;
+        for (let i = 0; i < nodes.length; i++) {
+          const n = nodes[i];
+          const dist = Math.hypot(e.clientX - n.x, e.clientY - n.y);
+          if (dist < 32) {
+            clickedNodeId = n.id;
+            break;
+          }
+        }
+
+        if (clickedNodeId !== null) {
+          triggerBurstAtNode(clickedNodeId);
         } else if (enableRipples) {
           const waves = wavesRef.current;
           const available = waves.find(w => !w.active);
@@ -640,7 +602,6 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
       const maxDistSq = maxDistance * maxDistance;
       const minDistSq = minDist * minDist;
 
-      // Master 60 FPS Render Pipeline
       const render = () => {
         time += 1.0;
 
@@ -648,7 +609,6 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
         mouse.x += (mouse.targetX - mouse.x) * 0.18;
         mouse.y += (mouse.targetY - mouse.y) * 0.18;
 
-        // Radar Sweep Horizontal
         if (enableRadarSweep) {
           radarX += 3.5;
           if (radarX > width + 200) radarX = -200;
@@ -658,7 +618,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
         ctx.scale(dpr, dpr);
         ctx.clearRect(0, 0, width, height);
 
-        // 1. HAZ DE RADAR CUÁNTICO (RADAR SWEEP)
+        // 1. HAZ DE RADAR CUÁNTICO
         if (enableRadarSweep && radarX > -100 && radarX < width + 100) {
           const radarGrad = ctx.createLinearGradient(radarX - 120, 0, radarX, 0);
           radarGrad.addColorStop(0, 'rgba(16, 185, 129, 0)');
@@ -711,7 +671,6 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           n.vx += (targetX - n.x) * springK;
           n.vy += (targetY - n.y) * springK;
 
-          // Repulsión electrostática (Anti-clumping)
           for (let j = i + 1; j < nodeCount; j++) {
             const other = nodes[j];
             const dx = n.x - other.x;
@@ -740,11 +699,6 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           if (n.activity > 0) n.activity = Math.max(0, n.activity - 0.015);
           if (n.haloPulse > 0) n.haloPulse = Math.max(0, n.haloPulse - 0.012);
 
-          // Fluctuación sutil de latencia en telemetría
-          if (time % 60 === 0 && Math.random() < 0.3) {
-            n.latency = Math.max(6, Math.min(24, n.latency + (Math.random() > 0.5 ? 1 : -1)));
-          }
-
           if (n.tier === 'CORE') {
             n.sonarRadius += 0.45;
             if (n.sonarRadius > 55) n.sonarRadius = n.radius + 6;
@@ -754,7 +708,6 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             n.satellites[s].angle += n.satellites[s].speed;
           }
 
-          // Activación al paso del haz de radar
           if (enableRadarSweep && Math.abs(n.x - radarX) < 15) {
             n.activity = Math.max(n.activity, 0.65);
           }
@@ -888,7 +841,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           }
         }
 
-        // 6. FILAMENTOS DE FIBRA ÓPTICA LUMINOSA (GRADIENT BÉZIER FILAMENTS)
+        // 6. FILAMENTOS DE FIBRA ÓPTICA LUMINOSA
         for (let c = 0; c < connections.length; c++) {
           const conn = connections[c];
           const p1 = nodes[conn.source];
@@ -922,7 +875,6 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           ctx.quadraticCurveTo(conn.ctrlX, conn.ctrlY, p2.x, p2.y);
           ctx.stroke();
 
-          // Micro-nodo router hexagonal en líneas troncales principales
           if (conn.tier === 'TRUNK' && distRatio > 0.4) {
             ctx.save();
             ctx.translate(conn.ctrlX, conn.ctrlY);
@@ -1102,7 +1054,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           }
         }
 
-        // 10. DIBUJAR NODOS, SONAR RINGS, MICRO-SATÉLITES Y HUD TELEMETRY
+        // 10. DIBUJAR NODOS, SONAR RINGS Y MICRO-SATÉLITES (SIN TEXTOS DE TELEMETRÍA)
         for (let i = 0; i < nodeCount; i++) {
           const n = nodes[i];
           const nodeAlpha = (0.85 + n.activity * 0.15) * n.depth;
@@ -1132,17 +1084,6 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             ctx.strokeStyle = `${theme.trunkLine}${(0.48 + n.activity * 0.45).toFixed(3)})`;
             ctx.lineWidth = 1.3;
             ctx.stroke();
-
-            // HUD Flotante sobre Core Gateways
-            if (enableTelemetryHUD && width > 768) {
-              ctx.font = 'bold 8.5px "JetBrains Mono", Consolas, monospace';
-              ctx.fillStyle = theme.hudText;
-              ctx.fillText(`${n.name} [${n.latency}ms]`, n.x + 12, n.y - 10);
-
-              ctx.font = '7.5px "JetBrains Mono", Consolas, monospace';
-              ctx.fillStyle = isDark ? 'rgba(103, 232, 249, 0.7)' : 'rgba(14, 116, 144, 0.7)';
-              ctx.fillText(`OK • ${n.throughput} req/s`, n.x + 12, n.y);
-            }
           }
 
           if (n.tier === 'HUB') {
@@ -1152,12 +1093,6 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             ctx.strokeStyle = `${theme.branchLine}${(0.38 + n.activity * 0.4).toFixed(3)})`;
             ctx.lineWidth = 1.1;
             ctx.stroke();
-
-            if (enableTelemetryHUD && width > 1024) {
-              ctx.font = '8px "JetBrains Mono", Consolas, monospace';
-              ctx.fillStyle = isDark ? 'rgba(6, 182, 212, 0.85)' : 'rgba(14, 116, 144, 0.85)';
-              ctx.fillText(n.name, n.x + 10, n.y - 6);
-            }
           }
 
           for (let s = 0; s < n.satellites.length; s++) {
@@ -1193,57 +1128,6 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           }
         }
 
-        // 11. INSPECTOR HUD EN TIEMPO REAL (AL PASAR EL RATÓN SOBRE CUALQUIER NODO)
-        const hovered = hoveredNodeRef.current;
-        if (hovered && enableTelemetryHUD) {
-          // Corchete de enfoque $[ \quad ]$
-          const brkSize = hovered.radius + 12;
-          ctx.strokeStyle = isDark ? '#67E8F9' : '#0284C7';
-          ctx.lineWidth = 1.4;
-
-          // Esquinas del corchete
-          ctx.beginPath();
-          ctx.moveTo(hovered.x - brkSize, hovered.y - brkSize + 5);
-          ctx.lineTo(hovered.x - brkSize, hovered.y - brkSize);
-          ctx.lineTo(hovered.x - brkSize + 5, hovered.y - brkSize);
-
-          ctx.moveTo(hovered.x + brkSize - 5, hovered.y - brkSize);
-          ctx.lineTo(hovered.x + brkSize, hovered.y - brkSize);
-          ctx.lineTo(hovered.x + brkSize, hovered.y - brkSize + 5);
-
-          ctx.moveTo(hovered.x - brkSize, hovered.y + brkSize - 5);
-          ctx.lineTo(hovered.x - brkSize, hovered.y + brkSize);
-          ctx.lineTo(hovered.x - brkSize + 5, hovered.y + brkSize);
-
-          ctx.moveTo(hovered.x + brkSize - 5, hovered.y + brkSize);
-          ctx.lineTo(hovered.x + brkSize, hovered.y + brkSize);
-          ctx.lineTo(hovered.x + brkSize, hovered.y + brkSize - 5);
-          ctx.stroke();
-
-          // Tarjeta flotante de telemetría
-          const cardW = 150;
-          const cardH = 50;
-          const cardX = Math.min(width - cardW - 10, hovered.x + brkSize + 8);
-          const cardY = Math.max(10, hovered.y - cardH * 0.5);
-
-          ctx.fillStyle = theme.hudBg;
-          ctx.strokeStyle = theme.hudBorder;
-          ctx.lineWidth = 1.0;
-          ctx.beginPath();
-          ctx.roundRect(cardX, cardY, cardW, cardH, 6);
-          ctx.fill();
-          ctx.stroke();
-
-          ctx.font = 'bold 9px "JetBrains Mono", Consolas, monospace';
-          ctx.fillStyle = theme.hudText;
-          ctx.fillText(`● ${hovered.name}`, cardX + 10, cardY + 16);
-
-          ctx.font = '8px "JetBrains Mono", Consolas, monospace';
-          ctx.fillStyle = theme.hudSub;
-          ctx.fillText(`ROLE: ${hovered.role}`, cardX + 10, cardY + 29);
-          ctx.fillText(`PING: ${hovered.latency}ms  THRU: ${hovered.throughput}/s`, cardX + 10, cardY + 41);
-        }
-
         ctx.restore();
         animationFrameId = requestAnimationFrame(render);
       };
@@ -1257,7 +1141,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
         window.removeEventListener('mouseleave', handleMouseLeave);
         window.removeEventListener('click', handleClick);
       };
-    }, [maxDistance, isDark, enablePulses, enableRipples, enableMouseInteraction, enableTelemetryHUD, enableRadarSweep, variant]);
+    }, [maxDistance, isDark, enablePulses, enableRipples, enableMouseInteraction, enableRadarSweep, variant]);
 
     return (
       <canvas
