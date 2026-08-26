@@ -113,8 +113,6 @@ const PRESETS: Record<MeshVariant, {
   cols: number;
   rows: number;
   dustCount: number;
-  minDist: number;
-  maxDist: number;
   maxPackets: number;
   trunkOpacity: number;
   branchOpacity: number;
@@ -124,73 +122,61 @@ const PRESETS: Record<MeshVariant, {
   premium: {
     cols: 7,
     rows: 5,
-    dustCount: 40,
-    minDist: 60,
-    maxDist: 190,
-    maxPackets: 9,
-    trunkOpacity: 0.72,
-    branchOpacity: 0.45,
-    feederOpacity: 0.25,
+    dustCount: 50,
+    maxPackets: 10,
+    trunkOpacity: 0.85,
+    branchOpacity: 0.55,
+    feederOpacity: 0.32,
     enableTriangles: true,
   },
   admin: {
     cols: 8,
     rows: 5,
-    dustCount: 45,
-    minDist: 60,
-    maxDist: 200,
-    maxPackets: 10,
-    trunkOpacity: 0.75,
-    branchOpacity: 0.48,
-    feederOpacity: 0.28,
+    dustCount: 55,
+    maxPackets: 12,
+    trunkOpacity: 0.88,
+    branchOpacity: 0.58,
+    feederOpacity: 0.35,
     enableTriangles: true,
   },
   client: {
     cols: 7,
     rows: 4,
-    dustCount: 35,
-    minDist: 60,
-    maxDist: 185,
-    maxPackets: 8,
-    trunkOpacity: 0.68,
-    branchOpacity: 0.4,
-    feederOpacity: 0.22,
+    dustCount: 45,
+    maxPackets: 9,
+    trunkOpacity: 0.82,
+    branchOpacity: 0.52,
+    feederOpacity: 0.30,
     enableTriangles: true,
   },
   login: {
     cols: 7,
     rows: 5,
-    dustCount: 40,
-    minDist: 60,
-    maxDist: 190,
-    maxPackets: 9,
-    trunkOpacity: 0.72,
-    branchOpacity: 0.45,
-    feederOpacity: 0.25,
+    dustCount: 50,
+    maxPackets: 10,
+    trunkOpacity: 0.85,
+    branchOpacity: 0.55,
+    feederOpacity: 0.32,
     enableTriangles: true,
   },
   analytics: {
     cols: 8,
     rows: 6,
-    dustCount: 50,
-    minDist: 55,
-    maxDist: 210,
-    maxPackets: 12,
-    trunkOpacity: 0.8,
-    branchOpacity: 0.52,
-    feederOpacity: 0.3,
+    dustCount: 60,
+    maxPackets: 14,
+    trunkOpacity: 0.90,
+    branchOpacity: 0.60,
+    feederOpacity: 0.38,
     enableTriangles: true,
   },
   minimal: {
     cols: 5,
     rows: 3,
-    dustCount: 20,
-    minDist: 70,
-    maxDist: 170,
-    maxPackets: 4,
-    trunkOpacity: 0.45,
-    branchOpacity: 0.28,
-    feederOpacity: 0.16,
+    dustCount: 25,
+    maxPackets: 5,
+    trunkOpacity: 0.60,
+    branchOpacity: 0.35,
+    feederOpacity: 0.20,
     enableTriangles: false,
   },
 };
@@ -211,7 +197,6 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
   ) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const preset = PRESETS[variant] || PRESETS.premium;
-    const maxDistance = propMaxDistance ?? preset.maxDist;
 
     const nodesRef = useRef<NetworkNode[]>([]);
     const connectionsRef = useRef<NetworkConnection[]>([]);
@@ -245,7 +230,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           available.progress = 0;
           available.speed = 0.045;
           available.color = isDark ? '#67E8F9' : '#0284C7';
-          available.headRadius = 3.8;
+          available.headRadius = 4.4;
           available.ctrlX = c.ctrlX;
           available.ctrlY = c.ctrlY;
           available.sparkCooldown = 0;
@@ -285,7 +270,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           available.progress = 0;
           available.speed = 0.038;
           available.color = pColor;
-          available.headRadius = 3.6;
+          available.headRadius = 4.2;
           available.ctrlX = conn.ctrlX;
           available.ctrlY = conn.ctrlY;
           available.sparkCooldown = 0;
@@ -340,48 +325,50 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
       let dpr = Math.min(window.devicePixelRatio || 1, 2);
 
       const darkPalette = {
-        core: '#10B981',           // Esmeralda Neón
-        coreInner: '#FFFFFF',      // Núcleo Blanco Puro
-        hub: '#06B6D4',            // Cian Eléctrico
-        relay: '#14B8A6',          // Teal Microservicios
-        edge: '#34D399',           // Menta Neón
-        coreHalo: 'rgba(16, 185, 129, 0.45)',
-        hubHalo: 'rgba(6, 182, 212, 0.3)',
-        relayHalo: 'rgba(20, 184, 166, 0.2)',
+        core: '#10B981',
+        coreInner: '#FFFFFF',
+        hub: '#06B6D4',
+        relay: '#14B8A6',
+        edge: '#34D399',
+        coreHalo: 'rgba(16, 185, 129, 0.55)',
+        hubHalo: 'rgba(6, 182, 212, 0.38)',
+        relayHalo: 'rgba(20, 184, 166, 0.28)',
         trunkLine: 'rgba(16, 185, 129, ',
         branchLine: 'rgba(6, 182, 212, ',
         feederLine: 'rgba(20, 184, 166, ',
         mouseLine: 'rgba(103, 232, 249, ',
-        triangleFill: 'rgba(16, 185, 129, 0.035)',
-        triangleStroke: 'rgba(6, 182, 212, 0.12)',
+        triangleFill: 'rgba(16, 185, 129, 0.045)',
+        triangleStroke: 'rgba(6, 182, 212, 0.16)',
         dustColor: 'rgba(167, 243, 208, ',
         packetColor: '#A7F3D0',
         waveColor: 'rgba(52, 211, 153, ',
-        radarSweep: 'rgba(16, 185, 129, 0.06)',
+        radarSweep: 'rgba(16, 185, 129, 0.08)',
       };
 
       const lightPalette = {
-        core: '#047857',           // Esmeralda Profundo
-        coreInner: '#F0FDF4',      // Menta Suave
-        hub: '#0E7490',            // Cian Profundo
-        relay: '#0F766E',          // Teal Arquitectónico
-        edge: '#059669',           // Esmeralda Satélite
-        coreHalo: 'rgba(4, 120, 87, 0.32)',
-        hubHalo: 'rgba(14, 116, 144, 0.22)',
-        relayHalo: 'rgba(15, 118, 110, 0.16)',
+        core: '#047857',
+        coreInner: '#F0FDF4',
+        hub: '#0E7490',
+        relay: '#0F766E',
+        edge: '#059669',
+        coreHalo: 'rgba(4, 120, 87, 0.40)',
+        hubHalo: 'rgba(14, 116, 144, 0.28)',
+        relayHalo: 'rgba(15, 118, 110, 0.20)',
         trunkLine: 'rgba(4, 120, 87, ',
         branchLine: 'rgba(14, 116, 144, ',
         feederLine: 'rgba(15, 118, 110, ',
         mouseLine: 'rgba(14, 116, 144, ',
-        triangleFill: 'rgba(4, 120, 87, 0.025)',
-        triangleStroke: 'rgba(14, 116, 144, 0.09)',
+        triangleFill: 'rgba(4, 120, 87, 0.035)',
+        triangleStroke: 'rgba(14, 116, 144, 0.12)',
         dustColor: 'rgba(15, 118, 110, ',
         packetColor: '#047857',
         waveColor: 'rgba(4, 120, 87, ',
-        radarSweep: 'rgba(4, 120, 87, 0.04)',
+        radarSweep: 'rgba(4, 120, 87, 0.05)',
       };
 
       const theme = isDark ? darkPalette : lightPalette;
+
+      let calculatedMaxDist = 320;
 
       const initTopology = () => {
         const isMobile = width < 640;
@@ -393,6 +380,8 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
         const cellW = width / cols;
         const cellH = height / rows;
 
+        calculatedMaxDist = propMaxDistance ?? Math.hypot(cellW, cellH) * 1.35;
+
         const nodes: NetworkNode[] = [];
         let idCounter = 0;
 
@@ -402,16 +391,16 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             const baseX = c * cellW + cellW * 0.5 + offsetX;
             const baseY = r * cellH + cellH * 0.5;
 
-            if (baseX < 30 || baseX > width - 30 || baseY < 30 || baseY > height - 30) continue;
+            if (baseX < 20 || baseX > width - 20 || baseY < 20 || baseY > height - 20) continue;
 
-            const jitterX = (Math.random() - 0.5) * (cellW * 0.45);
-            const jitterY = (Math.random() - 0.5) * (cellH * 0.45);
+            const jitterX = (Math.random() - 0.5) * (cellW * 0.4);
+            const jitterY = (Math.random() - 0.5) * (cellH * 0.4);
 
             const anchorX = baseX + jitterX;
             const anchorY = baseY + jitterY;
 
             let tier: HierarchyTier = 'EDGE';
-            let radius = isDark ? 2.3 : 2.0;
+            let radius = isDark ? 3.0 : 2.6;
             let color = theme.edge;
             let glowColor = theme.relayHalo;
 
@@ -420,17 +409,17 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
 
             if (isGatewayPos) {
               tier = 'CORE';
-              radius = isDark ? 6.8 : 5.8;
+              radius = isDark ? 7.8 : 6.8;
               color = theme.core;
               glowColor = theme.coreHalo;
             } else if (isHubPos) {
               tier = 'HUB';
-              radius = isDark ? 4.6 : 4.0;
+              radius = isDark ? 5.4 : 4.8;
               color = theme.hub;
               glowColor = theme.hubHalo;
-            } else if (Math.random() < 0.4) {
+            } else if (Math.random() < 0.45) {
               tier = 'RELAY';
-              radius = isDark ? 3.2 : 2.8;
+              radius = isDark ? 4.0 : 3.4;
               color = theme.relay;
               glowColor = theme.relayHalo;
             }
@@ -441,9 +430,9 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
               for (let s = 0; s < satCount; s++) {
                 satellites.push({
                   angle: Math.random() * Math.PI * 2,
-                  speed: (Math.random() * 0.02 + 0.02) * (s % 2 === 0 ? 1 : -1),
-                  radius: radius + 12 + s * 7,
-                  size: isDark ? 1.8 : 1.5,
+                  speed: (Math.random() * 0.02 + 0.018) * (s % 2 === 0 ? 1 : -1),
+                  radius: radius + 18 + s * 11,
+                  size: isDark ? 3.0 : 2.5,
                 });
               }
             }
@@ -462,38 +451,38 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
               coreColor: theme.coreInner,
               glowColor,
               phase: Math.random() * Math.PI * 2,
-              driftRadius: Math.random() * 18 + 12,
+              driftRadius: Math.random() * 20 + 14,
               driftSpeedX: (Math.random() * 0.008 + 0.006) * (Math.random() > 0.5 ? 1 : -1),
               driftSpeedY: (Math.random() * 0.008 + 0.006) * (Math.random() > 0.5 ? 1 : -1),
               depth: Math.random() * 0.3 + 0.7,
               activity: 0,
               haloPulse: 0,
               satellites,
-              sonarRadius: Math.random() * 45,
+              sonarRadius: Math.random() * 55,
             });
           }
         }
 
         nodesRef.current = nodes;
 
-        const dustCount = isMobile ? 20 : preset.dustCount;
+        const dustCount = isMobile ? 25 : preset.dustCount;
         const dust: Stardust[] = [];
         for (let d = 0; d < dustCount; d++) {
           dust.push({
             x: Math.random() * width,
             y: Math.random() * height,
-            vx: (Math.random() - 0.5) * 0.12,
-            vy: (Math.random() - 0.5) * 0.12,
-            size: Math.random() * 1.1 + 0.6,
-            alpha: Math.random() * 0.3 + 0.1,
-            twinkleSpeed: Math.random() * 0.03 + 0.015,
+            vx: (Math.random() - 0.5) * 0.18,
+            vy: (Math.random() - 0.5) * 0.18,
+            size: Math.random() * 1.8 + 1.2,
+            alpha: Math.random() * 0.45 + 0.3,
+            twinkleSpeed: Math.random() * 0.03 + 0.02,
             twinklePhase: Math.random() * Math.PI * 2,
           });
         }
         dustRef.current = dust;
 
         const sparks: Spark[] = [];
-        for (let sp = 0; sp < 40; sp++) {
+        for (let sp = 0; sp < 60; sp++) {
           sparks.push({
             active: false,
             x: 0,
@@ -501,9 +490,9 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             vx: 0,
             vy: 0,
             alpha: 0,
-            decay: 0.05,
+            decay: 0.025,
             color: '#67E8F9',
-            size: 1.5,
+            size: 2.5,
           });
         }
         sparksRef.current = sparks;
@@ -515,9 +504,9 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             source: 0,
             target: 0,
             progress: 0,
-            speed: Math.random() * 0.015 + 0.02,
+            speed: Math.random() * 0.012 + 0.016,
             color: isDark ? '#67E8F9' : '#0284C7',
-            headRadius: isDark ? 3.5 : 3.0,
+            headRadius: isDark ? 4.2 : 3.6,
             ctrlX: 0,
             ctrlY: 0,
             sparkCooldown: 0,
@@ -557,7 +546,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
         for (let i = 0; i < nodes.length; i++) {
           const n = nodes[i];
           const dist = Math.hypot(e.clientX - n.x, e.clientY - n.y);
-          if (dist < 32) {
+          if (dist < 36) {
             clickedNodeId = n.id;
             break;
           }
@@ -593,13 +582,10 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
       window.addEventListener('resize', handleResize);
       window.addEventListener('mousemove', handleMouseMove, { passive: true });
       window.addEventListener('mouseleave', handleMouseLeave);
-      window.addEventListener('click', handleClick, { passive: true });
+      window.addEventListener('click', handleClick);
 
       let time = 0;
       let radarX = 0;
-      const minDist = preset.minDist;
-      const maxDistSq = maxDistance * maxDistance;
-      const minDistSq = minDist * minDist;
 
       const render = () => {
         time += 1.0;
@@ -619,19 +605,19 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
 
         // 1. HAZ DE RADAR CUÁNTICO
         if (enableRadarSweep && radarX > -100 && radarX < width + 100) {
-          const radarGrad = ctx.createLinearGradient(radarX - 120, 0, radarX, 0);
+          const radarGrad = ctx.createLinearGradient(radarX - 140, 0, radarX, 0);
           radarGrad.addColorStop(0, 'rgba(16, 185, 129, 0)');
           radarGrad.addColorStop(0.8, theme.radarSweep);
-          radarGrad.addColorStop(1, isDark ? 'rgba(103, 232, 249, 0.12)' : 'rgba(14, 116, 144, 0.08)');
+          radarGrad.addColorStop(1, isDark ? 'rgba(103, 232, 249, 0.18)' : 'rgba(14, 116, 144, 0.12)');
 
           ctx.fillStyle = radarGrad;
-          ctx.fillRect(radarX - 120, 0, 120, height);
+          ctx.fillRect(radarX - 140, 0, 140, height);
 
           ctx.beginPath();
           ctx.moveTo(radarX, 0);
           ctx.lineTo(radarX, height);
-          ctx.strokeStyle = isDark ? 'rgba(103, 232, 249, 0.25)' : 'rgba(14, 116, 144, 0.18)';
-          ctx.lineWidth = 1.0;
+          ctx.strokeStyle = isDark ? 'rgba(103, 232, 249, 0.35)' : 'rgba(14, 116, 144, 0.25)';
+          ctx.lineWidth = 1.2;
           ctx.stroke();
         }
 
@@ -653,7 +639,10 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
           ctx.fillStyle = `${theme.dustColor}${currentAlpha.toFixed(3)})`;
+          ctx.shadowColor = isDark ? '#A7F3D0' : '#047857';
+          ctx.shadowBlur = 4;
           ctx.fill();
+          ctx.shadowBlur = 0;
         }
 
         const nodes = nodesRef.current;
@@ -676,9 +665,9 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             const dy = n.y - other.y;
             const dSq = dx * dx + dy * dy;
 
-            if (dSq < 3600 && dSq > 0.1) {
+            if (dSq < 4900 && dSq > 0.1) {
               const d = Math.sqrt(dSq);
-              const repelForce = (1 - d / 60) * 0.8;
+              const repelForce = (1 - d / 70) * 0.9;
               const nx = dx / d;
               const ny = dy / d;
 
@@ -699,16 +688,16 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           if (n.haloPulse > 0) n.haloPulse = Math.max(0, n.haloPulse - 0.012);
 
           if (n.tier === 'CORE') {
-            n.sonarRadius += 0.45;
-            if (n.sonarRadius > 55) n.sonarRadius = n.radius + 6;
+            n.sonarRadius += 0.55;
+            if (n.sonarRadius > 70) n.sonarRadius = n.radius + 8;
           }
 
           for (let s = 0; s < n.satellites.length; s++) {
             n.satellites[s].angle += n.satellites[s].speed;
           }
 
-          if (enableRadarSweep && Math.abs(n.x - radarX) < 15) {
-            n.activity = Math.max(n.activity, 0.65);
+          if (enableRadarSweep && Math.abs(n.x - radarX) < 20) {
+            n.activity = Math.max(n.activity, 0.75);
           }
 
           if (mouse.isActive && enableMouseInteraction) {
@@ -716,11 +705,11 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             const dy = mouse.y - n.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
 
-            if (dist < 220 && dist > 1) {
-              const pull = (1 - dist / 220) * 1.5;
-              n.vx += (dx / dist) * pull * 0.3;
-              n.vy += (dy / dist) * pull * 0.3;
-              n.activity = Math.max(n.activity, pull * 0.8);
+            if (dist < 240 && dist > 1) {
+              const pull = (1 - dist / 240) * 1.8;
+              n.vx += (dx / dist) * pull * 0.35;
+              n.vy += (dy / dist) * pull * 0.35;
+              n.activity = Math.max(n.activity, pull * 0.85);
             }
           }
 
@@ -735,19 +724,21 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             const band = Math.abs(wDist - wave.radius);
 
             if (band < 35) {
-              const force = (1 - band / 35) * wave.intensity * 2.5;
+              const force = (1 - band / 35) * wave.intensity * 2.8;
               const angle = Math.atan2(wdy, wdx);
-              n.vx += Math.cos(angle) * force * 0.3;
-              n.vy += Math.sin(angle) * force * 0.3;
-              n.activity = Math.max(n.activity, wave.intensity * 0.9);
+              n.vx += Math.cos(angle) * force * 0.35;
+              n.vy += Math.sin(angle) * force * 0.35;
+              n.activity = Math.max(n.activity, wave.intensity * 0.95);
             }
           }
         }
 
-        // 4. CONEXIONES ESTRUCTURADAS
+        // 4. CONSTRUCCIÓN DE CONEXIONES DINÁMICAS
         const connections: NetworkConnection[] = [];
         const maxConnsPerNode = 4;
         const connCounts = new Uint8Array(nodeCount);
+        const maxDistSq = calculatedMaxDist * calculatedMaxDist;
+        const minDistSq = 40 * 40;
 
         for (let i = 0; i < nodeCount; i++) {
           if (connCounts[i] >= maxConnsPerNode) continue;
@@ -778,8 +769,8 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
                 const mdx = mouse.x - midX;
                 const mdy = mouse.y - midY;
                 const mDist = Math.sqrt(mdx * mdx + mdy * mdy);
-                if (mDist < 160 && mDist > 1) {
-                  const warp = (1 - mDist / 160) * 18;
+                if (mDist < 180 && mDist > 1) {
+                  const warp = (1 - mDist / 180) * 24;
                   midX += (mdx / mDist) * warp;
                   midY += (mdy / mDist) * warp;
                 }
@@ -808,11 +799,11 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
         if (preset.enableTriangles && connections.length >= 3) {
           ctx.fillStyle = theme.triangleFill;
           ctx.strokeStyle = theme.triangleStroke;
-          ctx.lineWidth = 0.5;
+          ctx.lineWidth = 0.6;
 
-          for (let c1 = 0; c1 < Math.min(connections.length, 30); c1++) {
+          for (let c1 = 0; c1 < Math.min(connections.length, 35); c1++) {
             const conn1 = connections[c1];
-            for (let c2 = c1 + 1; c2 < Math.min(connections.length, 30); c2++) {
+            for (let c2 = c1 + 1; c2 < Math.min(connections.length, 35); c2++) {
               const conn2 = connections[c2];
 
               if (conn1.source === conn2.source || conn1.source === conn2.target || conn1.target === conn2.source || conn1.target === conn2.target) {
@@ -826,7 +817,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
                   Math.hypot(p3.x - p1.x, p3.y - p1.y)
                 );
 
-                if (maxSide < maxDistance * 0.85) {
+                if (maxSide < calculatedMaxDist * 0.85) {
                   ctx.beginPath();
                   ctx.moveTo(p1.x, p1.y);
                   ctx.lineTo(p2.x, p2.y);
@@ -846,8 +837,8 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           const p1 = nodes[conn.source];
           const p2 = nodes[conn.target];
 
-          const distRatio = 1 - conn.dist / maxDistance;
-          const boost = Math.max(p1.activity, p2.activity) * 0.4;
+          const distRatio = 1 - conn.dist / calculatedMaxDist;
+          const boost = Math.max(p1.activity, p2.activity) * 0.45;
 
           const lineGrad = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
           if (conn.tier === 'TRUNK') {
@@ -856,17 +847,17 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             lineGrad.addColorStop(0.5, isDark ? `rgba(6, 182, 212, ${alpha})` : `rgba(14, 116, 144, ${alpha})`);
             lineGrad.addColorStop(1, `${theme.trunkLine}${alpha})`);
             ctx.strokeStyle = lineGrad;
-            ctx.lineWidth = isDark ? 2.0 : 1.6;
+            ctx.lineWidth = isDark ? 2.4 : 1.9;
           } else if (conn.tier === 'BRANCH') {
             const alpha = Math.min(1.0, distRatio * preset.branchOpacity + boost).toFixed(3);
             lineGrad.addColorStop(0, `${theme.branchLine}${alpha})`);
             lineGrad.addColorStop(1, `${theme.feederLine}${alpha})`);
             ctx.strokeStyle = lineGrad;
-            ctx.lineWidth = isDark ? 1.3 : 1.05;
+            ctx.lineWidth = isDark ? 1.5 : 1.2;
           } else {
             const alpha = Math.min(1.0, distRatio * preset.feederOpacity + boost).toFixed(3);
             ctx.strokeStyle = `${theme.feederLine}${alpha})`;
-            ctx.lineWidth = isDark ? 0.95 : 0.8;
+            ctx.lineWidth = isDark ? 1.1 : 0.9;
           }
 
           ctx.beginPath();
@@ -874,24 +865,24 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           ctx.quadraticCurveTo(conn.ctrlX, conn.ctrlY, p2.x, p2.y);
           ctx.stroke();
 
-          if (conn.tier === 'TRUNK' && distRatio > 0.4) {
+          if (conn.tier === 'TRUNK' && distRatio > 0.35) {
             ctx.save();
             ctx.translate(conn.ctrlX, conn.ctrlY);
-            ctx.rotate(time * 0.02 + conn.routerAngle);
-            ctx.strokeStyle = isDark ? 'rgba(103, 232, 249, 0.4)' : 'rgba(14, 116, 144, 0.3)';
-            ctx.lineWidth = 1.0;
-            ctx.strokeRect(-2.5, -2.5, 5, 5);
+            ctx.rotate(time * 0.025 + conn.routerAngle);
+            ctx.strokeStyle = isDark ? 'rgba(103, 232, 249, 0.6)' : 'rgba(14, 116, 144, 0.45)';
+            ctx.lineWidth = 1.2;
+            ctx.strokeRect(-3, -3, 6, 6);
             ctx.restore();
           }
         }
 
         // 7. RETÍCULA Y FILAMENTOS MAGNÉTICOS DEL RATÓN
         if (mouse.isActive && enableMouseInteraction) {
-          const focusRing = 18 + Math.sin(time * 0.08) * 3;
+          const focusRing = 22 + Math.sin(time * 0.08) * 3;
           ctx.beginPath();
           ctx.arc(mouse.x, mouse.y, focusRing, 0, Math.PI * 2);
-          ctx.strokeStyle = isDark ? 'rgba(103, 232, 249, 0.45)' : 'rgba(14, 116, 144, 0.35)';
-          ctx.lineWidth = 1.0;
+          ctx.strokeStyle = isDark ? 'rgba(103, 232, 249, 0.6)' : 'rgba(14, 116, 144, 0.45)';
+          ctx.lineWidth = 1.2;
           ctx.setLineDash([4, 4]);
           ctx.stroke();
           ctx.setLineDash([]);
@@ -902,13 +893,13 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             const mdy = mouse.y - n.y;
             const mDist = Math.sqrt(mdx * mdx + mdy * mdy);
 
-            if (mDist < 200) {
-              const alpha = ((1 - mDist / 200) * (isDark ? 0.55 : 0.38)).toFixed(3);
+            if (mDist < 240) {
+              const alpha = ((1 - mDist / 240) * (isDark ? 0.65 : 0.45)).toFixed(3);
               ctx.beginPath();
               ctx.moveTo(mouse.x, mouse.y);
               ctx.lineTo(n.x, n.y);
               ctx.strokeStyle = `${theme.mouseLine}${alpha})`;
-              ctx.lineWidth = 1.3;
+              ctx.lineWidth = 1.5;
               ctx.stroke();
             }
           }
@@ -928,7 +919,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
               pkt.source = chosenConn.source;
               pkt.target = chosenConn.target;
               pkt.progress = 0;
-              pkt.speed = Math.random() * 0.015 + 0.02;
+              pkt.speed = Math.random() * 0.012 + 0.016;
               pkt.color = isDark ? '#67E8F9' : '#0284C7';
               pkt.ctrlX = chosenConn.ctrlX;
               pkt.ctrlY = chosenConn.ctrlY;
@@ -956,23 +947,23 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             const headY = oneMinusT * oneMinusT * src.y + 2 * oneMinusT * t * pkt.ctrlY + t * t * tgt.y;
 
             pkt.sparkCooldown++;
-            if (pkt.sparkCooldown >= 3) {
+            if (pkt.sparkCooldown >= 2) {
               pkt.sparkCooldown = 0;
               const sparkAvail = sparks.find(s => !s.active);
               if (sparkAvail) {
                 sparkAvail.active = true;
-                sparkAvail.x = headX + (Math.random() - 0.5) * 4;
-                sparkAvail.y = headY + (Math.random() - 0.5) * 4;
-                sparkAvail.vx = (Math.random() - 0.5) * 0.5;
-                sparkAvail.vy = (Math.random() - 0.5) * 0.5;
-                sparkAvail.alpha = 0.8;
-                sparkAvail.decay = 0.05;
+                sparkAvail.x = headX + (Math.random() - 0.5) * 6;
+                sparkAvail.y = headY + (Math.random() - 0.5) * 6;
+                sparkAvail.vx = (Math.random() - 0.5) * 0.8;
+                sparkAvail.vy = (Math.random() - 0.5) * 0.8;
+                sparkAvail.alpha = 1.0;
+                sparkAvail.decay = 0.03;
                 sparkAvail.color = isDark ? '#67E8F9' : '#0284C7';
-                sparkAvail.size = Math.random() * 1.4 + 0.8;
+                sparkAvail.size = Math.random() * 2.0 + 1.5;
               }
             }
 
-            const tTail = Math.max(0, t - 0.26);
+            const tTail = Math.max(0, t - 0.30);
             const oneMinusTTail = 1 - tTail;
             const tailX = oneMinusTTail * oneMinusTTail * src.x + 2 * oneMinusTTail * tTail * pkt.ctrlX + tTail * tTail * tgt.x;
             const tailY = oneMinusTTail * oneMinusTTail * src.y + 2 * oneMinusTTail * tTail * pkt.ctrlY + tTail * tTail * tgt.y;
@@ -981,21 +972,21 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
 
             const grad = ctx.createLinearGradient(tailX, tailY, headX, headY);
             grad.addColorStop(0, 'rgba(6, 182, 212, 0)');
-            grad.addColorStop(0.7, `${theme.branchLine}${(visibility * (isDark ? 0.8 : 0.6)).toFixed(3)})`);
+            grad.addColorStop(0.6, `${theme.branchLine}${(visibility * (isDark ? 0.9 : 0.75)).toFixed(3)})`);
             grad.addColorStop(1, pkt.color);
 
             ctx.beginPath();
             ctx.moveTo(tailX, tailY);
             ctx.lineTo(headX, headY);
             ctx.strokeStyle = grad;
-            ctx.lineWidth = isDark ? 2.8 : 2.2;
+            ctx.lineWidth = isDark ? 3.4 : 2.6;
             ctx.stroke();
 
             ctx.beginPath();
             ctx.arc(headX, headY, pkt.headRadius, 0, Math.PI * 2);
             ctx.fillStyle = pkt.color;
             ctx.shadowColor = pkt.color;
-            ctx.shadowBlur = isDark ? 12 : 6;
+            ctx.shadowBlur = isDark ? 16 : 8;
             ctx.globalAlpha = visibility;
             ctx.fill();
             ctx.globalAlpha = 1.0;
@@ -1018,9 +1009,12 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             ctx.beginPath();
             ctx.arc(spark.x, spark.y, spark.size, 0, Math.PI * 2);
             ctx.fillStyle = spark.color;
+            ctx.shadowColor = spark.color;
+            ctx.shadowBlur = 6;
             ctx.globalAlpha = spark.alpha;
             ctx.fill();
             ctx.globalAlpha = 1.0;
+            ctx.shadowBlur = 0;
           }
         }
 
@@ -1041,28 +1035,28 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
 
             ctx.beginPath();
             ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
-            ctx.strokeStyle = `${theme.waveColor}${(wave.intensity * 0.6).toFixed(3)})`;
-            ctx.lineWidth = 2.0;
+            ctx.strokeStyle = `${theme.waveColor}${(wave.intensity * 0.7).toFixed(3)})`;
+            ctx.lineWidth = 2.4;
             ctx.stroke();
 
             ctx.beginPath();
-            ctx.arc(wave.x, wave.y, Math.max(1, wave.radius - 16), 0, Math.PI * 2);
-            ctx.strokeStyle = `${theme.waveColor}${(wave.intensity * 0.3).toFixed(3)})`;
-            ctx.lineWidth = 1.2;
+            ctx.arc(wave.x, wave.y, Math.max(1, wave.radius - 18), 0, Math.PI * 2);
+            ctx.strokeStyle = `${theme.waveColor}${(wave.intensity * 0.4).toFixed(3)})`;
+            ctx.lineWidth = 1.4;
             ctx.stroke();
           }
         }
 
-        // 10. DIBUJAR NODOS, SONAR RINGS Y MICRO-SATÉLITES (LIMPIO, SIN TEXTOS)
+        // 10. DIBUJAR NODOS, HALOS Y MICRO-SATÉLITES
         for (let i = 0; i < nodeCount; i++) {
           const n = nodes[i];
-          const nodeAlpha = (0.85 + n.activity * 0.15) * n.depth;
+          const nodeAlpha = (0.88 + n.activity * 0.12) * n.depth;
 
           if (n.tier === 'CORE') {
-            const haloSize = 36 + Math.sin(time * 0.05 + n.phase) * 8 + (n.activity * 20);
+            const haloSize = 46 + Math.sin(time * 0.05 + n.phase) * 10 + (n.activity * 25);
             const haloGrad = ctx.createRadialGradient(n.x, n.y, 2, n.x, n.y, haloSize);
-            haloGrad.addColorStop(0, isDark ? 'rgba(16, 185, 129, 0.48)' : 'rgba(4, 120, 87, 0.36)');
-            haloGrad.addColorStop(0.5, isDark ? 'rgba(6, 182, 212, 0.22)' : 'rgba(14, 116, 144, 0.16)');
+            haloGrad.addColorStop(0, isDark ? 'rgba(16, 185, 129, 0.60)' : 'rgba(4, 120, 87, 0.45)');
+            haloGrad.addColorStop(0.5, isDark ? 'rgba(6, 182, 212, 0.30)' : 'rgba(14, 116, 144, 0.22)');
             haloGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
             ctx.beginPath();
@@ -1070,32 +1064,41 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             ctx.fillStyle = haloGrad;
             ctx.fill();
 
-            const sonarAlpha = (1 - n.sonarRadius / 55) * 0.4;
+            const sonarAlpha = (1 - n.sonarRadius / 70) * 0.55;
             ctx.beginPath();
             ctx.arc(n.x, n.y, n.sonarRadius, 0, Math.PI * 2);
             ctx.strokeStyle = `${theme.trunkLine}${sonarAlpha.toFixed(3)})`;
-            ctx.lineWidth = 1.0;
+            ctx.lineWidth = 1.3;
             ctx.stroke();
 
-            const orbitRadius = n.radius + 7.0 + Math.sin(time * 0.04 + n.phase) * 1.5;
+            const orbitRadius = n.radius + 9.0 + Math.sin(time * 0.04 + n.phase) * 1.8;
             ctx.beginPath();
             ctx.arc(n.x, n.y, orbitRadius, 0, Math.PI * 2);
-            ctx.strokeStyle = `${theme.trunkLine}${(0.48 + n.activity * 0.45).toFixed(3)})`;
-            ctx.lineWidth = 1.3;
+            ctx.strokeStyle = `${theme.trunkLine}${(0.55 + n.activity * 0.45).toFixed(3)})`;
+            ctx.lineWidth = 1.5;
             ctx.stroke();
           }
 
           if (n.tier === 'HUB') {
-            const hubRingRadius = n.radius + 4.8 + Math.sin(time * 0.06 + n.phase) * 1.2;
+            const hubRingRadius = n.radius + 6.0 + Math.sin(time * 0.06 + n.phase) * 1.4;
             ctx.beginPath();
             ctx.arc(n.x, n.y, hubRingRadius, 0, Math.PI * 2);
-            ctx.strokeStyle = `${theme.branchLine}${(0.38 + n.activity * 0.4).toFixed(3)})`;
-            ctx.lineWidth = 1.1;
+            ctx.strokeStyle = `${theme.branchLine}${(0.45 + n.activity * 0.4).toFixed(3)})`;
+            ctx.lineWidth = 1.3;
             ctx.stroke();
           }
 
           for (let s = 0; s < n.satellites.length; s++) {
             const sat = n.satellites[s];
+
+            ctx.beginPath();
+            ctx.arc(n.x, n.y, sat.radius, 0, Math.PI * 2);
+            ctx.strokeStyle = isDark ? 'rgba(103, 232, 249, 0.20)' : 'rgba(14, 116, 144, 0.15)';
+            ctx.lineWidth = 0.8;
+            ctx.setLineDash([3, 4]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
             const satX = n.x + Math.cos(sat.angle) * sat.radius;
             const satY = n.y + Math.sin(sat.angle) * sat.radius;
 
@@ -1103,17 +1106,17 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             ctx.arc(satX, satY, sat.size, 0, Math.PI * 2);
             ctx.fillStyle = isDark ? '#67E8F9' : '#0E7490';
             ctx.shadowColor = isDark ? '#67E8F9' : '#0E7490';
-            ctx.shadowBlur = 5;
+            ctx.shadowBlur = 8;
             ctx.fill();
             ctx.shadowBlur = 0;
           }
 
-          const currentRadius = n.radius + (n.activity * 1.2);
+          const currentRadius = n.radius + (n.activity * 1.5);
           ctx.beginPath();
           ctx.arc(n.x, n.y, currentRadius, 0, Math.PI * 2);
           ctx.fillStyle = n.color;
           ctx.shadowColor = n.color;
-          ctx.shadowBlur = isDark ? (n.tier === 'CORE' ? 20 : n.tier === 'HUB' ? 14 : 7) : 4;
+          ctx.shadowBlur = isDark ? (n.tier === 'CORE' ? 24 : n.tier === 'HUB' ? 16 : 9) : 6;
           ctx.globalAlpha = nodeAlpha;
           ctx.fill();
           ctx.globalAlpha = 1.0;
@@ -1121,7 +1124,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
 
           if (n.tier === 'CORE' || n.tier === 'HUB') {
             ctx.beginPath();
-            ctx.arc(n.x, n.y, n.tier === 'CORE' ? 2.5 : 1.7, 0, Math.PI * 2);
+            ctx.arc(n.x, n.y, n.tier === 'CORE' ? 2.8 : 2.0, 0, Math.PI * 2);
             ctx.fillStyle = n.coreColor;
             ctx.fill();
           }
@@ -1140,7 +1143,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
         window.removeEventListener('mouseleave', handleMouseLeave);
         window.removeEventListener('click', handleClick);
       };
-    }, [maxDistance, isDark, enablePulses, enableRipples, enableMouseInteraction, enableRadarSweep, variant]);
+    }, [propMaxDistance, isDark, enablePulses, enableRipples, enableMouseInteraction, enableRadarSweep, variant]);
 
     return (
       <canvas
