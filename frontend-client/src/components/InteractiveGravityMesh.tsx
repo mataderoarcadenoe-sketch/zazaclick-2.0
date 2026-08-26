@@ -23,9 +23,10 @@ export interface InteractiveGravityMeshRef {
   emitEvent: (event: { type: string; payload?: any }) => void;
 }
 
-type NodeType = 'HUB' | 'RELAY' | 'EDGE';
+export type HierarchyTier = 'CORE' | 'HUB' | 'RELAY' | 'EDGE';
 
-interface Node {
+interface NetworkNode {
+  id: number;
   x: number;
   y: number;
   originX: number;
@@ -33,32 +34,37 @@ interface Node {
   vx: number;
   vy: number;
   radius: number;
-  type: NodeType;
+  tier: HierarchyTier;
   color: string;
+  coreColor: string;
   glowColor: string;
   phase: number;
   driftSpeed: number;
   depth: number;
   activity: number;
+  haloPulse: number;
 }
 
-interface Connection {
+interface NetworkConnection {
   source: number;
   target: number;
-  distSq: number;
   dist: number;
+  distSq: number;
+  tier: 'TRUNK' | 'BRANCH' | 'FEEDER';
 }
 
-interface DataPulse {
+interface DataPacket {
   active: boolean;
   source: number;
   target: number;
   progress: number;
   speed: number;
   color: string;
+  headRadius: number;
+  length: number;
 }
 
-interface Ripple {
+interface SignalWave {
   active: boolean;
   x: number;
   y: number;
@@ -68,83 +74,118 @@ interface Ripple {
   speed: number;
 }
 
-// Preset visual configurations
+// Preset visual configurations for Living API Network
 const PRESETS: Record<MeshVariant, {
-  particleCount: number;
+  coreCount: number;
+  hubCount: number;
+  relayCount: number;
+  edgeCount: number;
   maxDistance: number;
   gravityRadius: number;
   gravityStrength: number;
   springStrength: number;
   damping: number;
-  pulseFrequency: number; // probability per frame
-  maxPulses: number;
-  lineAlphaMultiplier: number;
+  pulseFrequency: number;
+  maxPackets: number;
+  trunkOpacity: number;
+  branchOpacity: number;
+  feederOpacity: number;
 }> = {
   premium: {
-    particleCount: 65,
-    maxDistance: 140,
-    gravityRadius: 170,
-    gravityStrength: 24,
-    springStrength: 0.028,
+    coreCount: 3,
+    hubCount: 7,
+    relayCount: 16,
+    edgeCount: 28,
+    maxDistance: 160,
+    gravityRadius: 200,
+    gravityStrength: 32,
+    springStrength: 0.032,
     damping: 0.88,
-    pulseFrequency: 0.02,
-    maxPulses: 5,
-    lineAlphaMultiplier: 1.0,
+    pulseFrequency: 0.035,
+    maxPackets: 6,
+    trunkOpacity: 0.55,
+    branchOpacity: 0.35,
+    feederOpacity: 0.2,
   },
   admin: {
-    particleCount: 72,
-    maxDistance: 145,
-    gravityRadius: 180,
-    gravityStrength: 26,
-    springStrength: 0.03,
+    coreCount: 4,
+    hubCount: 8,
+    relayCount: 20,
+    edgeCount: 32,
+    maxDistance: 170,
+    gravityRadius: 220,
+    gravityStrength: 36,
+    springStrength: 0.035,
     damping: 0.89,
-    pulseFrequency: 0.025,
-    maxPulses: 6,
-    lineAlphaMultiplier: 1.1,
+    pulseFrequency: 0.045,
+    maxPackets: 8,
+    trunkOpacity: 0.65,
+    branchOpacity: 0.42,
+    feederOpacity: 0.24,
   },
   client: {
-    particleCount: 60,
-    maxDistance: 135,
-    gravityRadius: 160,
-    gravityStrength: 22,
-    springStrength: 0.026,
-    damping: 0.88,
-    pulseFrequency: 0.018,
-    maxPulses: 4,
-    lineAlphaMultiplier: 0.95,
-  },
-  login: {
-    particleCount: 50,
-    maxDistance: 130,
-    gravityRadius: 160,
-    gravityStrength: 20,
-    springStrength: 0.025,
-    damping: 0.87,
-    pulseFrequency: 0.012,
-    maxPulses: 3,
-    lineAlphaMultiplier: 0.85,
-  },
-  analytics: {
-    particleCount: 75,
-    maxDistance: 150,
+    coreCount: 3,
+    hubCount: 6,
+    relayCount: 14,
+    edgeCount: 24,
+    maxDistance: 155,
     gravityRadius: 190,
     gravityStrength: 28,
-    springStrength: 0.032,
+    springStrength: 0.03,
+    damping: 0.88,
+    pulseFrequency: 0.03,
+    maxPackets: 5,
+    trunkOpacity: 0.5,
+    branchOpacity: 0.32,
+    feederOpacity: 0.18,
+  },
+  login: {
+    coreCount: 3,
+    hubCount: 6,
+    relayCount: 12,
+    edgeCount: 22,
+    maxDistance: 150,
+    gravityRadius: 180,
+    gravityStrength: 25,
+    springStrength: 0.028,
+    damping: 0.87,
+    pulseFrequency: 0.025,
+    maxPackets: 4,
+    trunkOpacity: 0.45,
+    branchOpacity: 0.28,
+    feederOpacity: 0.16,
+  },
+  analytics: {
+    coreCount: 5,
+    hubCount: 10,
+    relayCount: 24,
+    edgeCount: 36,
+    maxDistance: 180,
+    gravityRadius: 230,
+    gravityStrength: 38,
+    springStrength: 0.038,
     damping: 0.9,
-    pulseFrequency: 0.04,
-    maxPulses: 8,
-    lineAlphaMultiplier: 1.2,
+    pulseFrequency: 0.06,
+    maxPackets: 10,
+    trunkOpacity: 0.7,
+    branchOpacity: 0.48,
+    feederOpacity: 0.28,
   },
   minimal: {
-    particleCount: 35,
-    maxDistance: 110,
-    gravityRadius: 130,
-    gravityStrength: 15,
-    springStrength: 0.022,
-    damping: 0.85,
-    pulseFrequency: 0.005,
-    maxPulses: 2,
-    lineAlphaMultiplier: 0.7,
+    coreCount: 2,
+    hubCount: 4,
+    relayCount: 8,
+    edgeCount: 14,
+    maxDistance: 130,
+    gravityRadius: 150,
+    gravityStrength: 20,
+    springStrength: 0.024,
+    damping: 0.86,
+    pulseFrequency: 0.015,
+    maxPackets: 3,
+    trunkOpacity: 0.35,
+    branchOpacity: 0.2,
+    feederOpacity: 0.12,
   },
 };
 
@@ -152,7 +193,6 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
   (
     {
       variant = 'premium',
-      particleCount: propParticleCount,
       maxDistance: propMaxDistance,
       gravityRadius: propGravityRadius,
       gravityStrength: propGravityStrength,
@@ -169,30 +209,28 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const preset = PRESETS[variant] || PRESETS.premium;
 
-    const particleCount = propParticleCount ?? preset.particleCount;
     const maxDistance = propMaxDistance ?? preset.maxDistance;
     const gravityRadius = propGravityRadius ?? preset.gravityRadius;
     const gravityStrength = propGravityStrength ?? preset.gravityStrength;
     const springStrength = propSpringStrength ?? preset.springStrength;
     const damping = propDamping ?? preset.damping;
 
-    const nodesRef = useRef<Node[]>([]);
-    const connectionsRef = useRef<Connection[]>([]);
-    const pulsesRef = useRef<DataPulse[]>([]);
-    const ripplesRef = useRef<Ripple[]>([]);
+    const nodesRef = useRef<NetworkNode[]>([]);
+    const connectionsRef = useRef<NetworkConnection[]>([]);
+    const packetsRef = useRef<DataPacket[]>([]);
+    const wavesRef = useRef<SignalWave[]>([]);
     const mouseRef = useRef({
-      x: -2000,
-      y: -2000,
-      targetX: -2000,
-      targetY: -2000,
+      x: -3000,
+      y: -3000,
+      targetX: -3000,
+      targetY: -3000,
       isActive: false,
     });
 
     useImperativeHandle(ref, () => ({
       triggerPulse: (sourceIdx, targetIdx) => {
-        const nodes = nodesRef.current;
         const conns = connectionsRef.current;
-        if (nodes.length < 2 || conns.length === 0) return;
+        if (conns.length === 0) return;
 
         let src = sourceIdx ?? -1;
         let tgt = targetIdx ?? -1;
@@ -203,73 +241,78 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           tgt = randConn.target;
         }
 
-        const pulses = pulsesRef.current;
-        const available = pulses.find(p => !p.active);
-        const pulseColor = isDark ? '#67E8F9' : '#0D9488';
+        const packets = packetsRef.current;
+        const available = packets.find(p => !p.active);
+        const pColor = isDark ? '#A7F3D0' : '#047857';
 
         if (available) {
           available.active = true;
           available.source = src;
           available.target = tgt;
           available.progress = 0;
-          available.speed = Math.random() * 0.02 + 0.025;
-          available.color = pulseColor;
-        } else if (pulses.length < preset.maxPulses * 2) {
-          pulses.push({
+          available.speed = 0.035;
+          available.color = pColor;
+          available.headRadius = 3.2;
+          available.length = 0.22;
+        } else if (packets.length < preset.maxPackets * 2) {
+          packets.push({
             active: true,
             source: src,
             target: tgt,
             progress: 0,
-            speed: Math.random() * 0.02 + 0.025,
-            color: pulseColor,
+            speed: 0.035,
+            color: pColor,
+            headRadius: 3.2,
+            length: 0.22,
           });
         }
       },
       triggerRipple: (x, y) => {
-        const ripples = ripplesRef.current;
-        const available = ripples.find(r => !r.active);
+        const waves = wavesRef.current;
+        const available = waves.find(w => !w.active);
         if (available) {
           available.active = true;
           available.x = x;
           available.y = y;
-          available.radius = 5;
-          available.maxRadius = 160;
+          available.radius = 8;
+          available.maxRadius = 220;
           available.intensity = 1.0;
-          available.speed = 3.5;
-        } else if (ripples.length < 6) {
-          ripples.push({
+          available.speed = 4.2;
+        } else if (waves.length < 6) {
+          waves.push({
             active: true,
             x,
             y,
-            radius: 5,
-            maxRadius: 160,
+            radius: 8,
+            maxRadius: 220,
             intensity: 1.0,
-            speed: 3.5,
+            speed: 4.2,
           });
         }
       },
       emitEvent: (event) => {
         const nodes = nodesRef.current;
-        const hubs = nodes.filter(n => n.type === 'HUB');
-        if (hubs.length > 0) {
-          const randomHub = hubs[Math.floor(Math.random() * hubs.length)];
-          randomHub.activity = 1.0;
-          randomHub.vx += (Math.random() - 0.5) * 2;
-          randomHub.vy += (Math.random() - 0.5) * 2;
+        const cores = nodes.filter(n => n.tier === 'CORE' || n.tier === 'HUB');
+        if (cores.length > 0) {
+          const randNode = cores[Math.floor(Math.random() * cores.length)];
+          randNode.activity = 1.0;
+          randNode.haloPulse = 1.0;
         }
         if (event.type === 'message_sent' || event.type === 'api_request') {
           const conns = connectionsRef.current;
           if (conns.length > 0) {
             const randConn = conns[Math.floor(Math.random() * conns.length)];
-            const pulses = pulsesRef.current;
-            const available = pulses.find(p => !p.active);
+            const packets = packetsRef.current;
+            const available = packets.find(p => !p.active);
             if (available) {
               available.active = true;
               available.source = randConn.source;
               available.target = randConn.target;
               available.progress = 0;
-              available.speed = 0.04;
-              available.color = isDark ? '#A7F3D0' : '#059669';
+              available.speed = 0.045;
+              available.color = isDark ? '#67E8F9' : '#0284C7';
+              available.headRadius = 3.6;
+              available.length = 0.25;
             }
           }
         }
@@ -290,101 +333,178 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
       const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
       const darkPalette = {
-        hub: '#10B981',
+        core: '#10B981',
+        coreInner: '#FFFFFF',
+        hub: '#06B6D4',
         relay: '#14B8A6',
-        edge: '#06B6D4',
-        hubGlow: 'rgba(16, 185, 129, 0.4)',
-        relayGlow: 'rgba(20, 184, 166, 0.25)',
-        edgeGlow: 'rgba(6, 182, 212, 0.2)',
-        lineBase: 'rgba(16, 185, 129, ',
-        lineHub: 'rgba(6, 182, 212, ',
-        mouseLine: 'rgba(52, 211, 153, ',
-        ripple: 'rgba(16, 185, 129, ',
+        edge: '#34D399',
+        coreHalo: 'rgba(16, 185, 129, 0.35)',
+        hubHalo: 'rgba(6, 182, 212, 0.25)',
+        relayHalo: 'rgba(20, 184, 166, 0.18)',
+        edgeHalo: 'rgba(52, 211, 153, 0.12)',
+        trunkLine: 'rgba(16, 185, 129, ',
+        branchLine: 'rgba(6, 182, 212, ',
+        feederLine: 'rgba(20, 184, 166, ',
+        mouseFilament: 'rgba(103, 232, 249, ',
+        packetColor: '#A7F3D0',
+        waveColor: 'rgba(52, 211, 153, ',
       };
 
       const lightPalette = {
-        hub: '#059669',
-        relay: '#0D9488',
-        edge: '#0284C7',
-        hubGlow: 'rgba(5, 150, 105, 0.25)',
-        relayGlow: 'rgba(13, 148, 136, 0.15)',
-        edgeGlow: 'rgba(2, 132, 199, 0.15)',
-        lineBase: 'rgba(5, 150, 105, ',
-        lineHub: 'rgba(13, 148, 136, ',
-        mouseLine: 'rgba(13, 148, 136, ',
-        ripple: 'rgba(5, 150, 105, ',
+        core: '#047857',
+        coreInner: '#ECFDF5',
+        hub: '#0E7490',
+        relay: '#0F766E',
+        edge: '#059669',
+        coreHalo: 'rgba(4, 120, 87, 0.2)',
+        hubHalo: 'rgba(14, 116, 144, 0.15)',
+        relayHalo: 'rgba(15, 118, 110, 0.12)',
+        edgeHalo: 'rgba(5, 150, 105, 0.08)',
+        trunkLine: 'rgba(4, 120, 87, ',
+        branchLine: 'rgba(14, 116, 144, ',
+        feederLine: 'rgba(15, 118, 110, ',
+        mouseFilament: 'rgba(14, 116, 144, ',
+        packetColor: '#047857',
+        waveColor: 'rgba(4, 120, 87, ',
       };
 
       const theme = isDark ? darkPalette : lightPalette;
 
-      const initNodes = () => {
-        let count = particleCount;
-        if (width < 640) {
-          count = Math.max(18, Math.floor(particleCount * 0.35));
-        } else if (width < 1024) {
-          count = Math.max(30, Math.floor(particleCount * 0.65));
-        }
+      const initNetworkTopology = () => {
+        const isMobile = width < 640;
+        const isTablet = width >= 640 && width < 1024;
 
-        const nodes: Node[] = [];
-        const hubCount = Math.max(2, Math.floor(count * 0.14));
-        const relayCount = Math.max(4, Math.floor(count * 0.36));
+        const coreCount = isMobile ? 2 : preset.coreCount;
+        const hubCount = isMobile ? 4 : isTablet ? 5 : preset.hubCount;
+        const relayCount = isMobile ? 8 : isTablet ? 12 : preset.relayCount;
+        const edgeCount = isMobile ? 12 : isTablet ? 18 : preset.edgeCount;
 
-        const clusterCenters = [
-          { x: width * 0.22, y: height * 0.35 },
-          { x: width * 0.78, y: height * 0.4 },
-          { x: width * 0.5, y: height * 0.75 },
-          { x: width * 0.82, y: height * 0.8 },
-          { x: width * 0.18, y: height * 0.82 },
+        const nodes: NetworkNode[] = [];
+        let idCounter = 0;
+
+        const corePositions = [
+          { x: width * 0.20, y: height * 0.32 },
+          { x: width * 0.82, y: height * 0.38 },
+          { x: width * 0.52, y: height * 0.76 },
+          { x: width * 0.15, y: height * 0.80 },
+          { x: width * 0.88, y: height * 0.82 },
         ];
 
-        for (let i = 0; i < count; i++) {
-          const type: NodeType = i < hubCount ? 'HUB' : i < hubCount + relayCount ? 'RELAY' : 'EDGE';
-          const cluster = clusterCenters[i % clusterCenters.length];
-          const clusterRadius = Math.min(width, height) * 0.26;
-
-          const angle = Math.random() * Math.PI * 2;
-          const dist = Math.pow(Math.random(), 0.75) * clusterRadius;
-          const x = Math.max(20, Math.min(width - 20, cluster.x + Math.cos(angle) * dist + (Math.random() - 0.5) * 80));
-          const y = Math.max(20, Math.min(height - 20, cluster.y + Math.sin(angle) * dist + (Math.random() - 0.5) * 80));
-
-          let radius = 1.6;
-          let color = theme.edge;
-          let glowColor = theme.edgeGlow;
-          let depth = Math.random() * 0.5 + 0.5;
-
-          if (type === 'HUB') {
-            radius = isDark ? 3.6 : 3.2;
-            color = theme.hub;
-            glowColor = theme.hubGlow;
-            depth = 1.0;
-          } else if (type === 'RELAY') {
-            radius = isDark ? 2.4 : 2.2;
-            color = theme.relay;
-            glowColor = theme.relayGlow;
-            depth = 0.85;
-          }
+        for (let i = 0; i < coreCount; i++) {
+          const pos = corePositions[i % corePositions.length];
+          const x = pos.x + (Math.random() - 0.5) * 40;
+          const y = pos.y + (Math.random() - 0.5) * 40;
 
           nodes.push({
+            id: idCounter++,
             x,
             y,
             originX: x,
             originY: y,
             vx: 0,
             vy: 0,
-            radius,
-            type,
-            color,
-            glowColor,
+            radius: isDark ? 5.2 : 4.6,
+            tier: 'CORE',
+            color: theme.core,
+            coreColor: theme.coreInner,
+            glowColor: theme.coreHalo,
             phase: Math.random() * Math.PI * 2,
-            driftSpeed: Math.random() * 0.015 + 0.008,
-            depth,
+            driftSpeed: 0.008,
+            depth: 1.0,
             activity: 0,
+            haloPulse: 0,
+          });
+        }
+
+        for (let i = 0; i < hubCount; i++) {
+          const parentCore = nodes[i % coreCount];
+          const angle = (i * 1.3) + Math.random() * 0.8;
+          const dist = 110 + Math.random() * 90;
+          const x = Math.max(30, Math.min(width - 30, parentCore.originX + Math.cos(angle) * dist));
+          const y = Math.max(30, Math.min(height - 30, parentCore.originY + Math.sin(angle) * dist));
+
+          nodes.push({
+            id: idCounter++,
+            x,
+            y,
+            originX: x,
+            originY: y,
+            vx: 0,
+            vy: 0,
+            radius: isDark ? 3.8 : 3.4,
+            tier: 'HUB',
+            color: theme.hub,
+            coreColor: theme.coreInner,
+            glowColor: theme.hubHalo,
+            phase: Math.random() * Math.PI * 2,
+            driftSpeed: 0.012,
+            depth: 0.9,
+            activity: 0,
+            haloPulse: 0,
+          });
+        }
+
+        const hubsAndCores = nodes.filter(n => n.tier === 'CORE' || n.tier === 'HUB');
+        for (let i = 0; i < relayCount; i++) {
+          const parent = hubsAndCores[i % hubsAndCores.length];
+          const angle = Math.random() * Math.PI * 2;
+          const dist = 80 + Math.random() * 80;
+          const x = Math.max(20, Math.min(width - 20, parent.originX + Math.cos(angle) * dist));
+          const y = Math.max(20, Math.min(height - 20, parent.originY + Math.sin(angle) * dist));
+
+          nodes.push({
+            id: idCounter++,
+            x,
+            y,
+            originX: x,
+            originY: y,
+            vx: 0,
+            vy: 0,
+            radius: isDark ? 2.8 : 2.5,
+            tier: 'RELAY',
+            color: theme.relay,
+            coreColor: theme.relay,
+            glowColor: theme.relayHalo,
+            phase: Math.random() * Math.PI * 2,
+            driftSpeed: 0.016,
+            depth: 0.75,
+            activity: 0,
+            haloPulse: 0,
+          });
+        }
+
+        const allUpperNodes = nodes.filter(n => n.tier !== 'EDGE');
+        for (let i = 0; i < edgeCount; i++) {
+          const parent = allUpperNodes[i % allUpperNodes.length];
+          const angle = Math.random() * Math.PI * 2;
+          const dist = 60 + Math.random() * 95;
+          const x = Math.max(15, Math.min(width - 15, parent.originX + Math.cos(angle) * dist));
+          const y = Math.max(15, Math.min(height - 15, parent.originY + Math.sin(angle) * dist));
+
+          nodes.push({
+            id: idCounter++,
+            x,
+            y,
+            originX: x,
+            originY: y,
+            vx: 0,
+            vy: 0,
+            radius: isDark ? 1.9 : 1.7,
+            tier: 'EDGE',
+            color: theme.edge,
+            coreColor: theme.edge,
+            glowColor: theme.edgeHalo,
+            phase: Math.random() * Math.PI * 2,
+            driftSpeed: 0.02,
+            depth: 0.6,
+            activity: 0,
+            haloPulse: 0,
           });
         }
 
         nodesRef.current = nodes;
-        pulsesRef.current = [];
-        ripplesRef.current = [];
+        packetsRef.current = [];
+        wavesRef.current = [];
       };
 
       const handleResize = () => {
@@ -397,7 +517,7 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
         canvas.style.width = `${width}px`;
         canvas.style.height = `${height}px`;
         ctx.scale(dpr, dpr);
-        initNodes();
+        initNetworkTopology();
       };
 
       handleResize();
@@ -412,8 +532,8 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
 
       const handleMouseLeave = () => {
         mouseRef.current.isActive = false;
-        mouseRef.current.targetX = -2000;
-        mouseRef.current.targetY = -2000;
+        mouseRef.current.targetX = -3000;
+        mouseRef.current.targetY = -3000;
       };
 
       const handleClick = (e: MouseEvent) => {
@@ -422,25 +542,25 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
         const clickX = e.clientX - rect.left;
         const clickY = e.clientY - rect.top;
 
-        const ripples = ripplesRef.current;
-        const available = ripples.find(r => !r.active);
+        const waves = wavesRef.current;
+        const available = waves.find(w => !w.active);
         if (available) {
           available.active = true;
           available.x = clickX;
           available.y = clickY;
-          available.radius = 5;
-          available.maxRadius = 150;
-          available.intensity = 0.9;
-          available.speed = 3.2;
-        } else if (ripples.length < 6) {
-          ripples.push({
+          available.radius = 8;
+          available.maxRadius = 220;
+          available.intensity = 1.0;
+          available.speed = 4.2;
+        } else if (waves.length < 6) {
+          waves.push({
             active: true,
             x: clickX,
             y: clickY,
-            radius: 5,
-            maxRadius: 150,
-            intensity: 0.9,
-            speed: 3.2,
+            radius: 8,
+            maxRadius: 220,
+            intensity: 1.0,
+            speed: 4.2,
           });
         }
       };
@@ -455,8 +575,8 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
 
       const handleTouchEnd = () => {
         mouseRef.current.isActive = false;
-        mouseRef.current.targetX = -2000;
-        mouseRef.current.targetY = -2000;
+        mouseRef.current.targetX = -3000;
+        mouseRef.current.targetY = -3000;
       };
 
       window.addEventListener('resize', handleResize);
@@ -481,25 +601,25 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           time += 0.015;
 
           const mouse = mouseRef.current;
-          mouse.x += (mouse.targetX - mouse.x) * 0.18;
-          mouse.y += (mouse.targetY - mouse.y) * 0.18;
+          mouse.x += (mouse.targetX - mouse.x) * 0.16;
+          mouse.y += (mouse.targetY - mouse.y) * 0.16;
 
           ctx.clearRect(0, 0, width, height);
 
           const nodes = nodesRef.current;
           const nodeCount = nodes.length;
 
-          // 1. UPDATE NODES PHYSICS
+          // 1. UPDATE NODES WITH SPRING PHYSICS
           for (let i = 0; i < nodeCount; i++) {
             const n = nodes[i];
 
             n.phase += n.driftSpeed;
-            const idleX = prefersReducedMotion ? 0 : Math.cos(n.phase * 0.7 + time * 0.8) * 0.4 * n.depth;
-            const idleY = prefersReducedMotion ? 0 : Math.sin(n.phase + time) * 0.6 * n.depth;
+            const idleAmp = n.tier === 'CORE' ? 0.3 : n.tier === 'HUB' ? 0.5 : 0.8;
+            const idleX = prefersReducedMotion ? 0 : Math.cos(n.phase * 0.8 + time * 0.7) * idleAmp * n.depth;
+            const idleY = prefersReducedMotion ? 0 : Math.sin(n.phase + time) * idleAmp * 1.2 * n.depth;
 
-            if (n.activity > 0) {
-              n.activity = Math.max(0, n.activity - 0.015);
-            }
+            if (n.activity > 0) n.activity = Math.max(0, n.activity - 0.018);
+            if (n.haloPulse > 0) n.haloPulse = Math.max(0, n.haloPulse - 0.014);
 
             if (mouse.isActive && !prefersReducedMotion) {
               const dx = mouse.x - n.x;
@@ -509,31 +629,34 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
               if (distSq < gravRadSq && distSq > 0) {
                 const dist = Math.sqrt(distSq);
                 const proximityRatio = 1 - dist / gravityRadius;
-                const force = proximityRatio * proximityRatio * gravityStrength * (n.type === 'HUB' ? 0.6 : 1.0);
+                const easeFactor = Math.cos((dist / gravityRadius) * (Math.PI / 2));
+                const massFactor = n.tier === 'CORE' ? 0.4 : n.tier === 'HUB' ? 0.7 : 1.0;
+                const force = easeFactor * gravityStrength * massFactor;
                 const angle = Math.atan2(dy, dx);
 
-                n.vx -= Math.cos(angle) * force * 0.08;
-                n.vy -= Math.sin(angle) * force * 0.08;
-                n.activity = Math.max(n.activity, proximityRatio * 0.8);
+                n.vx -= Math.cos(angle) * force * 0.09;
+                n.vy -= Math.sin(angle) * force * 0.09;
+                n.activity = Math.max(n.activity, proximityRatio * 0.85);
               }
             }
 
-            const ripples = ripplesRef.current;
-            for (let r = 0; r < ripples.length; r++) {
-              const rip = ripples[r];
-              if (!rip.active) continue;
+            const waves = wavesRef.current;
+            for (let w = 0; w < waves.length; w++) {
+              const wave = waves[w];
+              if (!wave.active) continue;
 
-              const rdx = n.x - rip.x;
-              const rdy = n.y - rip.y;
-              const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
-              const waveDist = Math.abs(rDist - rip.radius);
+              const wdx = n.x - wave.x;
+              const wdy = n.y - wave.y;
+              const wDist = Math.sqrt(wdx * wdx + wdy * wdy);
+              const waveBand = Math.abs(wDist - wave.radius);
 
-              if (waveDist < 25) {
-                const waveForce = (1 - waveDist / 25) * rip.intensity * 2.2;
-                const waveAngle = Math.atan2(rdy, rdx);
-                n.vx += Math.cos(waveAngle) * waveForce * 0.15;
-                n.vy += Math.sin(waveAngle) * waveForce * 0.15;
-                n.activity = Math.max(n.activity, rip.intensity * 0.7);
+              if (waveBand < 30) {
+                const waveForce = (1 - waveBand / 30) * wave.intensity * 2.8;
+                const waveAngle = Math.atan2(wdy, wdx);
+                n.vx += Math.cos(waveAngle) * waveForce * 0.16;
+                n.vy += Math.sin(waveAngle) * waveForce * 0.16;
+                n.activity = Math.max(n.activity, wave.intensity * 0.9);
+                n.haloPulse = Math.max(n.haloPulse, wave.intensity * 0.8);
               }
             }
 
@@ -547,67 +670,91 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
             n.y += n.vy;
           }
 
-          // 2. COMPUTE CONNECTIONS GRAPH
-          const validConnections: Connection[] = [];
+          // 2. COMPUTE TOPOLOGICAL GRAPH CONNECTIONS
+          const connections: NetworkConnection[] = [];
           const maxConnectionsPerNode = 4;
-          const nodeConnectionCounts = new Uint8Array(nodeCount);
+          const nodeConnCount = new Uint8Array(nodeCount);
 
           for (let i = 0; i < nodeCount; i++) {
-            if (nodeConnectionCounts[i] >= maxConnectionsPerNode) continue;
+            if (nodeConnCount[i] >= maxConnectionsPerNode) continue;
 
             for (let j = i + 1; j < nodeCount; j++) {
-              if (nodeConnectionCounts[j] >= maxConnectionsPerNode) continue;
+              if (nodeConnCount[j] >= maxConnectionsPerNode) continue;
 
               const n1 = nodes[i];
               const n2 = nodes[j];
+
+              let allowedDistSq = maxDistSq;
+              if (n1.tier === 'CORE' && n2.tier === 'CORE') allowedDistSq *= 1.4;
+              else if (n1.tier === 'CORE' || n2.tier === 'CORE') allowedDistSq *= 1.25;
+
               const dx = n1.x - n2.x;
               const dy = n1.y - n2.y;
               const distSq = dx * dx + dy * dy;
 
-              if (distSq < maxDistSq) {
+              if (distSq < allowedDistSq) {
                 const dist = Math.sqrt(distSq);
-                validConnections.push({
+                let connTier: 'TRUNK' | 'BRANCH' | 'FEEDER' = 'FEEDER';
+
+                if ((n1.tier === 'CORE' || n1.tier === 'HUB') && (n2.tier === 'CORE' || n2.tier === 'HUB')) {
+                  connTier = 'TRUNK';
+                } else if (n1.tier === 'RELAY' || n2.tier === 'RELAY' || n1.tier === 'HUB' || n2.tier === 'HUB') {
+                  connTier = 'BRANCH';
+                }
+
+                connections.push({
                   source: i,
                   target: j,
-                  distSq,
                   dist,
+                  distSq,
+                  tier: connTier,
                 });
-                nodeConnectionCounts[i]++;
-                nodeConnectionCounts[j]++;
-                if (nodeConnectionCounts[i] >= maxConnectionsPerNode) break;
+                nodeConnCount[i]++;
+                nodeConnCount[j]++;
+                if (nodeConnCount[i] >= maxConnectionsPerNode) break;
               }
             }
           }
 
-          connectionsRef.current = validConnections;
+          connectionsRef.current = connections;
 
-          // 3. DRAW CONNECTIONS
-          const baseAlpha = (isDark ? 0.18 : 0.12) * preset.lineAlphaMultiplier;
-
-          for (let c = 0; c < validConnections.length; c++) {
-            const conn = validConnections[c];
+          // 3. DRAW CONNECTION CHANNELS
+          for (let c = 0; c < connections.length; c++) {
+            const conn = connections[c];
             const p1 = nodes[conn.source];
             const p2 = nodes[conn.target];
 
-            const distanceFactor = 1 - conn.dist / maxDistance;
-            const activityBoost = Math.max(p1.activity, p2.activity) * 0.35;
-            const alpha = (distanceFactor * baseAlpha + activityBoost).toFixed(3);
+            const distFactor = 1 - conn.dist / (maxDistance * 1.25);
+            const actBoost = Math.max(p1.activity, p2.activity) * 0.45;
 
-            ctx.beginPath();
-            ctx.moveTo(p1.x, p1.y);
-            ctx.lineTo(p2.x, p2.y);
-
-            if (p1.type === 'HUB' || p2.type === 'HUB') {
-              ctx.strokeStyle = `${theme.lineHub}${alpha})`;
-              ctx.lineWidth = isDark ? 0.95 : 0.85;
+            if (conn.tier === 'TRUNK') {
+              const alpha = Math.min(1.0, distFactor * preset.trunkOpacity + actBoost).toFixed(3);
+              ctx.beginPath();
+              ctx.moveTo(p1.x, p1.y);
+              ctx.lineTo(p2.x, p2.y);
+              ctx.strokeStyle = `${theme.trunkLine}${alpha})`;
+              ctx.lineWidth = isDark ? 1.6 : 1.4;
+              ctx.stroke();
+            } else if (conn.tier === 'BRANCH') {
+              const alpha = Math.min(1.0, distFactor * preset.branchOpacity + actBoost).toFixed(3);
+              ctx.beginPath();
+              ctx.moveTo(p1.x, p1.y);
+              ctx.lineTo(p2.x, p2.y);
+              ctx.strokeStyle = `${theme.branchLine}${alpha})`;
+              ctx.lineWidth = isDark ? 1.1 : 0.95;
+              ctx.stroke();
             } else {
-              ctx.strokeStyle = `${theme.lineBase}${alpha})`;
-              ctx.lineWidth = isDark ? 0.75 : 0.65;
+              const alpha = Math.min(1.0, distFactor * preset.feederOpacity + actBoost).toFixed(3);
+              ctx.beginPath();
+              ctx.moveTo(p1.x, p1.y);
+              ctx.lineTo(p2.x, p2.y);
+              ctx.strokeStyle = `${theme.feederLine}${alpha})`;
+              ctx.lineWidth = isDark ? 0.8 : 0.7;
+              ctx.stroke();
             }
-            ctx.stroke();
           }
 
-          // 4. DRAW MOUSE INTERACTION FILAMENTS
+          // 4. DRAW MOUSE MAGNETIC LENS FILAMENTS
           if (mouse.isActive && !prefersReducedMotion) {
             for (let i = 0; i < nodeCount; i++) {
               const n = nodes[i];
@@ -617,98 +764,131 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
 
               if (mDistSq < gravRadSq) {
                 const mDist = Math.sqrt(mDistSq);
-                const mAlpha = ((1 - mDist / gravityRadius) * (isDark ? 0.32 : 0.22)).toFixed(3);
+                const mAlpha = ((1 - mDist / gravityRadius) * (isDark ? 0.45 : 0.3)).toFixed(3);
 
                 ctx.beginPath();
                 ctx.moveTo(mouse.x, mouse.y);
                 ctx.lineTo(n.x, n.y);
-                ctx.strokeStyle = `${theme.mouseLine}${mAlpha})`;
-                ctx.lineWidth = 1.1;
+                ctx.strokeStyle = `${theme.mouseFilament}${mAlpha})`;
+                ctx.lineWidth = 1.3;
                 ctx.stroke();
               }
             }
           }
 
-          // 5. UPDATE & DRAW DATA PULSES
-          if (enablePulses && !prefersReducedMotion && validConnections.length > 0) {
-            const pulses = pulsesRef.current;
+          // 5. UPDATE & DRAW DATA COMET PACKETS
+          if (enablePulses && !prefersReducedMotion && connections.length > 0) {
+            const packets = packetsRef.current;
 
-            if (Math.random() < preset.pulseFrequency && pulses.filter(p => p.active).length < preset.maxPulses) {
-              const randConn = validConnections[Math.floor(Math.random() * validConnections.length)];
-              const available = pulses.find(p => !p.active);
-              const pulseColor = isDark ? '#A7F3D0' : '#0D9488';
+            if (Math.random() < preset.pulseFrequency && packets.filter(p => p.active).length < preset.maxPackets) {
+              const trunkAndBranches = connections.filter(c => c.tier === 'TRUNK' || c.tier === 'BRANCH');
+              const chosenConn = (trunkAndBranches.length > 0 ? trunkAndBranches : connections)[
+                Math.floor(Math.random() * (trunkAndBranches.length > 0 ? trunkAndBranches.length : connections.length))
+              ];
+
+              const available = packets.find(p => !p.active);
+              const pColor = isDark ? '#A7F3D0' : '#047857';
 
               if (available) {
                 available.active = true;
-                available.source = randConn.source;
-                available.target = randConn.target;
+                available.source = chosenConn.source;
+                available.target = chosenConn.target;
                 available.progress = 0;
-                available.speed = Math.random() * 0.02 + 0.022;
-                available.color = pulseColor;
-              } else if (pulses.length < preset.maxPulses) {
-                pulses.push({
+                available.speed = Math.random() * 0.018 + 0.024;
+                available.color = pColor;
+                available.headRadius = isDark ? 3.2 : 2.8;
+                available.length = 0.22;
+              } else if (packets.length < preset.maxPackets) {
+                packets.push({
                   active: true,
-                  source: randConn.source,
-                  target: randConn.target,
+                  source: chosenConn.source,
+                  target: chosenConn.target,
                   progress: 0,
-                  speed: Math.random() * 0.02 + 0.022,
-                  color: pulseColor,
+                  speed: Math.random() * 0.018 + 0.024,
+                  color: pColor,
+                  headRadius: isDark ? 3.2 : 2.8,
+                  length: 0.22,
                 });
               }
             }
 
-            for (let p = 0; p < pulses.length; p++) {
-              const pulse = pulses[p];
-              if (!pulse.active) continue;
+            for (let p = 0; p < packets.length; p++) {
+              const pkt = packets[p];
+              if (!pkt.active) continue;
 
-              pulse.progress += pulse.speed;
-              if (pulse.progress >= 1.0) {
-                pulse.active = false;
+              pkt.progress += pkt.speed;
+              if (pkt.progress >= 1.0) {
+                pkt.active = false;
+                if (nodes[pkt.target]) {
+                  nodes[pkt.target].activity = 1.0;
+                }
                 continue;
               }
 
-              const src = nodes[pulse.source];
-              const tgt = nodes[pulse.target];
+              const src = nodes[pkt.source];
+              const tgt = nodes[pkt.target];
               if (!src || !tgt) {
-                pulse.active = false;
+                pkt.active = false;
                 continue;
               }
 
-              const currX = src.x + (tgt.x - src.x) * pulse.progress;
-              const currY = src.y + (tgt.y - src.y) * pulse.progress;
-              const pulseAlpha = Math.sin(pulse.progress * Math.PI);
+              const headX = src.x + (tgt.x - src.x) * pkt.progress;
+              const headY = src.y + (tgt.y - src.y) * pkt.progress;
+              const tailProgress = Math.max(0, pkt.progress - pkt.length);
+              const tailX = src.x + (tgt.x - src.x) * tailProgress;
+              const tailY = src.y + (tgt.y - src.y) * tailProgress;
+
+              const packetVisibility = Math.sin(pkt.progress * Math.PI);
+
+              const grad = ctx.createLinearGradient(tailX, tailY, headX, headY);
+              grad.addColorStop(0, 'rgba(16, 185, 129, 0)');
+              grad.addColorStop(0.7, `${theme.trunkLine}${(packetVisibility * (isDark ? 0.6 : 0.4)).toFixed(3)})`);
+              grad.addColorStop(1, pkt.color);
 
               ctx.beginPath();
-              ctx.arc(currX, currY, isDark ? 2.2 : 1.8, 0, Math.PI * 2);
-              ctx.fillStyle = pulse.color;
-              ctx.shadowColor = pulse.color;
-              ctx.shadowBlur = isDark ? 6 : 3;
-              ctx.globalAlpha = pulseAlpha * (isDark ? 0.9 : 0.7);
+              ctx.moveTo(tailX, tailY);
+              ctx.lineTo(headX, headY);
+              ctx.strokeStyle = grad;
+              ctx.lineWidth = isDark ? 2.4 : 2.0;
+              ctx.stroke();
+
+              ctx.beginPath();
+              ctx.arc(headX, headY, pkt.headRadius, 0, Math.PI * 2);
+              ctx.fillStyle = pkt.color;
+              ctx.shadowColor = pkt.color;
+              ctx.shadowBlur = isDark ? 10 : 5;
+              ctx.globalAlpha = packetVisibility;
               ctx.fill();
               ctx.globalAlpha = 1.0;
               ctx.shadowBlur = 0;
             }
           }
 
-          // 6. UPDATE & DRAW RIPPLES
+          // 6. UPDATE & DRAW SIGNAL WAVES
           if (enableRipples && !prefersReducedMotion) {
-            const ripples = ripplesRef.current;
-            for (let r = 0; r < ripples.length; r++) {
-              const rip = ripples[r];
-              if (!rip.active) continue;
+            const waves = wavesRef.current;
+            for (let w = 0; w < waves.length; w++) {
+              const wave = waves[w];
+              if (!wave.active) continue;
 
-              rip.radius += rip.speed;
-              rip.intensity *= 0.96;
+              wave.radius += wave.speed;
+              wave.intensity *= 0.965;
 
-              if (rip.radius >= rip.maxRadius || rip.intensity <= 0.03) {
-                rip.active = false;
+              if (wave.radius >= wave.maxRadius || wave.intensity <= 0.02) {
+                wave.active = false;
                 continue;
               }
 
               ctx.beginPath();
-              ctx.arc(rip.x, rip.y, rip.radius, 0, Math.PI * 2);
-              ctx.strokeStyle = `${theme.ripple}${rip.intensity * 0.4})`;
-              ctx.lineWidth = 1.2;
+              ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
+              ctx.strokeStyle = `${theme.waveColor}${(wave.intensity * 0.5).toFixed(3)})`;
+              ctx.lineWidth = 1.6;
+              ctx.stroke();
+
+              ctx.beginPath();
+              ctx.arc(wave.x, wave.y, Math.max(1, wave.radius - 12), 0, Math.PI * 2);
+              ctx.strokeStyle = `${theme.waveColor}${(wave.intensity * 0.25).toFixed(3)})`;
+              ctx.lineWidth = 0.9;
               ctx.stroke();
             }
           }
@@ -716,26 +896,54 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
           // 7. DRAW NODES
           for (let i = 0; i < nodeCount; i++) {
             const n = nodes[i];
-            const nodeAlpha = (0.7 + n.activity * 0.3) * n.depth;
+            const nodeAlpha = (0.75 + n.activity * 0.25) * n.depth;
 
-            if (n.type === 'HUB' && !prefersReducedMotion) {
-              const ringRadius = n.radius + 3 + Math.sin(time * 2 + n.phase) * 1.5;
+            if (n.tier === 'CORE' && !prefersReducedMotion) {
+              const haloSize = 28 + Math.sin(time * 2.2 + n.phase) * 6 + (n.activity * 16) + (n.haloPulse * 20);
+              const haloGrad = ctx.createRadialGradient(n.x, n.y, 2, n.x, n.y, haloSize);
+              haloGrad.addColorStop(0, isDark ? 'rgba(16, 185, 129, 0.35)' : 'rgba(4, 120, 87, 0.25)');
+              haloGrad.addColorStop(0.5, isDark ? 'rgba(6, 182, 212, 0.15)' : 'rgba(14, 116, 144, 0.1)');
+              haloGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
               ctx.beginPath();
-              ctx.arc(n.x, n.y, ringRadius, 0, Math.PI * 2);
-              ctx.strokeStyle = `${theme.lineHub}${0.18 + n.activity * 0.3})`;
-              ctx.lineWidth = 0.8;
+              ctx.arc(n.x, n.y, haloSize, 0, Math.PI * 2);
+              ctx.fillStyle = haloGrad;
+              ctx.fill();
+
+              const orbitRadius = n.radius + 5.5 + Math.sin(time * 1.8 + n.phase) * 1.5;
+              ctx.beginPath();
+              ctx.arc(n.x, n.y, orbitRadius, 0, Math.PI * 2);
+              ctx.strokeStyle = `${theme.trunkLine}${(0.35 + n.activity * 0.45).toFixed(3)})`;
+              ctx.lineWidth = 1.1;
               ctx.stroke();
             }
 
+            if (n.tier === 'HUB' && !prefersReducedMotion) {
+              const hubRingRadius = n.radius + 3.8 + Math.sin(time * 2.5 + n.phase) * 1.0;
+              ctx.beginPath();
+              ctx.arc(n.x, n.y, hubRingRadius, 0, Math.PI * 2);
+              ctx.strokeStyle = `${theme.branchLine}${(0.25 + n.activity * 0.4).toFixed(3)})`;
+              ctx.lineWidth = 0.9;
+              ctx.stroke();
+            }
+
+            const currentRadius = n.radius + (n.activity * 1.0);
             ctx.beginPath();
-            ctx.arc(n.x, n.y, n.radius + (n.activity * 0.8), 0, Math.PI * 2);
+            ctx.arc(n.x, n.y, currentRadius, 0, Math.PI * 2);
             ctx.fillStyle = n.color;
-            ctx.shadowColor = n.glowColor;
-            ctx.shadowBlur = isDark ? (n.type === 'HUB' ? 10 : 5) : 3;
+            ctx.shadowColor = n.color;
+            ctx.shadowBlur = isDark ? (n.tier === 'CORE' ? 14 : n.tier === 'HUB' ? 9 : 5) : 3;
             ctx.globalAlpha = nodeAlpha;
             ctx.fill();
             ctx.globalAlpha = 1.0;
             ctx.shadowBlur = 0;
+
+            if (n.tier === 'CORE' || n.tier === 'HUB') {
+              ctx.beginPath();
+              ctx.arc(n.x, n.y, n.tier === 'CORE' ? 2.0 : 1.4, 0, Math.PI * 2);
+              ctx.fillStyle = n.coreColor;
+              ctx.fill();
+            }
           }
         }
 
@@ -755,7 +963,6 @@ export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, Inte
         document.removeEventListener('visibilitychange', handleVisibilityChange);
       };
     }, [
-      particleCount,
       maxDistance,
       gravityRadius,
       gravityStrength,

@@ -106,19 +106,19 @@ export default function Auth() {
   }, [renderGoogleButton]);
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center p-4 sm:p-6 lg:p-12 bg-gradient-to-br from-emerald-50/50 via-slate-50 to-teal-50/40 dark:from-[#050C1A] dark:via-[#071322] dark:to-[#041D1A] text-slate-900 dark:text-white overflow-hidden transition-colors duration-300 font-sans selection:bg-emerald-500 selection:text-white">
+    <div className="min-h-screen relative flex items-center justify-center p-4 sm:p-6 lg:p-12 bg-[#F8FAFC] dark:bg-[#050C1A] text-slate-900 dark:text-white overflow-hidden transition-colors duration-300 font-sans selection:bg-emerald-500 selection:text-white">
       
-      {/* Interactive Gravity Mesh Background (Living API Network Engine) */}
+      {/* Dynamic Ambient Background Aura */}
+      <div className="absolute -top-32 -left-32 w-[650px] h-[650px] rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 blur-[160px] pointer-events-none" />
+      <div className="absolute -bottom-32 -right-32 w-[650px] h-[650px] rounded-full bg-teal-500/10 dark:bg-cyan-500/12 blur-[160px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-emerald-500/5 dark:bg-emerald-400/5 blur-[200px] pointer-events-none" />
+
+      {/* Living API Network Infrastructure Canvas (High Visibility Layer) */}
       <InteractiveGravityMesh 
         variant="client"
         isDark={isDark} 
         className="absolute inset-0 pointer-events-none z-0"
       />
-
-      {/* Dynamic Colorful Glow Orbs */}
-      <div className="absolute -top-32 -left-32 w-[650px] h-[650px] rounded-full bg-gradient-to-br from-emerald-500/15 to-teal-500/10 dark:from-emerald-500/20 dark:to-teal-500/15 blur-[140px] pointer-events-none animate-pulse-glow" />
-      <div className="absolute -bottom-32 -right-32 w-[650px] h-[650px] rounded-full bg-gradient-to-tr from-teal-500/15 to-cyan-500/10 dark:from-teal-500/15 dark:to-cyan-500/15 blur-[140px] pointer-events-none animate-pulse-glow" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-emerald-500/5 dark:bg-emerald-400/5 blur-[180px] pointer-events-none" />
 
       {/* Floating Theme Button */}
       <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-50">
