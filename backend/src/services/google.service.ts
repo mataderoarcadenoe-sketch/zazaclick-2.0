@@ -3,7 +3,7 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
-const CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '6104299697-7dissi3tuvd84q94737nqmsi96nmh2d5.apps.googleusercontent.com';
+const CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '782722800100-4j8107m9nn2r0ngt6b4e17r2s2166l19.apps.googleusercontent.com';
 
 const client = new OAuth2Client(CLIENT_ID);
 

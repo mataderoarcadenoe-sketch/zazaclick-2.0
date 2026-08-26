@@ -23,7 +23,7 @@ export default function Auth() {
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const isGoogleInitializedRef = useRef(false);
 
-  const GOOGLE_CLIENT_ID = '6104299697-7dissi3tuvd84q94737nqmsi96nmh2d5.apps.googleusercontent.com';
+  const GOOGLE_CLIENT_ID = '782722800100-4j8107m9nn2r0ngt6b4e17r2s2166l19.apps.googleusercontent.com';
 
   const handleGoogleCallback = useCallback(async (response: any) => {
     try {
