@@ -904,31 +904,31 @@ export default function AdminDashboardPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-400">Extender Días</label>
-                  <select
-                    value={subFormData.durationDays}
-                    onChange={e => setSubFormData({ ...subFormData, durationDays: parseInt(e.target.value) })}
-                    className="w-full px-4 py-2.5 bg-slate-100 dark:bg-[#141D2E] rounded-xl text-xs font-bold"
-                  >
-                    <option value={7}>+7 Días</option>
-                    <option value={15}>+15 Días</option>
-                    <option value={30}>+30 Días (1 Mes)</option>
-                    <option value={90}>+90 Días (3 Meses)</option>
-                    <option value={365}>+365 Días (1 Año)</option>
-                  </select>
+                  <CustomSelect
+                    value={String(subFormData.durationDays)}
+                    onChange={val => setSubFormData({ ...subFormData, durationDays: parseInt(val, 10) })}
+                    options={[
+                      { value: '7', label: '+7 Días' },
+                      { value: '15', label: '+15 Días' },
+                      { value: '30', label: '+30 Días (1 Mes)' },
+                      { value: '90', label: '+90 Días (3 Meses)' },
+                      { value: '365', label: '+365 Días (1 Año)' }
+                    ]}
+                  />
                 </div>
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-400">Estado de Licencia</label>
-                  <select
+                  <CustomSelect
                     value={subFormData.status}
-                    onChange={e => setSubFormData({ ...subFormData, status: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-slate-100 dark:bg-[#141D2E] rounded-xl text-xs font-bold"
-                  >
-                    <option value="active">Activo</option>
-                    <option value="trial">Trial</option>
-                    <option value="suspended">Suspendido</option>
-                    <option value="expired">Expirado</option>
-                  </select>
+                    onChange={val => setSubFormData({ ...subFormData, status: val })}
+                    options={[
+                      { value: 'active', label: 'Activo' },
+                      { value: 'trial', label: 'Trial' },
+                      { value: 'suspended', label: 'Suspendido' },
+                      { value: 'expired', label: 'Expirado' }
+                    ]}
+                  />
                 </div>
               </div>
 
@@ -981,15 +981,15 @@ export default function AdminDashboardPage() {
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-400">Moneda</label>
-                  <select
+                  <CustomSelect
                     value={paymentFormData.currency}
-                    onChange={e => setPaymentFormData({ ...paymentFormData, currency: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-slate-100 dark:bg-[#141D2E] rounded-xl text-xs font-bold"
-                  >
-                    <option value="USD">USD ($)</option>
-                    <option value="PEN">PEN (S/)</option>
-                    <option value="EUR">EUR (€)</option>
-                  </select>
+                    onChange={val => setPaymentFormData({ ...paymentFormData, currency: val })}
+                    options={[
+                      { value: 'USD', label: 'USD ($)' },
+                      { value: 'PEN', label: 'PEN (S/)' },
+                      { value: 'EUR', label: 'EUR (€)' }
+                    ]}
+                  />
                 </div>
               </div>
 
@@ -1017,16 +1017,16 @@ export default function AdminDashboardPage() {
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-400">Meses a Renovar</label>
-                <select
-                  value={paymentFormData.renewMonths}
-                  onChange={e => setPaymentFormData({ ...paymentFormData, renewMonths: parseInt(e.target.value) })}
-                  className="w-full px-4 py-2.5 bg-slate-100 dark:bg-[#141D2E] rounded-xl text-xs font-bold"
-                >
-                  <option value={1}>1 Mes</option>
-                  <option value={3}>3 Meses</option>
-                  <option value={6}>6 Meses</option>
-                  <option value={12}>12 Meses (1 Año)</option>
-                </select>
+                <CustomSelect
+                  value={String(paymentFormData.renewMonths)}
+                  onChange={val => setPaymentFormData({ ...paymentFormData, renewMonths: parseInt(val, 10) })}
+                  options={[
+                    { value: '1', label: '1 Mes' },
+                    { value: '3', label: '3 Meses' },
+                    { value: '6', label: '6 Meses' },
+                    { value: '12', label: '12 Meses (1 Año)' }
+                  ]}
+                />
               </div>
 
               <button
