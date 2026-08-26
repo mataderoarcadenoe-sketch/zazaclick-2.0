@@ -3,6 +3,7 @@ import * as dotenv from 'dotenv';
 import http from 'http';
 import https from 'https';
 import redis from '../config/redis';
+import { validateSafeUrl, normalizeBase64 } from '../utils/ssrf.util';
 
 dotenv.config();
 
@@ -221,7 +222,7 @@ export class EvolutionService {
   }
 
   /**
-   * Enviar un mensaje multimedia (imagen, video, documento, audio) a través de una instancia
+   * Enviar un mensaje multimedia (imagen, video, documento, audio) a través de Evolution API 2.4.0-rc2
    */
   public static async sendMediaMessage(
     instanceName: string,
@@ -231,7 +232,7 @@ export class EvolutionService {
     mimetype: string,
     caption?: string,
     fileName?: string
-  ): Promise<any> {
+  ): Promise<{ success: boolean; data?: any; error?: string; details?: any }> {
     try {
       let targetNumber = number;
       if (!number.includes('@')) {
@@ -245,23 +246,34 @@ export class EvolutionService {
       let finalMediatype = mediatype;
       const isGif = mimetype === 'image/gif' || (fileName && fileName.toLowerCase().endsWith('.gif')) || (media && media.toLowerCase().includes('.gif'));
 
-      let finalMedia = media;
-      // Si media es una URL, descargarla y convertirla a base64 para evitar bloqueos de Cloudflare
-      if (media.startsWith('http')) {
+      let finalMedia = normalizeBase64(media);
+
+      // Si media es una URL, validar contra SSRF y descargar como Base64
+      if (media.startsWith('http://') || media.startsWith('https://')) {
+        const ssrfCheck = await validateSafeUrl(media);
+        if (!ssrfCheck.safe) {
+          return {
+            success: false,
+            error: `Seguridad SSRF: ${ssrfCheck.error}`
+          };
+        }
+
         try {
-          console.log(`[EvolutionService] Descargando media desde URL para enviar como Base64: ${media}`);
+          console.log(`[EvolutionService] Descargando media de URL segura para enviar a Evolution API 2.4.0-rc2: ${media}`);
           const downloadRes = await axios.get(media, {
             responseType: 'arraybuffer',
             headers: {
               'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             },
-            timeout: 10000,
-            httpsAgent: new https.Agent({ rejectUnauthorized: false }) // Evitar problemas con certificados SSL auto-firmados
+            timeout: 15000,
+            maxContentLength: 50 * 1024 * 1024, // Límite seguro de 50MB
+            maxBodyLength: 50 * 1024 * 1024,
+            httpsAgent: new https.Agent({ rejectUnauthorized: false })
           });
           const base64Data = Buffer.from(downloadRes.data, 'binary').toString('base64');
-          finalMedia = base64Data; // Evolution API requiere el base64 puro (sin el prefijo 'data:...;base64,')
+          finalMedia = base64Data;
         } catch (downloadErr: any) {
-          console.warn(`[EvolutionService] No se pudo descargar la media en el backend, enviando URL original:`, downloadErr.message);
+          console.warn(`[EvolutionService] No se pudo convertir URL a Base64 en backend, enviando URL directa:`, downloadErr.message);
           finalMedia = media;
         }
       }
@@ -285,9 +297,168 @@ export class EvolutionService {
       }
 
       const response = await api.post(`/message/sendMedia/${instanceName}`, payload);
-      return { success: response.status === 200 || response.status === 201 };
+      return { 
+        success: response.status === 200 || response.status === 201,
+        data: response.data
+      };
     } catch (err: any) {
       console.error(`[EvolutionService] Error enviando media (${mediatype}) a ${number}:`, err.message, err.response?.data);
+      return {
+        success: false,
+        error: err.message,
+        details: err.response?.data
+      };
+    }
+  }
+
+  /**
+   * Enviar nota de voz real de WhatsApp (PTT con ondas de audio) a través de Evolution API 2.4.0-rc2
+   */
+  public static async sendWhatsAppAudio(
+    instanceName: string,
+    number: string,
+    audio: string
+  ): Promise<{ success: boolean; data?: any; error?: string; details?: any }> {
+    try {
+      let targetNumber = number;
+      if (!number.includes('@')) {
+        let cleanNumber = number.replace(/\D/g, '');
+        if (cleanNumber.length === 9 && cleanNumber.startsWith('9')) {
+          cleanNumber = `51${cleanNumber}`;
+        }
+        targetNumber = cleanNumber;
+      }
+
+      let finalAudio = normalizeBase64(audio);
+
+      // Validación SSRF si es URL
+      if (audio.startsWith('http://') || audio.startsWith('https://')) {
+        const ssrfCheck = await validateSafeUrl(audio);
+        if (!ssrfCheck.safe) {
+          return {
+            success: false,
+            error: `Seguridad SSRF: ${ssrfCheck.error}`
+          };
+        }
+
+        try {
+          console.log(`[EvolutionService] Descargando audio de URL segura: ${audio}`);
+          const downloadRes = await axios.get(audio, {
+            responseType: 'arraybuffer',
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            },
+            timeout: 15000,
+            maxContentLength: 30 * 1024 * 1024,
+            maxBodyLength: 30 * 1024 * 1024,
+            httpsAgent: new https.Agent({ rejectUnauthorized: false })
+          });
+          finalAudio = Buffer.from(downloadRes.data, 'binary').toString('base64');
+        } catch (downloadErr: any) {
+          console.warn(`[EvolutionService] Fallo al descargar audio en backend, enviando URL directa:`, downloadErr.message);
+          finalAudio = audio;
+        }
+      }
+
+      const payload = {
+        number: targetNumber,
+        audio: finalAudio,
+        encoding: true
+      };
+
+      const response = await api.post(`/message/sendWhatsAppAudio/${instanceName}`, payload);
+      return {
+        success: response.status === 200 || response.status === 201,
+        data: response.data
+      };
+    } catch (err: any) {
+      console.error(`[EvolutionService] Error enviando WhatsApp Audio PTT a ${number}:`, err.message, err.response?.data);
+      return {
+        success: false,
+        error: err.message,
+        details: err.response?.data
+      };
+    }
+  }
+
+  /**
+   * Enviar ubicación geográfica a través de Evolution API 2.4.0-rc2
+   */
+  public static async sendLocation(
+    instanceName: string,
+    number: string,
+    name: string,
+    address: string,
+    latitude: number,
+    longitude: number
+  ): Promise<{ success: boolean; data?: any; error?: string; details?: any }> {
+    try {
+      let targetNumber = number;
+      if (!number.includes('@')) {
+        let cleanNumber = number.replace(/\D/g, '');
+        if (cleanNumber.length === 9 && cleanNumber.startsWith('9')) {
+          cleanNumber = `51${cleanNumber}`;
+        }
+        targetNumber = cleanNumber;
+      }
+
+      const payload = {
+        number: targetNumber,
+        name: name || 'Ubicación',
+        address: address || '',
+        latitude: Number(latitude),
+        longitude: Number(longitude)
+      };
+
+      const response = await api.post(`/message/sendLocation/${instanceName}`, payload);
+      return {
+        success: response.status === 200 || response.status === 201,
+        data: response.data
+      };
+    } catch (err: any) {
+      console.error(`[EvolutionService] Error enviando ubicación a ${number}:`, err.message, err.response?.data);
+      return {
+        success: false,
+        error: err.message,
+        details: err.response?.data
+      };
+    }
+  }
+
+  /**
+   * Enviar tarjeta de contacto vCard a través de Evolution API 2.4.0-rc2
+   */
+  public static async sendContact(
+    instanceName: string,
+    number: string,
+    contact: Array<{ fullName: string; wuid?: string; phoneNumber: string }>
+  ): Promise<{ success: boolean; data?: any; error?: string; details?: any }> {
+    try {
+      let targetNumber = number;
+      if (!number.includes('@')) {
+        let cleanNumber = number.replace(/\D/g, '');
+        if (cleanNumber.length === 9 && cleanNumber.startsWith('9')) {
+          cleanNumber = `51${cleanNumber}`;
+        }
+        targetNumber = cleanNumber;
+      }
+
+      const payload = {
+        number: targetNumber,
+        contact: contact.map(c => ({
+          fullName: c.fullName,
+          wuid: c.wuid || c.phoneNumber.replace(/\D/g, ''),
+          phoneNumber: c.phoneNumber.startsWith('+') ? c.phoneNumber : `+${c.phoneNumber.replace(/\D/g, '')}`
+        }))
+      };
+
+      const response = await api.post(`/message/sendContact/${instanceName}`, payload);
+      return {
+        success: response.status === 200 || response.status === 201,
+        data: response.data
+      };
+    } catch (err: any) {
+      console.error(`[EvolutionService] Error enviando contacto a ${number}:`, err.message, err.response?.data);
       return {
         success: false,
         error: err.message,

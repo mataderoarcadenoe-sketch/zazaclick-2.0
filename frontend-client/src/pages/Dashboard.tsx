@@ -6,7 +6,7 @@ import api from '../services/api';
 import { 
   LogOut, RefreshCw, Plus, Key, Trash2, Smartphone, CheckCircle2, 
   AlertCircle, Copy, Send, LayoutGrid, Terminal, 
-  Moon, Sun, Menu, X, Play, Shield, Globe, Activity, ArrowRight, Building, Users, Server, Cpu, Zap
+  Moon, Sun, Menu, X, Play, Shield, Building, Image, Mic, MapPin, UserPlus, ArrowRight
 } from 'lucide-react';
 
 import { AsyncOperationModal, type AsyncStep, type AsyncStatus } from '../components/AsyncOperationModal';
@@ -55,14 +55,39 @@ export default function Dashboard() {
   const [adminInstances, setAdminInstances] = useState<any[]>([]);
   const [adminStats, setAdminStats] = useState<any>(null);
 
-  // Playground API (Probar Envío)
+  // Playground API (Probar Envío con soporte de Texto, Media, Audio PTT, Ubicación y Contacto)
+  const [playgroundType, setPlaygroundType] = useState<'text' | 'media' | 'audio' | 'location' | 'contact'>('text');
   const [playgroundInstance, setPlaygroundInstance] = useState('');
   const [playgroundPhone, setPlaygroundPhone] = useState('');
-  const [playgroundMessage, setPlaygroundMessage] = useState('Hola! Este es un mensaje de prueba enviado desde la API de WhatsApp Zaza.click.');
+  
+  // Parámetros de Texto
+  const [playgroundMessage, setPlaygroundMessage] = useState('¡Hola! Mensaje de prueba enviado desde la API de WhatsApp Zaza.click.');
+  
+  // Parámetros Multimedia
+  const [playgroundMediaType, setPlaygroundMediaType] = useState<'image' | 'video' | 'document' | 'audio'>('image');
+  const [playgroundMimeType, setPlaygroundMimeType] = useState('image/jpeg');
+  const [playgroundMedia, setPlaygroundMedia] = useState('https://images.unsplash.com/photo-1579202673506-ca3ce28943ef');
+  const [playgroundCaption, setPlaygroundCaption] = useState('¡Mira esta imagen enviada vía API!');
+  const [playgroundFileName, setPlaygroundFileName] = useState('catalogo.pdf');
+  
+  // Parámetros Audio PTT
+  const [playgroundAudio, setPlaygroundAudio] = useState('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
+  
+  // Parámetros Ubicación
+  const [playgroundLocName, setPlaygroundLocName] = useState('Sede Principal Zaza Click');
+  const [playgroundLocAddress, setPlaygroundLocAddress] = useState('Av. República de Panamá 3545, San Isidro, Lima');
+  const [playgroundLatitude, setPlaygroundLatitude] = useState(-12.098412);
+  const [playgroundLongitude, setPlaygroundLongitude] = useState(-77.028941);
+
+  // Parámetros Contacto
+  const [playgroundContactName, setPlaygroundContactName] = useState('Soporte Zaza Click');
+  const [playgroundContactPhone, setPlaygroundContactPhone] = useState('+51912345678');
+
   const [playgroundLoading, setPlaygroundLoading] = useState(false);
   const [playgroundResponse, setPlaygroundResponse] = useState<any>(null);
 
   // Documentación API
+  const [docEndpoint, setDocEndpoint] = useState<'send-text' | 'send-media' | 'send-audio' | 'send-location' | 'send-contact'>('send-text');
   const [docLang, setDocLang] = useState<'curl' | 'js' | 'python' | 'php'>('curl');
 
   // Notificaciones Toast
@@ -134,13 +159,10 @@ export default function Dashboard() {
   useEffect(() => {
     if (!qrCodeModal.open || !qrCodeModal.instanceName) return;
 
-    console.log(`🔄 [QR Polling] Iniciando monitoreo de conexión para: ${qrCodeModal.instanceName}`);
-
     const intervalId = setInterval(async () => {
       try {
         const res = await api.get(`/instances/${qrCodeModal.instanceName}/status`);
         if (res.data?.success && res.data.isConnected) {
-          console.log(`✅ [QR Polling] Conexión detectada exitosamente para ${qrCodeModal.instanceName}`);
           setQrCodeModal({ open: false, instanceName: '', qrCode: null });
           showNotification('¡Línea WhatsApp vinculada exitosamente!', 'success');
           fetchInstances();
@@ -153,7 +175,7 @@ export default function Dashboard() {
     return () => clearInterval(intervalId);
   }, [qrCodeModal.open, qrCodeModal.instanceName, fetchInstances]);
 
-  // Manejadores de Instancias WhatsApp con Máquina de Estados Operacional
+  // Manejadores de Instancias WhatsApp
   const handleCreateInstance = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const instanceName = newInstanceName.trim();
@@ -162,13 +184,9 @@ export default function Dashboard() {
       return;
     }
 
-    if (asyncOp.open && asyncOp.status !== 'idle' && asyncOp.status !== 'error' && asyncOp.status !== 'timeout') {
-      return;
-    }
-
     const initialSteps: AsyncStep[] = [
       { id: '1', label: 'Enviando solicitud de creación al servidor', status: 'active' },
-      { id: '2', label: 'Inicializando motor WhatsApp API (Evolution Engine)', status: 'pending' },
+      { id: '2', label: 'Inicializando motor WhatsApp API (Evolution Engine 2.4.0-rc2)', status: 'pending' },
       { id: '3', label: 'Guardando credenciales y generador de API Key en PostgreSQL', status: 'pending' }
     ];
 
@@ -183,33 +201,9 @@ export default function Dashboard() {
       onRetry: () => handleCreateInstance()
     });
 
-    const timeoutId = setTimeout(() => {
-      setAsyncOp(prev => {
-        if (prev.status === 'success' || prev.status === 'error') return prev;
-        return {
-          ...prev,
-          status: 'timeout',
-          errorMessage: 'La operación está tomando más tiempo del habitual. La instancia se está configurando en segundo plano en el servidor.',
-          steps: prev.steps.map(s => s.status === 'active' ? { ...s, status: 'failed' } : s)
-        };
-      });
-    }, 25000);
-
     try {
       setLoadingInstances(true);
-
-      setAsyncOp(prev => ({
-        ...prev,
-        status: 'processing',
-        steps: [
-          { ...prev.steps[0], status: 'completed' },
-          { ...prev.steps[1], status: 'active', detail: 'Conectando con el clúster de Evolution API...' },
-          prev.steps[2]
-        ]
-      }));
-
       const res = await api.post('/instances', { instanceName });
-      clearTimeout(timeoutId);
 
       if (res.data?.success) {
         setAsyncOp(prev => ({
@@ -234,7 +228,6 @@ export default function Dashboard() {
         }));
       }
     } catch (err: any) {
-      clearTimeout(timeoutId);
       setAsyncOp(prev => ({
         ...prev,
         status: 'error',
@@ -246,7 +239,7 @@ export default function Dashboard() {
     }
   };
 
-  // Modal de Confirmación Personalizado (Sin diálogos nativos de navegador)
+  // Modal de Confirmación Personalizado
   const [confirmModal, setConfirmModal] = useState<{
     open: boolean;
     title: string;
@@ -319,11 +312,11 @@ export default function Dashboard() {
     }
   };
 
-  // Manejador del Tester API (Playground)
+  // Manejador del Tester API Multi-Tipo (Playground)
   const handleTestSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!playgroundInstance || !playgroundPhone || !playgroundMessage) {
-      showNotification('Completa la instancia, número de teléfono y mensaje', 'error');
+    if (!playgroundInstance || !playgroundPhone) {
+      showNotification('Selecciona una instancia y completa el número de teléfono', 'error');
       return;
     }
 
@@ -334,11 +327,42 @@ export default function Dashboard() {
       const targetInst = instances.find(i => i.instance_name === playgroundInstance);
       const apiKey = targetInst?.api_key || 'tu_api_key';
 
-      const res = await api.post('/webhooks/send-text', {
+      let endpointUrl = '/webhooks/send-text';
+      let payload: any = {
         instanceName: playgroundInstance,
-        number: playgroundPhone,
-        text: playgroundMessage
-      }, {
+        number: playgroundPhone
+      };
+
+      if (playgroundType === 'text') {
+        endpointUrl = '/webhooks/send-text';
+        payload.text = playgroundMessage;
+      } else if (playgroundType === 'media') {
+        endpointUrl = '/webhooks/send-media';
+        payload.mediatype = playgroundMediaType;
+        payload.mimetype = playgroundMimeType;
+        payload.media = playgroundMedia;
+        if (playgroundCaption) payload.caption = playgroundCaption;
+        if (playgroundMediaType === 'document' && playgroundFileName) payload.fileName = playgroundFileName;
+      } else if (playgroundType === 'audio') {
+        endpointUrl = '/webhooks/send-audio';
+        payload.audio = playgroundAudio;
+      } else if (playgroundType === 'location') {
+        endpointUrl = '/webhooks/send-location';
+        payload.name = playgroundLocName;
+        payload.address = playgroundLocAddress;
+        payload.latitude = playgroundLatitude;
+        payload.longitude = playgroundLongitude;
+      } else if (playgroundType === 'contact') {
+        endpointUrl = '/webhooks/send-contact';
+        payload.contact = [
+          {
+            fullName: playgroundContactName,
+            phoneNumber: playgroundContactPhone
+          }
+        ];
+      }
+
+      const res = await api.post(endpointUrl, payload, {
         headers: {
           'x-api-key': apiKey
         }
@@ -346,7 +370,7 @@ export default function Dashboard() {
 
       setPlaygroundResponse(res.data);
       if (res.data?.success) {
-        showNotification('Mensaje enviado exitosamente vía API');
+        showNotification(`Mensaje (${playgroundType.toUpperCase()}) enviado exitosamente vía API`);
       } else {
         showNotification(res.data?.error || 'Fallo en la prueba de envío', 'error');
       }
@@ -381,33 +405,76 @@ export default function Dashboard() {
   const activeInstancesCount = instances.filter(i => i.status === 'connected').length;
   const maxInstances = subscription?.max_instances || 1;
 
-  // Código de ejemplo para documentación API
+  // Generador de código para documentación API completa
   const getDocCode = () => {
     const selectedInst = instances[0] || { instance_name: 'mi_linea_whatsapp', api_key: 'tu_api_key_aqui' };
 
+    let endpointPath = '/api/webhooks/send-text';
+    let payloadObj: any = {
+      instanceName: selectedInst.instance_name,
+      number: "51912345678",
+      text: "¡Hola! Mensaje enviado desde la API de WhatsApp."
+    };
+
+    if (docEndpoint === 'send-media') {
+      endpointPath = '/api/webhooks/send-media';
+      payloadObj = {
+        instanceName: selectedInst.instance_name,
+        number: "51912345678",
+        mediatype: "image",
+        mimetype: "image/jpeg",
+        media: "https://images.unsplash.com/photo-1579202673506-ca3ce28943ef",
+        caption: "Catálogo de Productos 2026",
+        fileName: "catalogo.jpg"
+      };
+    } else if (docEndpoint === 'send-audio') {
+      endpointPath = '/api/webhooks/send-audio';
+      payloadObj = {
+        instanceName: selectedInst.instance_name,
+        number: "51912345678",
+        audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+      };
+    } else if (docEndpoint === 'send-location') {
+      endpointPath = '/api/webhooks/send-location';
+      payloadObj = {
+        instanceName: selectedInst.instance_name,
+        number: "51912345678",
+        name: "Sede Principal Zaza Click",
+        address: "Av. República de Panamá 3545, San Isidro, Lima",
+        latitude: -12.098412,
+        longitude: -77.028941
+      };
+    } else if (docEndpoint === 'send-contact') {
+      endpointPath = '/api/webhooks/send-contact';
+      payloadObj = {
+        instanceName: selectedInst.instance_name,
+        number: "51912345678",
+        contact: [
+          {
+            fullName: "Soporte Zaza Click",
+            phoneNumber: "+51912345678"
+          }
+        ]
+      };
+    }
+
+    const payloadJson = JSON.stringify(payloadObj, null, 2);
+
     if (docLang === 'curl') {
-      return `curl -X POST "${currentBackendUrl}/api/webhooks/send-text" \\
+      return `curl -X POST "${currentBackendUrl}${endpointPath}" \\
   -H "Content-Type: application/json" \\
   -H "x-api-key: ${selectedInst.api_key}" \\
-  -d '{
-    "instanceName": "${selectedInst.instance_name}",
-    "number": "51912345678",
-    "text": "Hola! Mensaje enviado desde la API de WhatsApp."
-  }'`;
+  -d '${JSON.stringify(payloadObj)}'`;
     }
 
     if (docLang === 'js') {
-      return `const response = await fetch("${currentBackendUrl}/api/webhooks/send-text", {
+      return `const response = await fetch("${currentBackendUrl}${endpointPath}", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
     "x-api-key": "${selectedInst.api_key}"
   },
-  body: JSON.stringify({
-    instanceName: "${selectedInst.instance_name}",
-    number: "51912345678",
-    text: "Hola! Mensaje enviado desde la API de WhatsApp."
-  })
+  body: JSON.stringify(${payloadJson})
 });
 
 const data = await response.json();
@@ -417,16 +484,12 @@ console.log(data);`;
     if (docLang === 'python') {
       return `import requests
 
-url = "${currentBackendUrl}/api/webhooks/send-text"
+url = "${currentBackendUrl}${endpointPath}"
 headers = {
     "Content-Type": "application/json",
     "x-api-key": "${selectedInst.api_key}"
 }
-payload = {
-    "instanceName": "${selectedInst.instance_name}",
-    "number": "51912345678",
-    "text": "Hola! Mensaje enviado desde la API de WhatsApp."
-}
+payload = ${JSON.stringify(payloadObj, null, 4)}
 
 response = requests.post(url, json=payload, headers=headers)
 print(response.json())`;
@@ -434,17 +497,13 @@ print(response.json())`;
 
     if (docLang === 'php') {
       return `<?php
-$ch = curl_init("${currentBackendUrl}/api/webhooks/send-text");
+$ch = curl_init("${currentBackendUrl}${endpointPath}");
 curl_setopt($ch, CURLOPT_HTTPHEADER, array(
     'Content-Type: application/json',
     'x-api-key: ${selectedInst.api_key}'
 ));
 curl_setopt($ch, CURLOPT_POST, 1);
-curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(array(
-    'instanceName' => '${selectedInst.instance_name}',
-    'number' => '51912345678',
-    'text' => 'Hola! Mensaje enviado desde la API de WhatsApp.'
-)));
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(${JSON.stringify(payloadObj)}));
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 $response = curl_exec($ch);
 curl_close($ch);
@@ -568,7 +627,7 @@ echo $response;`;
       {/* Main Area Canvas */}
       <div className="flex-1 flex flex-col overflow-hidden lg:pl-20">
         
-        {/* Top Header (Clean Surface Integration) */}
+        {/* Top Header */}
         <header className="h-16 bg-white dark:bg-[#0B0F19] px-4 sm:px-8 flex items-center justify-between z-30 transition-colors duration-250">
           <div className="flex items-center gap-3">
             <button 
@@ -582,13 +641,12 @@ echo $response;`;
                 {menuItems.find(i => i.id === activeTab)?.label || 'Consola de WhatsApp API'}
               </h2>
               <p className="text-[11px] text-slate-400 font-normal leading-none mt-0.5 hidden sm:block">
-                Gateway REST, enrutamiento multi-inquilino y webhooks en tiempo real.
+                Gateway REST, enrutamiento multi-inquilino y webhooks en tiempo real (Evolution API 2.4.0-rc2).
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3.5">
-            {/* Status Live Tag */}
             <div className="hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -597,7 +655,6 @@ echo $response;`;
               <span className="text-[10px] font-bold tracking-wider">GATEWAY OPERATIVO</span>
             </div>
 
-            {/* Dark Mode Switcher */}
             <button
               onClick={toggleDark}
               className="p-2.5 bg-slate-100 dark:bg-slate-800 rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-slate-600 dark:text-slate-300 cursor-pointer"
@@ -606,7 +663,6 @@ echo $response;`;
               {isDark ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-emerald-600" />}
             </button>
 
-            {/* Profile badge */}
             <div className="flex items-center gap-2.5 pl-3">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center font-bold text-xs uppercase">
                 {(user?.email || 'A')[0].toUpperCase()}
@@ -627,19 +683,17 @@ echo $response;`;
             {activeTab === 'overview' && (
               <div className="space-y-8 animate-fadeIn text-left">
                 
-                {/* Hero Greeting Header Banner (Clean Surface Contrast) */}
                 <div className="p-6 sm:p-8 bg-white dark:bg-[#0D131F] rounded-3xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
-                  
                   <div className="space-y-2 text-left relative z-10">
                     <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/50 rounded-full text-[10px] font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                      <span>Motor Evolution API v2 · Redis Core</span>
+                      <span>Motor Evolution API 2.4.0-rc2 · Redis Queue Engine</span>
                     </div>
                     <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                      Dashboard de WhatsApp API
+                      Dashboard de WhatsApp API SaaS
                     </h1>
                     <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl leading-relaxed font-normal">
-                      Conecta tus números de WhatsApp, emite credenciales <code className="text-emerald-600 dark:text-emerald-400 font-bold">x-api-key</code> y monitorea tus webhooks en tiempo real.
+                      Envía mensajes de texto, imágenes, audios PTT, videos, PDFs y contactos mediante tu <code className="text-emerald-600 dark:text-emerald-400 font-bold">x-api-key</code>.
                     </p>
                   </div>
 
@@ -658,18 +712,13 @@ echo $response;`;
                       className="px-5 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-2xl flex items-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
                     >
                       <Play size={16} />
-                      <span>Probar Envíos</span>
+                      <span>Probar Envíos API</span>
                     </button>
                   </div>
-
-                  {/* Backdrop lights */}
-                  <div className="absolute right-0 top-0 w-64 h-64 bg-emerald-500/8 rounded-full blur-[90px] pointer-events-none" />
                 </div>
 
-                {/* KPI Metrics Telemetry Cards (Flat Surfaces) */}
+                {/* KPI Metrics */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                  
-                  {/* Instancias Conectadas */}
                   <div className="p-6 bg-white dark:bg-[#0D131F] rounded-3xl space-y-2">
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Líneas Conectadas</span>
                     <div className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -681,18 +730,16 @@ echo $response;`;
                     </p>
                   </div>
 
-                  {/* Estado del Servicio */}
                   <div className="p-6 bg-white dark:bg-[#0D131F] rounded-3xl space-y-2">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Estado del Gateway</span>
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Endpoints Soportados</span>
                     <div className="text-3xl sm:text-4xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
-                      99.99%
+                      5 REST
                     </div>
                     <p className="text-xs font-medium text-slate-500 dark:text-slate-400 pt-1">
-                      Latencia de red &lt; 42ms
+                      Texto, Media, Audio, GPS, Contacto
                     </p>
                   </div>
 
-                  {/* Base Endpoint URL */}
                   <div className="p-6 bg-white dark:bg-[#0D131F] rounded-3xl space-y-2 min-w-0">
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">URL Endpoint</span>
                     <div className="text-xs font-mono font-bold text-slate-900 dark:text-white truncate pt-1" title={currentBackendUrl}>
@@ -707,7 +754,6 @@ echo $response;`;
                     </button>
                   </div>
 
-                  {/* Documentación */}
                   <div className="p-6 bg-white dark:bg-[#0D131F] rounded-3xl space-y-2">
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Suscripción Activa</span>
                     <div className="text-lg font-black text-slate-900 dark:text-white uppercase truncate pt-1">
@@ -721,75 +767,6 @@ echo $response;`;
                       Ver Detalle de Licencia ➔
                     </button>
                   </div>
-
-                </div>
-
-                {/* Secciones de Acción Rápida (Flat Interactive Surfaces) */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-                  
-                  {/* Instancias */}
-                  <div className="p-7 bg-white dark:bg-[#0D131F] rounded-3xl space-y-4 text-left group">
-                    <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold group-hover:scale-105 transition-transform">
-                      <Smartphone size={22} />
-                    </div>
-                    <div className="space-y-1">
-                      <h3 className="text-base font-bold text-slate-900 dark:text-white">1. Conecta tus Líneas</h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 font-normal leading-relaxed">
-                        Vincula tu número de teléfono escaneando el código QR oficial de WhatsApp Web.
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab('instances')}
-                      className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 text-xs font-bold rounded-2xl active:scale-[0.98] transition-all cursor-pointer inline-flex items-center gap-1.5"
-                    >
-                      <span>Gestionar Instancias</span>
-                      <ArrowRight size={14} />
-                    </button>
-                  </div>
-
-                  {/* Playground */}
-                  <div className="p-7 bg-white dark:bg-[#0D131F] rounded-3xl space-y-4 text-left group">
-                    <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold group-hover:scale-105 transition-transform">
-                      <Play size={22} />
-                    </div>
-                    <div className="space-y-1">
-                      <h3 className="text-base font-bold text-slate-900 dark:text-white">2. Tester de API</h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 font-normal leading-relaxed">
-                        Simula peticiones HTTP POST en tiempo real enviando mensajes a tu propio WhatsApp.
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab('playground')}
-                      className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 text-xs font-bold rounded-2xl active:scale-[0.98] transition-all cursor-pointer inline-flex items-center gap-1.5"
-                    >
-                      <span>Probar Envíos</span>
-                      <ArrowRight size={14} />
-                    </button>
-                  </div>
-
-                  {/* Documentación */}
-                  <div className="p-7 bg-white dark:bg-[#0D131F] rounded-3xl space-y-4 text-left group">
-                    <div className="w-12 h-12 rounded-2xl bg-cyan-50 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400 flex items-center justify-center font-bold group-hover:scale-105 transition-transform">
-                      <Terminal size={22} />
-                    </div>
-                    <div className="space-y-1">
-                      <h3 className="text-base font-bold text-slate-900 dark:text-white">3. Código & Webhooks</h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 font-normal leading-relaxed">
-                        Consulta ejemplos listos en cURL, Node.js, Python y PHP para integrar en tu software.
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab('docs')}
-                      className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 text-xs font-bold rounded-2xl active:scale-[0.98] transition-all cursor-pointer inline-flex items-center gap-1.5"
-                    >
-                      <span>Ver Ejemplos</span>
-                      <ArrowRight size={14} />
-                    </button>
-                  </div>
-
                 </div>
 
               </div>
@@ -798,13 +775,11 @@ echo $response;`;
             {/* INSTANCIAS / LÍNEAS WHATSAPP */}
             {activeTab === 'instances' && (
               <div className="space-y-8 animate-fadeIn text-left">
-                
                 <div className="space-y-1">
                   <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Instancias y Conexiones WhatsApp</h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Crea nuevas conexiones de API o escanea el código QR para vincular tus líneas.</p>
                 </div>
 
-                {/* Formulario de Creación (Flat Input Surface) */}
                 <div className="p-6 sm:p-8 bg-white dark:bg-[#0D131F] rounded-3xl space-y-4">
                   <h3 className="text-sm font-bold text-slate-900 dark:text-white">Crear Nueva Instancia API</h3>
                   <form onSubmit={handleCreateInstance} className="flex flex-col sm:flex-row gap-3">
@@ -826,7 +801,6 @@ echo $response;`;
                   </form>
                 </div>
 
-                {/* Grid de Instancias */}
                 <div className="space-y-4">
                   <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tus Instancias ({instances.length})</h3>
 
@@ -859,7 +833,6 @@ echo $response;`;
                             </span>
                           </div>
 
-                          {/* API Key */}
                           <div className="space-y-1.5">
                             <span className="text-[10px] font-bold text-slate-400 uppercase block">API Key de Instancia</span>
                             <div className="flex items-center justify-between bg-slate-50 dark:bg-[#141D2E] px-3.5 py-2.5 rounded-2xl">
@@ -875,7 +848,6 @@ echo $response;`;
                             </div>
                           </div>
 
-                          {/* Acciones */}
                           <div className="flex items-center gap-3 pt-1">
                             {inst.status === 'connected' ? (
                               <button
@@ -914,16 +886,47 @@ echo $response;`;
               </div>
             )}
 
-            {/* TESTER DE API (PLAYGROUND) */}
+            {/* TESTER DE API MULTI-TIPO (PLAYGROUND) */}
             {activeTab === 'playground' && (
               <div className="space-y-8 animate-fadeIn text-left">
                 <div className="space-y-1">
                   <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Tester Interactivo de API</h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Simula el envío de mensajes de WhatsApp mediante peticiones HTTP POST reales.</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Prueba el envío de Texto, Multimedia, Notas de Voz PTT, Ubicación y Contactos.</p>
+                </div>
+
+                {/* Selector de Tipo de Envío */}
+                <div className="flex gap-2 flex-wrap">
+                  {[
+                    { id: 'text', label: 'Texto', icon: Terminal },
+                    { id: 'media', label: 'Multimedia (Img/Doc/Vid)', icon: Image },
+                    { id: 'audio', label: 'Nota de Voz PTT', icon: Mic },
+                    { id: 'location', label: 'Ubicación GPS', icon: MapPin },
+                    { id: 'contact', label: 'Contacto vCard', icon: UserPlus },
+                  ].map(t => {
+                    const Icon = t.icon;
+                    const active = playgroundType === t.id;
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => setPlaygroundType(t.id as any)}
+                        className={`px-4 py-2.5 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                          active
+                            ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white'
+                            : 'bg-white dark:bg-[#0D131F] text-slate-600 dark:text-slate-300 hover:bg-slate-100'
+                        }`}
+                      >
+                        <Icon size={14} />
+                        <span>{t.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
 
                 <div className="p-6 sm:p-8 bg-white dark:bg-[#0D131F] rounded-3xl space-y-6">
                   <form onSubmit={handleTestSend} className="space-y-5">
+                    
+                    {/* Campos Base (Instancia y Teléfono) */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                       <div className="space-y-1.5">
                         <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block">Instancia WhatsApp</label>
@@ -951,15 +954,177 @@ echo $response;`;
                       </div>
                     </div>
 
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block">Mensaje de Texto</label>
-                      <textarea
-                        rows={3}
-                        value={playgroundMessage}
-                        onChange={(e) => setPlaygroundMessage(e.target.value)}
-                        className="w-full px-4 py-3 bg-slate-100 dark:bg-[#141D2E] rounded-2xl text-xs font-normal text-slate-900 dark:text-white focus:outline-none focus:bg-slate-200 dark:focus:bg-[#1A253A]"
-                      />
-                    </div>
+                    {/* Formulario Dinámico según playgroundType */}
+                    {playgroundType === 'text' && (
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block">Mensaje de Texto</label>
+                        <textarea
+                          rows={3}
+                          value={playgroundMessage}
+                          onChange={(e) => setPlaygroundMessage(e.target.value)}
+                          className="w-full px-4 py-3 bg-slate-100 dark:bg-[#141D2E] rounded-2xl text-xs font-normal text-slate-900 dark:text-white focus:outline-none focus:bg-slate-200 dark:focus:bg-[#1A253A]"
+                        />
+                      </div>
+                    )}
+
+                    {playgroundType === 'media' && (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block">Tipo de Medio (mediatype)</label>
+                            <select
+                              value={playgroundMediaType}
+                              onChange={(e) => {
+                                const val = e.target.value as any;
+                                setPlaygroundMediaType(val);
+                                if (val === 'image') setPlaygroundMimeType('image/jpeg');
+                                if (val === 'document') setPlaygroundMimeType('application/pdf');
+                                if (val === 'video') setPlaygroundMimeType('video/mp4');
+                                if (val === 'audio') setPlaygroundMimeType('audio/mpeg');
+                              }}
+                              className="w-full px-4 py-3 bg-slate-100 dark:bg-[#141D2E] rounded-2xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none"
+                            >
+                              <option value="image">Imagen (JPG, PNG, WEBP)</option>
+                              <option value="document">Documento (PDF, DOCX, XLSX)</option>
+                              <option value="video">Video (MP4)</option>
+                              <option value="audio">Audio como Archivo (MP3)</option>
+                            </select>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block">MIME Type</label>
+                            <input
+                              type="text"
+                              value={playgroundMimeType}
+                              onChange={(e) => setPlaygroundMimeType(e.target.value)}
+                              className="w-full px-4 py-3 bg-slate-100 dark:bg-[#141D2E] rounded-2xl text-xs font-mono text-slate-900 dark:text-white focus:outline-none"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block">URL Pública o Base64 del Archivo</label>
+                          <input
+                            type="text"
+                            value={playgroundMedia}
+                            onChange={(e) => setPlaygroundMedia(e.target.value)}
+                            placeholder="https://... o Base64 puro"
+                            className="w-full px-4 py-3 bg-slate-100 dark:bg-[#141D2E] rounded-2xl text-xs font-mono text-slate-900 dark:text-white focus:outline-none"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block">Caption / Descripción (Opcional)</label>
+                            <input
+                              type="text"
+                              value={playgroundCaption}
+                              onChange={(e) => setPlaygroundCaption(e.target.value)}
+                              className="w-full px-4 py-3 bg-slate-100 dark:bg-[#141D2E] rounded-2xl text-xs text-slate-900 dark:text-white focus:outline-none"
+                            />
+                          </div>
+
+                          {playgroundMediaType === 'document' && (
+                            <div className="space-y-1.5">
+                              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block">Nombre del Archivo (fileName)</label>
+                              <input
+                                type="text"
+                                value={playgroundFileName}
+                                onChange={(e) => setPlaygroundFileName(e.target.value)}
+                                className="w-full px-4 py-3 bg-slate-100 dark:bg-[#141D2E] rounded-2xl text-xs text-slate-900 dark:text-white focus:outline-none"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {playgroundType === 'audio' && (
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block">URL de Audio para Nota de Voz PTT (MP3/OGG)</label>
+                        <input
+                          type="text"
+                          value={playgroundAudio}
+                          onChange={(e) => setPlaygroundAudio(e.target.value)}
+                          placeholder="https://.../audio.mp3"
+                          className="w-full px-4 py-3 bg-slate-100 dark:bg-[#141D2E] rounded-2xl text-xs font-mono text-slate-900 dark:text-white focus:outline-none"
+                        />
+                        <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium pt-1">
+                          ● Se enviará codificado como Nota de Voz real de WhatsApp (PTT con ondas de audio).
+                        </p>
+                      </div>
+                    )}
+
+                    {playgroundType === 'location' && (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block">Nombre del Lugar</label>
+                            <input
+                              type="text"
+                              value={playgroundLocName}
+                              onChange={(e) => setPlaygroundLocName(e.target.value)}
+                              className="w-full px-4 py-3 bg-slate-100 dark:bg-[#141D2E] rounded-2xl text-xs text-slate-900 dark:text-white focus:outline-none"
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block">Dirección</label>
+                            <input
+                              type="text"
+                              value={playgroundLocAddress}
+                              onChange={(e) => setPlaygroundLocAddress(e.target.value)}
+                              className="w-full px-4 py-3 bg-slate-100 dark:bg-[#141D2E] rounded-2xl text-xs text-slate-900 dark:text-white focus:outline-none"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block">Latitud</label>
+                            <input
+                              type="number"
+                              step="any"
+                              value={playgroundLatitude}
+                              onChange={(e) => setPlaygroundLatitude(parseFloat(e.target.value))}
+                              className="w-full px-4 py-3 bg-slate-100 dark:bg-[#141D2E] rounded-2xl text-xs font-mono text-slate-900 dark:text-white focus:outline-none"
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block">Longitud</label>
+                            <input
+                              type="number"
+                              step="any"
+                              value={playgroundLongitude}
+                              onChange={(e) => setPlaygroundLongitude(parseFloat(e.target.value))}
+                              className="w-full px-4 py-3 bg-slate-100 dark:bg-[#141D2E] rounded-2xl text-xs font-mono text-slate-900 dark:text-white focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {playgroundType === 'contact' && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block">Nombre Completo del Contacto</label>
+                          <input
+                            type="text"
+                            value={playgroundContactName}
+                            onChange={(e) => setPlaygroundContactName(e.target.value)}
+                            className="w-full px-4 py-3 bg-slate-100 dark:bg-[#141D2E] rounded-2xl text-xs text-slate-900 dark:text-white focus:outline-none"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block">Teléfono del Contacto (con +)</label>
+                          <input
+                            type="text"
+                            value={playgroundContactPhone}
+                            onChange={(e) => setPlaygroundContactPhone(e.target.value)}
+                            className="w-full px-4 py-3 bg-slate-100 dark:bg-[#141D2E] rounded-2xl text-xs font-mono text-slate-900 dark:text-white focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                    )}
 
                     <button
                       type="submit"
@@ -967,14 +1132,14 @@ echo $response;`;
                       className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold rounded-2xl active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[44px] disabled:opacity-50"
                     >
                       <Send size={15} />
-                      <span>{playgroundLoading ? 'Enviando petición...' : 'Ejecutar Envío de Prueba'}</span>
+                      <span>{playgroundLoading ? 'Enviando petición a WhatsApp...' : `Ejecutar Envío de ${playgroundType.toUpperCase()}`}</span>
                     </button>
                   </form>
 
-                  {/* Respuesta HTTP (Flat Dark Canvas) */}
+                  {/* Respuesta HTTP */}
                   {playgroundResponse && (
                     <div className="space-y-2 pt-4">
-                      <span className="text-xs font-bold text-slate-400 uppercase block">Respuesta HTTP de la API:</span>
+                      <span className="text-xs font-bold text-slate-400 uppercase block">Respuesta HTTP de la API (Evolution 2.4.0-rc2):</span>
                       <pre className="p-5 bg-slate-100 dark:bg-[#070B12] text-emerald-600 dark:text-emerald-400 rounded-3xl text-xs font-mono overflow-x-auto">
                         {JSON.stringify(playgroundResponse, null, 2)}
                       </pre>
@@ -989,7 +1154,31 @@ echo $response;`;
               <div className="space-y-8 animate-fadeIn text-left">
                 <div className="space-y-1">
                   <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Documentación de la API REST</h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Integra el envío y recepción de WhatsApp en tu software propio mediante peticiones HTTP estándar.</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Integra el envío y recepción de WhatsApp en tu software mediante llamadas HTTP estándar con <code className="text-emerald-600 dark:text-emerald-400 font-bold">x-api-key</code>.</p>
+                </div>
+
+                {/* Sub-Tabs de Endpoints */}
+                <div className="flex gap-2 flex-wrap">
+                  {[
+                    { id: 'send-text', label: 'POST /send-text' },
+                    { id: 'send-media', label: 'POST /send-media' },
+                    { id: 'send-audio', label: 'POST /send-audio (PTT)' },
+                    { id: 'send-location', label: 'POST /send-location' },
+                    { id: 'send-contact', label: 'POST /send-contact' }
+                  ].map(e => (
+                    <button
+                      key={e.id}
+                      type="button"
+                      onClick={() => setDocEndpoint(e.id as any)}
+                      className={`px-4 py-2 text-xs font-mono font-bold rounded-2xl transition-all cursor-pointer ${
+                        docEndpoint === e.id
+                          ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+                          : 'bg-white dark:bg-[#0D131F] text-slate-600 dark:text-slate-300 hover:bg-slate-100'
+                      }`}
+                    >
+                      {e.label}
+                    </button>
+                  ))}
                 </div>
 
                 <div className="p-6 sm:p-8 bg-white dark:bg-[#0D131F] rounded-3xl space-y-6">
@@ -1014,7 +1203,9 @@ echo $response;`;
                   {/* Bloque de Código */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-400 uppercase">Endpoint: POST /api/webhooks/send-text</span>
+                      <span className="text-xs font-bold text-slate-400 uppercase font-mono">
+                        POST {currentBackendUrl}/api/webhooks/{docEndpoint}
+                      </span>
                       <button
                         type="button"
                         onClick={() => copyToClipboard(getDocCode())}
@@ -1064,8 +1255,6 @@ echo $response;`;
             {/* SUPERADMIN VIEWS */}
             {user?.role === 'admin' && activeTab === 'admin_overview' && (
               <div className="space-y-8 animate-fadeIn text-left">
-                
-                {/* Hero Admin */}
                 <div className="space-y-1.5">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[11px] font-bold rounded-full">
                     <Shield size={12} />
@@ -1079,7 +1268,6 @@ echo $response;`;
                   </p>
                 </div>
 
-                {/* Métricas KPI Admin */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                   <div className="p-7 bg-white dark:bg-[#0D131F] rounded-3xl space-y-2">
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Clientes / Empresas</span>
@@ -1101,7 +1289,6 @@ echo $response;`;
                     <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 pt-1">Gateway en línea</p>
                   </div>
                 </div>
-
               </div>
             )}
 
@@ -1109,7 +1296,7 @@ echo $response;`;
         </main>
       </div>
 
-      {/* Modal QR Code (Clean Surface Modal) */}
+      {/* Modal QR Code */}
       {qrCodeModal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fadeIn">
           <div className="bg-white dark:bg-[#0D131F] rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center space-y-4">
@@ -1136,7 +1323,7 @@ echo $response;`;
         </div>
       )}
 
-      {/* Modal de Confirmación Personalizado (Clean Flat Modal) */}
+      {/* Modal de Confirmación Personalizado */}
       {confirmModal.open && (
         <div className="fixed inset-0 z-[9990] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fadeIn">
           <div className="bg-white dark:bg-[#0D131F] rounded-3xl p-6 sm:p-8 max-w-sm w-full text-left space-y-5">
