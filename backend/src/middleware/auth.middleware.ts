@@ -82,9 +82,21 @@ export async function apiKeyOrTokenAuth(req: AuthenticatedRequest, res: Response
   // 2. Intentar con x-api-key
   if (apiKey) {
     try {
+      const { ApiKeyService } = await import('../services/api-key.service');
+      const keyValidation = await ApiKeyService.validateKey(apiKey);
+
+      if (keyValidation.isValid && keyValidation.userId) {
+        req.userId = keyValidation.userId;
+        req.tenantId = keyValidation.userId;
+        req.userRole = 'client';
+        (req as any).environment = keyValidation.environment || 'live';
+        (req as any).scopes = keyValidation.scopes || [];
+        return next();
+      }
+
       const pool = (await import('../config/database')).default;
       
-      // Buscar si la API Key corresponde a una instancia del usuario
+      // Buscar si la API Key corresponde a una instancia del usuario (Retrocompatibilidad)
       const instRes = await pool.query(
         'SELECT user_id FROM instances WHERE api_key = $1 LIMIT 1',
         [apiKey]
@@ -95,6 +107,7 @@ export async function apiKeyOrTokenAuth(req: AuthenticatedRequest, res: Response
         req.userId = userId;
         req.tenantId = userId;
         req.userRole = 'client';
+        (req as any).environment = 'live';
         return next();
       }
 

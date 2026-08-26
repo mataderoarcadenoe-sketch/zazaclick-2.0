@@ -10,6 +10,8 @@ import adminRoutes from './routes/admin.routes';
 import webhookRoutes from './routes/webhook.routes';
 import v1Routes from './routes/v1.routes';
 import openapiRoutes from './routes/openapi.routes';
+import developerRoutes from './routes/developer.routes';
+import { ApiLogService } from './services/api-log.service';
 import { EvolutionService } from './services/evolution.service';
 import { startSubscriptionScheduler } from './jobs/subscription-scheduler.job';
 import { engineRegistry } from './engines/core/EngineRegistry';
@@ -82,6 +84,7 @@ app.use(cors({
 // Middlewares Globales de Seguridad, Observabilidad y Rate Limiting
 app.use(requestIdMiddleware);
 app.use(globalRateLimiter);
+app.use(ApiLogService.middleware());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
@@ -90,6 +93,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/instances', instanceRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/webhooks', webhookRoutes);
+
+// Developer Portal & API Management Routes
+app.use('/api/developer', developerRoutes);
+app.use('/v1/developer', developerRoutes);
 
 // Developer Platform v1 API Routes & OpenAPI Specification
 app.use('/v1', v1Routes);

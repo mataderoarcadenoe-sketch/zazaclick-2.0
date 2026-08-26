@@ -225,7 +225,83 @@ export async function initDatabase() {
       );
     `);
 
-    // 8. Índices de Alto Rendimiento
+    // 8. Tabla de API Keys para Desarrolladores y Sistemas ERP
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS api_keys (
+        id VARCHAR(255) PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        name VARCHAR(100) NOT NULL DEFAULT 'Default API Key',
+        key_prefix VARCHAR(50) NOT NULL,
+        key_hash VARCHAR(255) NOT NULL,
+        masked_key VARCHAR(50) NOT NULL,
+        environment VARCHAR(20) NOT NULL DEFAULT 'live',
+        scopes JSONB NOT NULL DEFAULT '["instances:read","instances:write","messages:send","webhooks:read","webhooks:write","usage:read","logs:read"]'::jsonb,
+        is_active BOOLEAN DEFAULT true,
+        last_used_at TIMESTAMP NULL,
+        revoked_at TIMESTAMP NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // 9. Tabla de Logs de Solicitudes API (Observabilidad y Depuración para Developers)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS api_request_logs (
+        id VARCHAR(255) PRIMARY KEY,
+        user_id VARCHAR(255) NULL REFERENCES users(id) ON DELETE SET NULL,
+        instance_name VARCHAR(255) NULL,
+        method VARCHAR(10) NOT NULL,
+        endpoint VARCHAR(255) NOT NULL,
+        status_code INTEGER NOT NULL,
+        latency_ms INTEGER NOT NULL,
+        request_id VARCHAR(100) NOT NULL,
+        correlation_id VARCHAR(100) NULL,
+        ip_address VARCHAR(50) NULL,
+        user_agent TEXT NULL,
+        request_headers JSONB NULL,
+        request_body JSONB NULL,
+        response_body JSONB NULL,
+        environment VARCHAR(20) DEFAULT 'live',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // 10. Tabla de Entregas y Replay de Webhooks para ERP
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS webhook_deliveries (
+        id VARCHAR(255) PRIMARY KEY,
+        user_id VARCHAR(255) NULL REFERENCES users(id) ON DELETE SET NULL,
+        instance_name VARCHAR(255) NOT NULL,
+        event_id VARCHAR(100) NOT NULL,
+        delivery_id VARCHAR(100) NOT NULL,
+        event_type VARCHAR(100) NOT NULL,
+        target_url TEXT NOT NULL,
+        status VARCHAR(20) NOT NULL,
+        http_status INTEGER NULL,
+        latency_ms INTEGER NULL,
+        attempts INTEGER DEFAULT 1,
+        request_headers JSONB NULL,
+        payload JSONB NOT NULL,
+        response_body TEXT NULL,
+        error_message TEXT NULL,
+        is_replay BOOLEAN DEFAULT false,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        last_attempt_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // 11. Tabla de Auditoría de Seguridad para Desarrolladores
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS developer_security_logs (
+        id VARCHAR(255) PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        action VARCHAR(100) NOT NULL,
+        details JSONB NULL,
+        ip_address VARCHAR(50) NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // 12. Índices de Alto Rendimiento
     await pool.query(`
       CREATE INDEX IF NOT EXISTS idx_instances_lookup ON instances (instance_name, api_key);
       CREATE INDEX IF NOT EXISTS idx_instances_engine_type ON instances (engine_type);
@@ -233,16 +309,23 @@ export async function initDatabase() {
       CREATE INDEX IF NOT EXISTS idx_usage_logs_user ON usage_logs (user_id, created_at);
       CREATE INDEX IF NOT EXISTS idx_payments_user ON payments (user_id, created_at);
       CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON admin_audit_logs (created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_api_keys_lookup ON api_keys (key_hash, is_active);
+      CREATE INDEX IF NOT EXISTS idx_api_keys_user ON api_keys (user_id, created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_api_logs_user ON api_request_logs (user_id, created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_api_logs_req_id ON api_request_logs (request_id);
+      CREATE INDEX IF NOT EXISTS idx_wh_deliveries_user ON webhook_deliveries (user_id, created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_wh_deliveries_event ON webhook_deliveries (event_id);
+      CREATE INDEX IF NOT EXISTS idx_sec_logs_user ON developer_security_logs (user_id, created_at DESC);
     `);
 
-    // 9. Asegurar rol SuperAdmin para el correo principal
+    // 13. Asegurar rol SuperAdmin para el correo principal
     await pool.query(`
       UPDATE users 
       SET role = 'admin', status = 'active'
       WHERE email = 'syscomecosistemadigital@gmail.com';
     `);
 
-    console.log('🚀 [Database] Estructura SaaS Core, Licenciamiento y Auditoría inicializadas exitosamente.');
+    console.log('🚀 [Database] Estructura SaaS Core, Licenciamiento, Developer Platform y Auditoría inicializadas exitosamente.');
   } catch (error: any) {
     console.error('❌ [Database] Error inicializando tablas:', error.message);
   }

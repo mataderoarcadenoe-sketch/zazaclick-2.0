@@ -7,7 +7,7 @@ import {
   LogOut, RefreshCw, Plus, Key, Trash2, Smartphone, CheckCircle2, 
   AlertCircle, Copy, Send, LayoutGrid, Terminal, 
   Moon, Sun, Menu, X, Play, Shield, Building, Image, Mic, MapPin, UserPlus, ArrowRight,
-  Activity, Globe, CreditCard, AlertTriangle
+  Activity, Globe, CreditCard, AlertTriangle, Code
 } from 'lucide-react';
 
 import { AsyncOperationModal, type AsyncStep, type AsyncStatus } from '../components/AsyncOperationModal';
@@ -17,6 +17,7 @@ import { ConfirmationModal } from '../components/ConfirmationModal';
 import { ToastNotification } from '../components/ToastNotification';
 import { ZazaLogo } from '../components/ZazaLogo';
 import { DeveloperPlatformDocs } from '../components/DeveloperPlatformDocs';
+import { DeveloperPortal } from '../components/DeveloperPortal';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -426,9 +427,10 @@ export default function Dashboard() {
 
   const menuItems = [
     { id: 'overview', label: 'Dashboard API', icon: LayoutGrid },
+    { id: 'developer', label: 'Developer Portal', icon: Terminal },
     { id: 'instances', label: 'Instancias / QR', icon: Smartphone },
     { id: 'playground', label: 'Tester de API', icon: Play },
-    { id: 'docs', label: 'Documentación API', icon: Terminal },
+    { id: 'docs', label: 'Documentación API', icon: Code },
     { id: 'subscription', label: 'Planes y Suscripción', icon: Key },
   ];
 
@@ -871,6 +873,17 @@ echo $response;`;
                   </div>
                 </div>
 
+              </div>
+            )}
+
+            {/* DEVELOPER PORTAL & API MANAGEMENT */}
+            {activeTab === 'developer' && (
+              <div className="animate-fadeIn text-left">
+                <DeveloperPortal
+                  instances={instances}
+                  currentApiKey={instances[0]?.api_key || user?.id || 'zc_live_sec_demo'}
+                  onRefreshInstances={fetchInstances}
+                />
               </div>
             )}
 
