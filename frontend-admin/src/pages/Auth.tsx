@@ -3,7 +3,7 @@ import { useAuth } from '../services/authContext';
 import { 
   ShieldCheck, Moon, Sun, Lock, Loader2, 
   ShieldAlert, Server, KeyRound, CheckCircle2,
-  Terminal, ArrowRight, Zap, Database, Sparkles,
+  Terminal, ArrowRight, Zap, Database,
   LockKeyhole
 } from 'lucide-react';
 import { useDarkMode } from '../hooks/useDarkMode';
@@ -146,11 +146,6 @@ export default function AuthPage() {
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
               </span>
               <span>SUPERADMIN SAAS CONTROL CENTER · v2.0</span>
-            </div>
-
-            <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 text-xs font-bold border border-teal-500/20">
-              <Sparkles size={13} className="text-teal-500" />
-              <span>Control Maestro Total</span>
             </div>
           </div>
 
