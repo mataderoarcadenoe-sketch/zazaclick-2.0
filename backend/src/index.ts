@@ -16,9 +16,14 @@ dotenv.config();
 const app = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
 
-// Configuración de orígenes autorizados para desarrollo y producción en Railway
+// Configuración de orígenes autorizados para desarrollo y producción (Railway y zazaclick.sbs)
 const allowedOrigins = [
+  'https://zazaclick.sbs',
+  'https://app.zazaclick.sbs',
+  'https://admin.zazaclick.sbs',
+  'https://api.zazaclick.sbs',
   'https://zaza-click-frontend-production.up.railway.app',
+  'https://zaza-click-admin-production.up.railway.app',
   'https://zaza-click-20-production.up.railway.app',
   process.env.FRONTEND_URL,
   process.env.CLIENT_URL,
@@ -33,6 +38,7 @@ app.use(cors({
       allowedOrigins.includes(origin) ||
       origin.includes('localhost') ||
       origin.includes('127.0.0.1') ||
+      origin.includes('zazaclick.sbs') ||
       origin.includes('railway.app')
     ) {
       return callback(null, true);
