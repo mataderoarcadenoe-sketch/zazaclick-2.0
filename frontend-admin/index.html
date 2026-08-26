@@ -1,12 +1,22 @@
 <!doctype html>
-<html lang="en">
+<html lang="es" class="dark">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>Zaza Admin 2.0 — SuperAdmin Control Center</title>
+    <script>
+      try {
+        const saved = localStorage.getItem('darkMode');
+        if (saved !== null && JSON.parse(saved) === false) {
+          document.documentElement.classList.remove('dark');
+        } else {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    </script>
   </head>
-  <body>
+  <body class="bg-[#F8FAFC] dark:bg-[#050C1A] text-slate-900 dark:text-white transition-colors duration-300">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
