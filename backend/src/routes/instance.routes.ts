@@ -102,9 +102,10 @@ function generateId(prefix: string): string {
 }
 
 /**
- * POST /create - Crear una nueva instancia de WhatsApp
+/**
+ * POST / y POST /create - Crear una nueva instancia de WhatsApp
  */
-router.post('/create', authMiddleware, async (req: AuthenticatedRequest, res) => {
+const createInstanceHandler = async (req: AuthenticatedRequest, res: Response) => {
   const { instanceName } = req.body;
 
   console.log(`[Create] INICIO — userId=${req.userId} instanceName=${instanceName}`);
@@ -187,13 +188,15 @@ router.post('/create', authMiddleware, async (req: AuthenticatedRequest, res) =>
     console.error('[Create] STACK:', error.stack);
     res.status(500).json({ success: false, error: `Error en el servidor: ${error.message}` });
   }
-});
+};
+router.post('/create', authMiddleware, createInstanceHandler);
+router.post('/', authMiddleware, createInstanceHandler);
 
 
 /**
- * GET /list - Listar instancias del cliente y actualizar sus estados en vivo
+ * GET / y GET /list - Listar instancias del cliente y actualizar sus estados en vivo
  */
-router.get('/list', authMiddleware, async (req: AuthenticatedRequest, res) => {
+const getInstancesListHandler = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const instancesRes = await pool.query(
       'SELECT id, instance_name, phone, status, api_key, created_at FROM instances WHERE user_id = $1 ORDER BY created_at DESC',
@@ -230,12 +233,14 @@ router.get('/list', authMiddleware, async (req: AuthenticatedRequest, res) => {
     console.error('[Instance] Error en GET /list:', error.message);
     res.status(500).json({ success: false, error: 'Error en el servidor al listar instancias' });
   }
-});
+};
+router.get('/list', authMiddleware, getInstancesListHandler);
+router.get('/', authMiddleware, getInstancesListHandler);
 
 /**
- * GET /qr/:instanceName - Obtener código QR para vincular
+ * GET /qr/:instanceName y GET /:instanceName/connect - Obtener código QR para vincular
  */
-router.get('/qr/:instanceName', authMiddleware, async (req: AuthenticatedRequest, res) => {
+const getQrHandler = async (req: AuthenticatedRequest, res: Response) => {
   const { instanceName } = req.params;
 
   try {
@@ -253,19 +258,22 @@ router.get('/qr/:instanceName', authMiddleware, async (req: AuthenticatedRequest
 
     res.json({
       success: true,
-      qrcode: qrRes.qrcode
+      qrcode: qrRes.qrcode,
+      base64: qrRes.qrcode
     });
 
   } catch (error: any) {
     console.error('[Instance] Error en GET /qr:', error.message);
     res.status(500).json({ success: false, error: 'Error en el servidor al generar QR' });
   }
-});
+};
+router.get('/qr/:instanceName', authMiddleware, getQrHandler);
+router.get('/:instanceName/connect', authMiddleware, getQrHandler);
 
 /**
- * POST /logout/:instanceName - Cerrar sesión de WhatsApp
+ * POST /logout/:instanceName y POST /:instanceName/logout - Cerrar sesión de WhatsApp
  */
-router.post('/logout/:instanceName', authMiddleware, async (req: AuthenticatedRequest, res) => {
+const logoutHandler = async (req: AuthenticatedRequest, res: Response) => {
   const { instanceName } = req.params;
 
   try {
@@ -285,12 +293,14 @@ router.post('/logout/:instanceName', authMiddleware, async (req: AuthenticatedRe
     console.error('[Instance] Error en POST /logout:', error.message);
     res.status(500).json({ success: false, error: 'Error interno' });
   }
-});
+};
+router.post('/logout/:instanceName', authMiddleware, logoutHandler);
+router.post('/:instanceName/logout', authMiddleware, logoutHandler);
 
 /**
- * DELETE /delete/:instanceName - Eliminar instancia
+ * DELETE /delete/:instanceName y DELETE /:instanceName - Eliminar instancia
  */
-router.delete('/delete/:instanceName', authMiddleware, async (req: AuthenticatedRequest, res) => {
+const deleteInstanceHandler = async (req: AuthenticatedRequest, res: Response) => {
   const { instanceName } = req.params;
 
   try {
@@ -328,7 +338,10 @@ router.delete('/delete/:instanceName', authMiddleware, async (req: Authenticated
     console.error('[Instance] Error en DELETE:', error.message);
     res.status(500).json({ success: false, error: 'Error en el servidor al eliminar instancia' });
   }
-});
+};
+router.delete('/delete/:instanceName', authMiddleware, deleteInstanceHandler);
+router.delete('/:instanceName', authMiddleware, deleteInstanceHandler);
+
 
 /**
  * POST /send - Endpoint público para enviar mensajes utilizando API Key del cliente
