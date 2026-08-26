@@ -2,14 +2,15 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../services/authContext';
 import { 
   ShieldCheck, Moon, Sun, Lock, Loader2, 
-  ShieldAlert, Server, Cpu, KeyRound, CheckCircle2
+  ShieldAlert, Server, KeyRound, CheckCircle2,
+  Terminal, ArrowRight, Zap, Database
 } from 'lucide-react';
 import { useDarkMode } from '../hooks/useDarkMode';
 import api from '../services/api';
 
 declare global {
   interface Window {
-    google: any;
+    google?: any;
   }
 }
 
@@ -21,15 +22,20 @@ export default function AuthPage() {
   const { isDark, toggle: toggleDark } = useDarkMode();
   const googleBtnRef = useRef<HTMLDivElement>(null);
 
-  // Manejo de respuesta de Google OAuth SSO
-  const handleGoogleLoginResponse = useCallback(async (response: any) => {
-    setError(null);
-    setAuthenticating(true);
+  const GOOGLE_CLIENT_ID = '6104299697-7dissi3tuvd84q94737nqmsi96nmh2d5.apps.googleusercontent.com';
+
+  const handleGoogleCallback = useCallback(async (response: any) => {
     try {
+      if (!response.credential) {
+        setError('No se recibió la credencial de Google.');
+        return;
+      }
+      setAuthenticating(true);
+      setError(null);
       const res = await api.post('/auth/google-login', { credential: response.credential });
       if (res.data?.success && res.data?.token) {
         if (res.data?.user?.role !== 'admin') {
-          setError('Acceso Denegado: Esta cuenta de Google no tiene privilegios de SuperAdmin.');
+          setError('Acceso Denegado: Esta cuenta de Google no tiene permisos de SuperAdmin.');
           return;
         }
         localStorage.setItem('saas_auth_token', res.data.token);
@@ -49,173 +55,281 @@ export default function AuthPage() {
 
     try {
       window.google.accounts.id.initialize({
-        client_id: '6104299697-7dissi3tuvd84q94737nqmsi96nmh2d5.apps.googleusercontent.com',
-        callback: handleGoogleLoginResponse,
-        auto_select: false
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleCallback,
+        auto_select: false,
+        cancel_on_tap_outside: true,
       });
 
       googleBtnRef.current.innerHTML = '';
 
-      window.google.accounts.id.renderButton(
-        googleBtnRef.current,
-        { 
-          type: 'standard',
-          theme: isDark ? 'filled_black' : 'outline', 
-          size: 'large', 
-          width: '340',
-          text: 'signin_with',
-          shape: 'pill',
-          logo_alignment: 'left'
-        }
-      );
+      window.google.accounts.id.renderButton(googleBtnRef.current, {
+        theme: isDark ? 'filled_black' : 'outline',
+        size: 'large',
+        type: 'standard',
+        text: 'signin_with',
+        shape: 'pill',
+        logo_alignment: 'left',
+        width: 320,
+      });
+
       setLoadingGoogle(false);
     } catch (err) {
-      console.warn('Error al inicializar Google OAuth SDK:', err);
+      console.warn('Error inicializando Google Button en Admin:', err);
     }
-  }, [isDark, handleGoogleLoginResponse]);
+  }, [isDark, handleGoogleCallback]);
 
   useEffect(() => {
+    const existingScript = document.getElementById('google-gsi-client-admin');
+
     if (window.google) {
       renderGoogleButton();
-      return;
-    }
-
-    const SCRIPT_ID = 'google-gsi-client-admin';
-    let script = document.getElementById(SCRIPT_ID) as HTMLScriptElement;
-
-    if (!script) {
-      script = document.createElement('script');
-      script.id = SCRIPT_ID;
+    } else if (!existingScript) {
+      const script = document.createElement('script');
+      script.id = 'google-gsi-client-admin';
       script.src = 'https://accounts.google.com/gsi/client';
       script.async = true;
       script.defer = true;
       script.onload = () => renderGoogleButton();
-      document.body.appendChild(script);
+      script.onerror = () => {
+        setLoadingGoogle(false);
+        setError('No se pudo cargar el servicio de autenticación de Google.');
+      };
+      document.head.appendChild(script);
     } else {
-      script.addEventListener('load', renderGoogleButton);
-      return () => script.removeEventListener('load', renderGoogleButton);
+      existingScript.addEventListener('load', () => renderGoogleButton());
     }
   }, [renderGoogleButton]);
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center p-4 sm:p-6 lg:p-10 bg-[#F8FAFC] dark:bg-[#070B12] text-slate-900 dark:text-white overflow-hidden transition-colors duration-250 font-sans selection:bg-emerald-500 selection:text-white">
+    <div className="min-h-screen relative flex items-center justify-center p-4 sm:p-6 lg:p-10 bg-[#F8FAFC] dark:bg-[#070B12] text-slate-900 dark:text-white overflow-hidden transition-colors duration-250 font-sans bg-grid-tech selection:bg-emerald-500 selection:text-white">
       
-      {/* Background Ambient Aura */}
-      <div className="absolute -top-48 -left-48 w-[600px] h-[600px] rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 blur-[160px] pointer-events-none" />
-      <div className="absolute -bottom-48 -right-48 w-[600px] h-[600px] rounded-full bg-teal-500/10 dark:bg-teal-500/15 blur-[160px] pointer-events-none" />
+      {/* Ambient Glow Lights */}
+      <div className="absolute -top-48 -left-48 w-[650px] h-[650px] rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 blur-[160px] pointer-events-none animate-pulse-glow" />
+      <div className="absolute -bottom-48 -right-48 w-[650px] h-[650px] rounded-full bg-teal-500/10 dark:bg-teal-500/15 blur-[160px] pointer-events-none animate-pulse-glow" />
+      <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-cyan-500/5 dark:bg-cyan-500/8 blur-[180px] pointer-events-none" />
 
       {/* Floating Theme Button */}
       <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-50">
         <button
           onClick={toggleDark}
-          className="p-3 bg-white dark:bg-[#0D131F] rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-300 cursor-pointer shadow-sm"
+          className="p-3 bg-white dark:bg-[#0D131F] rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-300 cursor-pointer active:scale-95 flex items-center gap-2 shadow-sm"
           aria-label="Cambiar tema"
         >
           {isDark ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-emerald-600" />}
         </button>
       </div>
 
-      <div className="w-full max-w-md relative z-10 py-6 animate-fadeIn">
-        <div className="w-full bg-white dark:bg-[#0D131F] p-8 sm:p-10 rounded-[32px] relative overflow-hidden transition-all shadow-xl dark:shadow-2xl dark:shadow-black/50 border border-slate-100/80 dark:border-slate-800/40 text-center space-y-6">
+      <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center relative z-10 py-6">
+        
+        {/* Left Hero Showcase — SuperAdmin Command Center & Architecture Telemetry */}
+        <div className="lg:col-span-7 space-y-8 text-left hidden lg:block animate-fadeIn">
           
-          {/* Brand Logo & Header */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-center">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 dark:from-emerald-600 dark:to-teal-800 flex items-center justify-center text-white shadow-md transform hover:scale-105 transition-transform">
-                <ShieldCheck size={32} className="text-emerald-400" />
+          {/* Header Status Badge */}
+          <div className="flex items-center gap-3">
+            <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold tracking-wide">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span>SUPERADMIN SAAS CONTROL CENTER · v2.0</span>
+            </div>
+
+            <div className="hidden sm:inline-flex items-center px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold">
+              <span>Control Absoluto</span>
+            </div>
+          </div>
+
+          {/* Main Headline */}
+          <div className="space-y-3">
+            <h1 className="text-4xl xl:text-5xl font-black text-slate-900 dark:text-white leading-[1.12] tracking-tight">
+              Control Maestro, Licencias <br />
+              y Facturación de tu <br />
+              <span className="bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 bg-clip-text text-transparent">
+                WhatsApp API Gateway.
+              </span>
+            </h1>
+            <p className="text-slate-600 dark:text-slate-400 text-sm md:text-base leading-relaxed max-w-2xl font-normal">
+              Centro de mando exclusivo para gestionar inquilinos, supervisar consumo de cuotas en tiempo real, procesar pagos y controlar el clúster de Evolution API 2.4.0-rc2.
+            </p>
+          </div>
+
+          {/* SuperAdmin Architecture Canvas */}
+          <div className="p-6 rounded-3xl bg-white dark:bg-[#0D131F] relative overflow-hidden space-y-5 shadow-sm border border-slate-100/80 dark:border-slate-800/40">
+            
+            <div className="flex items-center justify-between pb-3">
+              <div className="flex items-center gap-2">
+                <Terminal size={16} className="text-emerald-500" />
+                <span className="text-xs font-bold text-slate-900 dark:text-white">Arquitectura de Control Administrativo</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                <span>SUPERADMIN ACTIVO</span>
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-bold uppercase tracking-wider">
-                <KeyRound size={12} className="text-emerald-500" />
-                <span>SuperAdmin Gateway · Zaza 2.0</span>
+            {/* Nodes Diagram */}
+            <div className="grid grid-cols-3 gap-3 text-center">
+              
+              {/* Node 1: SuperAdmin Authority */}
+              <div className="p-4 bg-slate-50 dark:bg-[#141D2E] rounded-2xl space-y-1">
+                <div className="w-8 h-8 mx-auto rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 flex items-center justify-center font-bold text-xs">
+                  <ShieldCheck size={16} className="text-emerald-400 dark:text-emerald-600" />
+                </div>
+                <h5 className="text-[11px] font-bold text-slate-800 dark:text-slate-200">SuperAdmin</h5>
+                <p className="text-[10px] text-slate-400">Control & Auditoría</p>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight pt-1">
-                Consola de Control
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-normal leading-relaxed">
-                Acceso exclusivo para la gestión de infraestructura, inquilinos, licencias y métricas globales.
+
+              {/* Node 2: Database & Atomic Quota */}
+              <div className="p-4 bg-emerald-50/80 dark:bg-emerald-950/40 rounded-2xl space-y-1 relative">
+                <div className="absolute -left-3 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600">
+                  <ArrowRight size={14} />
+                </div>
+                <div className="w-8 h-8 mx-auto rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                  <Database size={16} />
+                </div>
+                <h5 className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300">PostgreSQL Core</h5>
+                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono">Cuotas Atómicas</p>
+                <div className="absolute -right-3 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600">
+                  <ArrowRight size={14} />
+                </div>
+              </div>
+
+              {/* Node 3: Evolution Cluster */}
+              <div className="p-4 bg-slate-50 dark:bg-[#141D2E] rounded-2xl space-y-1">
+                <div className="w-8 h-8 mx-auto rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                  <Server size={16} />
+                </div>
+                <h5 className="text-[11px] font-bold text-slate-800 dark:text-slate-200">Evolution 2.4.0</h5>
+                <p className="text-[10px] text-slate-400">Baileys Multi-Device</p>
+              </div>
+
+            </div>
+
+            {/* Architecture Metrics Live Bar */}
+            <div className="grid grid-cols-3 gap-2 pt-2 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 size={13} className="text-emerald-500" />
+                <span>Control de Vencimientos</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 size={13} className="text-teal-500" />
+                <span>Reserva Atómica</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 size={13} className="text-cyan-500" />
+                <span>Anti-Bypass Perimetral</span>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Feature Highlights Cards */}
+          <div className="grid grid-cols-2 gap-4 max-w-2xl">
+            
+            <div className="p-5 rounded-2xl bg-white dark:bg-[#0D131F] space-y-1.5 shadow-sm border border-slate-100/80 dark:border-slate-800/40">
+              <div className="flex items-center gap-2 text-slate-900 dark:text-white text-xs font-bold">
+                <Zap size={16} className="text-emerald-500" />
+                <span>Control Total de Clientes</span>
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-normal">
+                Suspende, bloquea, activa y cambia planes de cualquier empresa al instante.
               </p>
             </div>
-          </div>
 
-          {/* Telemetría Rápida */}
-          <div className="grid grid-cols-2 gap-2.5">
-            <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-[#141D2E] flex items-center justify-center gap-2">
-              <Server size={14} className="text-emerald-500 flex-shrink-0" />
-              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Cluster Core v2.0</span>
-            </div>
-            <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-[#141D2E] flex items-center justify-center gap-2">
-              <Cpu size={14} className="text-teal-500 flex-shrink-0" />
-              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Evolution 2.4.0-rc2</span>
-            </div>
-          </div>
-
-          {/* Error Alert Box */}
-          {error && (
-            <div className="p-4 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs rounded-2xl text-left font-medium flex items-start gap-3 animate-fadeIn">
-              <ShieldAlert size={18} className="text-rose-600 dark:text-rose-400 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-bold text-rose-900 dark:text-rose-200">Acceso Restringido</p>
-                <p className="text-[11px] mt-0.5 text-rose-700 dark:text-rose-300 leading-relaxed">{error}</p>
+            <div className="p-5 rounded-2xl bg-white dark:bg-[#0D131F] space-y-1.5 shadow-sm border border-slate-100/80 dark:border-slate-800/40">
+              <div className="flex items-center gap-2 text-slate-900 dark:text-white text-xs font-bold">
+                <ShieldCheck size={16} className="text-teal-500" />
+                <span>Pagos & Trazabilidad</span>
               </div>
-            </div>
-          )}
-
-          {/* Tarjeta de Cuenta Autorizada */}
-          <div className="p-3.5 bg-emerald-50/70 dark:bg-emerald-950/30 rounded-2xl flex items-center gap-3 text-left">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 dark:bg-emerald-400/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
-              <CheckCircle2 size={16} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider block">
-                Cuenta de SuperAdmin Vinculada
-              </span>
-              <span className="text-xs font-mono font-bold text-slate-800 dark:text-slate-200 truncate block">
-                syscomecosistemadigital@gmail.com
-              </span>
-            </div>
-          </div>
-
-          {/* Google SSO Login Container */}
-          <div className="space-y-4 pt-2">
-            <div className="flex flex-col items-center justify-center min-h-[50px] relative w-full">
-              {loadingGoogle && !authenticating && (
-                <div className="flex items-center gap-2.5 py-3.5 px-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 text-xs font-medium animate-pulse">
-                  <Loader2 size={16} className="animate-spin text-emerald-500" />
-                  <span>Cargando Single Sign-On...</span>
-                </div>
-              )}
-
-              {authenticating && (
-                <div className="flex items-center gap-2.5 py-3.5 px-6 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-300 text-xs font-bold animate-pulse">
-                  <Loader2 size={16} className="animate-spin text-emerald-500" />
-                  <span>Verificando credenciales SuperAdmin...</span>
-                </div>
-              )}
-
-              <div 
-                ref={googleBtnRef} 
-                className={`w-full flex justify-center transform active:scale-[0.99] transition-all ${
-                  loadingGoogle || authenticating ? 'hidden' : 'block'
-                }`} 
-              />
-            </div>
-
-            {/* Security Footnote */}
-            <div className="pt-4 text-center space-y-1.5 border-t border-slate-100 dark:border-slate-800/60">
-              <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                <Lock size={12} className="text-emerald-500" />
-                <span>SuperAdmin Shield · Autenticación Criptográfica Google SSO</span>
-              </div>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                IP y registros de auditoría monitoreados en tiempo real.
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-normal">
+                Registro manual de pagos con cálculo de renovación Rolling y bitácora de auditoría.
               </p>
             </div>
+
           </div>
 
         </div>
+
+        {/* Right Column — Master SuperAdmin Google SSO Card */}
+        <div className="lg:col-span-5 flex justify-center w-full animate-fadeIn">
+          <div className="w-full max-w-md bg-white dark:bg-[#0D131F] p-8 sm:p-10 rounded-[32px] relative overflow-hidden transition-all shadow-xl dark:shadow-2xl dark:shadow-black/50 border border-slate-100/80 dark:border-slate-800/40 text-center space-y-6">
+            
+            {/* Brand Logo & Header */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 dark:from-emerald-600 dark:to-teal-800 flex items-center justify-center text-white shadow-md transform hover:scale-105 transition-transform">
+                  <ShieldCheck size={32} className="text-emerald-400" />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-bold uppercase tracking-wider">
+                  <KeyRound size={12} className="text-emerald-500" />
+                  <span>SuperAdmin Gateway · Zaza 2.0</span>
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight pt-1">
+                  Consola de Control
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-normal leading-relaxed">
+                  Inicia sesión con tu cuenta autorizada para acceder al panel de control global.
+                </p>
+              </div>
+            </div>
+
+            {/* Error Message Card */}
+            {error && (
+              <div className="p-4 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs rounded-2xl text-left font-medium flex items-start gap-3 animate-fadeIn">
+                <ShieldAlert size={18} className="text-rose-600 dark:text-rose-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold text-rose-900 dark:text-rose-200">Acceso Restringido</p>
+                  <p className="text-[11px] mt-0.5 text-rose-700 dark:text-rose-300 leading-relaxed">{error}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Google Authentication Button Container */}
+            <div className="space-y-5 pt-2">
+              
+              <div className="flex flex-col items-center justify-center min-h-[50px] relative w-full">
+                {loadingGoogle && !authenticating && (
+                  <div className="flex items-center gap-2.5 py-3.5 px-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 text-xs font-medium animate-pulse">
+                    <Loader2 size={16} className="animate-spin text-emerald-500" />
+                    <span>Cargando autenticación segura...</span>
+                  </div>
+                )}
+
+                {authenticating && (
+                  <div className="flex items-center gap-2.5 py-3.5 px-6 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-300 text-xs font-bold animate-pulse">
+                    <Loader2 size={16} className="animate-spin text-emerald-500" />
+                    <span>Verificando credenciales SuperAdmin...</span>
+                  </div>
+                )}
+
+                <div 
+                  ref={googleBtnRef} 
+                  className={`w-full flex justify-center transform active:scale-[0.99] transition-all ${
+                    loadingGoogle || authenticating ? 'hidden' : 'block'
+                  }`} 
+                />
+              </div>
+
+              {/* Security Footnote */}
+              <div className="pt-4 text-center space-y-1.5 border-t border-slate-100 dark:border-slate-800/60">
+                <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                  <Lock size={12} className="text-emerald-500" />
+                  <span>SuperAdmin Shield · Autenticación Criptográfica Google SSO</span>
+                </div>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                  Infraestructura protegida con monitoreo y auditoría en tiempo real.
+                </p>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
       </div>
     </div>
   );
