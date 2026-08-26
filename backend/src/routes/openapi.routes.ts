@@ -7,7 +7,7 @@ export const openApiSpec = {
   info: {
     title: 'Zaza Click 2.0 — WhatsApp API Developer Platform',
     version: '2.0.0',
-    description: 'Multi-Engine WhatsApp API Gateway for ERP, CRM, and SaaS enterprise integrations. Supports Evolution API (Node.js/Baileys) and Evolution Go (whatsmeow) seamlessly.',
+    description: 'Multi-Engine WhatsApp API Gateway for ERP, CRM, and SaaS enterprise integrations. Supports Evolution API (Node.js/Baileys) and Evolution Go (whatsmeow) seamlessly with atomic quotas, distributed idempotency and HMAC-signed outbound webhooks.',
     contact: {
       name: 'Zaza Click Support',
       email: 'soporte@zazaclick.sbs',
@@ -50,6 +50,22 @@ export const openApiSpec = {
             enum: ['evolution_api', 'evolution_go'],
             default: 'evolution_api',
             description: 'Underlying WhatsApp engine'
+          }
+        }
+      },
+      ConfigureWebhookRequest: {
+        type: 'object',
+        required: ['url'],
+        properties: {
+          url: {
+            type: 'string',
+            example: 'https://mi-erp.com/api/webhooks/whatsapp',
+            description: 'Public HTTPS webhook destination URL for incoming WhatsApp events'
+          },
+          enabled: {
+            type: 'boolean',
+            default: true,
+            description: 'Enable or disable outbound webhook delivery'
           }
         }
       },
@@ -137,6 +153,22 @@ export const openApiSpec = {
           }
         }
       },
+      CanonicalWebhookEvent: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', example: 'evt_1724712000_a9b8c7' },
+          type: {
+            type: 'string',
+            enum: ['MESSAGE_RECEIVED', 'MESSAGE_STATUS_UPDATE', 'CONNECTION_UPDATE', 'QRCODE_UPDATED', 'CHATS_UPDATE', 'PRESENCE_UPDATE'],
+            example: 'MESSAGE_RECEIVED'
+          },
+          timestamp: { type: 'integer', example: 1724712000 },
+          instanceName: { type: 'string', example: 'erp_ventas_001' },
+          tenantId: { type: 'string', example: 'user_1724000000' },
+          engine: { type: 'string', example: 'evolution_go' },
+          data: { type: 'object' }
+        }
+      },
       ApiResponseSuccess: {
         type: 'object',
         properties: {
@@ -149,7 +181,24 @@ export const openApiSpec = {
         type: 'object',
         properties: {
           success: { type: 'boolean', example: false },
-          code: { type: 'string', example: 'MESSAGE_LIMIT_REACHED' },
+          code: {
+            type: 'string',
+            enum: [
+              'INVALID_API_KEY',
+              'INVALID_REQUEST',
+              'IDEMPOTENCY_CONFLICT',
+              'RATE_LIMIT_EXCEEDED',
+              'MESSAGE_LIMIT_REACHED',
+              'SSRF_BLOCKED',
+              'INVALID_WEBHOOK_URL',
+              'ENGINE_TIMEOUT',
+              'ENGINE_UNAVAILABLE',
+              'ENGINE_SEND_FAILED',
+              'UNKNOWN_DELIVERY',
+              'INTERNAL_ERROR'
+            ],
+            example: 'MESSAGE_LIMIT_REACHED'
+          },
           error: { type: 'string', example: 'Has alcanzado el límite máximo de mensajes.' }
         }
       }
@@ -168,7 +217,8 @@ export const openApiSpec = {
         responses: {
           201: { description: 'Instancia creada exitosamente' },
           400: { description: 'Límite de plan alcanzado o parámetros inválidos' },
-          401: { description: 'API Key inválida' }
+          401: { description: 'API Key inválida' },
+          429: { description: 'Rate limit excedido' }
         }
       },
       get: {
@@ -189,7 +239,7 @@ export const openApiSpec = {
           { name: 'instanceName', in: 'path', required: true, schema: { type: 'string' } }
         ],
         responses: {
-          200: { description: 'Código QR generado' }
+          200: { description: 'Código QR generado en Base64 Data URI' }
         }
       }
     },
@@ -203,6 +253,24 @@ export const openApiSpec = {
         ],
         responses: {
           200: { description: 'Estado en vivo de la conexión' }
+        }
+      }
+    },
+    '/v1/instances/{instanceName}/webhook': {
+      post: {
+        summary: 'Configurar Webhook para ERP (Firma HMAC)',
+        description: 'Registra la URL de destino del ERP con validación estricta anti-SSRF y genera un secreto de firma HMAC-SHA256.',
+        security: [{ ApiKeyAuth: [] }, { BearerAuth: [] }],
+        parameters: [
+          { name: 'instanceName', in: 'path', required: true, schema: { type: 'string' } }
+        ],
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/ConfigureWebhookRequest' } } }
+        },
+        responses: {
+          200: { description: 'Webhook configurado exitosamente con secreto HMAC' },
+          400: { description: 'URL bloqueada por política anti-SSRF o inválida' }
         }
       }
     },
@@ -220,6 +288,7 @@ export const openApiSpec = {
         },
         responses: {
           200: { description: 'Mensaje enviado exitosamente' },
+          409: { description: 'Conflicto de idempotencia (solicitud en proceso)' },
           429: { description: 'Límite de mensajes alcanzado' },
           502: { description: 'Fallo en motor de WhatsApp' }
         }
@@ -232,7 +301,7 @@ export const openApiSpec = {
         security: [{ ApiKeyAuth: [] }],
         requestBody: {
           required: true,
-          content: { 'application/json': { schema: { $ref: '#/components/schemas/SendMediaRequest' } } },
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/SendMediaRequest' } } }
         },
         responses: {
           200: { description: 'Archivo multimedia enviado' }

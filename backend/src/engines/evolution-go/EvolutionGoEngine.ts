@@ -75,7 +75,7 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     const start = Date.now();
     try {
       const client = this.getClient();
-      const BACKEND_URL = process.env.BACKEND_URL || 'https://zaza-click-20-production.up.railway.app';
+      const BACKEND_URL = process.env.BACKEND_URL || 'https://api.zazaclick.sbs';
       const webhookUrl = `${BACKEND_URL}/api/webhooks/whatsapp`;
 
       // Intentar eliminar la instancia previa en Go por si existía
@@ -217,7 +217,7 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     const start = Date.now();
     try {
       const client = this.getClient();
-      const url = webhookUrl || `${process.env.BACKEND_URL || 'https://zaza-click-20-production.up.railway.app'}/api/webhooks/whatsapp`;
+      const url = webhookUrl || `${process.env.BACKEND_URL || 'https://api.zazaclick.sbs'}/api/webhooks/whatsapp`;
       let response;
       try {
         response = await client.post(`/webhook/set/${instanceName}`, { url, enabled: true });

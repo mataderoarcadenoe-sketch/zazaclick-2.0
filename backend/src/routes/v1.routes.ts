@@ -1,9 +1,11 @@
 import { Router, Response } from 'express';
+import * as crypto from 'crypto';
 import pool from '../config/database';
 import { apiKeyOrTokenAuth, AuthenticatedRequest } from '../middleware/auth.middleware';
 import { licensingMiddleware, LicensedRequest } from '../middleware/licensing.middleware';
 import { engineRouter } from '../engines/core/EngineRouter';
 import { EngineType } from '../engines/contracts/engine.types';
+import { validateWebhookUrl } from '../utils/ssrf-validator.util';
 import redis from '../config/redis';
 
 const router = Router();
@@ -412,13 +414,13 @@ router.delete('/instances/:instanceName', apiKeyOrTokenAuth, async (req: Authent
 });
 
 /**
- * POST /v1/instances/:instanceName/webhook — Configurar URL de webhook para la instancia
+ * POST /v1/instances/:instanceName/webhook — Configurar URL de webhook para ERP externo con firma HMAC
  */
 router.post('/instances/:instanceName/webhook', apiKeyOrTokenAuth, async (req: AuthenticatedRequest, res: Response) => {
   const { instanceName } = req.params;
-  const { url } = req.body;
+  const { url, enabled } = req.body;
 
-  if (!url || (!url.startsWith('http://') && !url.startsWith('https://'))) {
+  if (!url || typeof url !== 'string') {
     return res.status(400).json({
       success: false,
       code: 'INVALID_WEBHOOK_URL',
@@ -426,9 +428,19 @@ router.post('/instances/:instanceName/webhook', apiKeyOrTokenAuth, async (req: A
     });
   }
 
+  // 1. Validación estricta anti-SSRF (bloquea IPs privadas, loopback, cloud metadata y DNS rebinding)
+  const ssrfCheck = await validateWebhookUrl(url);
+  if (!ssrfCheck.isValid) {
+    return res.status(400).json({
+      success: false,
+      code: 'SSRF_BLOCKED',
+      error: ssrfCheck.reason || 'URL rechazada por política de seguridad anti-SSRF.'
+    });
+  }
+
   try {
     const verifyRes = await pool.query(
-      'SELECT id FROM instances WHERE user_id = $1 AND instance_name = $2',
+      'SELECT id, webhook_secret FROM instances WHERE user_id = $1 AND instance_name = $2',
       [req.userId, instanceName]
     );
 
@@ -436,25 +448,41 @@ router.post('/instances/:instanceName/webhook', apiKeyOrTokenAuth, async (req: A
       return res.status(403).json({
         success: false,
         code: 'FORBIDDEN',
-        error: 'Acceso no autorizado.'
+        error: 'Acceso no autorizado a esta instancia.'
       });
     }
 
-    const engine = await engineRouter.getEngineForInstance(instanceName);
-    const setRes = await engine.configureWebhook(instanceName, url);
+    // 2. Generar o recuperar secreto de firma HMAC-SHA256
+    const webhookSecret = verifyRes.rows[0].webhook_secret || `whsec_${crypto.randomBytes(24).toString('hex')}`;
+    const isEnabled = enabled !== false;
 
-    if (setRes.success) {
-      return res.json({
-        success: true,
-        message: 'URL de webhook configurada exitosamente.',
-        data: { instanceName, webhookUrl: url }
-      });
-    }
+    // 3. Guardar configuración en PostgreSQL
+    await pool.query(`
+      UPDATE instances
+      SET webhook_url = $1, webhook_secret = $2, webhook_enabled = $3, updated_at = CURRENT_TIMESTAMP
+      WHERE instance_name = $4
+    `, [ssrfCheck.normalizedUrl || url, webhookSecret, isEnabled, instanceName]);
 
-    return res.status(502).json({
-      success: false,
-      code: 'WEBHOOK_CONFIG_FAILED',
-      error: setRes.error?.message || 'No se pudo configurar el webhook en el motor.'
+    // 4. Invalidar caché en Redis para actualización inmediata del dispatcher
+    try {
+      await redis.del(`inst_wh:${instanceName}`);
+    } catch {}
+
+    return res.json({
+      success: true,
+      message: 'URL de webhook para ERP y firma HMAC-SHA256 configuradas exitosamente.',
+      data: {
+        instanceName,
+        webhookUrl: ssrfCheck.normalizedUrl || url,
+        webhookSecret: webhookSecret,
+        enabled: isEnabled,
+        signatureHeader: 'X-Zaza-Signature',
+        timestampHeader: 'X-Zaza-Timestamp',
+        eventHeader: 'X-Zaza-Event',
+        deliveryIdHeader: 'X-Zaza-Delivery-Id',
+        algorithm: 'HMAC-SHA256',
+        format: 'sha256=<hex_digest>'
+      }
     });
   } catch (err: any) {
     return res.status(500).json({

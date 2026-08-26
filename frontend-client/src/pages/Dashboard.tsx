@@ -434,7 +434,7 @@ export default function Dashboard() {
 
   const currentBackendUrl = window.location.origin.includes('localhost') 
     ? 'http://localhost:3000' 
-    : 'https://zaza-click-20-production.up.railway.app';
+    : 'https://api.zazaclick.sbs';
 
   const activeInstancesCount = instances.filter(i => i.status === 'connected').length;
   const maxInstances = subscription?.max_instances || 1;
@@ -687,7 +687,7 @@ echo $response;`;
           <div className="flex items-center gap-3">
             {user?.role === 'admin' && (
               <a
-                href="https://zaza-click-admin-production.up.railway.app"
+                href="https://admin.zazaclick.sbs"
                 target="_blank"
                 rel="noreferrer"
                 className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 dark:bg-emerald-600 hover:bg-slate-800 dark:hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer"

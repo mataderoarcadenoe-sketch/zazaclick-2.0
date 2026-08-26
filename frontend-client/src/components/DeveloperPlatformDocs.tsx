@@ -892,30 +892,78 @@ Body:
             </div>
           )}
 
-          {/* 5. WEBHOOKS & REALTIME */}
+          {/* 5. WEBHOOKS & EVENTOS ENTERPRISE (HMAC-SHA256) */}
           {activeSection === 'webhooks' && (
             <div className="space-y-6">
-              <div className="surface-panel p-6 rounded-2xl space-y-4">
+              <div className="surface-panel p-6 rounded-2xl space-y-5">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                     <Radio size={20} />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">Webhooks & Eventos en Tiempo Real</h2>
-                    <p className="text-xs text-slate-500">Recibe eventos entrantes de WhatsApp en tu propio servidor ERP/CRM.</p>
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">Webhooks para ERP (Firma HMAC-SHA256)</h2>
+                    <p className="text-xs text-slate-500">Recibe eventos entrantes de WhatsApp en tiempo real de forma segura y verificable en tu backend.</p>
                   </div>
                 </div>
 
-                <div className="space-y-4 pt-2">
-                  <p className="text-xs text-slate-600 dark:text-slate-400">
-                    Cada vez que un cliente envía un mensaje o el estado de WhatsApp cambia, Zaza Click despacha una petición HTTP POST a tu URL de webhook configurada.
+                {/* Banner de Seguridad HMAC */}
+                <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 space-y-1.5">
+                  <div className="font-bold flex items-center gap-1.5">
+                    <Lock size={14} /> Firma Criptográfica Obligatoria
+                  </div>
+                  <p className="leading-relaxed">
+                    Cada webhook emitido por Zaza Click incluye la cabecera <code className="font-mono font-bold bg-amber-500/20 px-1 py-0.5 rounded">X-Zaza-Signature: sha256=&lt;hash&gt;</code> y <code className="font-mono font-bold bg-amber-500/20 px-1 py-0.5 rounded">X-Zaza-Timestamp</code>. Tu ERP puede verificar que el payload no ha sido alterado y prevenir ataques de repetición (Replay Attacks).
                   </p>
+                </div>
 
-                  <div className="p-4 rounded-xl bg-slate-950 text-slate-200 font-mono text-xs space-y-2 overflow-x-auto">
-                    <div className="text-emerald-400 font-bold">// Payload de Ejemplo: Evento MESSAGE_RECEIVED</div>
-{`{
-  "event": "messages.upsert",
-  "instance": "${currentInstanceName}",
+                {/* Paso 1: Configurar Webhook */}
+                <div className="space-y-3 pt-2">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">Paso 1: Registrar la URL de tu ERP vía API</h3>
+                  <pre className="p-4 bg-slate-950 text-slate-200 rounded-xl text-xs font-mono overflow-x-auto">
+{`POST ${BASE_URL}/v1/instances/${currentInstanceName}/webhook
+Headers:
+  x-api-key: ${currentApiKey}
+  Content-Type: application/json
+Body:
+  {
+    "url": "https://tu-erp.com/api/webhooks/whatsapp",
+    "enabled": true
+  }
+
+// Respuesta de Zaza Click:
+{
+  "success": true,
+  "message": "URL de webhook para ERP y firma HMAC-SHA256 configuradas exitosamente.",
+  "data": {
+    "instanceName": "${currentInstanceName}",
+    "webhookUrl": "https://tu-erp.com/api/webhooks/whatsapp",
+    "webhookSecret": "whsec_8f2a0b1c2d3e4f5a6b7c8d9e0f1a2b3c",
+    "signatureHeader": "X-Zaza-Signature",
+    "algorithm": "HMAC-SHA256"
+  }
+}`}
+                  </pre>
+                </div>
+
+                {/* Paso 2: Payload Canónico Entrante */}
+                <div className="space-y-3 pt-2">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">Paso 2: Formato del Evento Canónico</h3>
+                  <pre className="p-4 bg-slate-950 text-slate-200 rounded-xl text-xs font-mono overflow-x-auto">
+{`// Cabeceras HTTP recibidas en tu ERP:
+X-Zaza-Signature: sha256=a1b2c3d4e5f67890123456789abcdef...
+X-Zaza-Timestamp: 1724712000
+X-Zaza-Event: MESSAGE_RECEIVED
+X-Zaza-Event-Id: evt_1724712000_abc123
+X-Zaza-Delivery-Id: del_1724712000_xyz789
+
+// Cuerpo JSON (Payload):
+{
+  "id": "evt_1724712000_abc123",
+  "type": "MESSAGE_RECEIVED",
+  "timestamp": 1724712000,
+  "instanceName": "${currentInstanceName}",
+  "tenantId": "user_1724000000",
+  "engine": "evolution_go",
   "data": {
     "key": {
       "remoteJid": "51912345678@s.whatsapp.net",
@@ -924,12 +972,90 @@ Body:
     },
     "pushName": "Juan Pérez",
     "message": {
-      "conversation": "Hola, quisiera información sobre sus productos."
-    },
-    "messageTimestamp": 1724712000
+      "conversation": "Hola, quisiera consultar el estado de mi factura."
+    }
   }
 }`}
+                  </pre>
+                </div>
+
+                {/* Paso 3: Validación de Firma en tu ERP */}
+                <div className="space-y-3 pt-2">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">Paso 3: Cómo Validar la Firma HMAC en tu ERP</h3>
+
+                  <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-3">
+                    <div className="text-xs font-bold text-slate-700 dark:text-slate-300">Ejemplo en Node.js (Express):</div>
+                    <pre className="p-3 bg-slate-950 text-slate-200 rounded-lg text-xs font-mono overflow-x-auto">
+{`const crypto = require('crypto');
+
+app.post('/api/webhooks/whatsapp', express.raw({ type: 'application/json' }), (req, res) => {
+  const signature = req.headers['x-zaza-signature']; // "sha256=..."
+  const timestamp = req.headers['x-zaza-timestamp'];
+  const webhookSecret = 'whsec_tu_secreto_aqui';
+
+  // 1. Validar Anti-Replay: Timestamp no mayor a 300 segundos
+  const now = Math.floor(Date.now() / 1000);
+  if (Math.abs(now - parseInt(timestamp, 10)) > 300) {
+    return res.status(400).send('Timestamp expirado (Replay Attack)');
+  }
+
+  // 2. Calcular firma esperada
+  const payloadToSign = \`\${timestamp}.\${req.body.toString('utf8')}\`;
+  const expectedSig = 'sha256=' + crypto.createHmac('sha256', webhookSecret).update(payloadToSign).digest('hex');
+
+  // 3. Comparación en tiempo constante
+  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSig))) {
+    return res.status(401).send('Firma inválida');
+  }
+
+  const event = JSON.parse(req.body.toString('utf8'));
+  console.log('Evento verificado:', event.type, event.data);
+
+  // Responder 200 OK inmediatamente
+  res.status(200).json({ received: true });
+});`}
+                    </pre>
+
+                    <div className="text-xs font-bold text-slate-700 dark:text-slate-300 pt-2">Ejemplo en PHP:</div>
+                    <pre className="p-3 bg-slate-950 text-slate-200 rounded-lg text-xs font-mono overflow-x-auto">
+{`<?php
+$rawBody = file_get_contents('php://input');
+$signature = $_SERVER['HTTP_X_ZAZA_SIGNATURE'] ?? '';
+$timestamp = $_SERVER['HTTP_X_ZAZA_TIMESTAMP'] ?? '';
+$webhookSecret = 'whsec_tu_secreto_aqui';
+
+// 1. Validar ventana de tiempo (300s)
+if (abs(time() - intval($timestamp)) > 300) {
+    http_response_code(400);
+    exit('Timestamp expirado');
+}
+
+// 2. Calcular firma
+$payload = $timestamp . '.' . $rawBody;
+$expectedSig = 'sha256=' . hash_hmac('sha256', $payload, $webhookSecret);
+
+// 3. Verificar
+if (!hash_equals($expectedSig, $signature)) {
+    http_response_code(401);
+    exit('Firma HMAC inválida');
+}
+
+$event = json_decode($rawBody, true);
+// Procesar evento en el ERP...
+
+http_response_code(200);
+echo json_encode(['received' => true]);
+?>`}
+                    </pre>
                   </div>
+                </div>
+
+                {/* Política de Reintentos */}
+                <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-2">
+                  <div className="text-xs font-bold text-slate-900 dark:text-white uppercase">Política de Reintentos de Zaza Click:</div>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Si el servidor de tu ERP responde con un código de error (HTTP 5xx, 429) o no responde en 5 segundos (Timeout), Zaza Click reintentará automáticamente la entrega con backoff exponencial: <strong>1er reintento: 30s | 2do reintento: 60s | 3er reintento: 120s | 4to reintento: 240s</strong>.
+                  </p>
                 </div>
               </div>
             </div>

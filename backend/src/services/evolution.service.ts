@@ -77,7 +77,7 @@ export class EvolutionService {
 
   public static async createInstance(instanceName: string): Promise<{ success: boolean; instance?: any; error?: string; status?: number }> {
     try {
-      const BACKEND_URL = process.env.BACKEND_URL || 'https://zaza-click-20-production.up.railway.app';
+      const BACKEND_URL = process.env.BACKEND_URL || 'https://api.zazaclick.sbs';
       const webhookUrl = `${BACKEND_URL}/api/webhooks/whatsapp`;
         
       console.log(`🔌 [EvolutionService] Registrando webhook en creación: ${webhookUrl}`);
@@ -1034,7 +1034,7 @@ export class EvolutionService {
    */
   public static async configureWebhook(instanceName: string): Promise<boolean> {
     try {
-      const BACKEND_URL = process.env.BACKEND_URL || 'https://zaza-click-20-production.up.railway.app';
+      const BACKEND_URL = process.env.BACKEND_URL || 'https://api.zazaclick.sbs';
       const webhookUrl = `${BACKEND_URL}/api/webhooks/whatsapp`;
         
       console.log(`🔌 [EvolutionService] Sincronizando webhook público para ${instanceName}: ${webhookUrl}`);

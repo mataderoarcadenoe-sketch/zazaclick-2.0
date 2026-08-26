@@ -467,6 +467,13 @@ router.get('/engines/health', async (req: AuthenticatedRequest, res) => {
 /**
  * GET /instances - Listar todas las instancias del sistema con estado administrativo y motor asignado
  */
+function maskApiKey(key: string | null | undefined): string {
+  if (!key) return '';
+  if (key.length <= 8) return '********';
+  const last4 = key.slice(-4);
+  return `zc_live_********${last4}`;
+}
+
 router.get('/instances', async (req: AuthenticatedRequest, res) => {
   try {
     const query = `
@@ -480,6 +487,8 @@ router.get('/instances', async (req: AuthenticatedRequest, res) => {
         i.messages_sent,
         i.last_activity_at,
         i.api_key, 
+        i.webhook_url,
+        i.webhook_enabled,
         i.created_at,
         u.id as user_id,
         u.email as owner_email,
@@ -496,7 +505,11 @@ router.get('/instances', async (req: AuthenticatedRequest, res) => {
       ORDER BY i.created_at DESC;
     `;
     const result = await pool.query(query);
-    res.json({ success: true, data: result.rows });
+    const maskedRows = result.rows.map(row => ({
+      ...row,
+      api_key: maskApiKey(row.api_key)
+    }));
+    res.json({ success: true, data: maskedRows });
   } catch (error: any) {
     console.error('[AdminInstances Error]:', error.message);
     res.status(500).json({ success: false, error: 'Error al listar instancias' });

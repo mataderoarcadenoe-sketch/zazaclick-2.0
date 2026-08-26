@@ -15,6 +15,8 @@ import { startSubscriptionScheduler } from './jobs/subscription-scheduler.job';
 import { engineRegistry } from './engines/core/EngineRegistry';
 import { evolutionApiEngine } from './engines/evolution-api/EvolutionApiEngine';
 import { evolutionGoEngine } from './engines/evolution-go/EvolutionGoEngine';
+import { requestIdMiddleware } from './middleware/request-id.middleware';
+import { globalRateLimiter } from './middleware/rate-limiter.middleware';
 
 dotenv.config();
 
@@ -27,9 +29,6 @@ const allowedOrigins = [
   'https://app.zazaclick.sbs',
   'https://admin.zazaclick.sbs',
   'https://api.zazaclick.sbs',
-  'https://zaza-click-frontend-production.up.railway.app',
-  'https://zaza-click-admin-production.up.railway.app',
-  'https://zaza-click-20-production.up.railway.app',
   process.env.FRONTEND_URL,
   process.env.CLIENT_URL,
   process.env.CORS_ORIGIN
@@ -60,13 +59,29 @@ app.use(cors({
     'x-tenant-id',
     'idempotency-key',
     'Idempotency-Key',
+    'x-request-id',
+    'X-Request-Id',
+    'x-correlation-id',
+    'X-Correlation-Id',
     'Accept',
     'X-Requested-With'
   ],
-  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  exposedHeaders: [
+    'Content-Range',
+    'X-Content-Range',
+    'X-Request-Id',
+    'X-Correlation-Id',
+    'X-RateLimit-Limit',
+    'X-RateLimit-Remaining',
+    'Retry-After'
+  ],
   credentials: true,
   optionsSuccessStatus: 200
 }));
+
+// Middlewares Globales de Seguridad, Observabilidad y Rate Limiting
+app.use(requestIdMiddleware);
+app.use(globalRateLimiter);
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 

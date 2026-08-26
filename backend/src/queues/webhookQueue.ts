@@ -3,6 +3,7 @@ import redis from '../config/redis';
 import { getIO } from '../config/socket';
 import pool from '../config/database';
 import { EvolutionService } from '../services/evolution.service';
+import { WebhookDispatcherService } from '../services/webhook-dispatcher.service';
 
 const redisUrl = process.env.REDIS_PRIVATE_URL || process.env.REDIS_URL;
 const connectionConfig: any = redisUrl ? { url: redisUrl, maxRetriesPerRequest: null } : {
@@ -206,6 +207,10 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
         }
       }
     }
+
+    // Despacho asíncrono y seguro hacia el ERP del cliente con firma HMAC
+    await WebhookDispatcherService.dispatchEvent(instance, event, data);
+
   } catch (err: any) {
     console.error(`❌ [QueueWorker] Error procesando evento ${eventUpper}:`, err.message);
     throw err; // Permite reintentar si el error es transitorio
