@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../services/authContext';
 import { 
   ShieldCheck, Zap, Moon, Sun, Smartphone, 
-  CheckCircle2, Lock, Loader2, Sparkles, Server, Terminal, ArrowRight, ShieldAlert, Cpu
+  CheckCircle2, Lock, Loader2, Server, Terminal, ArrowRight, ShieldAlert, Cpu
 } from 'lucide-react';
 import { useDarkMode } from '../hooks/useDarkMode';
 import api from '../services/api';
@@ -132,8 +132,7 @@ export default function AuthPage() {
               <span>WHATSAPP API ENTERPRISE SAAS GATEWAY · v2.0</span>
             </div>
 
-            <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-xs font-semibold">
-              <Sparkles size={13} className="text-emerald-500" />
+            <div className="hidden sm:inline-flex items-center px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-xs font-semibold">
               <span>Multi-Inquilino</span>
             </div>
           </div>
@@ -263,8 +262,7 @@ export default function AuthPage() {
               </div>
 
               <div className="space-y-1">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-bold uppercase tracking-wider">
-                  <Sparkles size={12} className="text-emerald-500" />
+                <div className="inline-flex items-center px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-bold uppercase tracking-wider">
                   <span>Zaza.click 2.0</span>
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight pt-1">
