@@ -22,37 +22,11 @@ export interface InteractiveGravityMeshRef {
 
 export type HierarchyTier = 'CORE' | 'HUB' | 'RELAY' | 'EDGE';
 
-interface Satellite {
-  angle: number;
-  speed: number;
-  radius: number;
-  size: number;
-}
+/* ───────────────────────────────────────────────────────────
+   MINIMAL PREMIUM MESH — Inspired by Stripe / Linear / Vercel
+   ─────────────────────────────────────────────────────────── */
 
-interface Stardust {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  size: number;
-  alpha: number;
-  twinkleSpeed: number;
-  twinklePhase: number;
-}
-
-interface Spark {
-  active: boolean;
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  alpha: number;
-  decay: number;
-  color: string;
-  size: number;
-}
-
-interface NetworkNode {
+interface MeshNode {
   id: number;
   anchorX: number;
   anchorY: number;
@@ -62,1124 +36,554 @@ interface NetworkNode {
   vy: number;
   radius: number;
   tier: HierarchyTier;
-  color: string;
-  coreColor: string;
-  glowColor: string;
   phase: number;
   driftRadius: number;
   driftSpeedX: number;
   driftSpeedY: number;
-  depth: number;
+  depth: number; // parallax-like layering 0.5–1.0
   activity: number;
-  haloPulse: number;
-  satellites: Satellite[];
-  sonarRadius: number;
 }
 
-interface NetworkConnection {
-  source: number;
-  target: number;
+interface MeshConnection {
+  i: number;
+  j: number;
   dist: number;
-  ctrlX: number;
-  ctrlY: number;
-  tier: 'TRUNK' | 'BRANCH' | 'FEEDER';
-  routerAngle: number;
 }
 
-interface DataPacket {
+interface DataPulse {
   active: boolean;
-  source: number;
-  target: number;
+  srcIdx: number;
+  tgtIdx: number;
   progress: number;
   speed: number;
-  color: string;
-  headRadius: number;
-  ctrlX: number;
-  ctrlY: number;
-  sparkCooldown: number;
+  ctrlOffsetX: number;
+  ctrlOffsetY: number;
 }
 
-interface SignalWave {
+interface Ripple {
   active: boolean;
   x: number;
   y: number;
   radius: number;
   maxRadius: number;
-  intensity: number;
-  speed: number;
+  alpha: number;
 }
-
-const PRESETS: Record<MeshVariant, {
-  cols: number;
-  rows: number;
-  dustCount: number;
-  maxPackets: number;
-  trunkOpacity: number;
-  branchOpacity: number;
-  feederOpacity: number;
-  enableTriangles: boolean;
-}> = {
-  premium: {
-    cols: 7,
-    rows: 5,
-    dustCount: 50,
-    maxPackets: 10,
-    trunkOpacity: 0.85,
-    branchOpacity: 0.55,
-    feederOpacity: 0.32,
-    enableTriangles: true,
-  },
-  admin: {
-    cols: 8,
-    rows: 5,
-    dustCount: 55,
-    maxPackets: 12,
-    trunkOpacity: 0.88,
-    branchOpacity: 0.58,
-    feederOpacity: 0.35,
-    enableTriangles: true,
-  },
-  client: {
-    cols: 7,
-    rows: 4,
-    dustCount: 45,
-    maxPackets: 9,
-    trunkOpacity: 0.82,
-    branchOpacity: 0.52,
-    feederOpacity: 0.30,
-    enableTriangles: true,
-  },
-  login: {
-    cols: 7,
-    rows: 5,
-    dustCount: 50,
-    maxPackets: 10,
-    trunkOpacity: 0.85,
-    branchOpacity: 0.55,
-    feederOpacity: 0.32,
-    enableTriangles: true,
-  },
-  analytics: {
-    cols: 8,
-    rows: 6,
-    dustCount: 60,
-    maxPackets: 14,
-    trunkOpacity: 0.90,
-    branchOpacity: 0.60,
-    feederOpacity: 0.38,
-    enableTriangles: true,
-  },
-  minimal: {
-    cols: 5,
-    rows: 3,
-    dustCount: 25,
-    maxPackets: 5,
-    trunkOpacity: 0.60,
-    branchOpacity: 0.35,
-    feederOpacity: 0.20,
-    enableTriangles: false,
-  },
-};
 
 export const InteractiveGravityMesh = forwardRef<InteractiveGravityMeshRef, InteractiveGravityMeshProps>(
   (
     {
       variant = 'premium',
-      maxDistance: propMaxDistance,
+      maxDistance: _propMaxDistance,
       isDark = true,
       className = 'fixed inset-0 pointer-events-none z-0',
       enablePulses = true,
       enableRipples = true,
       enableMouseInteraction = true,
-      enableRadarSweep = true,
     },
-    ref
+    ref,
   ) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
-    const preset = PRESETS[variant] || PRESETS.premium;
 
-    const nodesRef = useRef<NetworkNode[]>([]);
-    const connectionsRef = useRef<NetworkConnection[]>([]);
-    const packetsRef = useRef<DataPacket[]>([]);
-    const wavesRef = useRef<SignalWave[]>([]);
-    const dustRef = useRef<Stardust[]>([]);
-    const sparksRef = useRef<Spark[]>([]);
-    const mouseRef = useRef({
-      x: -3000,
-      y: -3000,
-      targetX: -3000,
-      targetY: -3000,
-      isActive: false,
-    });
+    const nodesRef = useRef<MeshNode[]>([]);
+    const connectionsRef = useRef<MeshConnection[]>([]);
+    const pulsesRef = useRef<DataPulse[]>([]);
+    const ripplesRef = useRef<Ripple[]>([]);
+    const mouseRef = useRef({ x: -9999, y: -9999, active: false });
 
-    const triggerBurstAtNode = (nodeId?: number) => {
+    /* ── Imperative API ── */
+    const fireBurst = (nodeId?: number) => {
       const nodes = nodesRef.current;
       const conns = connectionsRef.current;
-      const packets = packetsRef.current;
-      if (nodes.length === 0 || conns.length === 0) return;
-
-      const targetNodeId = nodeId ?? (nodes.find(n => n.tier === 'CORE')?.id ?? 0);
-      const relevantConns = conns.filter(c => c.source === targetNodeId || c.target === targetNodeId);
-
-      relevantConns.forEach((c) => {
-        const available = packets.find(p => !p.active);
-        if (available) {
-          available.active = true;
-          available.source = c.source === targetNodeId ? c.source : c.target;
-          available.target = c.source === targetNodeId ? c.target : c.source;
-          available.progress = 0;
-          available.speed = 0.045;
-          available.color = isDark ? '#67E8F9' : '#0284C7';
-          available.headRadius = 4.4;
-          available.ctrlX = c.ctrlX;
-          available.ctrlY = c.ctrlY;
-          available.sparkCooldown = 0;
-        }
-      });
-
-      const nodeObj = nodes.find(n => n.id === targetNodeId);
-      if (nodeObj) {
-        nodeObj.activity = 1.0;
-        nodeObj.haloPulse = 1.0;
-      }
+      const pulses = pulsesRef.current;
+      if (!nodes.length || !conns.length) return;
+      const id = nodeId ?? nodes.find(n => n.tier === 'CORE')?.id ?? 0;
+      conns
+        .filter(c => c.i === id || c.j === id)
+        .forEach(c => {
+          const p = pulses.find(pp => !pp.active);
+          if (p) {
+            p.active = true;
+            p.srcIdx = c.i === id ? c.i : c.j;
+            p.tgtIdx = c.i === id ? c.j : c.i;
+            p.progress = 0;
+            p.speed = 0.025 + Math.random() * 0.015;
+            p.ctrlOffsetX = (Math.random() - 0.5) * 30;
+            p.ctrlOffsetY = (Math.random() - 0.5) * 30;
+          }
+        });
+      const n = nodes.find(nn => nn.id === id);
+      if (n) n.activity = 1;
     };
 
     useImperativeHandle(ref, () => ({
-      triggerPulse: (sourceIdx, targetIdx) => {
+      triggerPulse: () => {
         const conns = connectionsRef.current;
-        if (conns.length === 0) return;
-
-        let src = sourceIdx ?? -1;
-        let tgt = targetIdx ?? -1;
-
-        if (src === -1 || tgt === -1) {
-          const randConn = conns[Math.floor(Math.random() * conns.length)];
-          src = randConn.source;
-          tgt = randConn.target;
-        }
-
-        const packets = packetsRef.current;
-        const available = packets.find(p => !p.active);
-        const pColor = isDark ? '#67E8F9' : '#0284C7';
-
-        if (available) {
-          const conn = conns.find(c => (c.source === src && c.target === tgt) || (c.source === tgt && c.target === src)) || conns[0];
-          available.active = true;
-          available.source = src;
-          available.target = tgt;
-          available.progress = 0;
-          available.speed = 0.038;
-          available.color = pColor;
-          available.headRadius = 4.2;
-          available.ctrlX = conn.ctrlX;
-          available.ctrlY = conn.ctrlY;
-          available.sparkCooldown = 0;
+        if (!conns.length) return;
+        const c = conns[Math.floor(Math.random() * conns.length)];
+        const p = pulsesRef.current.find(pp => !pp.active);
+        if (p) {
+          p.active = true;
+          p.srcIdx = c.i;
+          p.tgtIdx = c.j;
+          p.progress = 0;
+          p.speed = 0.02 + Math.random() * 0.012;
+          p.ctrlOffsetX = (Math.random() - 0.5) * 30;
+          p.ctrlOffsetY = (Math.random() - 0.5) * 30;
         }
       },
-      triggerRipple: (x, y) => {
-        const waves = wavesRef.current;
-        const available = waves.find(w => !w.active);
-        if (available) {
-          available.active = true;
-          available.x = x;
-          available.y = y;
-          available.radius = 10;
-          available.maxRadius = 280;
-          available.intensity = 1.0;
-          available.speed = 5.0;
-        } else if (waves.length < 6) {
-          waves.push({
-            active: true,
-            x,
-            y,
-            radius: 10,
-            maxRadius: 280,
-            intensity: 1.0,
-            speed: 5.0,
-          });
+      triggerRipple: (x: number, y: number) => {
+        const r = ripplesRef.current.find(rr => !rr.active);
+        if (r) {
+          r.active = true; r.x = x; r.y = y; r.radius = 0; r.maxRadius = 200; r.alpha = 0.6;
         }
       },
-      triggerBurst: (nodeId) => {
-        triggerBurstAtNode(nodeId);
-      },
-      emitEvent: () => {
-        const nodes = nodesRef.current;
-        const cores = nodes.filter(n => n.tier === 'CORE' || n.tier === 'HUB');
-        if (cores.length > 0) {
-          const randNode = cores[Math.floor(Math.random() * cores.length)];
-          triggerBurstAtNode(randNode.id);
-        }
-      },
+      triggerBurst: fireBurst,
+      emitEvent: () => fireBurst(),
     }));
 
     useEffect(() => {
       const canvas = canvasRef.current;
       if (!canvas) return;
-
       const ctx = canvas.getContext('2d', { alpha: true });
       if (!ctx) return;
 
-      let animationFrameId: number;
-      let width = window.innerWidth;
-      let height = window.innerHeight;
-      let dpr = Math.min(window.devicePixelRatio || 1, 2);
+      let raf: number;
+      let W = 0;
+      let H = 0;
+      let dpr = 1;
+      let maxDist = 260;
 
-      // Paleta Cromática de Alto Contraste y Saturación
-      const darkPalette = {
-        core: '#10B981',           // Esmeralda Neón Vivo
-        coreInner: '#FFFFFF',      // Núcleo Blanco Brillante
-        hub: '#06B6D4',            // Cian Eléctrico
-        relay: '#14B8A6',          // Teal Tecnológico
-        edge: '#34D399',           // Menta Neón
-        coreHalo: 'rgba(16, 185, 129, 0.55)',
-        hubHalo: 'rgba(6, 182, 212, 0.38)',
-        relayHalo: 'rgba(20, 184, 166, 0.28)',
-        trunkLine: 'rgba(16, 185, 129, ',
-        branchLine: 'rgba(6, 182, 212, ',
-        feederLine: 'rgba(20, 184, 166, ',
+      /* ── Palette ── */
+      const dark = {
+        nodePrimary: 'rgba(52, 211, 153, ',     // emerald-400
+        nodeSecondary: 'rgba(6, 182, 212, ',     // cyan-500
+        nodeEdge: 'rgba(148, 163, 184, ',        // slate-400
+        line: 'rgba(52, 211, 153, ',
+        lineFaint: 'rgba(148, 163, 184, ',
+        pulse: '#67E8F9',
+        pulseTrail: 'rgba(103, 232, 249, ',
+        ripple: 'rgba(52, 211, 153, ',
         mouseLine: 'rgba(103, 232, 249, ',
-        triangleFill: 'rgba(16, 185, 129, 0.045)',
-        triangleStroke: 'rgba(6, 182, 212, 0.16)',
-        dustColor: 'rgba(167, 243, 208, ',
-        packetColor: '#A7F3D0',
-        waveColor: 'rgba(52, 211, 153, ',
-        radarSweep: 'rgba(16, 185, 129, 0.08)',
+        mouseRing: 'rgba(103, 232, 249, 0.3)',
       };
-
-      const lightPalette = {
-        core: '#047857',           // Esmeralda Intenso
-        coreInner: '#F0FDF4',      // Centro Claro
-        hub: '#0E7490',            // Cian Oscuro Nítido
-        relay: '#0F766E',          // Teal Arquitectónico
-        edge: '#059669',           // Esmeralda Satélite
-        coreHalo: 'rgba(4, 120, 87, 0.40)',
-        hubHalo: 'rgba(14, 116, 144, 0.28)',
-        relayHalo: 'rgba(15, 118, 110, 0.20)',
-        trunkLine: 'rgba(4, 120, 87, ',
-        branchLine: 'rgba(14, 116, 144, ',
-        feederLine: 'rgba(15, 118, 110, ',
+      const light = {
+        nodePrimary: 'rgba(16, 185, 129, ',      // emerald-500
+        nodeSecondary: 'rgba(14, 116, 144, ',     // cyan-700
+        nodeEdge: 'rgba(148, 163, 184, ',         // slate-400
+        line: 'rgba(16, 185, 129, ',
+        lineFaint: 'rgba(148, 163, 184, ',
+        pulse: '#0891B2',
+        pulseTrail: 'rgba(8, 145, 178, ',
+        ripple: 'rgba(16, 185, 129, ',
         mouseLine: 'rgba(14, 116, 144, ',
-        triangleFill: 'rgba(4, 120, 87, 0.035)',
-        triangleStroke: 'rgba(14, 116, 144, 0.12)',
-        dustColor: 'rgba(15, 118, 110, ',
-        packetColor: '#047857',
-        waveColor: 'rgba(4, 120, 87, ',
-        radarSweep: 'rgba(4, 120, 87, 0.05)',
+        mouseRing: 'rgba(14, 116, 144, 0.2)',
       };
+      const pal = isDark ? dark : light;
 
-      const theme = isDark ? darkPalette : lightPalette;
+      /* ── Topology ── */
+      const build = () => {
+        const isMobile = W < 640;
+        const cols = isMobile ? 5 : variant === 'minimal' ? 6 : 9;
+        const rows = isMobile ? 6 : variant === 'minimal' ? 4 : 6;
+        const cellW = W / cols;
+        const cellH = H / rows;
+        maxDist = Math.hypot(cellW, cellH) * 1.15;
 
-      let calculatedMaxDist = 320;
-
-      const initTopology = () => {
-        const isMobile = width < 640;
-        const isTablet = width >= 640 && width < 1024;
-
-        const cols = isMobile ? 4 : isTablet ? 6 : preset.cols;
-        const rows = isMobile ? 5 : isTablet ? 5 : preset.rows;
-
-        const cellW = width / cols;
-        const cellH = height / rows;
-
-        // Distancia dinámica proporcional al tamaño de las celdas para garantizar conexiones completas
-        calculatedMaxDist = propMaxDistance ?? Math.hypot(cellW, cellH) * 1.35;
-
-        const nodes: NetworkNode[] = [];
-        let idCounter = 0;
-
+        const nodes: MeshNode[] = [];
+        let id = 0;
         for (let r = 0; r < rows; r++) {
           for (let c = 0; c < cols; c++) {
-            const offsetX = (r % 2 === 1) ? cellW * 0.5 : 0;
-            const baseX = c * cellW + cellW * 0.5 + offsetX;
-            const baseY = r * cellH + cellH * 0.5;
-
-            if (baseX < 20 || baseX > width - 20 || baseY < 20 || baseY > height - 20) continue;
-
-            const jitterX = (Math.random() - 0.5) * (cellW * 0.4);
-            const jitterY = (Math.random() - 0.5) * (cellH * 0.4);
-
-            const anchorX = baseX + jitterX;
-            const anchorY = baseY + jitterY;
+            const odd = r % 2 === 1 ? cellW * 0.5 : 0;
+            const bx = c * cellW + cellW * 0.5 + odd;
+            const by = r * cellH + cellH * 0.5;
+            if (bx < 15 || bx > W - 15 || by < 15 || by > H - 15) continue;
+            const jx = (Math.random() - 0.5) * cellW * 0.55;
+            const jy = (Math.random() - 0.5) * cellH * 0.55;
+            const ax = bx + jx;
+            const ay = by + jy;
 
             let tier: HierarchyTier = 'EDGE';
-            let radius = isDark ? 3.0 : 2.6;
-            let color = theme.edge;
-            let glowColor = theme.relayHalo;
+            let radius = 1.8;
+            const isCorePos =
+              (r === Math.floor(rows * 0.3) && c === Math.floor(cols * 0.3)) ||
+              (r === Math.floor(rows * 0.5) && c === Math.floor(cols * 0.5)) ||
+              (r === Math.floor(rows * 0.7) && c === Math.floor(cols * 0.7));
+            const isHubPos = (r + c) % 3 === 0 && !isCorePos;
 
-            const isGatewayPos = (r === 1 && c === 2) || (r === 2 && c === Math.floor(cols / 2)) || (r === rows - 2 && c === cols - 3);
-            const isHubPos = (r % 2 === 1 && c % 2 === 1) && !isGatewayPos;
-
-            if (isGatewayPos) {
-              tier = 'CORE';
-              radius = isDark ? 7.8 : 6.8;
-              color = theme.core;
-              glowColor = theme.coreHalo;
-            } else if (isHubPos) {
-              tier = 'HUB';
-              radius = isDark ? 5.4 : 4.8;
-              color = theme.hub;
-              glowColor = theme.hubHalo;
-            } else if (Math.random() < 0.45) {
-              tier = 'RELAY';
-              radius = isDark ? 4.0 : 3.4;
-              color = theme.relay;
-              glowColor = theme.relayHalo;
-            }
-
-            // Satélites Orbitando con Radio Amplio y Visibilidad Nítida
-            const satellites: Satellite[] = [];
-            if (tier === 'CORE' || tier === 'HUB') {
-              const satCount = tier === 'CORE' ? 2 : 1;
-              for (let s = 0; s < satCount; s++) {
-                satellites.push({
-                  angle: Math.random() * Math.PI * 2,
-                  speed: (Math.random() * 0.02 + 0.018) * (s % 2 === 0 ? 1 : -1),
-                  radius: radius + 18 + s * 11,
-                  size: isDark ? 3.0 : 2.5,
-                });
-              }
-            }
+            if (isCorePos) { tier = 'CORE'; radius = 3.2; }
+            else if (isHubPos) { tier = 'HUB'; radius = 2.4; }
+            else if (Math.random() < 0.3) { tier = 'RELAY'; radius = 2.0; }
 
             nodes.push({
-              id: idCounter++,
-              anchorX,
-              anchorY,
-              x: anchorX,
-              y: anchorY,
-              vx: 0,
-              vy: 0,
-              radius,
-              tier,
-              color,
-              coreColor: theme.coreInner,
-              glowColor,
-              phase: Math.random() * Math.PI * 2,
-              driftRadius: Math.random() * 20 + 14,
-              driftSpeedX: (Math.random() * 0.008 + 0.006) * (Math.random() > 0.5 ? 1 : -1),
-              driftSpeedY: (Math.random() * 0.008 + 0.006) * (Math.random() > 0.5 ? 1 : -1),
-              depth: Math.random() * 0.3 + 0.7,
+              id: id++, anchorX: ax, anchorY: ay,
+              x: ax, y: ay, vx: 0, vy: 0,
+              radius: isDark ? radius : radius * 0.9,
+              tier, phase: Math.random() * Math.PI * 2,
+              driftRadius: 8 + Math.random() * 12,
+              driftSpeedX: (0.003 + Math.random() * 0.004) * (Math.random() > 0.5 ? 1 : -1),
+              driftSpeedY: (0.003 + Math.random() * 0.004) * (Math.random() > 0.5 ? 1 : -1),
+              depth: 0.55 + Math.random() * 0.45,
               activity: 0,
-              haloPulse: 0,
-              satellites,
-              sonarRadius: Math.random() * 55,
             });
           }
         }
-
         nodesRef.current = nodes;
 
-        // Polvo Estelar de Fondo con Gran Luminosidad
-        const dustCount = isMobile ? 25 : preset.dustCount;
-        const dust: Stardust[] = [];
-        for (let d = 0; d < dustCount; d++) {
-          dust.push({
-            x: Math.random() * width,
-            y: Math.random() * height,
-            vx: (Math.random() - 0.5) * 0.18,
-            vy: (Math.random() - 0.5) * 0.18,
-            size: Math.random() * 1.8 + 1.2,
-            alpha: Math.random() * 0.45 + 0.3,
-            twinkleSpeed: Math.random() * 0.03 + 0.02,
-            twinklePhase: Math.random() * Math.PI * 2,
-          });
+        const pulses: DataPulse[] = [];
+        const pCount = variant === 'minimal' ? 3 : isMobile ? 4 : 6;
+        for (let i = 0; i < pCount; i++) {
+          pulses.push({ active: false, srcIdx: 0, tgtIdx: 0, progress: 0, speed: 0.02, ctrlOffsetX: 0, ctrlOffsetY: 0 });
         }
-        dustRef.current = dust;
+        pulsesRef.current = pulses;
 
-        // Pool de Chispas Fotónicas
-        const sparks: Spark[] = [];
-        for (let sp = 0; sp < 60; sp++) {
-          sparks.push({
-            active: false,
-            x: 0,
-            y: 0,
-            vx: 0,
-            vy: 0,
-            alpha: 0,
-            decay: 0.025,
-            color: '#67E8F9',
-            size: 2.5,
-          });
-        }
-        sparksRef.current = sparks;
-
-        // Paquetes de Datos
-        const initialPackets: DataPacket[] = [];
-        for (let p = 0; p < preset.maxPackets; p++) {
-          initialPackets.push({
-            active: false,
-            source: 0,
-            target: 0,
-            progress: 0,
-            speed: Math.random() * 0.012 + 0.016,
-            color: isDark ? '#67E8F9' : '#0284C7',
-            headRadius: isDark ? 4.2 : 3.6,
-            ctrlX: 0,
-            ctrlY: 0,
-            sparkCooldown: 0,
-          });
-        }
-        packetsRef.current = initialPackets;
+        const ripples: Ripple[] = [];
+        for (let i = 0; i < 4; i++) ripples.push({ active: false, x: 0, y: 0, radius: 0, maxRadius: 200, alpha: 0 });
+        ripplesRef.current = ripples;
       };
 
-      const handleResize = () => {
-        if (!canvas) return;
+      const resize = () => {
         dpr = Math.min(window.devicePixelRatio || 1, 2);
-        width = window.innerWidth;
-        height = window.innerHeight;
-        canvas.width = Math.floor(width * dpr);
-        canvas.height = Math.floor(height * dpr);
-        initTopology();
+        W = window.innerWidth;
+        H = window.innerHeight;
+        canvas.width = Math.floor(W * dpr);
+        canvas.height = Math.floor(H * dpr);
+        build();
       };
+      resize();
 
-      handleResize();
-
-      const handleMouseMove = (e: MouseEvent) => {
+      /* ── Input ── */
+      const onMove = (e: MouseEvent) => {
         if (!enableMouseInteraction) return;
-        mouseRef.current.targetX = e.clientX;
-        mouseRef.current.targetY = e.clientY;
-        mouseRef.current.isActive = true;
+        mouseRef.current.x = e.clientX;
+        mouseRef.current.y = e.clientY;
+        mouseRef.current.active = true;
       };
-
-      const handleMouseLeave = () => {
-        mouseRef.current.isActive = false;
-        mouseRef.current.targetX = -3000;
-        mouseRef.current.targetY = -3000;
-      };
-
-      const handleClick = (e: MouseEvent) => {
+      const onLeave = () => { mouseRef.current.active = false; mouseRef.current.x = -9999; };
+      const onClick = (e: MouseEvent) => {
         const nodes = nodesRef.current;
-        let clickedNodeId: number | null = null;
-        for (let i = 0; i < nodes.length; i++) {
-          const n = nodes[i];
-          const dist = Math.hypot(e.clientX - n.x, e.clientY - n.y);
-          if (dist < 36) {
-            clickedNodeId = n.id;
-            break;
+        for (const n of nodes) {
+          if (Math.hypot(e.clientX - n.x, e.clientY - n.y) < 30) {
+            fireBurst(n.id);
+            return;
           }
         }
-
-        if (clickedNodeId !== null) {
-          triggerBurstAtNode(clickedNodeId);
-        } else if (enableRipples) {
-          const waves = wavesRef.current;
-          const available = waves.find(w => !w.active);
-          if (available) {
-            available.active = true;
-            available.x = e.clientX;
-            available.y = e.clientY;
-            available.radius = 10;
-            available.maxRadius = 280;
-            available.intensity = 1.0;
-            available.speed = 5.0;
-          } else if (waves.length < 6) {
-            waves.push({
-              active: true,
-              x: e.clientX,
-              y: e.clientY,
-              radius: 10,
-              maxRadius: 280,
-              intensity: 1.0,
-              speed: 5.0,
-            });
-          }
+        if (enableRipples) {
+          const r = ripplesRef.current.find(rr => !rr.active);
+          if (r) { r.active = true; r.x = e.clientX; r.y = e.clientY; r.radius = 0; r.maxRadius = 200; r.alpha = 0.5; }
         }
       };
 
-      window.addEventListener('resize', handleResize);
-      window.addEventListener('mousemove', handleMouseMove, { passive: true });
-      window.addEventListener('mouseleave', handleMouseLeave);
-      window.addEventListener('click', handleClick, { passive: true });
+      window.addEventListener('resize', resize);
+      window.addEventListener('mousemove', onMove, { passive: true });
+      window.addEventListener('mouseleave', onLeave);
+      window.addEventListener('click', onClick, { passive: true });
 
-      let time = 0;
-      let radarX = 0;
+      let t = 0;
 
-      const render = () => {
-        time += 1.0;
-
+      const frame = () => {
+        t += 1;
+        const nodes = nodesRef.current;
+        const N = nodes.length;
         const mouse = mouseRef.current;
-        mouse.x += (mouse.targetX - mouse.x) * 0.18;
-        mouse.y += (mouse.targetY - mouse.y) * 0.18;
-
-        if (enableRadarSweep) {
-          radarX += 3.5;
-          if (radarX > width + 200) radarX = -200;
-        }
 
         ctx.save();
         ctx.scale(dpr, dpr);
-        ctx.clearRect(0, 0, width, height);
+        ctx.clearRect(0, 0, W, H);
 
-        // 1. HAZ DE RADAR CUÁNTICO
-        if (enableRadarSweep && radarX > -100 && radarX < width + 100) {
-          const radarGrad = ctx.createLinearGradient(radarX - 140, 0, radarX, 0);
-          radarGrad.addColorStop(0, 'rgba(16, 185, 129, 0)');
-          radarGrad.addColorStop(0.8, theme.radarSweep);
-          radarGrad.addColorStop(1, isDark ? 'rgba(103, 232, 249, 0.18)' : 'rgba(14, 116, 144, 0.12)');
-
-          ctx.fillStyle = radarGrad;
-          ctx.fillRect(radarX - 140, 0, 140, height);
-
-          ctx.beginPath();
-          ctx.moveTo(radarX, 0);
-          ctx.lineTo(radarX, height);
-          ctx.strokeStyle = isDark ? 'rgba(103, 232, 249, 0.35)' : 'rgba(14, 116, 144, 0.25)';
-          ctx.lineWidth = 1.2;
-          ctx.stroke();
-        }
-
-        // 2. POLVO CÓSMICO DE PROFUNDIDAD (STARDUST)
-        const dust = dustRef.current;
-        for (let d = 0; d < dust.length; d++) {
-          const p = dust[d];
-          p.x += p.vx;
-          p.y += p.vy;
-
-          if (p.x < 0) p.x = width;
-          if (p.x > width) p.x = 0;
-          if (p.y < 0) p.y = height;
-          if (p.y > height) p.y = 0;
-
-          p.twinklePhase += p.twinkleSpeed;
-          const currentAlpha = p.alpha * (0.6 + 0.4 * Math.sin(p.twinklePhase));
-
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-          ctx.fillStyle = `${theme.dustColor}${currentAlpha.toFixed(3)})`;
-          ctx.shadowColor = isDark ? '#A7F3D0' : '#047857';
-          ctx.shadowBlur = 4;
-          ctx.fill();
-          ctx.shadowBlur = 0;
-        }
-
-        const nodes = nodesRef.current;
-        const nodeCount = nodes.length;
-
-        // 3. FÍSICA ARMÓNICA CON ANCLAJE ESPACIAL Y REPULSIÓN
-        for (let i = 0; i < nodeCount; i++) {
+        /* ── 1. Physics: gentle Lissajous drift + soft repulsion ── */
+        for (let i = 0; i < N; i++) {
           const n = nodes[i];
+          const tx = n.anchorX + Math.cos(t * n.driftSpeedX + n.phase) * n.driftRadius;
+          const ty = n.anchorY + Math.sin(t * n.driftSpeedY + n.phase * 1.3) * n.driftRadius;
+          n.vx += (tx - n.x) * 0.025;
+          n.vy += (ty - n.y) * 0.025;
 
-          const targetX = n.anchorX + Math.cos(time * n.driftSpeedX + n.phase) * n.driftRadius;
-          const targetY = n.anchorY + Math.sin(time * n.driftSpeedY + n.phase * 1.3) * n.driftRadius;
-
-          const springK = 0.04;
-          n.vx += (targetX - n.x) * springK;
-          n.vy += (targetY - n.y) * springK;
-
-          for (let j = i + 1; j < nodeCount; j++) {
-            const other = nodes[j];
-            const dx = n.x - other.x;
-            const dy = n.y - other.y;
-            const dSq = dx * dx + dy * dy;
-
-            if (dSq < 4900 && dSq > 0.1) { // 70px
-              const d = Math.sqrt(dSq);
-              const repelForce = (1 - d / 70) * 0.9;
-              const nx = dx / d;
-              const ny = dy / d;
-
-              n.vx += nx * repelForce;
-              n.vy += ny * repelForce;
-              other.vx -= nx * repelForce;
-              other.vy -= ny * repelForce;
+          // soft repulsion
+          for (let j = i + 1; j < N; j++) {
+            const o = nodes[j];
+            const dx = n.x - o.x;
+            const dy = n.y - o.y;
+            const d2 = dx * dx + dy * dy;
+            if (d2 < 2500 && d2 > 0.01) {
+              const d = Math.sqrt(d2);
+              const f = (1 - d / 50) * 0.4;
+              const ux = dx / d * f;
+              const uy = dy / d * f;
+              n.vx += ux; n.vy += uy;
+              o.vx -= ux; o.vy -= uy;
             }
           }
 
-          n.vx *= 0.88;
-          n.vy *= 0.88;
-
-          n.x += n.vx;
-          n.y += n.vy;
-
-          if (n.activity > 0) n.activity = Math.max(0, n.activity - 0.015);
-          if (n.haloPulse > 0) n.haloPulse = Math.max(0, n.haloPulse - 0.012);
-
-          if (n.tier === 'CORE') {
-            n.sonarRadius += 0.55;
-            if (n.sonarRadius > 70) n.sonarRadius = n.radius + 8;
-          }
-
-          for (let s = 0; s < n.satellites.length; s++) {
-            n.satellites[s].angle += n.satellites[s].speed;
-          }
-
-          if (enableRadarSweep && Math.abs(n.x - radarX) < 20) {
-            n.activity = Math.max(n.activity, 0.75);
-          }
-
-          if (mouse.isActive && enableMouseInteraction) {
+          // mouse attraction
+          if (mouse.active && enableMouseInteraction) {
             const dx = mouse.x - n.x;
             const dy = mouse.y - n.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-
-            if (dist < 240 && dist > 1) {
-              const pull = (1 - dist / 240) * 1.8;
-              n.vx += (dx / dist) * pull * 0.35;
-              n.vy += (dy / dist) * pull * 0.35;
-              n.activity = Math.max(n.activity, pull * 0.85);
+            const d = Math.sqrt(dx * dx + dy * dy);
+            if (d < 200 && d > 1) {
+              const pull = (1 - d / 200) * 0.8;
+              n.vx += (dx / d) * pull * 0.15;
+              n.vy += (dy / d) * pull * 0.15;
+              n.activity = Math.max(n.activity, pull * 0.4);
             }
           }
 
-          const waves = wavesRef.current;
-          for (let w = 0; w < waves.length; w++) {
-            const wave = waves[w];
-            if (!wave.active) continue;
+          // ripple influence
+          for (const rp of ripplesRef.current) {
+            if (!rp.active) continue;
+            const dx = n.x - rp.x;
+            const dy = n.y - rp.y;
+            const d = Math.sqrt(dx * dx + dy * dy);
+            const band = Math.abs(d - rp.radius);
+            if (band < 25) {
+              const f = (1 - band / 25) * rp.alpha * 1.5;
+              n.vx += (dx / Math.max(d, 1)) * f * 0.2;
+              n.vy += (dy / Math.max(d, 1)) * f * 0.2;
+              n.activity = Math.max(n.activity, rp.alpha * 0.5);
+            }
+          }
 
-            const wdx = n.x - wave.x;
-            const wdy = n.y - wave.y;
-            const wDist = Math.sqrt(wdx * wdx + wdy * wdy);
-            const band = Math.abs(wDist - wave.radius);
+          n.vx *= 0.92;
+          n.vy *= 0.92;
+          n.x += n.vx;
+          n.y += n.vy;
+          if (n.activity > 0) n.activity = Math.max(0, n.activity - 0.008);
+        }
 
-            if (band < 35) {
-              const force = (1 - band / 35) * wave.intensity * 2.8;
-              const angle = Math.atan2(wdy, wdx);
-              n.vx += Math.cos(angle) * force * 0.35;
-              n.vy += Math.sin(angle) * force * 0.35;
-              n.activity = Math.max(n.activity, wave.intensity * 0.95);
+        /* ── 2. Connections: build fresh each frame ── */
+        const conns: MeshConnection[] = [];
+        const maxPerNode = 3;
+        const counts = new Uint8Array(N);
+        const maxD2 = maxDist * maxDist;
+
+        for (let i = 0; i < N; i++) {
+          if (counts[i] >= maxPerNode) continue;
+          for (let j = i + 1; j < N; j++) {
+            if (counts[j] >= maxPerNode) continue;
+            const dx = nodes[i].x - nodes[j].x;
+            const dy = nodes[i].y - nodes[j].y;
+            const d2 = dx * dx + dy * dy;
+            if (d2 < maxD2 && d2 > 900) {
+              conns.push({ i, j, dist: Math.sqrt(d2) });
+              counts[i]++;
+              counts[j]++;
+              if (counts[i] >= maxPerNode) break;
             }
           }
         }
+        connectionsRef.current = conns;
 
-        // 4. CONSTRUCCIÓN DE CONEXIONES CON RANGO AMPLIO DINÁMICO
-        const connections: NetworkConnection[] = [];
-        const maxConnsPerNode = 4;
-        const connCounts = new Uint8Array(nodeCount);
-        const maxDistSq = calculatedMaxDist * calculatedMaxDist;
-        const minDistSq = 40 * 40;
+        /* ── 3. Draw connections: ultra-thin elegant lines ── */
+        for (const c of conns) {
+          const a = nodes[c.i];
+          const b = nodes[c.j];
+          const ratio = 1 - c.dist / maxDist;
+          const boost = Math.max(a.activity, b.activity);
 
-        for (let i = 0; i < nodeCount; i++) {
-          if (connCounts[i] >= maxConnsPerNode) continue;
+          // base opacity: very subtle
+          const baseAlpha = ratio * (isDark ? 0.12 : 0.10) + boost * 0.15;
+          const isTrunk = (a.tier === 'CORE' || a.tier === 'HUB') && (b.tier === 'CORE' || b.tier === 'HUB');
 
-          for (let j = i + 1; j < nodeCount; j++) {
-            if (connCounts[j] >= maxConnsPerNode) continue;
-
-            const n1 = nodes[i];
-            const n2 = nodes[j];
-            const dx = n1.x - n2.x;
-            const dy = n1.y - n2.y;
-            const distSq = dx * dx + dy * dy;
-
-            if (distSq < maxDistSq && distSq > minDistSq) {
-              const dist = Math.sqrt(distSq);
-              let tier: 'TRUNK' | 'BRANCH' | 'FEEDER' = 'FEEDER';
-
-              if ((n1.tier === 'CORE' || n1.tier === 'HUB') && (n2.tier === 'CORE' || n2.tier === 'HUB')) {
-                tier = 'TRUNK';
-              } else if (n1.tier === 'RELAY' || n2.tier === 'RELAY' || n1.tier === 'HUB' || n2.tier === 'HUB') {
-                tier = 'BRANCH';
-              }
-
-              let midX = (n1.x + n2.x) * 0.5;
-              let midY = (n1.y + n2.y) * 0.5;
-
-              if (mouse.isActive && enableMouseInteraction) {
-                const mdx = mouse.x - midX;
-                const mdy = mouse.y - midY;
-                const mDist = Math.sqrt(mdx * mdx + mdy * mdy);
-                if (mDist < 180 && mDist > 1) {
-                  const warp = (1 - mDist / 180) * 24;
-                  midX += (mdx / mDist) * warp;
-                  midY += (mdy / mDist) * warp;
-                }
-              }
-
-              connections.push({
-                source: i,
-                target: j,
-                dist,
-                ctrlX: midX,
-                ctrlY: midY,
-                tier,
-                routerAngle: (i + j) * 0.4,
-              });
-
-              connCounts[i]++;
-              connCounts[j]++;
-              if (connCounts[i] >= maxConnsPerNode) break;
-            }
-          }
-        }
-
-        connectionsRef.current = connections;
-
-        // 5. FACETAS GEOMÉTRICAS TRIANGULARES HOLOGRÁFICAS
-        if (preset.enableTriangles && connections.length >= 3) {
-          ctx.fillStyle = theme.triangleFill;
-          ctx.strokeStyle = theme.triangleStroke;
-          ctx.lineWidth = 0.6;
-
-          for (let c1 = 0; c1 < Math.min(connections.length, 35); c1++) {
-            const conn1 = connections[c1];
-            for (let c2 = c1 + 1; c2 < Math.min(connections.length, 35); c2++) {
-              const conn2 = connections[c2];
-
-              if (conn1.source === conn2.source || conn1.source === conn2.target || conn1.target === conn2.source || conn1.target === conn2.target) {
-                const p1 = nodes[conn1.source];
-                const p2 = nodes[conn1.target];
-                const p3 = nodes[conn2.source === conn1.source || conn2.source === conn1.target ? conn2.target : conn2.source];
-
-                const maxSide = Math.max(
-                  Math.hypot(p1.x - p2.x, p1.y - p2.y),
-                  Math.hypot(p2.x - p3.x, p2.y - p3.y),
-                  Math.hypot(p3.x - p1.x, p3.y - p1.y)
-                );
-
-                if (maxSide < calculatedMaxDist * 0.85) {
-                  ctx.beginPath();
-                  ctx.moveTo(p1.x, p1.y);
-                  ctx.lineTo(p2.x, p2.y);
-                  ctx.lineTo(p3.x, p3.y);
-                  ctx.closePath();
-                  ctx.fill();
-                  ctx.stroke();
-                }
-              }
-            }
-          }
-        }
-
-        // 6. FILAMENTOS DE FIBRA ÓPTICA LUMINOSA (GRADIENT BÉZIER FILAMENTS)
-        for (let c = 0; c < connections.length; c++) {
-          const conn = connections[c];
-          const p1 = nodes[conn.source];
-          const p2 = nodes[conn.target];
-
-          const distRatio = 1 - conn.dist / calculatedMaxDist;
-          const boost = Math.max(p1.activity, p2.activity) * 0.45;
-
-          const lineGrad = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
-          if (conn.tier === 'TRUNK') {
-            const alpha = Math.min(1.0, distRatio * preset.trunkOpacity + boost).toFixed(3);
-            lineGrad.addColorStop(0, `${theme.trunkLine}${alpha})`);
-            lineGrad.addColorStop(0.5, isDark ? `rgba(6, 182, 212, ${alpha})` : `rgba(14, 116, 144, ${alpha})`);
-            lineGrad.addColorStop(1, `${theme.trunkLine}${alpha})`);
-            ctx.strokeStyle = lineGrad;
-            ctx.lineWidth = isDark ? 2.4 : 1.9;
-          } else if (conn.tier === 'BRANCH') {
-            const alpha = Math.min(1.0, distRatio * preset.branchOpacity + boost).toFixed(3);
-            lineGrad.addColorStop(0, `${theme.branchLine}${alpha})`);
-            lineGrad.addColorStop(1, `${theme.feederLine}${alpha})`);
-            ctx.strokeStyle = lineGrad;
-            ctx.lineWidth = isDark ? 1.5 : 1.2;
+          if (isTrunk) {
+            ctx.strokeStyle = `${pal.line}${Math.min(0.35, baseAlpha + 0.08).toFixed(3)})`;
+            ctx.lineWidth = 0.8;
           } else {
-            const alpha = Math.min(1.0, distRatio * preset.feederOpacity + boost).toFixed(3);
-            ctx.strokeStyle = `${theme.feederLine}${alpha})`;
-            ctx.lineWidth = isDark ? 1.1 : 0.9;
+            ctx.strokeStyle = `${pal.lineFaint}${Math.min(0.25, baseAlpha).toFixed(3)})`;
+            ctx.lineWidth = 0.5;
           }
 
           ctx.beginPath();
-          ctx.moveTo(p1.x, p1.y);
-          ctx.quadraticCurveTo(conn.ctrlX, conn.ctrlY, p2.x, p2.y);
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
           ctx.stroke();
-
-          // Micro-nodo router hexagonal en líneas troncales
-          if (conn.tier === 'TRUNK' && distRatio > 0.35) {
-            ctx.save();
-            ctx.translate(conn.ctrlX, conn.ctrlY);
-            ctx.rotate(time * 0.025 + conn.routerAngle);
-            ctx.strokeStyle = isDark ? 'rgba(103, 232, 249, 0.6)' : 'rgba(14, 116, 144, 0.45)';
-            ctx.lineWidth = 1.2;
-            ctx.strokeRect(-3, -3, 6, 6);
-            ctx.restore();
-          }
         }
 
-        // 7. RETÍCULA Y FILAMENTOS MAGNÉTICOS DEL RATÓN
-        if (mouse.isActive && enableMouseInteraction) {
-          const focusRing = 22 + Math.sin(time * 0.08) * 3;
+        /* ── 4. Mouse interaction lines ── */
+        if (mouse.active && enableMouseInteraction) {
+          // soft ring
           ctx.beginPath();
-          ctx.arc(mouse.x, mouse.y, focusRing, 0, Math.PI * 2);
-          ctx.strokeStyle = isDark ? 'rgba(103, 232, 249, 0.6)' : 'rgba(14, 116, 144, 0.45)';
-          ctx.lineWidth = 1.2;
-          ctx.setLineDash([4, 4]);
+          ctx.arc(mouse.x, mouse.y, 14 + Math.sin(t * 0.06) * 2, 0, Math.PI * 2);
+          ctx.strokeStyle = pal.mouseRing;
+          ctx.lineWidth = 0.8;
           ctx.stroke();
-          ctx.setLineDash([]);
 
-          for (let i = 0; i < nodeCount; i++) {
+          for (let i = 0; i < N; i++) {
             const n = nodes[i];
-            const mdx = mouse.x - n.x;
-            const mdy = mouse.y - n.y;
-            const mDist = Math.sqrt(mdx * mdx + mdy * mdy);
-
-            if (mDist < 240) {
-              const alpha = ((1 - mDist / 240) * (isDark ? 0.65 : 0.45)).toFixed(3);
+            const d = Math.hypot(mouse.x - n.x, mouse.y - n.y);
+            if (d < 160) {
+              const a = (1 - d / 160) * (isDark ? 0.20 : 0.14);
               ctx.beginPath();
               ctx.moveTo(mouse.x, mouse.y);
               ctx.lineTo(n.x, n.y);
-              ctx.strokeStyle = `${theme.mouseLine}${alpha})`;
-              ctx.lineWidth = 1.5;
+              ctx.strokeStyle = `${pal.mouseLine}${a.toFixed(3)})`;
+              ctx.lineWidth = 0.6;
               ctx.stroke();
             }
           }
         }
 
-        // 8. PAQUETES DE DATOS CUÁNTICOS CON ESTELA DE CHISPAS
-        if (enablePulses && connections.length > 0) {
-          const packets = packetsRef.current;
-          const sparks = sparksRef.current;
-
-          for (let p = 0; p < packets.length; p++) {
-            const pkt = packets[p];
-
-            if (!pkt.active) {
-              const chosenConn = connections[Math.floor(Math.random() * connections.length)];
-              pkt.active = true;
-              pkt.source = chosenConn.source;
-              pkt.target = chosenConn.target;
-              pkt.progress = 0;
-              pkt.speed = Math.random() * 0.012 + 0.016;
-              pkt.color = isDark ? '#67E8F9' : '#0284C7';
-              pkt.ctrlX = chosenConn.ctrlX;
-              pkt.ctrlY = chosenConn.ctrlY;
-              pkt.sparkCooldown = 0;
+        /* ── 5. Data pulses: elegant traveling dots ── */
+        if (enablePulses && conns.length > 0) {
+          const pulses = pulsesRef.current;
+          for (const p of pulses) {
+            if (!p.active) {
+              // spawn with delay — only ~40% chance per frame to avoid constant streams
+              if (Math.random() > 0.005) continue;
+              const c = conns[Math.floor(Math.random() * conns.length)];
+              p.active = true;
+              p.srcIdx = c.i;
+              p.tgtIdx = c.j;
+              p.progress = 0;
+              p.speed = 0.008 + Math.random() * 0.008;
+              p.ctrlOffsetX = (Math.random() - 0.5) * 20;
+              p.ctrlOffsetY = (Math.random() - 0.5) * 20;
             }
 
-            pkt.progress += pkt.speed;
-
-            if (pkt.progress >= 1.0) {
-              pkt.active = false;
-              if (nodes[pkt.target]) {
-                nodes[pkt.target].activity = 1.0;
-                nodes[pkt.target].haloPulse = 1.0;
-              }
+            p.progress += p.speed;
+            if (p.progress >= 1) {
+              p.active = false;
+              const tn = nodes[p.tgtIdx];
+              if (tn) tn.activity = Math.min(1, tn.activity + 0.5);
               continue;
             }
 
-            const src = nodes[pkt.source];
-            const tgt = nodes[pkt.target];
-            if (!src || !tgt) continue;
+            const s = nodes[p.srcIdx];
+            const e = nodes[p.tgtIdx];
+            if (!s || !e) continue;
 
-            const t = pkt.progress;
-            const oneMinusT = 1 - t;
-            const headX = oneMinusT * oneMinusT * src.x + 2 * oneMinusT * t * pkt.ctrlX + t * t * tgt.x;
-            const headY = oneMinusT * oneMinusT * src.y + 2 * oneMinusT * t * pkt.ctrlY + t * t * tgt.y;
+            const mx = (s.x + e.x) * 0.5 + p.ctrlOffsetX;
+            const my = (s.y + e.y) * 0.5 + p.ctrlOffsetY;
+            const tt = p.progress;
+            const u = 1 - tt;
 
-            // Emitir chispas fotónicas visibles
-            pkt.sparkCooldown++;
-            if (pkt.sparkCooldown >= 2) {
-              pkt.sparkCooldown = 0;
-              const sparkAvail = sparks.find(s => !s.active);
-              if (sparkAvail) {
-                sparkAvail.active = true;
-                sparkAvail.x = headX + (Math.random() - 0.5) * 6;
-                sparkAvail.y = headY + (Math.random() - 0.5) * 6;
-                sparkAvail.vx = (Math.random() - 0.5) * 0.8;
-                sparkAvail.vy = (Math.random() - 0.5) * 0.8;
-                sparkAvail.alpha = 1.0;
-                sparkAvail.decay = 0.03;
-                sparkAvail.color = isDark ? '#67E8F9' : '#0284C7';
-                sparkAvail.size = Math.random() * 2.0 + 1.5;
-              }
-            }
+            const hx = u * u * s.x + 2 * u * tt * mx + tt * tt * e.x;
+            const hy = u * u * s.y + 2 * u * tt * my + tt * tt * e.y;
 
-            const tTail = Math.max(0, t - 0.30);
-            const oneMinusTTail = 1 - tTail;
-            const tailX = oneMinusTTail * oneMinusTTail * src.x + 2 * oneMinusTTail * tTail * pkt.ctrlX + tTail * tTail * tgt.x;
-            const tailY = oneMinusTTail * oneMinusTTail * src.y + 2 * oneMinusTTail * tTail * pkt.ctrlY + tTail * tTail * tgt.y;
+            // trail
+            const tt2 = Math.max(0, tt - 0.15);
+            const u2 = 1 - tt2;
+            const tx = u2 * u2 * s.x + 2 * u2 * tt2 * mx + tt2 * tt2 * e.x;
+            const ty = u2 * u2 * s.y + 2 * u2 * tt2 * my + tt2 * tt2 * e.y;
 
-            const visibility = Math.sin(pkt.progress * Math.PI);
+            const vis = Math.sin(p.progress * Math.PI);
 
-            const grad = ctx.createLinearGradient(tailX, tailY, headX, headY);
-            grad.addColorStop(0, 'rgba(6, 182, 212, 0)');
-            grad.addColorStop(0.6, `${theme.branchLine}${(visibility * (isDark ? 0.9 : 0.75)).toFixed(3)})`);
-            grad.addColorStop(1, pkt.color);
-
+            const grad = ctx.createLinearGradient(tx, ty, hx, hy);
+            grad.addColorStop(0, `${pal.pulseTrail}0)`);
+            grad.addColorStop(1, `${pal.pulseTrail}${(vis * 0.7).toFixed(3)})`);
             ctx.beginPath();
-            ctx.moveTo(tailX, tailY);
-            ctx.lineTo(headX, headY);
+            ctx.moveTo(tx, ty);
+            ctx.lineTo(hx, hy);
             ctx.strokeStyle = grad;
-            ctx.lineWidth = isDark ? 3.4 : 2.6;
-            ctx.stroke();
-
-            // Cabeza del paquete con halo de fotón
-            ctx.beginPath();
-            ctx.arc(headX, headY, pkt.headRadius, 0, Math.PI * 2);
-            ctx.fillStyle = pkt.color;
-            ctx.shadowColor = pkt.color;
-            ctx.shadowBlur = isDark ? 16 : 8;
-            ctx.globalAlpha = visibility;
-            ctx.fill();
-            ctx.globalAlpha = 1.0;
-            ctx.shadowBlur = 0;
-          }
-
-          // Dibujar Chispas Fotónicas
-          for (let sp = 0; sp < sparks.length; sp++) {
-            const spark = sparks[sp];
-            if (!spark.active) continue;
-
-            spark.x += spark.vx;
-            spark.y += spark.vy;
-            spark.alpha -= spark.decay;
-
-            if (spark.alpha <= 0) {
-              spark.active = false;
-              continue;
-            }
-
-            ctx.beginPath();
-            ctx.arc(spark.x, spark.y, spark.size, 0, Math.PI * 2);
-            ctx.fillStyle = spark.color;
-            ctx.shadowColor = spark.color;
-            ctx.shadowBlur = 6;
-            ctx.globalAlpha = spark.alpha;
-            ctx.fill();
-            ctx.globalAlpha = 1.0;
-            ctx.shadowBlur = 0;
-          }
-        }
-
-        // 9. ONDAS DE CHOQUE (CLICK RIPPLES)
-        if (enableRipples) {
-          const waves = wavesRef.current;
-          for (let w = 0; w < waves.length; w++) {
-            const wave = waves[w];
-            if (!wave.active) continue;
-
-            wave.radius += wave.speed;
-            wave.intensity *= 0.96;
-
-            if (wave.radius >= wave.maxRadius || wave.intensity <= 0.02) {
-              wave.active = false;
-              continue;
-            }
-
-            ctx.beginPath();
-            ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
-            ctx.strokeStyle = `${theme.waveColor}${(wave.intensity * 0.7).toFixed(3)})`;
-            ctx.lineWidth = 2.4;
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.arc(wave.x, wave.y, Math.max(1, wave.radius - 18), 0, Math.PI * 2);
-            ctx.strokeStyle = `${theme.waveColor}${(wave.intensity * 0.4).toFixed(3)})`;
-            ctx.lineWidth = 1.4;
-            ctx.stroke();
-          }
-        }
-
-        // 10. DIBUJAR NODOS, HALOS Y MICRO-SATÉLITES (TOTALMENTE NÍTIDO)
-        for (let i = 0; i < nodeCount; i++) {
-          const n = nodes[i];
-          const nodeAlpha = (0.88 + n.activity * 0.12) * n.depth;
-
-          // 10.1 CORE: Halo multi-capa y Anillo Sonar
-          if (n.tier === 'CORE') {
-            const haloSize = 46 + Math.sin(time * 0.05 + n.phase) * 10 + (n.activity * 25);
-            const haloGrad = ctx.createRadialGradient(n.x, n.y, 2, n.x, n.y, haloSize);
-            haloGrad.addColorStop(0, isDark ? 'rgba(16, 185, 129, 0.60)' : 'rgba(4, 120, 87, 0.45)');
-            haloGrad.addColorStop(0.5, isDark ? 'rgba(6, 182, 212, 0.30)' : 'rgba(14, 116, 144, 0.22)');
-            haloGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-
-            ctx.beginPath();
-            ctx.arc(n.x, n.y, haloSize, 0, Math.PI * 2);
-            ctx.fillStyle = haloGrad;
-            ctx.fill();
-
-            // Onda Sonar Expansiva
-            const sonarAlpha = (1 - n.sonarRadius / 70) * 0.55;
-            ctx.beginPath();
-            ctx.arc(n.x, n.y, n.sonarRadius, 0, Math.PI * 2);
-            ctx.strokeStyle = `${theme.trunkLine}${sonarAlpha.toFixed(3)})`;
-            ctx.lineWidth = 1.3;
-            ctx.stroke();
-
-            // Anillo Orbital con marcas
-            const orbitRadius = n.radius + 9.0 + Math.sin(time * 0.04 + n.phase) * 1.8;
-            ctx.beginPath();
-            ctx.arc(n.x, n.y, orbitRadius, 0, Math.PI * 2);
-            ctx.strokeStyle = `${theme.trunkLine}${(0.55 + n.activity * 0.45).toFixed(3)})`;
             ctx.lineWidth = 1.5;
             ctx.stroke();
-          }
 
-          // 10.2 HUB: Anillo concéntrico
-          if (n.tier === 'HUB') {
-            const hubRingRadius = n.radius + 6.0 + Math.sin(time * 0.06 + n.phase) * 1.4;
+            // head dot
             ctx.beginPath();
-            ctx.arc(n.x, n.y, hubRingRadius, 0, Math.PI * 2);
-            ctx.strokeStyle = `${theme.branchLine}${(0.45 + n.activity * 0.4).toFixed(3)})`;
-            ctx.lineWidth = 1.3;
-            ctx.stroke();
-          }
-
-          // 10.3 Micro-Satélites con Órbita Visual Punteada
-          for (let s = 0; s < n.satellites.length; s++) {
-            const sat = n.satellites[s];
-
-            // Pista orbital punteada sutil
-            ctx.beginPath();
-            ctx.arc(n.x, n.y, sat.radius, 0, Math.PI * 2);
-            ctx.strokeStyle = isDark ? 'rgba(103, 232, 249, 0.20)' : 'rgba(14, 116, 144, 0.15)';
-            ctx.lineWidth = 0.8;
-            ctx.setLineDash([3, 4]);
-            ctx.stroke();
-            ctx.setLineDash([]);
-
-            // Cuerpo del Satélite
-            const satX = n.x + Math.cos(sat.angle) * sat.radius;
-            const satY = n.y + Math.sin(sat.angle) * sat.radius;
-
-            ctx.beginPath();
-            ctx.arc(satX, satY, sat.size, 0, Math.PI * 2);
-            ctx.fillStyle = isDark ? '#67E8F9' : '#0E7490';
-            ctx.shadowColor = isDark ? '#67E8F9' : '#0E7490';
-            ctx.shadowBlur = 8;
+            ctx.arc(hx, hy, 2.2, 0, Math.PI * 2);
+            ctx.fillStyle = pal.pulse;
+            ctx.shadowColor = pal.pulse;
+            ctx.shadowBlur = isDark ? 8 : 4;
+            ctx.globalAlpha = vis;
             ctx.fill();
+            ctx.globalAlpha = 1;
             ctx.shadowBlur = 0;
           }
+        }
 
-          // 10.4 Cuerpo Principal del Nodo
-          const currentRadius = n.radius + (n.activity * 1.5);
+        /* ── 6. Ripples ── */
+        if (enableRipples) {
+          for (const r of ripplesRef.current) {
+            if (!r.active) continue;
+            r.radius += 3;
+            r.alpha *= 0.97;
+            if (r.radius > r.maxRadius || r.alpha < 0.01) { r.active = false; continue; }
+
+            ctx.beginPath();
+            ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
+            ctx.strokeStyle = `${pal.ripple}${(r.alpha * 0.4).toFixed(3)})`;
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+          }
+        }
+
+        /* ── 7. Nodes: minimalist dots with subtle glow ── */
+        for (let i = 0; i < N; i++) {
+          const n = nodes[i];
+          const a = (0.5 + n.activity * 0.5) * n.depth;
+
+          // Core/Hub: faint halo ring
+          if (n.tier === 'CORE') {
+            const haloR = n.radius + 6 + Math.sin(t * 0.03 + n.phase) * 2;
+            ctx.beginPath();
+            ctx.arc(n.x, n.y, haloR, 0, Math.PI * 2);
+            ctx.strokeStyle = `${pal.nodePrimary}${(0.12 + n.activity * 0.15).toFixed(3)})`;
+            ctx.lineWidth = 0.6;
+            ctx.stroke();
+          }
+
+          if (n.tier === 'HUB') {
+            const haloR = n.radius + 4 + Math.sin(t * 0.04 + n.phase) * 1.5;
+            ctx.beginPath();
+            ctx.arc(n.x, n.y, haloR, 0, Math.PI * 2);
+            ctx.strokeStyle = `${pal.nodeSecondary}${(0.10 + n.activity * 0.12).toFixed(3)})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+
+          // node dot
+          const r = n.radius + n.activity * 0.8;
+          const color =
+            n.tier === 'CORE' ? pal.nodePrimary :
+            n.tier === 'HUB' ? pal.nodeSecondary :
+            pal.nodeEdge;
+
+          const dotAlpha = n.tier === 'CORE' ? 0.75 + n.activity * 0.25 :
+                          n.tier === 'HUB' ? 0.55 + n.activity * 0.25 :
+                          0.30 + n.activity * 0.20;
+
           ctx.beginPath();
-          ctx.arc(n.x, n.y, currentRadius, 0, Math.PI * 2);
-          ctx.fillStyle = n.color;
-          ctx.shadowColor = n.color;
-          ctx.shadowBlur = isDark ? (n.tier === 'CORE' ? 24 : n.tier === 'HUB' ? 16 : 9) : 6;
-          ctx.globalAlpha = nodeAlpha;
+          ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
+          ctx.fillStyle = `${color}${(dotAlpha * a).toFixed(3)})`;
+
+          if (n.tier === 'CORE' || n.tier === 'HUB') {
+            ctx.shadowColor = `${color}0.4)`;
+            ctx.shadowBlur = isDark ? 6 : 3;
+          }
+
           ctx.fill();
-          ctx.globalAlpha = 1.0;
           ctx.shadowBlur = 0;
 
-          // 10.5 Núcleo Blanco Brillante
-          if (n.tier === 'CORE' || n.tier === 'HUB') {
+          // inner bright dot for CORE
+          if (n.tier === 'CORE') {
             ctx.beginPath();
-            ctx.arc(n.x, n.y, n.tier === 'CORE' ? 2.8 : 2.0, 0, Math.PI * 2);
-            ctx.fillStyle = n.coreColor;
+            ctx.arc(n.x, n.y, 1.2, 0, Math.PI * 2);
+            ctx.fillStyle = isDark ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.7)';
             ctx.fill();
           }
         }
 
         ctx.restore();
-        animationFrameId = requestAnimationFrame(render);
+        raf = requestAnimationFrame(frame);
       };
 
-      render();
+      frame();
 
       return () => {
-        cancelAnimationFrame(animationFrameId);
-        window.removeEventListener('resize', handleResize);
-        window.removeEventListener('mousemove', handleMouseMove);
-        window.removeEventListener('mouseleave', handleMouseLeave);
-        window.removeEventListener('click', handleClick);
+        cancelAnimationFrame(raf);
+        window.removeEventListener('resize', resize);
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('mouseleave', onLeave);
+        window.removeEventListener('click', onClick);
       };
-    }, [propMaxDistance, isDark, enablePulses, enableRipples, enableMouseInteraction, enableRadarSweep, variant]);
+    }, [isDark, enablePulses, enableRipples, enableMouseInteraction, variant, _propMaxDistance]);
 
     return (
       <canvas
         ref={canvasRef}
         className={className}
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          pointerEvents: 'none',
-          zIndex: 0,
-        }}
+        style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', pointerEvents: 'none', zIndex: 0 }}
       />
     );
-  }
+  },
 );
 
 InteractiveGravityMesh.displayName = 'InteractiveGravityMesh';
