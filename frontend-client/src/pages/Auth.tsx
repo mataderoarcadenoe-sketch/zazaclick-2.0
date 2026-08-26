@@ -21,6 +21,7 @@ export default function Auth() {
   const [loadingGoogle, setLoadingGoogle] = useState(true);
   const [authenticating, setAuthenticating] = useState(false);
   const googleBtnRef = useRef<HTMLDivElement>(null);
+  const isGoogleInitializedRef = useRef(false);
 
   const GOOGLE_CLIENT_ID = '6104299697-7dissi3tuvd84q94737nqmsi96nmh2d5.apps.googleusercontent.com';
 
@@ -47,15 +48,18 @@ export default function Auth() {
   }, [refreshUser]);
 
   const renderGoogleButton = useCallback(() => {
-    if (!window.google || !googleBtnRef.current) return;
+    if (!window.google?.accounts?.id || !googleBtnRef.current) return;
     
     try {
-      window.google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: handleGoogleCallback,
-        auto_select: false,
-        cancel_on_tap_outside: true,
-      });
+      if (!isGoogleInitializedRef.current) {
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleGoogleCallback,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+        });
+        isGoogleInitializedRef.current = true;
+      }
 
       googleBtnRef.current.innerHTML = '';
 
