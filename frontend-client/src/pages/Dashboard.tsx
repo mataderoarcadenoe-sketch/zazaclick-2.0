@@ -6,7 +6,8 @@ import api from '../services/api';
 import { 
   LogOut, RefreshCw, Plus, Key, Trash2, Smartphone, CheckCircle2, 
   AlertCircle, Copy, Send, LayoutGrid, Terminal, 
-  Moon, Sun, Menu, X, Play, Shield, Building, Image, Mic, MapPin, UserPlus, ArrowRight
+  Moon, Sun, Menu, X, Play, Shield, Building, Image, Mic, MapPin, UserPlus, ArrowRight,
+  Activity, Globe, CreditCard, AlertTriangle
 } from 'lucide-react';
 
 import { AsyncOperationModal, type AsyncStep, type AsyncStatus } from '../components/AsyncOperationModal';
@@ -743,62 +744,90 @@ echo $response;`;
 
                 {/* KPI Metrics */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                  <div className="p-6 bg-white dark:bg-[#0D131F] rounded-3xl space-y-2">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Consumo de Cuota</span>
-                    <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                      {subscription?.messages_used || 0} <span className="text-sm font-normal text-slate-400">/ {subscription?.messages_limit || 1000} msgs</span>
+                  <div className="p-6 bg-gradient-to-br from-orange-500 to-rose-600 dark:from-orange-600 dark:to-rose-800 rounded-3xl space-y-2 relative overflow-hidden shadow-lg shadow-orange-500/20 dark:shadow-orange-900/30">
+                    <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full bg-white/10" />
+                    <div className="absolute -right-1 -top-1 w-10 h-10 rounded-full bg-white/10" />
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center"><Activity size={14} className="text-white" /></div>
+                        <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Consumo de Cuota</span>
+                      </div>
+                      <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                        {subscription?.messages_used || 0} <span className="text-sm font-normal text-white/60">/ {subscription?.messages_limit || 1000} msgs</span>
+                      </div>
+                      <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full rounded-full bg-white/80"
+                          style={{ width: `${Math.min(100, Number(subscription?.consumption_percentage || 0))}%` }}
+                        />
+                      </div>
+                      <p className="text-[11px] font-bold text-white/70">
+                        {subscription?.consumption_percentage || 0}% consumido ({subscription?.available_messages || 0} disponibles)
+                      </p>
                     </div>
-                    <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full rounded-full ${Number(subscription?.consumption_percentage || 0) > 90 ? 'bg-rose-500' : 'bg-emerald-500'}`}
-                        style={{ width: `${Math.min(100, Number(subscription?.consumption_percentage || 0))}%` }}
-                      />
-                    </div>
-                    <p className="text-[11px] font-bold text-slate-400">
-                      {subscription?.consumption_percentage || 0}% consumido ({subscription?.available_messages || 0} disponibles)
-                    </p>
                   </div>
 
-                  <div className="p-6 bg-white dark:bg-[#0D131F] rounded-3xl space-y-2">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Líneas Conectadas</span>
-                    <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                      {activeInstancesCount} <span className="text-sm font-normal text-slate-400">/ {maxInstances === 99 ? '∞' : maxInstances}</span>
+                  <div className="p-6 bg-gradient-to-br from-emerald-500 to-teal-700 dark:from-emerald-600 dark:to-teal-900 rounded-3xl space-y-2 relative overflow-hidden shadow-lg shadow-emerald-500/20 dark:shadow-emerald-900/30">
+                    <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full bg-white/10" />
+                    <div className="absolute -right-1 -top-1 w-10 h-10 rounded-full bg-white/10" />
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center"><Smartphone size={14} className="text-white" /></div>
+                        <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Líneas Conectadas</span>
+                      </div>
+                      <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                        {activeInstancesCount} <span className="text-sm font-normal text-white/60">/ {maxInstances === 99 ? '∞' : maxInstances}</span>
+                      </div>
+                      <p className="text-xs font-bold text-white/70 pt-1 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-white/80 animate-pulse" />
+                        <span>{activeInstancesCount > 0 ? 'Conexión activa con WhatsApp' : 'Sin líneas vinculadas'}</span>
+                      </p>
                     </div>
-                    <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 pt-1 flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                      <span>{activeInstancesCount > 0 ? 'Conexión activa con WhatsApp' : 'Sin líneas vinculadas'}</span>
-                    </p>
                   </div>
 
-                  <div className="p-6 bg-white dark:bg-[#0D131F] rounded-3xl space-y-2 min-w-0">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">URL Endpoint</span>
-                    <div className="text-xs font-mono font-bold text-slate-900 dark:text-white truncate pt-1" title={currentBackendUrl}>
-                      {currentBackendUrl}
+                  <div className="p-6 bg-gradient-to-br from-blue-500 to-indigo-700 dark:from-blue-600 dark:to-indigo-900 rounded-3xl space-y-2 min-w-0 relative overflow-hidden shadow-lg shadow-blue-500/20 dark:shadow-blue-900/30">
+                    <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full bg-white/10" />
+                    <div className="absolute -right-1 -top-1 w-10 h-10 rounded-full bg-white/10" />
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center"><Globe size={14} className="text-white" /></div>
+                        <span className="text-xs font-bold text-white/80 uppercase tracking-wider">URL Endpoint</span>
+                      </div>
+                      <div className="text-xs font-mono font-bold text-white truncate pt-1" title={currentBackendUrl}>
+                        {currentBackendUrl}
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={() => copyToClipboard(currentBackendUrl)} 
+                        className="text-xs font-bold text-white/80 hover:text-white hover:underline pt-1 block cursor-pointer"
+                      >
+                        Copiar URL Base ➔
+                      </button>
                     </div>
-                    <button 
-                      type="button" 
-                      onClick={() => copyToClipboard(currentBackendUrl)} 
-                      className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline pt-1 block cursor-pointer"
-                    >
-                      Copiar URL Base ➔
-                    </button>
                   </div>
 
-                  <div className="p-6 bg-white dark:bg-[#0D131F] rounded-3xl space-y-2">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Plan y Vencimiento</span>
-                    <div className="text-lg font-black text-slate-900 dark:text-white uppercase truncate pt-1">
-                      {subscription?.plan_name || 'Plan Developer'}
-                    </div>
-                    <div className="pt-1">
-                      {subscription?.is_expired ? (
-                        <span className="px-2.5 py-1 bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 text-[10px] font-black rounded-full uppercase">
-                          🔴 VENCIDO
-                        </span>
-                      ) : (
-                        <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[10px] font-bold rounded-full uppercase">
-                          ● {subscription?.days_remaining || 0} DÍAS RESTANTES
-                        </span>
-                      )}
+                  <div className="p-6 bg-gradient-to-br from-violet-500 to-purple-700 dark:from-violet-600 dark:to-purple-900 rounded-3xl space-y-2 relative overflow-hidden shadow-lg shadow-violet-500/20 dark:shadow-violet-900/30">
+                    <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full bg-white/10" />
+                    <div className="absolute -right-1 -top-1 w-10 h-10 rounded-full bg-white/10" />
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center"><CreditCard size={14} className="text-white" /></div>
+                        <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Plan y Vencimiento</span>
+                      </div>
+                      <div className="text-lg font-black text-white uppercase truncate pt-1">
+                        {subscription?.plan_name || 'Plan Developer'}
+                      </div>
+                      <div className="pt-1">
+                        {subscription?.is_expired ? (
+                          <span className="px-2.5 py-1 bg-rose-500/30 text-white text-[10px] font-black rounded-full uppercase">
+                            🔴 VENCIDO
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-1 bg-white/20 text-white text-[10px] font-bold rounded-full uppercase">
+                            ● {subscription?.days_remaining || 0} DÍAS RESTANTES
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

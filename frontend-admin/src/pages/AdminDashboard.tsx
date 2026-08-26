@@ -407,34 +407,55 @@ export default function AdminDashboardPage() {
 
                 {/* Métricas Principales */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  <div className="p-7 bg-white dark:bg-[#0D131F] rounded-3xl space-y-2">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Clientes Totales</span>
-                    <div className="text-4xl font-black text-slate-900 dark:text-white">
-                      {stats?.users?.total_users || 0}
+                  <div className="p-7 bg-gradient-to-br from-violet-500 to-purple-700 dark:from-violet-600 dark:to-purple-900 rounded-3xl space-y-2 relative overflow-hidden shadow-lg shadow-violet-500/20 dark:shadow-violet-900/30">
+                    <div className="absolute -right-4 -top-4 w-24 h-24 rounded-full bg-white/10" />
+                    <div className="absolute -right-1 -top-1 w-12 h-12 rounded-full bg-white/10" />
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center"><Users size={16} className="text-white" /></div>
+                        <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Clientes Totales</span>
+                      </div>
+                      <div className="text-4xl font-black text-white">
+                        {stats?.users?.total_users || 0}
+                      </div>
+                      <p className="text-xs text-white/70 font-bold">
+                        ● {stats?.users?.active_users || 0} Activos · {stats?.users?.suspended_users || 0} Suspendidos
+                      </p>
                     </div>
-                    <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">
-                      ● {stats?.users?.active_users || 0} Activos · {stats?.users?.suspended_users || 0} Suspendidos
-                    </p>
                   </div>
 
-                  <div className="p-7 bg-white dark:bg-[#0D131F] rounded-3xl space-y-2">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Líneas WhatsApp</span>
-                    <div className="text-4xl font-black text-emerald-600 dark:text-emerald-400">
-                      {stats?.instances?.connected_instances || 0} <span className="text-base text-slate-400">/ {stats?.instances?.total_instances || 0}</span>
+                  <div className="p-7 bg-gradient-to-br from-emerald-500 to-teal-700 dark:from-emerald-600 dark:to-teal-900 rounded-3xl space-y-2 relative overflow-hidden shadow-lg shadow-emerald-500/20 dark:shadow-emerald-900/30">
+                    <div className="absolute -right-4 -top-4 w-24 h-24 rounded-full bg-white/10" />
+                    <div className="absolute -right-1 -top-1 w-12 h-12 rounded-full bg-white/10" />
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center"><Smartphone size={16} className="text-white" /></div>
+                        <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Líneas WhatsApp</span>
+                      </div>
+                      <div className="text-4xl font-black text-white">
+                        {stats?.instances?.connected_instances || 0} <span className="text-base text-white/60">/ {stats?.instances?.total_instances || 0}</span>
+                      </div>
+                      <p className="text-xs text-white/70 font-medium">
+                        {stats?.instances?.disabled_instances || 0} deshabilitadas por administración
+                      </p>
                     </div>
-                    <p className="text-xs text-slate-400 font-medium">
-                      {stats?.instances?.disabled_instances || 0} deshabilitadas por administración
-                    </p>
                   </div>
 
-                  <div className="p-7 bg-white dark:bg-[#0D131F] rounded-3xl space-y-2">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Mensajes Procesados</span>
-                    <div className="text-4xl font-black text-teal-600 dark:text-teal-400">
-                      {stats?.traffic?.total_messages || 0}
+                  <div className="p-7 bg-gradient-to-br from-cyan-500 to-blue-700 dark:from-cyan-600 dark:to-blue-900 rounded-3xl space-y-2 relative overflow-hidden shadow-lg shadow-cyan-500/20 dark:shadow-cyan-900/30">
+                    <div className="absolute -right-4 -top-4 w-24 h-24 rounded-full bg-white/10" />
+                    <div className="absolute -right-1 -top-1 w-12 h-12 rounded-full bg-white/10" />
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center"><Activity size={16} className="text-white" /></div>
+                        <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Mensajes Procesados</span>
+                      </div>
+                      <div className="text-4xl font-black text-white">
+                        {stats?.traffic?.total_messages || 0}
+                      </div>
+                      <p className="text-xs text-white/70 font-medium">
+                        ✓ {stats?.traffic?.successful_messages || 0} entregados exitosamente
+                      </p>
                     </div>
-                    <p className="text-xs text-slate-400 font-medium">
-                      ✓ {stats?.traffic?.successful_messages || 0} entregados exitosamente
-                    </p>
                   </div>
                 </div>
 
