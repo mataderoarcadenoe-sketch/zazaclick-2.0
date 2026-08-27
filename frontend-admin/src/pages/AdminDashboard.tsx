@@ -1132,16 +1132,24 @@ export default function AdminDashboardPage() {
                             </td>
                             <td className="py-3.5">
                               <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase ${
-                                u.status === 'active' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'bg-rose-500/15 text-rose-700 dark:text-rose-300'
+                                (u.user_status || u.status) === 'active' 
+                                  ? (u.is_expired ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300' : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300')
+                                  : (u.user_status || u.status) === 'suspended'
+                                  ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300'
+                                  : 'bg-slate-500/15 text-slate-700 dark:text-slate-300'
                               }`}>
-                                {u.status === 'active' ? 'Activo' : 'Suspendido'}
+                                {(u.user_status || u.status) === 'active' 
+                                  ? (u.is_expired ? '⚠️ Vencido' : '● Activo')
+                                  : (u.user_status || u.status) === 'suspended'
+                                  ? '● Suspendido'
+                                  : (u.user_status || u.status || 'Activo')}
                               </span>
                             </td>
                             <td className="py-3.5 text-right space-x-1.5">
                               <button
                                 onClick={() => {
                                   setEditSubscriptionModal({ open: true, user: u });
-                                  setSubFormData({ planId: u.plan_id || 'plan_basic', status: u.status || 'active', durationDays: 30, resetQuota: false });
+                                  setSubFormData({ planId: u.plan_id || 'plan_basic', status: u.user_status || u.status || 'active', durationDays: 30, resetQuota: false });
                                 }}
                                 className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-[10px] font-bold cursor-pointer transition-colors"
                               >
