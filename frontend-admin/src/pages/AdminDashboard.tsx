@@ -9,7 +9,7 @@ import {
   Building, RefreshCw, AlertCircle, ArrowRight,
   Plus, DollarSign, Clock, Check, AlertTriangle,
   Lock, RotateCcw, CreditCard, FileText, ToggleLeft, ToggleRight, Trash2, Eye,
-  Server, Cpu, Zap
+  Server, Cpu, Zap, Building2
 } from 'lucide-react';
 import { useDarkMode } from '../hooks/useDarkMode';
 import api from '../services/api';
@@ -21,7 +21,7 @@ import { ZazaLogo } from '../components/ZazaLogo';
 
 export default function AdminDashboardPage() {
   const { user, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'instances' | 'plans' | 'payments' | 'audit' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'instances' | 'plans' | 'payments' | 'audit' | 'b2b' | 'settings'>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isDark, toggle: toggleDark } = useDarkMode();
 
@@ -351,6 +351,7 @@ export default function AdminDashboardPage() {
     { id: 'instances', label: 'Líneas WhatsApp Totales', icon: Smartphone },
     { id: 'plans', label: 'Planes y Cuotas', icon: Key },
     { id: 'payments', label: 'Historial de Pagos', icon: DollarSign },
+    { id: 'b2b', label: 'Partners & B2B (VivesFit)', icon: Building2 },
     { id: 'audit', label: 'Bitácora de Auditoría', icon: FileText },
   ];
 
@@ -1048,6 +1049,136 @@ export default function AdminDashboardPage() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              </div>
+            )}
+
+            {/* PARTNERS & B2B (VIVESFIT CORE) */}
+            {activeTab === 'b2b' && (
+              <div className="space-y-6 animate-fadeIn text-left">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
+                      <Building2 size={19} />
+                    </div>
+                    <div className="space-y-0.5">
+                      <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Integración B2B Partners & VivesFit</h2>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Aprovisionamiento y control de ciclo de vida de gimnasios mediante API B2B.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Master Partner Key Card */}
+                <div className="surface-panel p-6 rounded-2xl space-y-4 border border-cyan-500/20">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 font-mono">Credencial Maestra de Integración</span>
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-white">Master Partner API Key (VivesFit Core)</h3>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                      ACTIVA &bull; /v1/b2b/*
+                    </span>
+                  </div>
+
+                  <div className="p-3 bg-slate-950 text-slate-200 rounded-xl text-xs font-mono flex items-center justify-between">
+                    <span>zc_partner_master_vivesfit_2026</span>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText('zc_partner_master_vivesfit_2026');
+                        showNotification('Master Partner Key copiada al portapapeles', 'success');
+                      }}
+                      className="px-2 py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded text-[10px] font-sans font-bold cursor-pointer transition-colors"
+                    >
+                      Copiar Clave
+                    </button>
+                  </div>
+
+                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                    Esta clave permite al servidor de VivesFit crear gimnasios (<code className="font-mono bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">POST /v1/b2b/tenants</code>), renovar planes (<code className="font-mono bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">POST /v1/b2b/tenants/:id/renew</code>) y cortar el servicio por falta de pago sin intervención manual.
+                  </p>
+                </div>
+
+                {/* Tabla de Gimnasios B2B */}
+                <div className="surface-panel rounded-2xl overflow-hidden space-y-3 p-6">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">Gimnasios y Clientes Aprovisionados</h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="text-slate-400 dark:text-slate-500 uppercase font-semibold text-[10px] tracking-wider font-mono border-b border-slate-100 dark:border-slate-800">
+                          <th className="py-3">Gimnasio / Empresa</th>
+                          <th className="py-3">ID VivesFit (External)</th>
+                          <th className="py-3">Correo</th>
+                          <th className="py-3">Plan / Cuota</th>
+                          <th className="py-3">Estado</th>
+                          <th className="py-3 text-right">Acción Rápida</th>
+                        </tr>
+                      </thead>
+                      <tbody className="font-medium divide-y divide-slate-100 dark:divide-slate-800/60">
+                        {usersList.map(u => (
+                          <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                            <td className="py-3.5 font-bold text-slate-900 dark:text-white">
+                              {u.company_name || 'Sin Razón Social'}
+                              <div className="text-[10px] text-slate-400 font-mono">{u.id}</div>
+                            </td>
+                            <td className="py-3.5 font-mono text-cyan-600 dark:text-cyan-400 font-bold">
+                              {u.external_id || 'manual_admin'}
+                            </td>
+                            <td className="py-3.5 text-slate-600 dark:text-slate-300">
+                              {u.email}
+                            </td>
+                            <td className="py-3.5">
+                              <span className="font-bold text-slate-800 dark:text-slate-200">{u.plan_name || 'Plan Basic'}</span>
+                              <div className="text-[10px] text-slate-400">{u.messages_used || 0} / {u.messages_limit || 1000} msgs</div>
+                            </td>
+                            <td className="py-3.5">
+                              <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase ${
+                                u.status === 'active' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'bg-rose-500/15 text-rose-700 dark:text-rose-300'
+                              }`}>
+                                {u.status === 'active' ? 'Activo' : 'Suspendido'}
+                              </span>
+                            </td>
+                            <td className="py-3.5 text-right space-x-1.5">
+                              <button
+                                onClick={() => {
+                                  setEditSubscriptionModal({ open: true, user: u });
+                                  setSubFormData({ planId: u.plan_id || 'plan_basic', status: u.status || 'active', durationDays: 30, resetQuota: false });
+                                }}
+                                className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-[10px] font-bold cursor-pointer transition-colors"
+                              >
+                                Gestionar
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Snippet para compartir con el equipo de VivesFit */}
+                <div className="surface-panel p-6 rounded-2xl space-y-3">
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white">Snippet para el Backend de VivesFit (Node.js / Express)</h4>
+                  <pre className="p-4 bg-slate-950 text-slate-200 rounded-xl text-xs font-mono overflow-x-auto leading-relaxed">
+{`// Código para que VivesFit cree un gimnasio automáticamente:
+const response = await fetch('https://api.zazaclick.sbs/v1/b2b/tenants', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer zc_partner_master_vivesfit_2026',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    companyName: 'Power Fitness Miraflores',
+    externalId: 'gym_001',
+    email: 'contacto@powerfitness.com',
+    planId: 'plan_basic',
+    instanceName: 'powerfit_wsp',
+    webhookUrl: 'https://api.vivesfit.com/webhooks/zaza'
+  })
+});
+
+const { data } = await response.json();
+console.log('Gimnasio Creado:', data.zazaTenantId, data.apiKey);`}
+                  </pre>
                 </div>
               </div>
             )}

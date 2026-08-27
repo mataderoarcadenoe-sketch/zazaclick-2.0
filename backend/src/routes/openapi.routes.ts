@@ -33,6 +33,11 @@ export const openApiSpec = {
         scheme: 'bearer',
         bearerFormat: 'JWT',
         description: 'Client Session JWT Token'
+      },
+      PartnerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        description: 'Master Partner API Key for B2B Tenant Provisioning (VivesFit & ERPs)'
       }
     },
     schemas: {
@@ -347,6 +352,123 @@ export const openApiSpec = {
         },
         responses: {
           200: { description: 'Contacto enviado' }
+        }
+      }
+    },
+    '/v1/b2b/tenants': {
+      post: {
+        summary: 'Aprovisionar nuevo Gimnasio/Tenant (B2B Partner)',
+        description: 'Crea de forma atómica un nuevo gimnasio con su Plan, Suscripción, API Key e Instancia WhatsApp en una sola llamada.',
+        security: [{ PartnerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['companyName', 'email'],
+                properties: {
+                  companyName: { type: 'string', example: 'Power Fitness Miraflores' },
+                  externalId: { type: 'string', example: 'gym_001' },
+                  email: { type: 'string', example: 'contacto@powerfitness.com' },
+                  phone: { type: 'string', example: '+51999888777' },
+                  planId: { type: 'string', example: 'plan_basic' },
+                  durationMonths: { type: 'integer', example: 1 },
+                  instanceName: { type: 'string', example: 'powerfit_wsp' },
+                  webhookUrl: { type: 'string', example: 'https://api.vivesfit.com/webhooks/zazaclick' }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          201: { description: 'Tenant aprovisionado con éxito con su API Key y líneas' }
+        }
+      },
+      get: {
+        summary: 'Listar Gimnasios/Tenants aprovisionados',
+        description: 'Lista todos los tenants gestionados por el partner con su estado y vigencia.',
+        security: [{ PartnerAuth: [] }],
+        responses: {
+          200: { description: 'Lista de tenants' }
+        }
+      }
+    },
+    '/v1/b2b/tenants/{id}': {
+      get: {
+        summary: 'Consultar dossier de un Gimnasio/Tenant',
+        description: 'Obtiene el estado en vivo, consumo de mensajes y líneas vinculadas.',
+        security: [{ PartnerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string' } }
+        ],
+        responses: {
+          200: { description: 'Dossier del tenant' }
+        }
+      },
+      delete: {
+        summary: 'Eliminar Gimnasio/Tenant en cascada',
+        description: 'Elimina permanentemente el tenant y sus líneas de WhatsApp.',
+        security: [{ PartnerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string' } }
+        ],
+        responses: {
+          200: { description: 'Tenant eliminado' }
+        }
+      }
+    },
+    '/v1/b2b/tenants/{id}/renew': {
+      post: {
+        summary: 'Renovar suscripción de un Gimnasio/Tenant',
+        description: 'Ejecuta el Rolling Renewal por N meses y resetea cuota de mensajes.',
+        security: [{ PartnerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string' } }
+        ],
+        requestBody: {
+          required: false,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  months: { type: 'integer', default: 1 },
+                  resetQuota: { type: 'boolean', default: true }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          200: { description: 'Suscripción renovada con éxito' }
+        }
+      }
+    },
+    '/v1/b2b/tenants/{id}/status': {
+      put: {
+        summary: 'Suspender / Reactivar Gimnasio/Tenant',
+        description: 'Cambia el estado del tenant. Si se suspende, se bloquea el tráfico de WhatsApp de inmediato.',
+        security: [{ PartnerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string' } }
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['status'],
+                properties: {
+                  status: { type: 'string', enum: ['active', 'suspended'] }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          200: { description: 'Estado comercial actualizado' }
         }
       }
     }

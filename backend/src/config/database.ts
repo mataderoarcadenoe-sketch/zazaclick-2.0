@@ -66,6 +66,8 @@ export async function initDatabase() {
       ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_end_date TIMESTAMP NULL;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS company_name VARCHAR(255) NULL;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(50) NULL;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS external_id VARCHAR(255) NULL;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS partner_id VARCHAR(255) NULL;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP NULL;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
     `);
@@ -316,6 +318,7 @@ export async function initDatabase() {
       CREATE INDEX IF NOT EXISTS idx_wh_deliveries_user ON webhook_deliveries (user_id, created_at DESC);
       CREATE INDEX IF NOT EXISTS idx_wh_deliveries_event ON webhook_deliveries (event_id);
       CREATE INDEX IF NOT EXISTS idx_sec_logs_user ON developer_security_logs (user_id, created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_users_external_partner ON users (external_id, partner_id);
     `);
 
     // 13. Asegurar rol SuperAdmin para el correo principal
