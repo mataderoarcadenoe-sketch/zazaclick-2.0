@@ -697,8 +697,8 @@ export default function AdminDashboardPage() {
                                 onClick={() => {
                                   setSubFormData({
                                     planId: u.plan_id || 'plan_basic',
-                                    status: u.subscription_status || 'active',
-                                    durationDays: 30,
+                                    status: u.subscription_status || u.user_status || 'active',
+                                    durationDays: '0',
                                     resetQuota: false
                                   });
                                   setEditSubscriptionModal({ open: true, user: u });
@@ -1149,7 +1149,7 @@ export default function AdminDashboardPage() {
                               <button
                                 onClick={() => {
                                   setEditSubscriptionModal({ open: true, user: u });
-                                  setSubFormData({ planId: u.plan_id || 'plan_basic', status: u.user_status || u.status || 'active', durationDays: 30, resetQuota: false });
+                                  setSubFormData({ planId: u.plan_id || 'plan_basic', status: u.user_status || u.status || 'active', durationDays: '0', resetQuota: false });
                                 }}
                                 className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-[10px] font-bold cursor-pointer transition-colors"
                               >
@@ -1334,16 +1334,18 @@ console.log('Gimnasio Creado:', data.zazaTenantId, data.apiKey);`}
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Extender Días</label>
+                  <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Vigencia / Extensión</label>
                   <CustomSelect
                     value={String(subFormData.durationDays)}
-                    onChange={val => setSubFormData({ ...subFormData, durationDays: parseInt(val, 10) })}
+                    onChange={val => setSubFormData({ ...subFormData, durationDays: val })}
                     options={[
-                      { value: '7', label: '+7 Días' },
-                      { value: '15', label: '+15 Días' },
-                      { value: '30', label: '+30 Días (1 Mes)' },
-                      { value: '90', label: '+90 Días (3 Meses)' },
-                      { value: '365', label: '+365 Días (1 Año)' }
+                      { value: '0', label: 'Mantener días actuales' },
+                      { value: 'reset_30', label: 'Fijar a 30 días exactos' },
+                      { value: '7', label: '+7 Días adicionales' },
+                      { value: '15', label: '+15 Días adicionales' },
+                      { value: '30', label: '+30 Días (1 Mes extra)' },
+                      { value: '90', label: '+90 Días (3 Meses extra)' },
+                      { value: '365', label: '+365 Días (1 Año extra)' }
                     ]}
                   />
                 </div>

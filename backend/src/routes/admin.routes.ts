@@ -287,22 +287,33 @@ router.put('/users/:id/subscription', async (req: AuthenticatedRequest, res) => 
     const planRes = await pool.query('SELECT * FROM plans WHERE id = $1', [targetPlanId]);
     const plan = planRes.rows[0];
 
-    // Cálculo de la nueva fecha (Rolling Renewal)
+    // Cálculo de la nueva fecha (Rolling Renewal o Mantener Fecha)
     let newEndDate = new Date();
     const now = new Date();
 
     if (customEndDate) {
       newEndDate = new Date(customEndDate);
-    } else if (durationDays) {
+    } else if (durationDays === 'reset_30') {
+      newEndDate = new Date(now);
+      newEndDate.setDate(now.getDate() + 30);
+    } else if (durationDays !== undefined && String(durationDays) === '0') {
+      // Mantener fecha actual exacta del cliente sin extender
+      newEndDate = (currentSub?.end_date && new Date(currentSub.end_date) > now) 
+        ? new Date(currentSub.end_date) 
+        : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    } else if (durationDays && parseInt(durationDays, 10) > 0) {
       const baseDate = (currentSub && new Date(currentSub.end_date) > now) ? new Date(currentSub.end_date) : now;
       newEndDate = new Date(baseDate);
       newEndDate.setDate(baseDate.getDate() + parseInt(durationDays, 10));
-    } else if (durationMonths) {
+    } else if (durationMonths && parseInt(durationMonths, 10) > 0) {
       const baseDate = (currentSub && new Date(currentSub.end_date) > now) ? new Date(currentSub.end_date) : now;
       newEndDate = new Date(baseDate);
       newEndDate.setMonth(baseDate.getMonth() + parseInt(durationMonths, 10));
     } else {
-      newEndDate.setMonth(now.getMonth() + 1);
+      // Si no se especifica extensión, conservar la fecha previa
+      newEndDate = (currentSub?.end_date && new Date(currentSub.end_date) > now) 
+        ? new Date(currentSub.end_date) 
+        : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     }
 
     const newStatus = status || 'active';
