@@ -10,6 +10,7 @@ export interface CanonicalWebhookEvent {
   timestamp: number;
   instanceName: string;
   tenantId?: string;
+  externalId?: string;
   engine?: string;
   data: any;
 }
@@ -180,13 +181,16 @@ export class WebhookDispatcherService {
       // 1. Consultar configuración de webhook en PostgreSQL (con caché Redis de 60s)
       const cacheKey = `inst_wh:${instanceName}`;
       let configJson = await redis.get(cacheKey);
-      let config: { webhook_url?: string; webhook_secret?: string; webhook_enabled?: boolean; user_id?: string; engine_type?: string } | null = null;
+      let config: { webhook_url?: string; webhook_secret?: string; webhook_enabled?: boolean; user_id?: string; external_id?: string; engine_type?: string } | null = null;
 
       if (configJson) {
         config = JSON.parse(configJson);
       } else {
         const dbRes = await pool.query(
-          'SELECT webhook_url, webhook_secret, webhook_enabled, user_id, engine_type FROM instances WHERE instance_name = $1 LIMIT 1',
+          `SELECT i.webhook_url, i.webhook_secret, i.webhook_enabled, i.user_id, i.engine_type, u.external_id 
+           FROM instances i 
+           LEFT JOIN users u ON i.user_id = u.id 
+           WHERE i.instance_name = $1 LIMIT 1`,
           [instanceName]
         );
         if (dbRes.rows.length > 0) {
@@ -209,6 +213,7 @@ export class WebhookDispatcherService {
         timestamp: Math.floor(Date.now() / 1000),
         instanceName,
         tenantId: config.user_id,
+        externalId: config.external_id || undefined,
         engine: config.engine_type || 'evolution_api',
         data: rawData
       };

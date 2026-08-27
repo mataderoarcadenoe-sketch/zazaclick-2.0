@@ -64,18 +64,44 @@ export class PartnerProvisioningService {
 
     const cleanEmail = email.trim().toLowerCase();
 
-    // 1. Validar que el email no esté tomado
-    const emailCheck = await pool.query('SELECT id FROM users WHERE email = $1', [cleanEmail]);
-    if (emailCheck.rows.length > 0) {
-      throw new Error(`El correo electrónico ${cleanEmail} ya se encuentra registrado.`);
+    // 1. Idempotencia: Si ya existe un tenant con este externalId para este partner, retornar el dossier existente
+    if (externalId) {
+      const extCheck = await pool.query(
+        'SELECT id, email, company_name, status FROM users WHERE external_id = $1 AND (partner_id = $2 OR partner_id IS NULL)',
+        [externalId, partnerId]
+      );
+      if (extCheck.rows.length > 0) {
+        const existingTenant = extCheck.rows[0];
+        const overview = await this.getTenantOverview(partnerId, existingTenant.id);
+        return {
+          zazaTenantId: existingTenant.id,
+          externalId: externalId,
+          companyName: existingTenant.company_name,
+          email: existingTenant.email,
+          status: existingTenant.status,
+          isExisting: true,
+          plan: {
+            id: overview.subscription?.plan || 'plan_basic',
+            name: overview.subscription?.plan || 'Plan Activo',
+            maxInstances: 1,
+            maxMessages: overview.subscription?.messagesLimit || 1000,
+            expiresAt: overview.subscription?.endDate ? new Date(overview.subscription.endDate).toISOString() : new Date().toISOString()
+          },
+          instance: overview.instances && overview.instances.length > 0 ? {
+            id: overview.instances[0].id,
+            instanceName: overview.instances[0].instanceName,
+            status: overview.instances[0].status,
+            engine: overview.instances[0].engine,
+            phone: overview.instances[0].phone
+          } : null
+        };
+      }
     }
 
-    // 2. Si se proporciona externalId, validar unicidad
-    if (externalId) {
-      const extCheck = await pool.query('SELECT id FROM users WHERE external_id = $1', [externalId]);
-      if (extCheck.rows.length > 0) {
-        throw new Error(`El externalId "${externalId}" ya está asignado a otro tenant.`);
-      }
+    // 2. Validar que el email no esté tomado
+    const emailCheck = await pool.query('SELECT id FROM users WHERE email = $1', [cleanEmail]);
+    if (emailCheck.rows.length > 0) {
+      throw new Error(`El correo electrónico ${cleanEmail} ya se encuentra registrado con otra cuenta.`);
     }
 
     // 3. Si se proporciona instanceName, validar formato y unicidad global
