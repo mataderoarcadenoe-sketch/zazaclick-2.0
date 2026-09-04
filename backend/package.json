@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "rimraf dist && npx tsc",
-    "start": "npm run build && node dist/index.js",
+    "start": "node dist/index.js",
     "dev": "ts-node src/index.ts"
   },
   "dependencies": {
@@ -19,7 +19,9 @@
     "ioredis": "^6.0.0",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.11.5",
-    "socket.io": "^4.8.3"
+    "rimraf": "^5.0.7",
+    "socket.io": "^4.8.3",
+    "typescript": "^5.4.5"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -29,8 +31,6 @@
     "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^20.12.12",
     "@types/pg": "^8.11.6",
-    "rimraf": "^5.0.7",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.4.5"
+    "ts-node": "^10.9.2"
   }
 }
