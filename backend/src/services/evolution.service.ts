@@ -210,7 +210,10 @@ export class EvolutionService {
         number: targetNumber,
         text: text,
       });
-      return { success: response.status === 200 || response.status === 201 };
+      return { 
+        success: response.status === 200 || response.status === 201,
+        data: response.data 
+      };
     } catch (err: any) {
       console.error(`[EvolutionService] Error enviando mensaje a ${number}:`, err.message, err.response?.data);
       return { 
