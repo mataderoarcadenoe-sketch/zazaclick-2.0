@@ -174,6 +174,46 @@ export class EvolutionService {
   }
 
   /**
+   * Intentar reconectar una instancia existente utilizando las llaves de sesión guardadas
+   */
+  public static async reconnect(instanceName: string): Promise<{ success: boolean; state: string; isConnected: boolean; requiresQr: boolean }> {
+    try {
+      // 1. Invocar /instance/connect en el motor principal o fallback
+      let connectResponse: any = null;
+      try {
+        connectResponse = await api.get(`/instance/connect/${instanceName}`);
+      } catch {
+        connectResponse = await fallbackApi.get(`/instance/connect/${instanceName}`);
+      }
+
+      // Si devuelve un QR de inmediato, la sesión previa fue revocada y necesita escaneo
+      const hasQr = Boolean(connectResponse?.data?.base64 || connectResponse?.data?.qrcode);
+
+      // 2. Dar margen de 1.5s para que Baileys / whatsmeow negocie el handshake
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // 3. Consultar el estado resultante
+      const state = await this.getConnectionState(instanceName);
+      const isConnected = state === 'open' || state === 'connected';
+
+      return {
+        success: isConnected,
+        state,
+        isConnected,
+        requiresQr: hasQr && !isConnected
+      };
+    } catch (err: any) {
+      console.warn(`[EvolutionService] Error en intento de reconexión para ${instanceName}:`, err.message);
+      return {
+        success: false,
+        state: 'disconnected',
+        isConnected: false,
+        requiresQr: true
+      };
+    }
+  }
+
+  /**
    * Obtener el código QR en Base64 o JSON para escanear
    */
   public static async getQRCode(instanceName: string): Promise<{ success: boolean; qrcode?: string; error?: string }> {

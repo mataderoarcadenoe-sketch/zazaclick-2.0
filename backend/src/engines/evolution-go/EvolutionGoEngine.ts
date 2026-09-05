@@ -155,6 +155,41 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     }
   }
 
+  public async reconnect(instanceName: string): Promise<EngineResult<{ state: string; isConnected: boolean; requiresQr?: boolean }>> {
+    const start = Date.now();
+    try {
+      const client = this.getClient();
+      let response: any = null;
+      try {
+        response = await client.get(`/instance/connect/${instanceName}`);
+      } catch {
+        response = await client.post('/instance/connect', {}, { headers: { instance: instanceName } });
+      }
+
+      const resData = response?.data?.data || response?.data;
+      const hasQr = Boolean(resData?.Qrcode || resData?.qrcode || resData?.base64);
+
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      const stateRes = await this.getConnectionState(instanceName);
+      const isConnected = Boolean(stateRes.data?.isConnected);
+      const state = stateRes.data?.state || (isConnected ? 'connected' : 'disconnected');
+
+      if (isConnected) {
+        this.circuitBreaker.recordSuccess();
+      }
+
+      return EvolutionGoMapper.mapSuccess({
+        state,
+        isConnected,
+        requiresQr: hasQr && !isConnected
+      }, Date.now() - start);
+    } catch (err: any) {
+      const latencyMs = Date.now() - start;
+      return EvolutionGoMapper.mapFailure(err, latencyMs);
+    }
+  }
+
   public async getQRCode(instanceName: string): Promise<EngineResult<{ qrcode: string }>> {
     const start = Date.now();
     try {

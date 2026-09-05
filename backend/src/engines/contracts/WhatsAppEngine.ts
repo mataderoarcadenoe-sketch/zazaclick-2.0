@@ -19,6 +19,7 @@ export interface WhatsAppEngine {
   createInstance(instanceName: string): Promise<EngineResult<{ token: string; qrcode?: string; instance?: any }>>;
   deleteInstance(instanceName: string): Promise<EngineResult<boolean>>;
   getConnectionState(instanceName: string): Promise<EngineResult<{ state: string; isConnected: boolean }>>;
+  reconnect?(instanceName: string): Promise<EngineResult<{ state: string; isConnected: boolean; requiresQr?: boolean }>>;
   getQRCode(instanceName: string): Promise<EngineResult<{ qrcode: string }>>;
   logout(instanceName: string): Promise<EngineResult<boolean>>;
   configureWebhook(instanceName: string, webhookUrl: string): Promise<EngineResult<boolean>>;

@@ -97,9 +97,18 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
       const connection = data.connection;
       if (connection) {
         const isConnected = connection === 'open';
-        const dbStatus = isConnected ? 'connected' : 'disconnected';
+        const reasonCode = data.disconnectionReasonCode || data.reason || data.statusCode || data.disconnectionObject?.output?.statusCode;
+        const isDeviceRemoved = reasonCode === 401 || data.disconnectionObject?.attrs?.type === 'device_removed';
         
-        console.log(`🔌 [QueueWorker] CONNECTION_UPDATE para "${instance}": ${connection} -> ${dbStatus}`);
+        let dbStatus = 'disconnected';
+        if (isConnected) {
+          dbStatus = 'connected';
+        } else if (connection === 'connecting' || (!isDeviceRemoved && (reasonCode === 408 || reasonCode === 515 || connection === 'close'))) {
+          // Desconexión temporal/recuperable por red o reposo del teléfono
+          dbStatus = 'reconnecting';
+        }
+        
+        console.log(`🔌 [QueueWorker] CONNECTION_UPDATE para "${instance}": connection=${connection}, reason=${reasonCode || 'N/A'} -> dbStatus=${dbStatus}`);
         
         await pool.query(
           'UPDATE instances SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE instance_name = $2',
@@ -109,8 +118,30 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
         io.to(roomName).emit('connection_status', {
           instance: instance,
           status: dbStatus,
-          connectionState: connection
+          connectionState: connection,
+          reasonCode: reasonCode || null
         });
+
+        // Si fue una desconexión recuperable (no cierre voluntario), intentar auto-reconexión automática
+        if (!isConnected && !isDeviceRemoved) {
+          setTimeout(async () => {
+            try {
+              const { engineRouter } = await import('../engines/core/EngineRouter');
+              const engine = await engineRouter.getEngineForInstance(instance);
+              if (typeof (engine as any).reconnect === 'function') {
+                console.log(`🔄 [QueueWorker] Centinela: Auto-reconectando instancia "${instance}" tras fallo transitorio...`);
+                const recRes = await (engine as any).reconnect(instance);
+                if (recRes.data?.isConnected) {
+                  await pool.query('UPDATE instances SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE instance_name = $2', ['connected', instance]);
+                  io.to(roomName).emit('connection_status', { instance, status: 'connected', connectionState: 'open' });
+                  console.log(`✅ [QueueWorker] Instancia "${instance}" auto-reconectada con éxito.`);
+                }
+              }
+            } catch (recErr: any) {
+              console.warn(`[QueueWorker] Reintento de auto-reconexión para "${instance}" falló:`, recErr.message);
+            }
+          }, 5000);
+        }
       }
     }
     else if (eventUpper === 'QRCODE_UPDATED') {

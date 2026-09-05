@@ -15,6 +15,7 @@ import b2bRoutes from './routes/b2b.routes';
 import { ApiLogService } from './services/api-log.service';
 import { EvolutionService } from './services/evolution.service';
 import { startSubscriptionScheduler } from './jobs/subscription-scheduler.job';
+import { startInstanceWatchdog } from './jobs/instance-watchdog.job';
 import { engineRegistry } from './engines/core/EngineRegistry';
 import { evolutionApiEngine } from './engines/evolution-api/EvolutionApiEngine';
 import { evolutionGoEngine } from './engines/evolution-go/EvolutionGoEngine';
@@ -165,6 +166,8 @@ async function startServer() {
       console.log(`🚀 Servidor Express + Socket.io ejecutándose exitosamente en http://0.0.0.0:${PORT}`);
       // Iniciar scheduler de sincronización de vencimientos
       startSubscriptionScheduler();
+      // Iniciar centinela de auto-reconexión de instancias WhatsApp
+      startInstanceWatchdog();
       // Configurar automáticamente los webhooks para todas las instancias existentes
       configureAllWebhooks();
     });

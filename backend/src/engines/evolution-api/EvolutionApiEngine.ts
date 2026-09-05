@@ -112,6 +112,21 @@ export class EvolutionApiEngine implements WhatsAppEngine {
     }
   }
 
+  public async reconnect(instanceName: string): Promise<EngineResult<{ state: string; isConnected: boolean; requiresQr?: boolean }>> {
+    const start = Date.now();
+    try {
+      const result = await EvolutionService.reconnect(instanceName);
+      const latencyMs = Date.now() - start;
+      if (result.isConnected) {
+        this.circuitBreaker.recordSuccess();
+      }
+      return EvolutionApiMapper.mapSuccess(result, latencyMs);
+    } catch (err: any) {
+      const latencyMs = Date.now() - start;
+      return EvolutionApiMapper.mapFailure(err, latencyMs);
+    }
+  }
+
   public async getQRCode(instanceName: string): Promise<EngineResult<{ qrcode: string }>> {
     const start = Date.now();
     try {
