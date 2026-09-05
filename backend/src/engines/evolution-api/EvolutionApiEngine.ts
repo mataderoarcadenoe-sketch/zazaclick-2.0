@@ -211,7 +211,7 @@ export class EvolutionApiEngine implements WhatsAppEngine {
           code: 'ENGINE_SEND_FAILED',
           message: res.error || 'Error al enviar texto en Evolution API',
           isRetryable: false,
-          statusCode: 502,
+          statusCode: 422,
           details: res.details
         },
         latencyMs

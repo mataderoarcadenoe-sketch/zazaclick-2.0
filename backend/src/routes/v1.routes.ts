@@ -532,7 +532,7 @@ router.post('/messages/text', licensingMiddleware, async (req: LicensedRequest, 
 
     const errorReason = sentResult.error?.message || 'ENGINE_SEND_FAILED';
     await ctx.rollback('text', errorReason);
-    return res.status(sentResult.error?.statusCode || 502).json({
+    return res.status(sentResult.error?.statusCode || 422).json({
       success: false,
       code: sentResult.error?.code || 'SEND_FAILED',
       message: sentResult.error?.message || 'Error al enviar mensaje de texto en WhatsApp.',
@@ -601,7 +601,7 @@ router.post('/messages/media', licensingMiddleware, async (req: LicensedRequest,
 
     const errorReason = sentResult.error?.message || 'ENGINE_MEDIA_FAILED';
     await ctx.rollback(mediatype, errorReason);
-    return res.status(sentResult.error?.statusCode || 502).json({
+    return res.status(sentResult.error?.statusCode || 422).json({
       success: false,
       code: sentResult.error?.code || 'SEND_FAILED',
       message: sentResult.error?.message || 'Error al enviar archivo multimedia en WhatsApp.'
@@ -651,7 +651,7 @@ router.post('/messages/audio', licensingMiddleware, async (req: LicensedRequest,
 
     const errorReason = sentResult.error?.message || 'ENGINE_AUDIO_FAILED';
     await ctx.rollback('audio_ptt', errorReason);
-    return res.status(sentResult.error?.statusCode || 502).json({
+    return res.status(sentResult.error?.statusCode || 422).json({
       success: false,
       code: sentResult.error?.code || 'SEND_FAILED',
       message: sentResult.error?.message || 'Error al enviar nota de voz en WhatsApp.'

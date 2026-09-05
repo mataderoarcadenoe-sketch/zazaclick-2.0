@@ -7,8 +7,10 @@ import { validateSafeUrl, normalizeBase64 } from '../utils/ssrf.util';
 
 dotenv.config();
 
-const EVOLUTION_URL = process.env.EVOLUTION_API_URL;
-const EVOLUTION_KEY = process.env.EVOLUTION_API_KEY;
+const EVOLUTION_URL = process.env.EVOLUTION_API_URL || 'https://evolution-api-production-8b953.up.railway.app';
+const EVOLUTION_KEY = process.env.EVOLUTION_API_KEY || '4296088A962E3B1C5D4180A84D581F78';
+const EVOLUTION_FALLBACK_URL = process.env.EVOLUTION_FALLBACK_URL || 'https://evolution-api-production-8b953.up.railway.app';
+const EVOLUTION_FALLBACK_KEY = process.env.EVOLUTION_FALLBACK_KEY || '4296088A962E3B1C5D4180A84D581F78';
 
 if (!EVOLUTION_URL || !EVOLUTION_KEY) {
   console.warn('⚠️ [EvolutionService] EVOLUTION_API_URL o EVOLUTION_API_KEY no configurados.');
@@ -18,6 +20,17 @@ const api = axios.create({
   baseURL: EVOLUTION_URL,
   headers: {
     'apikey': EVOLUTION_KEY,
+    'Content-Type': 'application/json',
+  },
+  timeout: 15000,
+  httpAgent: new http.Agent({ keepAlive: true, maxSockets: 100 }),
+  httpsAgent: new https.Agent({ keepAlive: true, maxSockets: 100 }),
+});
+
+const fallbackApi = axios.create({
+  baseURL: EVOLUTION_FALLBACK_URL,
+  headers: {
+    'apikey': EVOLUTION_FALLBACK_KEY,
     'Content-Type': 'application/json',
   },
   timeout: 15000,
@@ -146,9 +159,16 @@ export class EvolutionService {
   public static async getConnectionState(instanceName: string): Promise<string> {
     try {
       const response = await api.get(`/instance/connectionState/${instanceName}`);
-      return response.data?.instance?.state || 'disconnected';
-    } catch (err: any) {
-      // Si devuelve 404, asumimos que no existe o está desconectada
+      const state = response.data?.instance?.state;
+      if (state === 'open' || state === 'connected') {
+        return state;
+      }
+    } catch {}
+
+    try {
+      const fbResponse = await fallbackApi.get(`/instance/connectionState/${instanceName}`);
+      return fbResponse.data?.instance?.state || 'disconnected';
+    } catch {
       return 'disconnected';
     }
   }
@@ -162,9 +182,16 @@ export class EvolutionService {
       if (response.data?.base64) {
         return { success: true, qrcode: response.data.base64 };
       }
+    } catch {}
+
+    try {
+      const fbRes = await fallbackApi.get(`/instance/connect/${instanceName}`);
+      if (fbRes.data?.base64) {
+        return { success: true, qrcode: fbRes.data.base64 };
+      }
       return { success: false, error: 'No se generó el código QR' };
-    } catch (err: any) {
-      const errorMsg = this.parseError(err);
+    } catch (fbErr: any) {
+      const errorMsg = this.parseError(fbErr);
       return { success: false, error: errorMsg };
     }
   }
@@ -197,15 +224,16 @@ export class EvolutionService {
    * Enviar un mensaje de texto a través de una instancia específica
    */
   public static async sendTextMessage(instanceName: string, number: string, text: string): Promise<any> {
-    try {
-      let targetNumber = number;
-      if (!number.includes('@')) {
-        let cleanNumber = number.replace(/\D/g, '');
-        if (cleanNumber.length === 9 && cleanNumber.startsWith('9')) {
-          cleanNumber = `51${cleanNumber}`;
-        }
-        targetNumber = cleanNumber;
+    let targetNumber = number;
+    if (!number.includes('@')) {
+      let cleanNumber = number.replace(/\D/g, '');
+      if (cleanNumber.length === 9 && cleanNumber.startsWith('9')) {
+        cleanNumber = `51${cleanNumber}`;
       }
+      targetNumber = cleanNumber;
+    }
+
+    try {
       const response = await api.post(`/message/sendText/${instanceName}`, {
         number: targetNumber,
         text: text,
@@ -215,12 +243,25 @@ export class EvolutionService {
         data: response.data 
       };
     } catch (err: any) {
-      console.error(`[EvolutionService] Error enviando mensaje a ${number}:`, err.message, err.response?.data);
-      return { 
-        success: false, 
-        error: err.message, 
-        details: err.response?.data 
-      };
+      console.warn(`[EvolutionService] Motor primario falló (${err.response?.status || err.message}). Intentando fallback activo para ${instanceName}...`);
+      try {
+        const fbResponse = await fallbackApi.post(`/message/sendText/${instanceName}`, {
+          number: targetNumber,
+          text: text,
+        });
+        console.log(`✅ [EvolutionService] Mensaje enviado exitosamente vía motor activo fallback a ${targetNumber}`);
+        return {
+          success: fbResponse.status === 200 || fbResponse.status === 201,
+          data: fbResponse.data
+        };
+      } catch (fbErr: any) {
+        console.error(`[EvolutionService] Error en fallback enviando mensaje a ${number}:`, fbErr.message, fbErr.response?.data);
+        return { 
+          success: false, 
+          error: fbErr.response?.data?.message || fbErr.message || err.message, 
+          details: fbErr.response?.data || err.response?.data 
+        };
+      }
     }
   }
 
@@ -236,6 +277,7 @@ export class EvolutionService {
     caption?: string,
     fileName?: string
   ): Promise<{ success: boolean; data?: any; error?: string; details?: any }> {
+    let payload: any = null;
     try {
       let targetNumber = number;
       if (!number.includes('@')) {
@@ -281,7 +323,7 @@ export class EvolutionService {
         }
       }
 
-      const payload: any = {
+      payload = {
         number: targetNumber,
         mediatype: isGif ? 'video' : finalMediatype,
         mimetype,
@@ -305,12 +347,21 @@ export class EvolutionService {
         data: response.data
       };
     } catch (err: any) {
-      console.error(`[EvolutionService] Error enviando media (${mediatype}) a ${number}:`, err.message, err.response?.data);
-      return {
-        success: false,
-        error: err.message,
-        details: err.response?.data
-      };
+      console.warn(`[EvolutionService] Motor primario falló enviando media (${err.response?.status || err.message}). Intentando fallback activo para ${instanceName}...`);
+      try {
+        const fbResponse = await fallbackApi.post(`/message/sendMedia/${instanceName}`, payload);
+        return {
+          success: fbResponse.status === 200 || fbResponse.status === 201,
+          data: fbResponse.data
+        };
+      } catch (fbErr: any) {
+        console.error(`[EvolutionService] Error enviando media (${mediatype}) a ${number}:`, fbErr.message, fbErr.response?.data);
+        return {
+          success: false,
+          error: fbErr.response?.data?.message || fbErr.message || err.message,
+          details: fbErr.response?.data || err.response?.data
+        };
+      }
     }
   }
 
@@ -369,11 +420,20 @@ export class EvolutionService {
         encoding: true
       };
 
-      const response = await api.post(`/message/sendWhatsAppAudio/${instanceName}`, payload);
-      return {
-        success: response.status === 200 || response.status === 201,
-        data: response.data
-      };
+      try {
+        const response = await api.post(`/message/sendWhatsAppAudio/${instanceName}`, payload);
+        return {
+          success: response.status === 200 || response.status === 201,
+          data: response.data
+        };
+      } catch (err: any) {
+        console.warn(`[EvolutionService] Motor primario falló enviando audio (${err.response?.status || err.message}). Intentando fallback activo para ${instanceName}...`);
+        const fbResponse = await fallbackApi.post(`/message/sendWhatsAppAudio/${instanceName}`, payload);
+        return {
+          success: fbResponse.status === 200 || fbResponse.status === 201,
+          data: fbResponse.data
+        };
+      }
     } catch (err: any) {
       console.error(`[EvolutionService] Error enviando WhatsApp Audio PTT a ${number}:`, err.message, err.response?.data);
       return {
