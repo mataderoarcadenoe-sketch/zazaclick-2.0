@@ -527,12 +527,17 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     const start = Date.now();
     try {
       const client = this.getClient();
-      const response = await client.get('/health', { timeout: 4000 });
+      let response: any;
+      try {
+        response = await client.get('/instance/all', { timeout: 4000 });
+      } catch {
+        response = await client.get('/health', { timeout: 4000 });
+      }
       const latencyMs = Date.now() - start;
 
       return {
         engine: this.engineType,
-        status: response.status === 200 ? 'ONLINE' : 'DEGRADED',
+        status: (response.status === 200 || response.status === 204) ? 'ONLINE' : 'DEGRADED',
         latencyMs,
         version: response.data?.version || '1.0.0',
         configured: true,
