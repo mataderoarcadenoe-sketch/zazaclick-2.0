@@ -50,7 +50,6 @@ export default function Dashboard() {
   const [newInstanceName, setNewInstanceName] = useState('');
   const [selectedEngine, setSelectedEngine] = useState<'evolution_api' | 'evolution_go'>('evolution_api');
   const [loadingInstances, setLoadingInstances] = useState(false);
-  const [reconnectingInst, setReconnectingInst] = useState<string | null>(null);
   const [qrCodeModal, setQrCodeModal] = useState<{ open: boolean; instanceName: string; qrCode: string | null }>({
     open: false,
     instanceName: '',
@@ -321,30 +320,6 @@ export default function Dashboard() {
       }
     } catch (err: any) {
       showNotification(err.response?.data?.error || 'Error al obtener código QR', 'error');
-    }
-  };
-
-  const handleReconnectInstance = async (instanceName: string) => {
-    try {
-      setReconnectingInst(instanceName);
-      showNotification(`Intentando reactivar sesión para "${instanceName}"...`, 'info');
-      const res = await api.post(`/instances/${instanceName}/reconnect`);
-
-      if (res.data?.success && res.data?.isConnected) {
-        showNotification(`¡Línea "${instanceName}" restablecida exitosamente!`, 'success');
-        fetchInstances();
-      } else if (res.data?.requiresQr) {
-        showNotification('La sesión anterior expiró en el móvil. Abriendo código QR...', 'warning');
-        handleGetQrCode(instanceName);
-      } else {
-        showNotification(`Estado actual: ${res.data?.state || 'reconectando'}. Reintentando en segundo plano...`, 'info');
-        fetchInstances();
-      }
-    } catch (err: any) {
-      showNotification(err.response?.data?.error || 'No se pudo reconectar automáticamente. Abriendo código QR...', 'error');
-      handleGetQrCode(instanceName);
-    } finally {
-      setReconnectingInst(null);
     }
   };
 
@@ -1061,28 +1036,21 @@ echo $response;`;
                               >
                                 Desconectar Línea
                               </button>
-                            ) : (
-                              <div className="flex-1 flex items-center gap-2">
-                                <button
-                                  type="button"
-                                  disabled={reconnectingInst === inst.instance_name}
-                                  onClick={() => handleReconnectInstance(inst.instance_name)}
-                                  className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                                  title="Intentar revivir la sesión con las llaves de WhatsApp sin nuevo QR"
-                                >
-                                  <Zap size={13} className={reconnectingInst === inst.instance_name ? "animate-spin text-amber-300" : "text-amber-300"} />
-                                  <span>{reconnectingInst === inst.instance_name ? 'Reconectando...' : 'Reconectar'}</span>
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleGetQrCode(inst.instance_name)}
-                                  className="px-3 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                                  title="Vincular con un nuevo teléfono o escanear QR"
-                                >
-                                  <Smartphone size={13} />
-                                  <span>Nuevo QR</span>
-                                </button>
+                            ) : inst.status === 'reconnecting' ? (
+                              <div className="flex-1 py-2 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 select-none border border-amber-500/20">
+                                <RefreshCw size={13} className="animate-spin text-amber-500" />
+                                <span>Auto-recuperando conexión...</span>
                               </div>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleGetQrCode(inst.instance_name)}
+                                className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                                title="Vincular teléfono con código QR"
+                              >
+                                <Smartphone size={14} />
+                                <span>Vincular con QR</span>
+                              </button>
                             )}
 
                             <button
