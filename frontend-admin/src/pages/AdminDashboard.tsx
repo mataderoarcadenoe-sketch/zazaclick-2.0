@@ -9,7 +9,7 @@ import {
   Building, RefreshCw, AlertCircle, ArrowRight,
   Plus, DollarSign, Clock, Check, AlertTriangle,
   Lock, RotateCcw, CreditCard, FileText, ToggleLeft, ToggleRight, Trash2, Eye,
-  Server, Cpu, Zap, Building2
+  Server, Cpu, Zap, Building2, QrCode, Code2
 } from 'lucide-react';
 import { useDarkMode } from '../hooks/useDarkMode';
 import api from '../services/api';
@@ -35,6 +35,7 @@ export default function AdminDashboardPage() {
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [b2bSnippetTab, setB2bSnippetTab] = useState<'provision' | 'status' | 'qr' | 'renew'>('provision');
   const [notification, setNotification] = useState<{ text: string; title?: string; type?: 'success' | 'error' | 'warning' | 'info' } | null>(null);
 
   // Modal de Confirmación Personalizado
@@ -900,9 +901,13 @@ export default function AdminDashboardPage() {
                           </td>
                           <td className="px-6 py-4">
                             <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase ${
-                              inst.connection_status === 'connected' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'bg-rose-500/15 text-rose-700 dark:text-rose-300'
+                              inst.connection_status === 'connected' 
+                                ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' 
+                                : inst.connection_status === 'reconnecting'
+                                ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 animate-pulse'
+                                : 'bg-rose-500/15 text-rose-700 dark:text-rose-300'
                             }`}>
-                              {inst.connection_status === 'connected' ? '● CONECTADO' : '○ DESCONECTADO'}
+                              {inst.connection_status === 'connected' ? '● CONECTADO' : inst.connection_status === 'reconnecting' ? '⟳ AUTO-RECUPERANDO' : '○ DESCONECTADO'}
                             </span>
                           </td>
                           <td className="px-6 py-4">
@@ -1070,14 +1075,19 @@ export default function AdminDashboardPage() {
 
                 {/* Master Partner Key Card */}
                 <div className="surface-panel p-6 rounded-2xl space-y-4 border border-cyan-500/20">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 font-mono">Credencial Maestra de Integración</span>
                       <h3 className="text-sm font-bold text-slate-900 dark:text-white">Master Partner API Key (VivesFit Core)</h3>
                     </div>
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-                      ACTIVA &bull; /v1/b2b/*
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                        DUAL ENGINE &bull; Go + API v2
+                      </span>
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                        ACTIVA &bull; /v1/b2b/* &amp; /v1/instances/*
+                      </span>
+                    </div>
                   </div>
 
                   <div className="p-3 bg-slate-950 text-slate-200 rounded-xl text-xs font-mono flex items-center justify-between">
@@ -1093,81 +1103,207 @@ export default function AdminDashboardPage() {
                     </button>
                   </div>
 
-                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Esta clave permite al servidor de VivesFit crear gimnasios (<code className="font-mono bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">POST /v1/b2b/tenants</code>), renovar planes (<code className="font-mono bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">POST /v1/b2b/tenants/:id/renew</code>) y cortar el servicio por falta de pago sin intervención manual.
-                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 text-xs">
+                    <div className="p-3 rounded-xl bg-slate-100/60 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800 space-y-1">
+                      <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <Zap size={14} className="text-indigo-500" />
+                        <span>Aprovisionamiento Dual</span>
+                      </div>
+                      <p className="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">
+                        VivesFit puede aprovisionar seleccionando motor <code className="font-mono text-indigo-600 dark:text-indigo-400">evolution_go</code> (whatsmeow ultra-rápido) o <code className="font-mono text-emerald-600 dark:text-emerald-400">evolution_api</code> (Baileys estándar).
+                      </p>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-slate-100/60 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800 space-y-1">
+                      <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <RefreshCw size={14} className="text-emerald-500" />
+                        <span>Auto-Sanación Autónoma</span>
+                      </div>
+                      <p className="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">
+                        Watchdog inteligente en segundo plano. Si un socket de gimnasio cae por inactividad, se recupera solo en memoria sin pedir nuevo QR ni intervención humana.
+                      </p>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-slate-100/60 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800 space-y-1">
+                      <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <QrCode size={14} className="text-cyan-500" />
+                        <span>Ciclo de Vida en ERP</span>
+                      </div>
+                      <p className="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">
+                        Endpoints con Master Key para consultar estado en vivo (<code className="font-mono">/status</code>), renderizar QR en recepción (<code className="font-mono">/qr</code>) y renovar planes (<code className="font-mono">/renew</code>).
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Tabla de Gimnasios B2B */}
                 <div className="surface-panel rounded-2xl overflow-hidden space-y-3 p-6">
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">Gimnasios y Clientes Aprovisionados</h3>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-white">Gimnasios y Clientes Aprovisionados</h3>
+                      <p className="text-xs text-slate-400">Listado de gimnasios conectados con sincronización de estado WhatsApp y motor asignado.</p>
+                    </div>
+                    <span className="text-xs font-mono font-bold text-slate-500 dark:text-slate-400">
+                      Total: {usersList.length} gimnasio(s)
+                    </span>
+                  </div>
+
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs">
                       <thead>
                         <tr className="text-slate-400 dark:text-slate-500 uppercase font-semibold text-[10px] tracking-wider font-mono border-b border-slate-100 dark:border-slate-800">
                           <th className="py-3">Gimnasio / Empresa</th>
                           <th className="py-3">ID VivesFit (External)</th>
-                          <th className="py-3">Correo</th>
+                          <th className="py-3">Línea WhatsApp / Motor</th>
                           <th className="py-3">Plan / Cuota</th>
-                          <th className="py-3">Estado</th>
+                          <th className="py-3">Estado Licencia</th>
                           <th className="py-3 text-right">Acción Rápida</th>
                         </tr>
                       </thead>
                       <tbody className="font-medium divide-y divide-slate-100 dark:divide-slate-800/60">
-                        {usersList.map(u => (
-                          <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                            <td className="py-3.5 font-bold text-slate-900 dark:text-white">
-                              {u.company_name || 'Sin Razón Social'}
-                              <div className="text-[10px] text-slate-400 font-mono">{u.id}</div>
-                            </td>
-                            <td className="py-3.5 font-mono text-cyan-600 dark:text-cyan-400 font-bold">
-                              {u.external_id || 'manual_admin'}
-                            </td>
-                            <td className="py-3.5 text-slate-600 dark:text-slate-300">
-                              {u.email}
-                            </td>
-                            <td className="py-3.5">
-                              <span className="font-bold text-slate-800 dark:text-slate-200">{u.plan_name || 'Plan Basic'}</span>
-                              <div className="text-[10px] text-slate-400">{u.messages_used || 0} / {u.messages_limit || 1000} msgs</div>
-                            </td>
-                            <td className="py-3.5">
-                              <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase ${
-                                (u.user_status || u.status) === 'active' 
-                                  ? (u.is_expired ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300' : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300')
-                                  : (u.user_status || u.status) === 'suspended'
-                                  ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300'
-                                  : 'bg-slate-500/15 text-slate-700 dark:text-slate-300'
-                              }`}>
-                                {(u.user_status || u.status) === 'active' 
-                                  ? (u.is_expired ? '⚠️ Vencido' : '● Activo')
-                                  : (u.user_status || u.status) === 'suspended'
-                                  ? '● Suspendido'
-                                  : (u.user_status || u.status || 'Activo')}
-                              </span>
-                            </td>
-                            <td className="py-3.5 text-right space-x-1.5">
-                              <button
-                                onClick={() => {
-                                  setEditSubscriptionModal({ open: true, user: u });
-                                  setSubFormData({ planId: u.plan_id || 'plan_basic', status: u.user_status || u.status || 'active', durationDays: '0', resetQuota: false });
-                                }}
-                                className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-[10px] font-bold cursor-pointer transition-colors"
-                              >
-                                Gestionar
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
+                        {usersList.map(u => {
+                          const inst = instancesList.find(i => i.user_id === u.id || i.owner_email === u.email);
+                          return (
+                            <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                              <td className="py-3.5 font-bold text-slate-900 dark:text-white">
+                                {u.company_name || 'Sin Razón Social'}
+                                <div className="text-[10px] text-slate-400 font-mono">{u.email}</div>
+                              </td>
+                              <td className="py-3.5 font-mono text-cyan-600 dark:text-cyan-400 font-bold">
+                                {u.external_id || 'manual_admin'}
+                              </td>
+                              <td className="py-3.5">
+                                {inst ? (
+                                  <div className="space-y-1">
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{inst.instance_name}</span>
+                                      <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold font-mono inline-flex items-center gap-0.5 ${
+                                        inst.engine_type === 'evolution_go'
+                                          ? 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20'
+                                          : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20'
+                                      }`}>
+                                        {inst.engine_type === 'evolution_go' ? <Zap size={9} /> : null}
+                                        {inst.engine_type === 'evolution_go' ? 'Go Engine' : 'API v2'}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 text-[10px]">
+                                      <span className={`inline-flex items-center gap-1 font-semibold ${
+                                        inst.connection_status === 'connected'
+                                          ? 'text-emerald-600 dark:text-emerald-400'
+                                          : inst.connection_status === 'reconnecting'
+                                          ? 'text-amber-600 dark:text-amber-400 animate-pulse'
+                                          : 'text-slate-400'
+                                      }`}>
+                                        {inst.connection_status === 'connected' ? '● Conectado' : inst.connection_status === 'reconnecting' ? '⟳ Auto-recuperando...' : '○ Desconectado'}
+                                      </span>
+                                      {inst.phone && <span className="text-slate-400 font-mono">({inst.phone})</span>}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <span className="text-slate-400 italic text-[11px]">Sin línea aprovisionada</span>
+                                )}
+                              </td>
+                              <td className="py-3.5">
+                                <span className="font-bold text-slate-800 dark:text-slate-200">{u.plan_name || 'Plan Basic'}</span>
+                                <div className="text-[10px] text-slate-400 font-mono">{u.messages_used || 0} / {u.messages_limit || 1000} msgs</div>
+                              </td>
+                              <td className="py-3.5">
+                                <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase ${
+                                  (u.user_status || u.status) === 'active' 
+                                    ? (u.is_expired ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300' : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300')
+                                    : (u.user_status || u.status) === 'suspended'
+                                    ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300'
+                                    : 'bg-slate-500/15 text-slate-700 dark:text-slate-300'
+                                }`}>
+                                  {(u.user_status || u.status) === 'active' 
+                                    ? (u.is_expired ? '⚠️ Vencido' : '● Activo')
+                                    : (u.user_status || u.status) === 'suspended'
+                                    ? '● Suspendido'
+                                    : (u.user_status || u.status || 'Activo')}
+                                </span>
+                              </td>
+                              <td className="py-3.5 text-right space-x-1.5">
+                                <button
+                                  onClick={() => {
+                                    setEditSubscriptionModal({ open: true, user: u });
+                                    setSubFormData({ planId: u.plan_id || 'plan_basic', status: u.user_status || u.status || 'active', durationDays: '0', resetQuota: false });
+                                  }}
+                                  className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-[10px] font-bold cursor-pointer transition-colors"
+                                >
+                                  Gestionar
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
                 </div>
 
-                {/* Snippet para compartir con el equipo de VivesFit */}
-                <div className="surface-panel p-6 rounded-2xl space-y-3">
-                  <h4 className="text-sm font-bold text-slate-900 dark:text-white">Snippet para el Backend de VivesFit (Node.js / Express)</h4>
-                  <pre className="p-4 bg-slate-950 text-slate-200 rounded-xl text-xs font-mono overflow-x-auto leading-relaxed">
-{`// Código para que VivesFit cree un gimnasio automáticamente:
+                {/* Guía de Integración y Snippets para VivesFit Backend */}
+                <div className="surface-panel p-6 rounded-2xl space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <Code2 size={16} className="text-cyan-500" />
+                        <span>Documentación de Endpoints B2B (Node.js / Express / Backend)</span>
+                      </h4>
+                      <p className="text-xs text-slate-400">Snippets listos para producción para el equipo de desarrollo de VivesFit.</p>
+                    </div>
+
+                    {/* Tabs de Snippets */}
+                    <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-900 rounded-xl">
+                      <button
+                        onClick={() => setB2bSnippetTab('provision')}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          b2bSnippetTab === 'provision'
+                            ? 'bg-white dark:bg-slate-800 text-cyan-600 dark:text-cyan-400 shadow-sm'
+                            : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                        }`}
+                      >
+                        1. Aprovisionar (Go / v2)
+                      </button>
+                      <button
+                        onClick={() => setB2bSnippetTab('status')}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          b2bSnippetTab === 'status'
+                            ? 'bg-white dark:bg-slate-800 text-cyan-600 dark:text-cyan-400 shadow-sm'
+                            : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                        }`}
+                      >
+                        2. Estado en Vivo
+                      </button>
+                      <button
+                        onClick={() => setB2bSnippetTab('qr')}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          b2bSnippetTab === 'qr'
+                            ? 'bg-white dark:bg-slate-800 text-cyan-600 dark:text-cyan-400 shadow-sm'
+                            : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                        }`}
+                      >
+                        3. Obtener QR
+                      </button>
+                      <button
+                        onClick={() => setB2bSnippetTab('renew')}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          b2bSnippetTab === 'renew'
+                            ? 'bg-white dark:bg-slate-800 text-cyan-600 dark:text-cyan-400 shadow-sm'
+                            : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                        }`}
+                      >
+                        4. Renovar Licencia
+                      </button>
+                    </div>
+                  </div>
+
+                  {b2bSnippetTab === 'provision' && (
+                    <div className="space-y-2">
+                      <div className="text-xs text-slate-500 dark:text-slate-400">
+                        Crea automáticamente el gimnasio, su suscripción, API Key e instancia WhatsApp en el motor elegido:
+                      </div>
+                      <pre className="p-4 bg-slate-950 text-slate-200 rounded-xl text-xs font-mono overflow-x-auto leading-relaxed">
+{`// POST https://api.zazaclick.sbs/v1/b2b/tenants
 const response = await fetch('https://api.zazaclick.sbs/v1/b2b/tenants', {
   method: 'POST',
   headers: {
@@ -1176,17 +1312,89 @@ const response = await fetch('https://api.zazaclick.sbs/v1/b2b/tenants', {
   },
   body: JSON.stringify({
     companyName: 'Power Fitness Miraflores',
-    externalId: 'gym_001',
+    externalId: 'gym_001',                      // ID del gimnasio en tu base de datos VivesFit
     email: 'contacto@powerfitness.com',
     planId: 'plan_basic',
+    durationMonths: 1,
     instanceName: 'powerfit_wsp',
+    engineType: 'evolution_go',                 // 'evolution_go' (whatsmeow ultra-rápido) o 'evolution_api' (Baileys)
     webhookUrl: 'https://api.vivesfit.com/webhooks/zaza'
   })
 });
 
 const { data } = await response.json();
-console.log('Gimnasio Creado:', data.zazaTenantId, data.apiKey);`}
-                  </pre>
+console.log('Tenant Creado:', data.zazaTenantId, 'API Key:', data.apiKey);`}
+                      </pre>
+                    </div>
+                  )}
+
+                  {b2bSnippetTab === 'status' && (
+                    <div className="space-y-2">
+                      <div className="text-xs text-slate-500 dark:text-slate-400">
+                        Consulta el estado de conexión en vivo de la línea WhatsApp del gimnasio para mostrar un indicador verde/rojo en VivesFit ERP. <span className="text-emerald-500 font-semibold">El sistema se auto-recupera solo si la conexión cae.</span>
+                      </div>
+                      <pre className="p-4 bg-slate-950 text-slate-200 rounded-xl text-xs font-mono overflow-x-auto leading-relaxed">
+{`// GET https://api.zazaclick.sbs/v1/instances/:instanceName/status
+const response = await fetch('https://api.zazaclick.sbs/v1/instances/powerfit_wsp/status', {
+  method: 'GET',
+  headers: {
+    'Authorization': 'Bearer zc_partner_master_vivesfit_2026'
+  }
+});
+
+const { isConnected, state } = await response.json();
+// isConnected: true / false
+// state: 'connected' | 'connecting' | 'disconnected'
+console.log('Línea WhatsApp Activa:', isConnected);`}
+                      </pre>
+                    </div>
+                  )}
+
+                  {b2bSnippetTab === 'qr' && (
+                    <div className="space-y-2">
+                      <div className="text-xs text-slate-500 dark:text-slate-400">
+                        Obtiene el código QR en base64 para que el recepcionista del gimnasio lo escanee desde su WhatsApp sin salir del panel de VivesFit:
+                      </div>
+                      <pre className="p-4 bg-slate-950 text-slate-200 rounded-xl text-xs font-mono overflow-x-auto leading-relaxed">
+{`// GET https://api.zazaclick.sbs/v1/instances/:instanceName/qr
+const response = await fetch('https://api.zazaclick.sbs/v1/instances/powerfit_wsp/qr', {
+  method: 'GET',
+  headers: {
+    'Authorization': 'Bearer zc_partner_master_vivesfit_2026'
+  }
+});
+
+const { base64 } = await response.json();
+// Renderizar directamente en tu frontend de VivesFit:
+// <img src={base64} alt="Escanear QR de WhatsApp" />`}
+                      </pre>
+                    </div>
+                  )}
+
+                  {b2bSnippetTab === 'renew' && (
+                    <div className="space-y-2">
+                      <div className="text-xs text-slate-500 dark:text-slate-400">
+                        Renueva automáticamente la suscripción de un gimnasio cada vez que pague su mensualidad en VivesFit:
+                      </div>
+                      <pre className="p-4 bg-slate-950 text-slate-200 rounded-xl text-xs font-mono overflow-x-auto leading-relaxed">
+{`// POST https://api.zazaclick.sbs/v1/b2b/tenants/:idOrExternalId/renew
+const response = await fetch('https://api.zazaclick.sbs/v1/b2b/tenants/gym_001/renew', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer zc_partner_master_vivesfit_2026',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    durationMonths: 1,      // Meses a adicionar a la fecha de vencimiento actual
+    resetQuota: true        // Reiniciar el contador de mensajes del mes a 0
+  })
+});
+
+const result = await response.json();
+console.log('Nueva Fecha de Vencimiento:', result.data.endDate);`}
+                      </pre>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

@@ -10,23 +10,8 @@ DOMINIOS OFICIALES:
 - https://api.zazaclick.sbs    Backend API SaaS Gateway
 - https://wps.zazaclick.sbs    Evolution WhatsApp API (v2.2.3)
 
-CUENTA OFICIAL DE GOOGLE / FIREBASE:
-------------------------------------
-- Correo: zaza.click.app@gmail.com
-- Nombre: Zaza Click
 
-FIREBASE & GOOGLE CLOUD OAUTH 2.0:
------------------------------------
-- Nombre Proyecto: Zaza Click 2.0
-- Project ID: zaza-click-2-0
-- Google OAuth Client ID: 782722800100-4j8107m9nn2r0ngt6b4e17r2s2166l19.apps.googleusercontent.com
-- Google OAuth Client Secret: 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
 
-DOMINIOS AUTORIZADOS OAUTH / FIREBASE:
----------------------------------------
-- https://app.zazaclick.sbs
-- https://admin.zazaclick.sbs
-- https://zazaclick.sbs
-- http://localhost:5173
-- http://localhost:3000
-=====================================================
+
+
+https://evolution-go-production-917b.up.railway.app/manager/instances
