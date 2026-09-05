@@ -316,6 +316,62 @@ router.get('/instances/:instanceName/status', apiKeyOrTokenAuth, async (req: Aut
 });
 
 /**
+ * POST /v1/instances/:instanceName/reconnect — Reconectar sesión activa sin solicitar nuevo QR
+ */
+router.post('/instances/:instanceName/reconnect', apiKeyOrTokenAuth, async (req: AuthenticatedRequest, res: Response) => {
+  const { instanceName } = req.params;
+
+  try {
+    const verifyRes = await pool.query(
+      'SELECT id, status FROM instances WHERE user_id = $1 AND instance_name = $2',
+      [req.userId, instanceName]
+    );
+
+    if (verifyRes.rows.length === 0) {
+      return res.status(403).json({
+        success: false,
+        code: 'FORBIDDEN',
+        error: 'Acceso no autorizado a esta instancia.'
+      });
+    }
+
+    const engine = await engineRouter.getEngineForInstance(instanceName);
+    let reconnectRes: any;
+    if (typeof (engine as any).reconnect === 'function') {
+      reconnectRes = await (engine as any).reconnect(instanceName);
+    } else {
+      await engine.getQRCode(instanceName);
+      reconnectRes = await engine.getConnectionState(instanceName);
+    }
+
+    const isConnected = Boolean(reconnectRes.data?.isConnected);
+    const state = reconnectRes.data?.state || (isConnected ? 'connected' : 'disconnected');
+    const requiresQr = Boolean(reconnectRes.data?.requiresQr);
+    const newDbStatus = isConnected ? 'connected' : (state === 'connecting' ? 'reconnecting' : 'disconnected');
+
+    await pool.query(
+      "UPDATE instances SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE instance_name = $2",
+      [newDbStatus, instanceName]
+    );
+
+    return res.json({
+      success: true,
+      instanceName,
+      state,
+      status: newDbStatus,
+      isConnected,
+      requiresQr
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      code: 'INTERNAL_ERROR',
+      error: err.message
+    });
+  }
+});
+
+/**
  * POST /v1/instances/:instanceName/logout — Desconectar WhatsApp de la instancia
  */
 router.post('/instances/:instanceName/logout', apiKeyOrTokenAuth, async (req: AuthenticatedRequest, res: Response) => {
