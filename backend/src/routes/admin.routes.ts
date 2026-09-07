@@ -212,7 +212,7 @@ router.post('/users', async (req: AuthenticatedRequest, res) => {
     // Registrar bitácora de auditoría
     await AuditService.logAction({
       adminId: req.userId || 'admin',
-      adminEmail: 'syscomecosistemadigital@gmail.com',
+      adminEmail: (req as any).userEmail || 'zaza.click.app@gmail.com',
       action: 'USER_CREATED',
       entity: 'user',
       entityId: userId,
@@ -254,7 +254,7 @@ router.put('/users/:id/status', async (req: AuthenticatedRequest, res) => {
 
     await AuditService.logAction({
       adminId: req.userId || 'admin',
-      adminEmail: 'syscomecosistemadigital@gmail.com',
+      adminEmail: (req as any).userEmail || 'zaza.click.app@gmail.com',
       action: 'USER_STATUS_UPDATED',
       entity: 'user',
       entityId: id,
@@ -353,7 +353,7 @@ router.put('/users/:id/subscription', async (req: AuthenticatedRequest, res) => 
 
     await AuditService.logAction({
       adminId: req.userId || 'admin',
-      adminEmail: 'syscomecosistemadigital@gmail.com',
+      adminEmail: (req as any).userEmail || 'zaza.click.app@gmail.com',
       action: 'SUBSCRIPTION_UPDATED',
       entity: 'subscription',
       entityId: subId,
@@ -389,7 +389,7 @@ router.post('/users/:id/reset-quota', async (req: AuthenticatedRequest, res) => 
 
     await AuditService.logAction({
       adminId: req.userId || 'admin',
-      adminEmail: 'syscomecosistemadigital@gmail.com',
+      adminEmail: (req as any).userEmail || 'zaza.click.app@gmail.com',
       action: 'QUOTA_RESET',
       entity: 'subscription',
       entityId: subRes.rows[0]?.id || id,
@@ -420,7 +420,7 @@ router.post('/users/:id/reset-password', async (req: AuthenticatedRequest, res) 
 
     await AuditService.logAction({
       adminId: req.userId || 'admin',
-      adminEmail: 'syscomecosistemadigital@gmail.com',
+      adminEmail: (req as any).userEmail || 'zaza.click.app@gmail.com',
       action: 'PASSWORD_RESET',
       entity: 'user',
       entityId: id
@@ -455,7 +455,7 @@ router.delete('/users/:id', async (req: AuthenticatedRequest, res) => {
 
     await AuditService.logAction({
       adminId: req.userId || 'admin',
-      adminEmail: 'syscomecosistemadigital@gmail.com',
+      adminEmail: (req as any).userEmail || 'zaza.click.app@gmail.com',
       action: 'USER_DELETED',
       entity: 'user',
       entityId: id
@@ -546,7 +546,7 @@ router.put('/instances/:id/toggle', async (req: AuthenticatedRequest, res) => {
 
     await AuditService.logAction({
       adminId: req.userId || 'admin',
-      adminEmail: 'syscomecosistemadigital@gmail.com',
+      adminEmail: (req as any).userEmail || 'zaza.click.app@gmail.com',
       action: isEnabled ? 'INSTANCE_ENABLED' : 'INSTANCE_DISABLED',
       entity: 'instance',
       entityId: id
@@ -709,7 +709,7 @@ router.post('/payments', async (req: AuthenticatedRequest, res) => {
 
     await AuditService.logAction({
       adminId: req.userId || 'admin',
-      adminEmail: 'syscomecosistemadigital@gmail.com',
+      adminEmail: (req as any).userEmail || 'zaza.click.app@gmail.com',
       action: 'PAYMENT_RECORDED',
       entity: 'payment',
       entityId: paymentId,
@@ -844,7 +844,7 @@ router.post('/partners', async (req: AuthenticatedRequest, res) => {
 
     await AuditService.logAction({
       adminId: req.userId || 'admin',
-      adminEmail: 'syscomecosistemadigital@gmail.com',
+      adminEmail: (req as any).userEmail || 'zaza.click.app@gmail.com',
       action: 'CREATE_PARTNER',
       entity: 'partner',
       entityId: result.partner.id,
@@ -873,7 +873,7 @@ router.put('/partners/:id/status', async (req: AuthenticatedRequest, res) => {
 
     await AuditService.logAction({
       adminId: req.userId || 'admin',
-      adminEmail: 'syscomecosistemadigital@gmail.com',
+      adminEmail: (req as any).userEmail || 'zaza.click.app@gmail.com',
       action: isActive ? 'ACTIVATE_PARTNER' : 'DEACTIVATE_PARTNER',
       entity: 'partner',
       entityId: id,
@@ -896,7 +896,7 @@ router.post('/partners/:id/rotate-key', async (req: AuthenticatedRequest, res) =
 
     await AuditService.logAction({
       adminId: req.userId || 'admin',
-      adminEmail: 'syscomecosistemadigital@gmail.com',
+      adminEmail: (req as any).userEmail || 'zaza.click.app@gmail.com',
       action: 'ROTATE_PARTNER_KEY',
       entity: 'partner',
       entityId: id,

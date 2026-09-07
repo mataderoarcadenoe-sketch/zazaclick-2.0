@@ -8,6 +8,7 @@ export interface AuthenticatedRequest extends Request {
   userRole?: string;
   tenantId?: string;
   agentId?: string;
+  userEmail?: string;
 }
 
 export function authMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction) {
@@ -38,6 +39,7 @@ export function authMiddleware(req: AuthenticatedRequest, res: Response, next: N
     req.userRole = decoded.role;
     req.tenantId = decoded.tenantId || decoded.id;
     req.agentId = decoded.id;
+    req.userEmail = decoded.email;
     return next();
   });
 }

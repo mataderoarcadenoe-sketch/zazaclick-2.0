@@ -7,10 +7,10 @@ import { validateSafeUrl, normalizeBase64 } from '../utils/ssrf.util';
 
 dotenv.config();
 
-const EVOLUTION_URL = process.env.EVOLUTION_API_URL || 'https://evolution-api-production-8b953.up.railway.app';
-const EVOLUTION_KEY = process.env.EVOLUTION_API_KEY || '4296088A962E3B1C5D4180A84D581F78';
-const EVOLUTION_FALLBACK_URL = process.env.EVOLUTION_FALLBACK_URL || 'https://evolution-api-production-8b953.up.railway.app';
-const EVOLUTION_FALLBACK_KEY = process.env.EVOLUTION_FALLBACK_KEY || '4296088A962E3B1C5D4180A84D581F78';
+const EVOLUTION_URL = process.env.EVOLUTION_API_URL || 'https://wps.zazaclick.sbs';
+const EVOLUTION_KEY = process.env.EVOLUTION_API_KEY || 'F2C43224-3975-46EC-954A-FB335F5C9FDA';
+const EVOLUTION_FALLBACK_URL = process.env.EVOLUTION_FALLBACK_URL || 'https://wps.zazaclick.sbs';
+const EVOLUTION_FALLBACK_KEY = process.env.EVOLUTION_FALLBACK_KEY || 'F2C43224-3975-46EC-954A-FB335F5C9FDA';
 
 if (!EVOLUTION_URL || !EVOLUTION_KEY) {
   console.warn('⚠️ [EvolutionService] EVOLUTION_API_URL o EVOLUTION_API_KEY no configurados.');

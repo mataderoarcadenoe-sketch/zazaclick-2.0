@@ -12,6 +12,11 @@ function generateId(prefix: string): string {
   return `${prefix}_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 }
 
+export function isSuperAdminEmail(email: string): boolean {
+  const clean = email.toLowerCase().trim();
+  return clean === 'zaza.click.app@gmail.com' || clean === 'syscomecosistemadigital@gmail.com';
+}
+
 /**
  * POST /register - Registro de nuevos desarrolladores / clientes con Trial controlado
  */
@@ -23,16 +28,16 @@ router.post('/register', async (req, res) => {
   }
 
   try {
-    const cleanEmail = email.trim().toLowerCase();
+    const cleanEmail = email.toLowerCase().trim();
 
     // 1. Verificar si el usuario ya existe
-    const userCheck = await pool.query('SELECT id FROM users WHERE email = $1', [cleanEmail]);
-    if (userCheck.rows.length > 0) {
-      return res.status(400).json({ success: false, error: 'El correo electrónico ya se encuentra registrado.' });
+    const existing = await pool.query('SELECT id FROM users WHERE email = $1', [cleanEmail]);
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ success: false, error: 'El correo electrónico ya está registrado' });
     }
 
-    // 2. Obtener la configuración del plan Trial activo
-    const trialPlanRes = await pool.query('SELECT * FROM plans WHERE is_trial = true AND is_active = true LIMIT 1');
+    // 2. Obtener plan trial configurado
+    const trialPlanRes = await pool.query('SELECT * FROM plans WHERE id = \'plan_trial\' LIMIT 1');
     const trialPlan = trialPlanRes.rows[0] || {
       id: 'plan_trial',
       name: 'Prueba Gratuita',
@@ -43,7 +48,7 @@ router.post('/register', async (req, res) => {
 
     const userId = generateId('user');
     const hashedPassword = await bcrypt.hash(password, 10);
-    const assignedRole = cleanEmail === 'syscomecosistemadigital@gmail.com' ? 'admin' : 'client';
+    const assignedRole = isSuperAdminEmail(cleanEmail) ? 'admin' : 'client';
 
     const now = new Date();
     const trialEndDate = new Date();
@@ -67,7 +72,7 @@ router.post('/register', async (req, res) => {
     await pool.query('COMMIT');
 
     // 5. Generar token JWT
-    const token = jwt.sign({ id: userId, role: assignedRole, tenantId: userId }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: userId, role: assignedRole, tenantId: userId, email: cleanEmail }, JWT_SECRET, { expiresIn: '7d' });
 
     res.status(201).json({
       success: true,
@@ -127,7 +132,7 @@ router.post('/login', async (req, res) => {
     await pool.query('UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = $1', [user.id]);
 
     const tenantId = user.parent_id || user.id;
-    const token = jwt.sign({ id: user.id, role: user.role, tenantId }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user.id, role: user.role, tenantId, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
 
     res.json({
       success: true,
@@ -181,7 +186,7 @@ router.post('/google-login', async (req, res) => {
       };
 
       const userId = generateId('user');
-      const assignedRole = cleanEmail === 'syscomecosistemadigital@gmail.com' ? 'admin' : 'client';
+      const assignedRole = isSuperAdminEmail(cleanEmail) ? 'admin' : 'client';
       const randomPassword = await bcrypt.hash(Math.random().toString(36), 10);
       const now = new Date();
       const trialEndDate = new Date();
@@ -215,8 +220,8 @@ router.post('/google-login', async (req, res) => {
         });
       }
 
-      // Asegurar rol admin para syscomecosistemadigital@gmail.com
-      if (cleanEmail === 'syscomecosistemadigital@gmail.com' && user.role !== 'admin') {
+      // Asegurar rol admin para cuentas superadmin
+      if (isSuperAdminEmail(cleanEmail) && user.role !== 'admin') {
         await pool.query('UPDATE users SET role = \'admin\' WHERE id = $1', [user.id]);
         user.role = 'admin';
       }
@@ -225,7 +230,7 @@ router.post('/google-login', async (req, res) => {
     }
 
     const tenantId = user.parent_id || user.id;
-    const token = jwt.sign({ id: user.id, role: user.role, tenantId }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user.id, role: user.role, tenantId, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
 
     res.json({
       success: true,

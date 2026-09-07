@@ -307,7 +307,7 @@ export default function AuthPage() {
                   Cuenta SuperAdmin Autorizada
                 </span>
                 <span className="text-xs font-mono font-bold text-slate-800 dark:text-slate-200 truncate block">
-                  syscomecosistemadigital@gmail.com
+                  zaza.click.app@gmail.com
                 </span>
               </div>
             </div>

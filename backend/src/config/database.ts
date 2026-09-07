@@ -342,11 +342,11 @@ export async function initDatabase() {
       CREATE INDEX IF NOT EXISTS idx_partners_slug ON partners (slug);
     `);
 
-    // 14. Asegurar rol SuperAdmin para el correo principal
+    // 14. Asegurar rol SuperAdmin para las cuentas autorizadas
     await pool.query(`
       UPDATE users 
       SET role = 'admin', status = 'active'
-      WHERE email = 'syscomecosistemadigital@gmail.com';
+      WHERE email IN ('zaza.click.app@gmail.com', 'syscomecosistemadigital@gmail.com');
     `);
 
     // 15. Seed de Partners Oficiales (VivesFit + Krono) y Migración de Aislamiento
