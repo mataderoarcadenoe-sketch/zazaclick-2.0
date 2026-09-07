@@ -744,11 +744,20 @@ export default function AdminDashboardPage() {
 
                             <td className="px-6 py-4 font-bold">
                               {u.is_expired ? (
-                                <span className="text-rose-600 dark:text-rose-400">🔴 VENCIDO</span>
+                                <span className="inline-flex items-center gap-1.5 text-rose-600 dark:text-rose-400">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                  VENCIDO
+                                </span>
                               ) : u.days_remaining <= 3 ? (
-                                <span className="text-amber-600 dark:text-amber-400">⚠️ {u.days_remaining} días</span>
+                                <span className="inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                  {u.days_remaining} días
+                                </span>
                               ) : (
-                                <span className="text-emerald-600 dark:text-emerald-400">● {u.days_remaining} días</span>
+                                <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                  {u.days_remaining} días
+                                </span>
                               )}
                             </td>
 
@@ -1150,7 +1159,7 @@ export default function AdminDashboardPage() {
 
                   <button
                     onClick={() => setCreatePartnerModal(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-cyan-900/20 cursor-pointer"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
                   >
                     <Plus size={15} />
                     <span>Registrar Nuevo Partner B2B</span>
@@ -1404,18 +1413,27 @@ export default function AdminDashboardPage() {
                                   <div className="text-[10px] text-slate-400 font-mono">{u.messages_used || 0} / {u.messages_limit || 1000} msgs</div>
                                 </td>
                                 <td className="py-3.5">
-                                  <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase ${
+                                  <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase inline-flex items-center gap-1.5 ${
                                     (u.user_status || u.status) === 'active' 
                                       ? (u.is_expired ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300' : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300')
                                       : (u.user_status || u.status) === 'suspended'
                                       ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300'
                                       : 'bg-slate-500/15 text-slate-700 dark:text-slate-300'
                                   }`}>
-                                    {(u.user_status || u.status) === 'active' 
-                                      ? (u.is_expired ? '⚠️ Vencido' : '● Activo')
-                                      : (u.user_status || u.status) === 'suspended'
-                                      ? '● Suspendido'
-                                      : (u.user_status || u.status || 'Activo')}
+                                    <span className={`w-1.5 h-1.5 rounded-full ${
+                                      (u.user_status || u.status) === 'active'
+                                        ? (u.is_expired ? 'bg-amber-500' : 'bg-emerald-500')
+                                        : (u.user_status || u.status) === 'suspended'
+                                        ? 'bg-rose-500'
+                                        : 'bg-slate-500'
+                                    }`}></span>
+                                    <span>
+                                      {(u.user_status || u.status) === 'active' 
+                                        ? (u.is_expired ? 'Vencido' : 'Activo')
+                                        : (u.user_status || u.status) === 'suspended'
+                                        ? 'Suspendido'
+                                        : (u.user_status || u.status || 'Activo')}
+                                    </span>
                                   </span>
                                 </td>
                                 <td className="py-3.5 text-right space-x-1.5">
@@ -1454,33 +1472,36 @@ export default function AdminDashboardPage() {
                       <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-900 rounded-xl">
                         <button
                           onClick={() => setDocPartnerTarget('generic')}
-                          className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 ${
                             docPartnerTarget === 'generic'
                               ? 'bg-white dark:bg-slate-800 text-cyan-600 dark:text-cyan-400 shadow-sm'
                               : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
                           }`}
                         >
-                          🏢 Genérico (Cualquier ERP)
+                          <Building2 size={12} />
+                          <span>Genérico (Cualquier ERP)</span>
                         </button>
                         <button
                           onClick={() => setDocPartnerTarget('krono')}
-                          className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 ${
                             docPartnerTarget === 'krono'
                               ? 'bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-400 shadow-sm'
                               : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
                           }`}
                         >
-                          ⏱️ Krono (RRHH &amp; Asistencias)
+                          <Clock size={12} />
+                          <span>Krono (RRHH &amp; Asistencias)</span>
                         </button>
                         <button
                           onClick={() => setDocPartnerTarget('vivesfit')}
-                          className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 ${
                             docPartnerTarget === 'vivesfit'
                               ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm'
                               : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
                           }`}
                         >
-                          🏋️ VivesFit (Gimnasios)
+                          <Activity size={12} />
+                          <span>VivesFit (Gimnasios)</span>
                         </button>
                       </div>
                     </div>
