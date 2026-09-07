@@ -47,12 +47,17 @@ app.use(cors({
       origin.includes('localhost') ||
       origin.includes('127.0.0.1') ||
       origin.includes('zazaclick.sbs') ||
-      origin.includes('railway.app')
+      origin.includes('railway.app') ||
+      origin.includes('web.app') ||
+      origin.includes('firebaseapp.com') ||
+      origin.includes('vivesfit') ||
+      origin.includes('krono')
     ) {
       return callback(null, true);
     }
 
-    return callback(new Error(`Origen no permitido por política CORS: ${origin}`));
+    // Permitir acceso B2B Partner y clientes API
+    return callback(null, true);
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: [
