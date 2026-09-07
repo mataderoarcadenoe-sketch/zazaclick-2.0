@@ -8,7 +8,7 @@ export class AuditService {
     adminId: string;
     adminEmail: string;
     action: string;
-    entity: 'user' | 'subscription' | 'instance' | 'plan' | 'payment';
+    entity: 'user' | 'subscription' | 'instance' | 'plan' | 'payment' | 'partner';
     entityId: string;
     details?: any;
   }): Promise<void> {

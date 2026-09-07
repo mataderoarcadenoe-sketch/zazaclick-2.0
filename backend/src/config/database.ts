@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import * as dotenv from 'dotenv';
+import * as crypto from 'crypto';
 
 dotenv.config();
 
@@ -303,7 +304,25 @@ export async function initDatabase() {
       );
     `);
 
-    // 12. Índices de Alto Rendimiento
+    // 12. Tabla de Partners Oficiales B2B (Ecosistema Multi-Software)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS partners (
+        id VARCHAR(255) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        slug VARCHAR(100) UNIQUE NOT NULL,
+        category VARCHAR(100) DEFAULT 'general',
+        contact_email VARCHAR(255) NOT NULL,
+        master_key VARCHAR(255) NOT NULL,
+        master_key_hash VARCHAR(255) NOT NULL,
+        masked_key VARCHAR(100) NOT NULL,
+        webhook_url VARCHAR(500) NULL,
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // 13. Índices de Alto Rendimiento
     await pool.query(`
       CREATE INDEX IF NOT EXISTS idx_instances_lookup ON instances (instance_name, api_key);
       CREATE INDEX IF NOT EXISTS idx_instances_engine_type ON instances (engine_type);
@@ -319,16 +338,73 @@ export async function initDatabase() {
       CREATE INDEX IF NOT EXISTS idx_wh_deliveries_event ON webhook_deliveries (event_id);
       CREATE INDEX IF NOT EXISTS idx_sec_logs_user ON developer_security_logs (user_id, created_at DESC);
       CREATE INDEX IF NOT EXISTS idx_users_external_partner ON users (external_id, partner_id);
+      CREATE INDEX IF NOT EXISTS idx_partners_hash ON partners (master_key_hash, is_active);
+      CREATE INDEX IF NOT EXISTS idx_partners_slug ON partners (slug);
     `);
 
-    // 13. Asegurar rol SuperAdmin para el correo principal
+    // 14. Asegurar rol SuperAdmin para el correo principal
     await pool.query(`
       UPDATE users 
       SET role = 'admin', status = 'active'
       WHERE email = 'syscomecosistemadigital@gmail.com';
     `);
 
-    console.log('🚀 [Database] Estructura SaaS Core, Licenciamiento, Developer Platform y Auditoría inicializadas exitosamente.');
+    // 15. Seed de Partners Oficiales (VivesFit + Krono) y Migración de Aislamiento
+    const vivesfitKey = process.env.MASTER_PARTNER_KEY || 'zc_partner_master_vivesfit_2026';
+    const vivesfitHash = crypto.createHash('sha256').update(vivesfitKey).digest('hex');
+    const vivesfitMasked = 'zc_partner_master_••••••••2026';
+
+    await pool.query(`
+      INSERT INTO partners (id, name, slug, category, contact_email, master_key, master_key_hash, masked_key, is_active)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true)
+      ON CONFLICT (id) DO UPDATE SET 
+        name = EXCLUDED.name,
+        master_key = EXCLUDED.master_key, 
+        master_key_hash = EXCLUDED.master_key_hash, 
+        masked_key = EXCLUDED.masked_key;
+    `, [
+      'partner_vivesfit_core',
+      'VivesFit Gym SaaS',
+      'vivesfit',
+      'fitness',
+      'soporte@vivesfit.com',
+      vivesfitKey,
+      vivesfitHash,
+      vivesfitMasked
+    ]);
+
+    const kronoKey = 'zc_partner_krono_live_2026';
+    const kronoHash = crypto.createHash('sha256').update(kronoKey).digest('hex');
+    const kronoMasked = 'zc_partner_krono_••••••••2026';
+
+    await pool.query(`
+      INSERT INTO partners (id, name, slug, category, contact_email, master_key, master_key_hash, masked_key, is_active)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true)
+      ON CONFLICT (id) DO UPDATE SET 
+        name = EXCLUDED.name,
+        master_key = EXCLUDED.master_key, 
+        master_key_hash = EXCLUDED.master_key_hash, 
+        masked_key = EXCLUDED.masked_key;
+    `, [
+      'partner_krono_core',
+      'Krono - Gestión de Personal & Asistencias',
+      'krono',
+      'hr_attendance',
+      'soporte@krono.com',
+      kronoKey,
+      kronoHash,
+      kronoMasked
+    ]);
+
+    // Asignar los gimnasios existentes formalmente a partner_vivesfit_core
+    await pool.query(`
+      UPDATE users 
+      SET partner_id = 'partner_vivesfit_core' 
+      WHERE (external_id LIKE 'gym_%' OR email LIKE '%vivesfit%' OR email LIKE '%gymbra%')
+        AND (partner_id IS NULL OR partner_id = '');
+    `);
+
+    console.log('🚀 [Database] Estructura SaaS Core, Licenciamiento, Partners Multi-Tenant y Auditoría inicializadas exitosamente.');
   } catch (error: any) {
     console.error('❌ [Database] Error inicializando tablas:', error.message);
   }

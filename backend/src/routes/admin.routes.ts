@@ -4,6 +4,7 @@ import * as bcrypt from 'bcryptjs';
 import { authMiddleware, adminMiddleware, AuthenticatedRequest } from '../middleware/auth.middleware';
 import { EvolutionService } from '../services/evolution.service';
 import { AuditService } from '../services/audit.service';
+import { PartnerService } from '../services/partner.service';
 
 const router = Router();
 
@@ -101,6 +102,8 @@ router.get('/users', async (req: AuthenticatedRequest, res) => {
         u.status as user_status,
         u.external_id,
         u.partner_id,
+        pt.name as partner_name,
+        pt.slug as partner_slug,
         u.trial_used,
         u.company_name,
         u.phone,
@@ -120,6 +123,7 @@ router.get('/users', async (req: AuthenticatedRequest, res) => {
         (SELECT COUNT(*) FROM instances WHERE user_id = u.id) as instances_count,
         (SELECT COUNT(*) FROM instances WHERE user_id = u.id AND status = 'connected') as connected_instances_count
       FROM users u
+      LEFT JOIN partners pt ON u.partner_id = pt.id
       LEFT JOIN subscriptions s ON u.id = s.user_id AND s.id = (
         SELECT id FROM subscriptions WHERE user_id = u.id ORDER BY created_at DESC LIMIT 1
       )
@@ -800,6 +804,108 @@ router.post('/license/activate', async (req: AuthenticatedRequest, res) => {
     res.status(500).json({ success: false, error: result.error || 'Error al activar la licencia' });
   } catch (error: any) {
     res.status(500).json({ success: false, error: 'Error interno al activar licencia' });
+  }
+});
+
+/**
+ * Partner B2B Ecosystem Endpoints
+ */
+
+/**
+ * GET /partners - Listar todos los Partners B2B con métricas consolidadas
+ */
+router.get('/partners', async (req: AuthenticatedRequest, res) => {
+  try {
+    const partners = await PartnerService.listPartners();
+    res.json({ success: true, data: partners });
+  } catch (error: any) {
+    console.error('[AdminPartners Error]:', error.message);
+    res.status(500).json({ success: false, error: 'Error al listar partners B2B' });
+  }
+});
+
+/**
+ * POST /partners - Registrar nuevo Partner B2B
+ */
+router.post('/partners', async (req: AuthenticatedRequest, res) => {
+  try {
+    const { name, slug, category, contactEmail, webhookUrl } = req.body;
+    if (!name || !slug || !contactEmail) {
+      return res.status(400).json({ success: false, error: 'Nombre, slug y correo de contacto son requeridos.' });
+    }
+
+    const result = await PartnerService.createPartner({
+      name,
+      slug,
+      category,
+      contactEmail,
+      webhookUrl
+    });
+
+    await AuditService.logAction({
+      adminId: req.userId || 'admin',
+      adminEmail: 'syscomecosistemadigital@gmail.com',
+      action: 'CREATE_PARTNER',
+      entity: 'partner',
+      entityId: result.partner.id,
+      details: { name, slug, category, contactEmail }
+    });
+
+    res.json({ success: true, data: result.partner, secretKey: result.secretKey });
+  } catch (error: any) {
+    console.error('[AdminCreatePartner Error]:', error.message);
+    res.status(400).json({ success: false, error: error.message || 'Error al crear partner B2B' });
+  }
+});
+
+/**
+ * PUT /partners/:id/status - Suspender o reactivar Partner B2B
+ */
+router.put('/partners/:id/status', async (req: AuthenticatedRequest, res) => {
+  try {
+    const { id } = req.params;
+    const { isActive } = req.body;
+    if (typeof isActive !== 'boolean') {
+      return res.status(400).json({ success: false, error: 'isActive (booleano) es requerido.' });
+    }
+
+    const updated = await PartnerService.toggleStatus(id, isActive);
+
+    await AuditService.logAction({
+      adminId: req.userId || 'admin',
+      adminEmail: 'syscomecosistemadigital@gmail.com',
+      action: isActive ? 'ACTIVATE_PARTNER' : 'DEACTIVATE_PARTNER',
+      entity: 'partner',
+      entityId: id,
+      details: { isActive }
+    });
+
+    res.json({ success: true, data: updated });
+  } catch (error: any) {
+    res.status(400).json({ success: false, error: error.message || 'Error al actualizar estado del partner' });
+  }
+});
+
+/**
+ * POST /partners/:id/rotate-key - Rotar Master Key de Partner B2B
+ */
+router.post('/partners/:id/rotate-key', async (req: AuthenticatedRequest, res) => {
+  try {
+    const { id } = req.params;
+    const result = await PartnerService.rotateKey(id);
+
+    await AuditService.logAction({
+      adminId: req.userId || 'admin',
+      adminEmail: 'syscomecosistemadigital@gmail.com',
+      action: 'ROTATE_PARTNER_KEY',
+      entity: 'partner',
+      entityId: id,
+      details: { maskedKey: result.maskedKey }
+    });
+
+    res.json({ success: true, newSecretKey: result.newSecretKey, maskedKey: result.maskedKey });
+  } catch (error: any) {
+    res.status(400).json({ success: false, error: error.message || 'Error al rotar clave del partner' });
   }
 });
 

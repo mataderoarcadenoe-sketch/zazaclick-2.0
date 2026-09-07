@@ -67,33 +67,40 @@ export async function apiKeyOrTokenAuth(req: AuthenticatedRequest, res: Response
     }
   }
 
-  // Verificar Master Partner Key (VivesFit & Partners Autorizados)
-  const masterKey = process.env.MASTER_PARTNER_KEY || 'zc_partner_master_vivesfit_2026';
-  const isMaster = Boolean(
-    (bearerToken && (bearerToken === masterKey || bearerToken === 'zc_partner_master_vivesfit_2026')) ||
-    (apiKey && (apiKey === masterKey || apiKey === 'zc_partner_master_vivesfit_2026'))
-  );
-
-  if (isMaster) {
+  // Verificar Master Partner Key (VivesFit, Krono & Partners Autorizados)
+  const candidatePartnerKey = bearerToken || apiKey;
+  if (candidatePartnerKey) {
     try {
-      const pool = (await import('../config/database')).default;
-      const instName = req.params?.instanceName || req.body?.instanceName;
-      if (instName) {
-        const instRes = await pool.query('SELECT user_id FROM instances WHERE instance_name = $1 LIMIT 1', [instName]);
-        if (instRes.rows.length > 0) {
-          req.userId = instRes.rows[0].user_id;
-          req.tenantId = instRes.rows[0].user_id;
+      const { PartnerService } = await import('../services/partner.service');
+      const partner = await PartnerService.getPartnerByKey(candidatePartnerKey);
+      if (partner) {
+        const pool = (await import('../config/database')).default;
+        const instName = req.params?.instanceName || req.body?.instanceName;
+        if (instName) {
+          const instRes = await pool.query(
+            `SELECT i.user_id 
+             FROM instances i
+             JOIN users u ON i.user_id = u.id
+             WHERE i.instance_name = $1 AND (u.partner_id = $2 OR $2 = 'partner_vivesfit_core')
+             LIMIT 1`,
+            [instName, partner.id]
+          );
+          if (instRes.rows.length > 0) {
+            req.userId = instRes.rows[0].user_id;
+            req.tenantId = instRes.rows[0].user_id;
+          }
         }
+        if (!req.userId && (req.params?.id || req.query?.tenantId)) {
+          req.userId = (req.params?.id || req.query?.tenantId) as string;
+          req.tenantId = req.userId;
+        }
+        req.userRole = 'partner';
+        (req as any).partnerId = partner.id;
+        (req as any).environment = 'live';
+        return next();
       }
-      if (!req.userId && (req.params?.id || req.query?.tenantId)) {
-        req.userId = (req.params?.id || req.query?.tenantId) as string;
-        req.tenantId = req.userId;
-      }
-      req.userRole = 'partner';
-      (req as any).environment = 'live';
-      return next();
     } catch (err: any) {
-      return res.status(500).json({ success: false, error: 'Error verificando Master Partner Key' });
+      console.error('[authMiddleware] Error verificando Master Partner Key:', err.message);
     }
   }
 

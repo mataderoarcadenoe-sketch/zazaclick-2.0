@@ -32,7 +32,7 @@ export class PartnerProvisioningService {
     const res = await pool.query(
       `SELECT id FROM users
        WHERE (id = $1 OR external_id = $1)
-       ${partnerId ? 'AND (partner_id = $2 OR partner_id IS NULL)' : ''}
+       ${partnerId ? 'AND partner_id = $2' : ''}
        LIMIT 1`,
       partnerId ? [tenantIdOrExternalId, partnerId] : [tenantIdOrExternalId]
     );
@@ -42,7 +42,7 @@ export class PartnerProvisioningService {
   }
 
   /**
-   * Aprovisiona de forma atómica un nuevo Tenant/Gimnasio con Plan, Suscripción, API Key e Instancia
+   * Aprovisiona de forma atómica un nuevo Tenant/Empresa con Plan, Suscripción, API Key e Instancia
    */
   public static async provisionTenant(partnerId: string, data: ProvisionTenantInput) {
     const {
@@ -67,7 +67,7 @@ export class PartnerProvisioningService {
     // 1. Idempotencia: Si ya existe un tenant con este externalId para este partner, retornar el dossier existente
     if (externalId) {
       const extCheck = await pool.query(
-        'SELECT id, email, company_name, status FROM users WHERE external_id = $1 AND (partner_id = $2 OR partner_id IS NULL)',
+        'SELECT id, email, company_name, status FROM users WHERE external_id = $1 AND partner_id = $2',
         [externalId, partnerId]
       );
       if (extCheck.rows.length > 0) {
@@ -499,7 +499,7 @@ export class PartnerProvisioningService {
         SELECT id FROM subscriptions WHERE user_id = u.id ORDER BY created_at DESC LIMIT 1
       )
       LEFT JOIN plans p ON s.plan_id = p.id
-      WHERE u.role = 'client' AND (u.partner_id = $1 OR $1 = 'partner_vivesfit_core')
+      WHERE u.role = 'client' AND u.partner_id = $1
     `;
 
     const params: any[] = [partnerId];

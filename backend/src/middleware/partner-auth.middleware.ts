@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import pool from '../config/database';
 import { ApiKeyService } from '../services/api-key.service';
+import { PartnerService } from '../services/partner.service';
 
 export interface PartnerRequest extends Request {
   partnerId?: string;
@@ -9,10 +10,8 @@ export interface PartnerRequest extends Request {
   scopes?: string[];
 }
 
-const DEFAULT_PARTNER_KEY = process.env.MASTER_PARTNER_KEY || 'zc_partner_master_vivesfit_2026';
-
 /**
- * Middleware de Autenticación para la API B2B de Partners (VivesFit & ERPs)
+ * Middleware de Autenticación para la API B2B de Partners (Multi-Tenant & ERPs)
  */
 export async function partnerAuthMiddleware(req: PartnerRequest, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
@@ -36,17 +35,26 @@ export async function partnerAuthMiddleware(req: PartnerRequest, res: Response, 
     });
   }
 
-  // 1. Verificación contra Master Partner Key de entorno
-  if (candidateKey === DEFAULT_PARTNER_KEY || (process.env.MASTER_PARTNER_KEY && candidateKey === process.env.MASTER_PARTNER_KEY)) {
-    req.partnerId = 'partner_vivesfit_core';
-    req.partnerName = 'VivesFit SaaS Platform';
-    req.isPartner = true;
-    req.scopes = ['partner:all', 'partner:tenants:write', 'partner:tenants:read', 'partner:subscriptions:write'];
-    return next();
-  }
-
-  // 2. Verificación contra base de datos (api_keys con prefijo zc_partner_ o scope partner:all)
   try {
+    // 1. Verificación contra tabla de Partners (O(1) vía hash SHA-256)
+    const partner = await PartnerService.getPartnerByKey(candidateKey);
+    if (partner) {
+      if (!partner.isActive) {
+        return res.status(403).json({
+          success: false,
+          code: 'PARTNER_SUSPENDED',
+          error: `El acceso de Partner para "${partner.name}" se encuentra temporalmente suspendido.`
+        });
+      }
+
+      req.partnerId = partner.id;
+      req.partnerName = partner.name;
+      req.isPartner = true;
+      req.scopes = ['partner:all', 'partner:tenants:write', 'partner:tenants:read', 'partner:subscriptions:write'];
+      return next();
+    }
+
+    // 2. Verificación contra base de datos (api_keys con prefijo zc_partner_ o scope partner:all)
     const keyHash = ApiKeyService.hashKey(candidateKey);
     const dbRes = await pool.query(
       `SELECT id, user_id, name, scopes, environment, is_active
