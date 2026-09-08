@@ -178,29 +178,50 @@ export class EvolutionService {
    */
   public static async reconnect(instanceName: string): Promise<{ success: boolean; state: string; isConnected: boolean; requiresQr: boolean }> {
     try {
-      // 1. Invocar /instance/connect en el motor principal o fallback
-      let connectResponse: any = null;
+      // 1. Invocar /instance/restart para reiniciar silenciosamente el socket con las llaves guardadas
+      let restartSuccess = false;
       try {
-        connectResponse = await api.get(`/instance/connect/${instanceName}`);
-      } catch {
-        connectResponse = await fallbackApi.get(`/instance/connect/${instanceName}`);
+        const restartRes = await api.post(`/instance/restart/${instanceName}`);
+        restartSuccess = restartRes.status === 200 || restartRes.status === 201;
+      } catch (rstErr: any) {
+        try {
+          const fbRestart = await fallbackApi.post(`/instance/restart/${instanceName}`);
+          restartSuccess = fbRestart.status === 200 || fbRestart.status === 201;
+        } catch {}
       }
 
-      // Si devuelve un QR de inmediato, la sesión previa fue revocada y necesita escaneo
-      const hasQr = Boolean(connectResponse?.data?.base64 || connectResponse?.data?.qrcode);
+      // Si restart falló o la instancia no estaba activa en memoria, invocar /instance/connect como fallback
+      let hasQr = false;
+      if (!restartSuccess) {
+        try {
+          const connectResponse = await api.get(`/instance/connect/${instanceName}`);
+          hasQr = Boolean(connectResponse?.data?.base64 || connectResponse?.data?.qrcode);
+        } catch {
+          try {
+            const fbConnect = await fallbackApi.get(`/instance/connect/${instanceName}`);
+            hasQr = Boolean(fbConnect?.data?.base64 || fbConnect?.data?.qrcode);
+          } catch {}
+        }
+      }
 
-      // 2. Dar margen de 1.5s para que Baileys / whatsmeow negocie el handshake
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // 2. Bucle de sondeo de hasta 8 segundos para dar tiempo al handshake criptográfico de Baileys
+      let state = 'connecting';
+      let isConnected = false;
 
-      // 3. Consultar el estado resultante
-      const state = await this.getConnectionState(instanceName);
-      const isConnected = state === 'open' || state === 'connected';
+      for (let attempt = 0; attempt < 4; attempt++) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        state = await this.getConnectionState(instanceName);
+        if (state === 'open' || state === 'connected') {
+          isConnected = true;
+          break;
+        }
+      }
 
       return {
         success: isConnected,
         state,
         isConnected,
-        requiresQr: hasQr && !isConnected
+        requiresQr: !isConnected && hasQr
       };
     } catch (err: any) {
       console.warn(`[EvolutionService] Error en intento de reconexión para ${instanceName}:`, err.message);

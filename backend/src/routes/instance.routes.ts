@@ -129,15 +129,24 @@ const getInstancesListHandler = async (req: AuthenticatedRequest, res: Response)
       try {
         const engine = await engineRouter.getEngineForInstance(inst.instance_name);
         const stateRes = await engine.getConnectionState(inst.instance_name);
-        const actualStatus = stateRes.data?.isConnected ? 'connected' : 'disconnected';
+        const isConnected = Boolean(stateRes.data?.isConnected);
         
-        if (inst.status !== actualStatus) {
-          console.log(`🔄 [InstanceList] Sincronizando estado de "${inst.instance_name}": ${inst.status} -> ${actualStatus}`);
+        // Si el motor reporta conectada y en BD no figuraba connected, sincronizar a connected
+        if (isConnected && inst.status !== 'connected') {
+          console.log(`🔄 [InstanceList] Sincronizando estado de "${inst.instance_name}": ${inst.status} -> connected`);
           await pool.query(
-            'UPDATE instances SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
-            [actualStatus, inst.id]
+            "UPDATE instances SET status = 'connected', updated_at = CURRENT_TIMESTAMP WHERE id = $1",
+            [inst.id]
           );
-          inst.status = actualStatus;
+          inst.status = 'connected';
+        } else if (!isConnected && inst.status === 'connected') {
+          // Si el socket tuvo un corte temporal, marcar como reconnecting (NUNCA disconnected de golpe)
+          console.log(`🔄 [InstanceList] Socket en reposo para "${inst.instance_name}": connected -> reconnecting`);
+          await pool.query(
+            "UPDATE instances SET status = 'reconnecting', updated_at = CURRENT_TIMESTAMP WHERE id = $1",
+            [inst.id]
+          );
+          inst.status = 'reconnecting';
         }
       } catch (err: any) {
         console.warn(`[InstanceList] No se pudo verificar estado de "${inst.instance_name}":`, err.message);
@@ -207,7 +216,7 @@ const logoutHandler = async (req: AuthenticatedRequest, res: Response) => {
     const engine = await engineRouter.getEngineForInstance(instanceName);
     const outRes = await engine.logout(instanceName);
     if (outRes.success) {
-      await pool.query('UPDATE instances SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE instance_name = $2', ['disconnected', instanceName]);
+      await pool.query("UPDATE instances SET status = 'logged_out', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1", [instanceName]);
       return res.json({ success: true, message: 'Sesión cerrada exitosamente.' });
     }
     res.status(500).json({ success: false, error: outRes.error?.message || 'No se pudo cerrar la sesión en el motor de WhatsApp.' });

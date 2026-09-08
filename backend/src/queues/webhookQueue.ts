@@ -100,11 +100,14 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
         const reasonCode = data.disconnectionReasonCode || data.reason || data.statusCode || data.disconnectionObject?.output?.statusCode;
         const isDeviceRemoved = reasonCode === 401 || data.disconnectionObject?.attrs?.type === 'device_removed';
         
-        let dbStatus = 'disconnected';
+        let dbStatus = 'reconnecting';
         if (isConnected) {
           dbStatus = 'connected';
-        } else if (connection === 'connecting' || (!isDeviceRemoved && (reasonCode === 408 || reasonCode === 515 || connection === 'close'))) {
-          // Desconexión temporal/recuperable por red o reposo del teléfono
+        } else if (isDeviceRemoved) {
+          // Cierre de sesión voluntario explícito por parte del usuario en el teléfono móvil
+          dbStatus = 'logged_out';
+        } else {
+          // Desconexión temporal/recuperable por red o reposo del teléfono (408, 515, close, etc.)
           dbStatus = 'reconnecting';
         }
         
@@ -140,7 +143,7 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
             } catch (recErr: any) {
               console.warn(`[QueueWorker] Reintento de auto-reconexión para "${instance}" falló:`, recErr.message);
             }
-          }, 5000);
+          }, 3000);
         }
       }
     }

@@ -50,9 +50,9 @@ export async function runWatchdogCycle(): Promise<void> {
           continue;
         }
 
-        // Caso 2: Si el estado en vivo es 'close' o 'disconnected', intentar levantar el socket con las llaves guardadas
-        if (!isLiveConnected && (liveState === 'close' || status === 'reconnecting')) {
-          console.log(`🐕 [Watchdog] Instancia "${instance_name}" con socket cerrado. Intentando reactivación silenciosa...`);
+        // Caso 2: Si el estado en vivo no está conectado y el usuario no cerró sesión explícitamente (status !== 'logged_out')
+        if (!isLiveConnected && status !== 'logged_out') {
+          console.log(`🐕 [Watchdog] Instancia "${instance_name}" sin conexión activa (liveState=${liveState}, status=${status}). Intentando reactivación silenciosa...`);
 
           let reconnectRes: any = null;
           if (typeof (engine as any).reconnect === 'function') {
@@ -75,6 +75,28 @@ export async function runWatchdogCycle(): Promise<void> {
                 connectionState: 'open'
               });
             }
+          } else if (reconnectRes?.data?.requiresQr) {
+            console.log(`⚠️ [Watchdog] Instancia "${instance_name}" requiere escaneo de QR (sesión expirada o desvinculada).`);
+            await pool.query(
+              "UPDATE instances SET status = 'disconnected', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1",
+              [instance_name]
+            );
+          } else {
+            // Mantener en estado reconnecting para que el frontend informe al usuario que está auto-recuperando
+            if (status !== 'reconnecting') {
+              await pool.query(
+                "UPDATE instances SET status = 'reconnecting', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1",
+                [instance_name]
+              );
+              const io = getIO();
+              if (io) {
+                io.to(`user_${user_id}`).emit('connection_status', {
+                  instance: instance_name,
+                  status: 'reconnecting',
+                  connectionState: 'connecting'
+                });
+              }
+            }
           }
         }
       } catch (instErr: any) {
@@ -88,18 +110,18 @@ export async function runWatchdogCycle(): Promise<void> {
 }
 
 /**
- * Iniciar el centinela en segundo plano (Intervalo: cada 3 minutos)
+ * Iniciar el centinela en segundo plano (Intervalo: cada 60 segundos)
  */
 export function startInstanceWatchdog(): void {
-  console.log('🐕 [Watchdog] Centinela de auto-reconexión iniciado (Intervalo: cada 3 minutos)...');
+  console.log('🐕 [Watchdog] Centinela de auto-reconexión iniciado (Intervalo: cada 60 segundos)...');
 
-  // Ejecutar primer ciclo a los 30 segundos tras arrancar
+  // Ejecutar primer ciclo a los 15 segundos tras arrancar
   setTimeout(() => {
     runWatchdogCycle();
-  }, 30000);
+  }, 15000);
 
-  // Intervalo recurrente cada 3 minutos (180,000 ms)
+  // Intervalo recurrente cada 60 segundos (60,000 ms)
   setInterval(() => {
     runWatchdogCycle();
-  }, 3 * 60 * 1000);
+  }, 60 * 1000);
 }

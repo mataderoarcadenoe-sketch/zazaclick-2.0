@@ -395,7 +395,7 @@ router.post('/instances/:instanceName/logout', apiKeyOrTokenAuth, async (req: Au
     const outRes = await engine.logout(instanceName);
 
     if (outRes.success) {
-      await pool.query("UPDATE instances SET status = 'disconnected', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1", [instanceName]);
+      await pool.query("UPDATE instances SET status = 'logged_out', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1", [instanceName]);
       return res.json({
         success: true,
         message: 'Sesión de WhatsApp cerrada exitosamente.'
