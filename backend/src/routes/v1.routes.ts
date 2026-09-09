@@ -315,6 +315,285 @@ router.get('/instances/:instanceName/status', apiKeyOrTokenAuth, async (req: Aut
   }
 });
 
+// ==========================================
+// 1.1. GESTIÓN DE GRUPOS DE WHATSAPP (ERP / API)
+// ==========================================
+
+/**
+ * GET /v1/instances/:instanceName/groups — Listar todos los grupos de WhatsApp de la instancia
+ */
+router.get('/instances/:instanceName/groups', apiKeyOrTokenAuth, async (req: AuthenticatedRequest, res: Response) => {
+  const { instanceName } = req.params;
+  const getParticipants = req.query.getParticipants !== 'false';
+
+  try {
+    // 1. Validar propiedad y autorización del tenant sobre la instancia
+    const verifyRes = await pool.query(
+      'SELECT id, status, engine_type FROM instances WHERE user_id = $1 AND instance_name = $2',
+      [req.userId, instanceName]
+    );
+
+    if (verifyRes.rows.length === 0) {
+      return res.status(403).json({
+        success: false,
+        code: 'FORBIDDEN',
+        error: 'Acceso no autorizado a esta instancia.'
+      });
+    }
+
+    // 2. Obtener motor asignado
+    const engine = await engineRouter.getEngineForInstance(instanceName);
+
+    if (typeof (engine as any).getGroups !== 'function') {
+      return res.status(501).json({
+        success: false,
+        code: 'NOT_SUPPORTED',
+        error: `El motor ${engine.engineType} no tiene implementado soporte de grupos.`
+      });
+    }
+
+    // 3. Consultar grupos en el motor de WhatsApp
+    const groupsRes = await (engine as any).getGroups(instanceName, getParticipants);
+
+    if (!groupsRes.success) {
+      return res.status(groupsRes.error?.statusCode || 502).json({
+        success: false,
+        code: groupsRes.error?.code || 'GROUPS_FETCH_FAILED',
+        error: groupsRes.error?.message || 'Error al obtener la lista de grupos desde WhatsApp.'
+      });
+    }
+
+    // 4. Normalizar formato canónico para ERPs e integraciones
+    const rawGroups = Array.isArray(groupsRes.data) ? groupsRes.data : [];
+    const formattedGroups = rawGroups.map((g: any) => ({
+      id: g.id || g.jid || g.groupJid,
+      subject: g.subject || g.name || 'Sin Asunto',
+      subjectOwner: g.subjectOwner || null,
+      size: g.size !== undefined ? g.size : (Array.isArray(g.participants) ? g.participants.length : 0),
+      creation: g.creation || g.creationTime || null,
+      owner: g.owner || null,
+      desc: g.desc || g.description || null,
+      restrict: Boolean(g.restrict),
+      announce: Boolean(g.announce),
+      participants: getParticipants ? (g.participants || []) : undefined
+    }));
+
+    return res.json({
+      success: true,
+      instanceName,
+      total: formattedGroups.length,
+      data: formattedGroups
+    });
+  } catch (err: any) {
+    console.error('[v1/instances/groups] Error:', err.message);
+    return res.status(500).json({
+      success: false,
+      code: 'INTERNAL_ERROR',
+      error: `Error interno al consultar grupos: ${err.message}`
+    });
+  }
+});
+
+/**
+ * POST /v1/instances/:instanceName/groups — Crear un nuevo grupo de WhatsApp desde ERP
+ */
+router.post('/instances/:instanceName/groups', apiKeyOrTokenAuth, async (req: AuthenticatedRequest, res: Response) => {
+  const { instanceName } = req.params;
+  const { subject, description, participants } = req.body;
+
+  if (!subject || typeof subject !== 'string') {
+    return res.status(400).json({
+      success: false,
+      code: 'INVALID_REQUEST',
+      error: 'El campo "subject" (nombre del grupo) es requerido.'
+    });
+  }
+
+  if (!participants || !Array.isArray(participants) || participants.length === 0) {
+    return res.status(400).json({
+      success: false,
+      code: 'INVALID_REQUEST',
+      error: 'El campo "participants" debe ser un arreglo con al menos 1 número o JID.'
+    });
+  }
+
+  try {
+    const verifyRes = await pool.query(
+      'SELECT id FROM instances WHERE user_id = $1 AND instance_name = $2',
+      [req.userId, instanceName]
+    );
+
+    if (verifyRes.rows.length === 0) {
+      return res.status(403).json({
+        success: false,
+        code: 'FORBIDDEN',
+        error: 'Acceso no autorizado a esta instancia.'
+      });
+    }
+
+    // Limpiar teléfonos a formato JID canónico
+    const cleanedParticipants = participants.map((num: string) => {
+      const cleanNum = num.split('@')[0].replace(/\D/g, '');
+      return `${cleanNum}@s.whatsapp.net`;
+    });
+
+    const engine = await engineRouter.getEngineForInstance(instanceName);
+    if (typeof (engine as any).createGroup !== 'function') {
+      return res.status(501).json({
+        success: false,
+        code: 'NOT_SUPPORTED',
+        error: `El motor ${engine.engineType} no soporta creación de grupos.`
+      });
+    }
+
+    const createRes = await (engine as any).createGroup(instanceName, subject, cleanedParticipants);
+
+    if (!createRes.success) {
+      return res.status(createRes.error?.statusCode || 502).json({
+        success: false,
+        code: createRes.error?.code || 'GROUP_CREATE_FAILED',
+        error: createRes.error?.message || 'Error al crear grupo en WhatsApp.'
+      });
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: `Grupo "${subject}" creado exitosamente en WhatsApp.`,
+      data: createRes.data
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      code: 'INTERNAL_ERROR',
+      error: err.message
+    });
+  }
+});
+
+/**
+ * POST /v1/instances/:instanceName/groups/participants — Gestionar miembros del grupo (add, remove, promote, demote)
+ */
+router.post('/instances/:instanceName/groups/participants', apiKeyOrTokenAuth, async (req: AuthenticatedRequest, res: Response) => {
+  const { instanceName } = req.params;
+  const { groupJid, action, participants } = req.body;
+
+  const validActions = ['add', 'remove', 'promote', 'demote'];
+  if (!groupJid || !action || !validActions.includes(action) || !Array.isArray(participants) || participants.length === 0) {
+    return res.status(400).json({
+      success: false,
+      code: 'INVALID_REQUEST',
+      error: `Parámetros inválidos. Requiere groupJid, action (${validActions.join(', ')}) y arreglo participants.`
+    });
+  }
+
+  try {
+    const verifyRes = await pool.query(
+      'SELECT id FROM instances WHERE user_id = $1 AND instance_name = $2',
+      [req.userId, instanceName]
+    );
+
+    if (verifyRes.rows.length === 0) {
+      return res.status(403).json({
+        success: false,
+        code: 'FORBIDDEN',
+        error: 'Acceso no autorizado a esta instancia.'
+      });
+    }
+
+    const cleanParticipants = participants.map((num: string) => {
+      const cleanNum = num.split('@')[0].replace(/\D/g, '');
+      return `${cleanNum}@s.whatsapp.net`;
+    });
+
+    const engine = await engineRouter.getEngineForInstance(instanceName);
+    if (typeof (engine as any).updateGroupParticipants !== 'function') {
+      return res.status(501).json({
+        success: false,
+        code: 'NOT_SUPPORTED',
+        error: `El motor ${engine.engineType} no soporta administración de miembros de grupo.`
+      });
+    }
+
+    const updateRes = await (engine as any).updateGroupParticipants(instanceName, groupJid, action, cleanParticipants);
+
+    if (!updateRes.success) {
+      return res.status(updateRes.error?.statusCode || 502).json({
+        success: false,
+        code: updateRes.error?.code || 'GROUP_UPDATE_FAILED',
+        error: updateRes.error?.message || 'Error al actualizar miembros del grupo.'
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: `Acción "${action}" ejecutada exitosamente para ${cleanParticipants.length} participante(s).`,
+      data: updateRes.data
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      code: 'INTERNAL_ERROR',
+      error: err.message
+    });
+  }
+});
+
+/**
+ * GET /v1/instances/:instanceName/groups/:groupId/invite-code — Obtener enlace de invitación a un grupo
+ */
+router.get('/instances/:instanceName/groups/:groupId/invite-code', apiKeyOrTokenAuth, async (req: AuthenticatedRequest, res: Response) => {
+  const { instanceName, groupId } = req.params;
+
+  try {
+    const verifyRes = await pool.query(
+      'SELECT id FROM instances WHERE user_id = $1 AND instance_name = $2',
+      [req.userId, instanceName]
+    );
+
+    if (verifyRes.rows.length === 0) {
+      return res.status(403).json({
+        success: false,
+        code: 'FORBIDDEN',
+        error: 'Acceso no autorizado a esta instancia.'
+      });
+    }
+
+    const groupJid = groupId.includes('@') ? groupId : `${groupId}@g.us`;
+    const engine = await engineRouter.getEngineForInstance(instanceName);
+
+    if (typeof (engine as any).getGroupInviteCode !== 'function') {
+      return res.status(501).json({
+        success: false,
+        code: 'NOT_SUPPORTED',
+        error: `El motor ${engine.engineType} no soporta enlaces de invitación de grupos.`
+      });
+    }
+
+    const inviteRes = await (engine as any).getGroupInviteCode(instanceName, groupJid);
+
+    if (!inviteRes.success) {
+      return res.status(inviteRes.error?.statusCode || 502).json({
+        success: false,
+        code: inviteRes.error?.code || 'INVITE_CODE_FAILED',
+        error: inviteRes.error?.message || 'Error al obtener enlace de invitación.'
+      });
+    }
+
+    return res.json({
+      success: true,
+      instanceName,
+      groupJid,
+      data: inviteRes.data
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      code: 'INTERNAL_ERROR',
+      error: err.message
+    });
+  }
+});
+
 /**
  * POST /v1/instances/:instanceName/reconnect — Reconectar sesión activa sin solicitar nuevo QR
  */

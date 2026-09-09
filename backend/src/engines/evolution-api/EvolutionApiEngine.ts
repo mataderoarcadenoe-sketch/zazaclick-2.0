@@ -480,6 +480,119 @@ export class EvolutionApiEngine implements WhatsAppEngine {
     }
   }
 
+  public async getGroups(instanceName: string, getParticipants: boolean = true): Promise<EngineResult<any[]>> {
+    const start = Date.now();
+    try {
+      const res = await EvolutionService.getGroups(instanceName);
+      const latencyMs = Date.now() - start;
+      if (res.success) {
+        this.circuitBreaker.recordSuccess();
+        const data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+        return EvolutionApiMapper.mapSuccess(data, latencyMs);
+      }
+      this.circuitBreaker.recordFailure(res.error);
+      return {
+        success: false,
+        engine: this.engineType,
+        error: {
+          code: 'ENGINE_SEND_FAILED',
+          message: res.error || 'Error al obtener grupos de Evolution API',
+          isRetryable: false,
+          statusCode: res.status || 500
+        },
+        latencyMs
+      };
+    } catch (err: any) {
+      const latencyMs = Date.now() - start;
+      this.circuitBreaker.recordFailure(err);
+      return EvolutionApiMapper.mapFailure(err, latencyMs);
+    }
+  }
+
+  public async createGroup(instanceName: string, subject: string, participants: string[]): Promise<EngineResult<any>> {
+    const start = Date.now();
+    try {
+      const res = await EvolutionService.createGroup(instanceName, subject, participants);
+      const latencyMs = Date.now() - start;
+      if (res.success) {
+        this.circuitBreaker.recordSuccess();
+        return EvolutionApiMapper.mapSuccess(res.data, latencyMs);
+      }
+      this.circuitBreaker.recordFailure(res.error);
+      return {
+        success: false,
+        engine: this.engineType,
+        error: {
+          code: 'ENGINE_SEND_FAILED',
+          message: res.error || 'Error al crear grupo en Evolution API',
+          isRetryable: false,
+          statusCode: res.status || 500
+        },
+        latencyMs
+      };
+    } catch (err: any) {
+      const latencyMs = Date.now() - start;
+      this.circuitBreaker.recordFailure(err);
+      return EvolutionApiMapper.mapFailure(err, latencyMs);
+    }
+  }
+
+  public async updateGroupParticipants(instanceName: string, groupJid: string, action: 'add' | 'remove' | 'promote' | 'demote', participants: string[]): Promise<EngineResult<any>> {
+    const start = Date.now();
+    try {
+      const res = await EvolutionService.updateGroupParticipants(instanceName, groupJid, action, participants);
+      const latencyMs = Date.now() - start;
+      if (res.success) {
+        this.circuitBreaker.recordSuccess();
+        return EvolutionApiMapper.mapSuccess(res.data, latencyMs);
+      }
+      this.circuitBreaker.recordFailure(res.error);
+      return {
+        success: false,
+        engine: this.engineType,
+        error: {
+          code: 'ENGINE_SEND_FAILED',
+          message: res.error || 'Error al actualizar miembros del grupo',
+          isRetryable: false,
+          statusCode: res.status || 500
+        },
+        latencyMs
+      };
+    } catch (err: any) {
+      const latencyMs = Date.now() - start;
+      this.circuitBreaker.recordFailure(err);
+      return EvolutionApiMapper.mapFailure(err, latencyMs);
+    }
+  }
+
+  public async getGroupInviteCode(instanceName: string, groupJid: string): Promise<EngineResult<any>> {
+    const start = Date.now();
+    try {
+      const res = await EvolutionService.getGroupInviteCode(instanceName, groupJid);
+      const latencyMs = Date.now() - start;
+      if (res.success) {
+        this.circuitBreaker.recordSuccess();
+        return EvolutionApiMapper.mapSuccess(res.data, latencyMs);
+      }
+      this.circuitBreaker.recordFailure(res.error);
+      return {
+        success: false,
+        engine: this.engineType,
+        error: {
+          code: 'ENGINE_SEND_FAILED',
+          message: res.error || 'Error al obtener código de invitación del grupo',
+          isRetryable: false,
+          statusCode: res.status || 500
+        },
+        latencyMs
+      };
+    } catch (err: any) {
+      const latencyMs = Date.now() - start;
+      this.circuitBreaker.recordFailure(err);
+      return EvolutionApiMapper.mapFailure(err, latencyMs);
+    }
+  }
+
   public async healthCheck(): Promise<EngineHealth> {
     const isConfigured = Boolean(process.env.EVOLUTION_API_URL && process.env.EVOLUTION_API_KEY);
     if (!isConfigured) {

@@ -37,6 +37,12 @@ export interface WhatsAppEngine {
   getMediaMessageBase64?(instanceName: string, messageKey: any, messageContent: any): Promise<EngineResult<any>>;
   markMessagesAsRead?(instanceName: string, remoteJid: string, messageIds: string[], phoneJid?: string): Promise<EngineResult<boolean>>;
 
+  // Métodos de grupos de WhatsApp
+  getGroups?(instanceName: string, getParticipants?: boolean): Promise<EngineResult<any[]>>;
+  createGroup?(instanceName: string, subject: string, participants: string[]): Promise<EngineResult<any>>;
+  updateGroupParticipants?(instanceName: string, groupJid: string, action: 'add' | 'remove' | 'promote' | 'demote', participants: string[]): Promise<EngineResult<any>>;
+  getGroupInviteCode?(instanceName: string, groupJid: string): Promise<EngineResult<any>>;
+
   // Diagnóstico y salud
   healthCheck(): Promise<EngineHealth>;
 }

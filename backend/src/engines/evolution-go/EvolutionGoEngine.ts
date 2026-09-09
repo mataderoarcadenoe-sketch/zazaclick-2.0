@@ -27,7 +27,7 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     sendLocation: true,
     sendContact: true,
     webhooks: true,
-    groups: false,
+    groups: true,
     chatsHistory: false
   };
 
@@ -524,6 +524,117 @@ export class EvolutionGoEngine implements WhatsAppEngine {
       }
 
       return EvolutionGoMapper.mapFailure(response.data, latencyMs);
+    } catch (err: any) {
+      const latencyMs = Date.now() - start;
+      this.circuitBreaker.recordFailure(err);
+      return EvolutionGoMapper.mapFailure(err, latencyMs);
+    }
+  }
+
+  public async getGroups(instanceName: string, getParticipants: boolean = true): Promise<EngineResult<any[]>> {
+    const start = Date.now();
+    try {
+      const client = this.getClient();
+      let response;
+      try {
+        response = await client.get(`/group/fetchAllGroups/${instanceName}?getParticipants=${getParticipants}`);
+      } catch (e: any) {
+        if (e.response?.status === 404) {
+          response = await client.get(`/group/all?getParticipants=${getParticipants}`, {
+            headers: { instance: instanceName }
+          });
+        } else {
+          throw e;
+        }
+      }
+      const latencyMs = Date.now() - start;
+      const data = response.data?.data || response.data || [];
+      this.circuitBreaker.recordSuccess();
+      return EvolutionGoMapper.mapSuccess(Array.isArray(data) ? data : [], latencyMs);
+    } catch (err: any) {
+      const latencyMs = Date.now() - start;
+      this.circuitBreaker.recordFailure(err);
+      return EvolutionGoMapper.mapFailure(err, latencyMs);
+    }
+  }
+
+  public async createGroup(instanceName: string, subject: string, participants: string[]): Promise<EngineResult<any>> {
+    const start = Date.now();
+    try {
+      const client = this.getClient();
+      let response;
+      try {
+        response = await client.post(`/group/create/${instanceName}`, { subject, participants });
+      } catch (e: any) {
+        if (e.response?.status === 404) {
+          response = await client.post('/group/create', { subject, participants }, {
+            headers: { instance: instanceName }
+          });
+        } else {
+          throw e;
+        }
+      }
+      const latencyMs = Date.now() - start;
+      this.circuitBreaker.recordSuccess();
+      return EvolutionGoMapper.mapSuccess(response.data?.data || response.data, latencyMs);
+    } catch (err: any) {
+      const latencyMs = Date.now() - start;
+      this.circuitBreaker.recordFailure(err);
+      return EvolutionGoMapper.mapFailure(err, latencyMs);
+    }
+  }
+
+  public async updateGroupParticipants(instanceName: string, groupJid: string, action: 'add' | 'remove' | 'promote' | 'demote', participants: string[]): Promise<EngineResult<any>> {
+    const start = Date.now();
+    try {
+      const client = this.getClient();
+      let response;
+      try {
+        response = await client.post(`/group/updateParticipant/${instanceName}?groupJid=${groupJid}`, {
+          action,
+          participants
+        });
+      } catch (e: any) {
+        if (e.response?.status === 404) {
+          response = await client.post(`/group/participants?groupJid=${groupJid}`, {
+            action,
+            participants
+          }, {
+            headers: { instance: instanceName }
+          });
+        } else {
+          throw e;
+        }
+      }
+      const latencyMs = Date.now() - start;
+      this.circuitBreaker.recordSuccess();
+      return EvolutionGoMapper.mapSuccess(response.data?.data || response.data, latencyMs);
+    } catch (err: any) {
+      const latencyMs = Date.now() - start;
+      this.circuitBreaker.recordFailure(err);
+      return EvolutionGoMapper.mapFailure(err, latencyMs);
+    }
+  }
+
+  public async getGroupInviteCode(instanceName: string, groupJid: string): Promise<EngineResult<any>> {
+    const start = Date.now();
+    try {
+      const client = this.getClient();
+      let response;
+      try {
+        response = await client.get(`/group/inviteCode/${instanceName}?groupJid=${groupJid}`);
+      } catch (e: any) {
+        if (e.response?.status === 404) {
+          response = await client.get(`/group/invite?groupJid=${groupJid}`, {
+            headers: { instance: instanceName }
+          });
+        } else {
+          throw e;
+        }
+      }
+      const latencyMs = Date.now() - start;
+      this.circuitBreaker.recordSuccess();
+      return EvolutionGoMapper.mapSuccess(response.data?.data || response.data, latencyMs);
     } catch (err: any) {
       const latencyMs = Date.now() - start;
       this.circuitBreaker.recordFailure(err);

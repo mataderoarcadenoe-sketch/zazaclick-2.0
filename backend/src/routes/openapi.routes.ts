@@ -85,7 +85,7 @@ export const openApiSpec = {
           number: {
             type: 'string',
             example: '51912345678',
-            description: 'Recipient phone number with country code'
+            description: 'Recipient phone number with country code (e.g. 51912345678) OR WhatsApp Group JID (e.g. 120363024823948@g.us)'
           },
           text: {
             type: 'string',
@@ -98,7 +98,11 @@ export const openApiSpec = {
         required: ['instanceName', 'number', 'mediatype', 'mimetype', 'media'],
         properties: {
           instanceName: { type: 'string', example: 'erp_ventas_001' },
-          number: { type: 'string', example: '51912345678' },
+          number: {
+            type: 'string',
+            example: '51912345678',
+            description: 'Recipient phone number with country code (e.g. 51912345678) OR WhatsApp Group JID (e.g. 120363024823948@g.us)'
+          },
           mediatype: {
             type: 'string',
             enum: ['image', 'video', 'document', 'audio'],
@@ -112,6 +116,42 @@ export const openApiSpec = {
           },
           caption: { type: 'string', example: 'Comprobante de Pago' },
           fileName: { type: 'string', example: 'factura_10492.pdf' }
+        }
+      },
+      CreateGroupRequest: {
+        type: 'object',
+        required: ['subject', 'participants'],
+        properties: {
+          subject: {
+            type: 'string',
+            example: 'Clientes VIP 2026',
+            description: 'Group title/name'
+          },
+          participants: {
+            type: 'array',
+            items: { type: 'string', example: '51912345678' },
+            description: 'Array of participant phone numbers'
+          }
+        }
+      },
+      ManageGroupParticipantsRequest: {
+        type: 'object',
+        required: ['groupJid', 'action', 'participants'],
+        properties: {
+          groupJid: {
+            type: 'string',
+            example: '120363024823948@g.us',
+            description: 'WhatsApp Group JID'
+          },
+          action: {
+            type: 'string',
+            enum: ['add', 'remove', 'promote', 'demote'],
+            example: 'add'
+          },
+          participants: {
+            type: 'array',
+            items: { type: 'string', example: '51912345678' }
+          }
         }
       },
       SendAudioRequest: {
@@ -276,6 +316,68 @@ export const openApiSpec = {
         responses: {
           200: { description: 'Webhook configurado exitosamente con secreto HMAC' },
           400: { description: 'URL bloqueada por política anti-SSRF o inválida' }
+        }
+      }
+    },
+    '/v1/instances/{instanceName}/groups': {
+      get: {
+        summary: 'Listar grupos de WhatsApp',
+        description: 'Obtiene la lista completa de grupos de WhatsApp asociados a la instancia con sus JIDs (@g.us), nombres y número de participantes.',
+        security: [{ ApiKeyAuth: [] }, { BearerAuth: [] }],
+        parameters: [
+          { name: 'instanceName', in: 'path', required: true, schema: { type: 'string' } },
+          { name: 'getParticipants', in: 'query', required: false, schema: { type: 'boolean', default: true } }
+        ],
+        responses: {
+          200: { description: 'Lista de grupos obtenida exitosamente' },
+          403: { description: 'Instancia no autorizada' },
+          502: { description: 'Error al consultar grupos en el motor' }
+        }
+      },
+      post: {
+        summary: 'Crear nuevo grupo de WhatsApp',
+        description: 'Crea un nuevo grupo de WhatsApp desde el ERP indicando el título y los participantes iniciales.',
+        security: [{ ApiKeyAuth: [] }, { BearerAuth: [] }],
+        parameters: [
+          { name: 'instanceName', in: 'path', required: true, schema: { type: 'string' } }
+        ],
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/CreateGroupRequest' } } }
+        },
+        responses: {
+          201: { description: 'Grupo creado exitosamente en WhatsApp' }
+        }
+      }
+    },
+    '/v1/instances/{instanceName}/groups/participants': {
+      post: {
+        summary: 'Administrar miembros del grupo',
+        description: 'Añadir, remover, promover o degradar participantes de un grupo de WhatsApp.',
+        security: [{ ApiKeyAuth: [] }, { BearerAuth: [] }],
+        parameters: [
+          { name: 'instanceName', in: 'path', required: true, schema: { type: 'string' } }
+        ],
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/ManageGroupParticipantsRequest' } } }
+        },
+        responses: {
+          200: { description: 'Miembros actualizados exitosamente' }
+        }
+      }
+    },
+    '/v1/instances/{instanceName}/groups/{groupId}/invite-code': {
+      get: {
+        summary: 'Obtener enlace de invitación al grupo',
+        description: 'Genera o consulta el enlace de invitación pública de WhatsApp para unirse al grupo.',
+        security: [{ ApiKeyAuth: [] }, { BearerAuth: [] }],
+        parameters: [
+          { name: 'instanceName', in: 'path', required: true, schema: { type: 'string' } },
+          { name: 'groupId', in: 'path', required: true, schema: { type: 'string' }, description: 'Group JID (ej. 120363024823948@g.us o 120363024823948)' }
+        ],
+        responses: {
+          200: { description: 'Enlace de invitación generado exitosamente' }
         }
       }
     },

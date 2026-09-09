@@ -821,9 +821,16 @@ router.get('/groups/:instanceName', authMiddleware, async (req: AuthenticatedReq
       return res.status(403).json({ success: false, error: 'Acceso no autorizado.' });
     }
 
-    const groupsResult = await EvolutionService.getGroups(instanceName);
+    const engine = await engineRouter.getEngineForInstance(instanceName);
+    let groupsResult: any;
+    if (typeof (engine as any).getGroups === 'function') {
+      groupsResult = await (engine as any).getGroups(instanceName);
+    } else {
+      groupsResult = await EvolutionService.getGroups(instanceName);
+    }
+
     if (!groupsResult.success) {
-      return res.status(500).json({ success: false, error: groupsResult.error || 'Error al obtener grupos' });
+      return res.status(500).json({ success: false, error: groupsResult.error?.message || groupsResult.error || 'Error al obtener grupos' });
     }
 
     res.json({ success: true, data: groupsResult.data });
@@ -857,9 +864,16 @@ router.post('/groups/:instanceName/create', authMiddleware, async (req: Authenti
       return `${cleanNum}@s.whatsapp.net`;
     });
 
-    const createResult = await EvolutionService.createGroup(instanceName, subject, cleanedParticipants);
+    const engine = await engineRouter.getEngineForInstance(instanceName);
+    let createResult: any;
+    if (typeof (engine as any).createGroup === 'function') {
+      createResult = await (engine as any).createGroup(instanceName, subject, cleanedParticipants);
+    } else {
+      createResult = await EvolutionService.createGroup(instanceName, subject, cleanedParticipants);
+    }
+
     if (!createResult.success) {
-      return res.status(500).json({ success: false, error: createResult.error || 'Error al crear el grupo' });
+      return res.status(500).json({ success: false, error: createResult.error?.message || createResult.error || 'Error al crear el grupo' });
     }
 
     res.json({ success: true, data: createResult.data });
@@ -893,9 +907,16 @@ router.put('/groups/:instanceName/participants', authMiddleware, async (req: Aut
       return `${cleanNum}@s.whatsapp.net`;
     });
 
-    const updateResult = await EvolutionService.updateGroupParticipants(instanceName, groupJid, action, cleanParticipants);
+    const engine = await engineRouter.getEngineForInstance(instanceName);
+    let updateResult: any;
+    if (typeof (engine as any).updateGroupParticipants === 'function') {
+      updateResult = await (engine as any).updateGroupParticipants(instanceName, groupJid, action, cleanParticipants);
+    } else {
+      updateResult = await EvolutionService.updateGroupParticipants(instanceName, groupJid, action, cleanParticipants);
+    }
+
     if (!updateResult.success) {
-      return res.status(500).json({ success: false, error: updateResult.error || 'Error al actualizar participantes del grupo' });
+      return res.status(500).json({ success: false, error: updateResult.error?.message || updateResult.error || 'Error al actualizar participantes del grupo' });
     }
 
     res.json({ success: true, data: updateResult.data });
@@ -923,9 +944,16 @@ router.get('/groups/:instanceName/invite-code', authMiddleware, async (req: Auth
       return res.status(403).json({ success: false, error: 'Acceso no autorizado.' });
     }
 
-    const codeResult = await EvolutionService.getGroupInviteCode(instanceName, groupJid as string);
+    const engine = await engineRouter.getEngineForInstance(instanceName);
+    let codeResult: any;
+    if (typeof (engine as any).getGroupInviteCode === 'function') {
+      codeResult = await (engine as any).getGroupInviteCode(instanceName, groupJid as string);
+    } else {
+      codeResult = await EvolutionService.getGroupInviteCode(instanceName, groupJid as string);
+    }
+
     if (!codeResult.success) {
-      return res.status(500).json({ success: false, error: codeResult.error || 'Error al obtener enlace de invitación' });
+      return res.status(500).json({ success: false, error: codeResult.error?.message || codeResult.error || 'Error al obtener enlace de invitación' });
     }
 
     res.json({ success: true, data: codeResult.data });

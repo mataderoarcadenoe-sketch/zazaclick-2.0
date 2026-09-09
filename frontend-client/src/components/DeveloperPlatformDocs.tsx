@@ -227,6 +227,53 @@ export const DeveloperPlatformDocs: React.FC<DeveloperPlatformDocsProps> = ({
               }
             }
           ]
+        },
+        {
+          name: "3. Groups (Gestión y Envío a Grupos)",
+          item: [
+            {
+              name: "List WhatsApp Groups",
+              request: {
+                method: "GET",
+                header: [{ key: "x-api-key", value: "{{API_KEY}}", type: "text" }],
+                url: { raw: "{{BASE_URL}}/v1/instances/{{INSTANCE_NAME}}/groups?getParticipants=true", host: ["{{BASE_URL}}"], path: ["v1", "instances", "{{INSTANCE_NAME}}", "groups"] }
+              }
+            },
+            {
+              name: "Create Group",
+              request: {
+                method: "POST",
+                header: [
+                  { key: "x-api-key", value: "{{API_KEY}}", type: "text" },
+                  { key: "Content-Type", value: "application/json", type: "text" }
+                ],
+                body: {
+                  mode: "raw",
+                  raw: JSON.stringify({ subject: "Comunidad Clientes VIP", participants: ["51912345678"] }, null, 2)
+                },
+                url: { raw: "{{BASE_URL}}/v1/instances/{{INSTANCE_NAME}}/groups", host: ["{{BASE_URL}}"], path: ["v1", "instances", "{{INSTANCE_NAME}}", "groups"] }
+              }
+            },
+            {
+              name: "Send Message to Group JID",
+              request: {
+                method: "POST",
+                header: [
+                  { key: "x-api-key", value: "{{API_KEY}}", type: "text" },
+                  { key: "Content-Type", value: "application/json", type: "text" }
+                ],
+                body: {
+                  mode: "raw",
+                  raw: JSON.stringify({
+                    instanceName: "{{INSTANCE_NAME}}",
+                    number: "120363024823948@g.us",
+                    text: "¡Hola a todos! Notificación oficial para el grupo desde la API."
+                  }, null, 2)
+                },
+                url: { raw: "{{BASE_URL}}/v1/messages/text", host: ["{{BASE_URL}}"], path: ["v1", "messages", "text"] }
+              }
+            }
+          ]
         }
       ]
     };
@@ -786,6 +833,47 @@ Body:
                   <pre className="p-4 bg-slate-950 text-slate-200 rounded-xl text-xs font-mono overflow-x-auto">
 {`curl -X GET "${BASE_URL}/v1/instances/${currentInstanceName}/qr" \\
   -H "x-api-key: ${currentApiKey}"`}
+                  </pre>
+                </div>
+
+                {/* Endpoint 3: Listar Grupos */}
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-600 font-mono text-[10px] font-bold">GET</span>
+                      /v1/instances/:instanceName/groups — Listar Grupos de WhatsApp
+                    </span>
+                    <button
+                      onClick={() => copyToClipboard(`curl -X GET "${BASE_URL}/v1/instances/${currentInstanceName}/groups?getParticipants=true" -H "x-api-key: ${currentApiKey}"`, 'inst-groups')}
+                      className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      {copiedKey === 'inst-groups' ? <CheckCircle2 size={13} /> : <Copy size={13} />}
+                      <span>{copiedKey === 'inst-groups' ? 'Copiado' : 'Copiar'}</span>
+                    </button>
+                  </div>
+                  <pre className="p-4 bg-slate-950 text-slate-200 rounded-xl text-xs font-mono overflow-x-auto">
+{`curl -X GET "${BASE_URL}/v1/instances/${currentInstanceName}/groups?getParticipants=true" \\
+  -H "x-api-key: ${currentApiKey}"`}
+                  </pre>
+                </div>
+
+                {/* Endpoint 4: Crear Grupo */}
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 font-mono text-[10px] font-bold">POST</span>
+                      /v1/instances/:instanceName/groups — Crear Grupo de WhatsApp
+                    </span>
+                    <button
+                      onClick={() => copyToClipboard(renderSnippet('/v1/instances/' + currentInstanceName + '/groups', 'POST', { subject: "Clientes VIP 2026", participants: ["51912345678"] }), 'inst-group-create')}
+                      className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      {copiedKey === 'inst-group-create' ? <CheckCircle2 size={13} /> : <Copy size={13} />}
+                      <span>{copiedKey === 'inst-group-create' ? 'Copiado' : 'Copiar'}</span>
+                    </button>
+                  </div>
+                  <pre className="p-4 bg-slate-950 text-slate-200 rounded-xl text-xs font-mono overflow-x-auto">
+                    {renderSnippet('/v1/instances/' + currentInstanceName + '/groups', 'POST', { subject: "Clientes VIP 2026", participants: ["51912345678"] })}
                   </pre>
                 </div>
               </div>
