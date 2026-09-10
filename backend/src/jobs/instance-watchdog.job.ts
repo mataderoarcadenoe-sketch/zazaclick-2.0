@@ -10,6 +10,7 @@
 import pool from '../config/database';
 import { engineRouter } from '../engines/core/EngineRouter';
 import { getIO } from '../config/socket';
+import redis from '../config/redis';
 
 export async function runWatchdogCycle(): Promise<void> {
   try {
@@ -25,13 +26,18 @@ export async function runWatchdogCycle(): Promise<void> {
     for (const inst of instances) {
       const { instance_name, status, user_id } = inst;
 
+      // Si el usuario cerró sesión voluntariamente, no intentar reconectar
+      if (status === 'logged_out') continue;
+
+      const lockKey = `lock:reconnect:${instance_name}`;
+
       try {
         const engine = await engineRouter.getEngineForInstance(instance_name);
         const stateRes = await engine.getConnectionState(instance_name);
         const isLiveConnected = Boolean(stateRes.data?.isConnected);
         const liveState = stateRes.data?.state || (isLiveConnected ? 'connected' : 'disconnected');
 
-        // Caso 1: La instancia está físicamente conectada pero en BD figuraba desconectada o reconectando
+        // Caso 1: La instancia está físicamente conectada en WhatsApp pero en BD figuraba desconectada o reconectando
         if (isLiveConnected && status !== 'connected') {
           console.log(`✅ [Watchdog] Instancia "${instance_name}" detectada viva. Sincronizando BD a 'connected'.`);
           await pool.query(
@@ -50,8 +56,14 @@ export async function runWatchdogCycle(): Promise<void> {
           continue;
         }
 
-        // Caso 2: Si el estado en vivo no está conectado y el usuario no cerró sesión explícitamente (status !== 'logged_out')
-        if (!isLiveConnected && status !== 'logged_out') {
+        // Caso 2: Si el estado en vivo no está conectado y no está bloqueada por otro proceso
+        if (!isLiveConnected) {
+          const acquired = await redis.set(lockKey, '1', 'PX', 45000, 'NX');
+          if (acquired !== 'OK') {
+            // Ya hay una reconexión activa por webhook o llamada previa
+            continue;
+          }
+
           console.log(`🐕 [Watchdog] Instancia "${instance_name}" sin conexión activa (liveState=${liveState}, status=${status}). Intentando reactivación silenciosa...`);
 
           let reconnectRes: any = null;
@@ -75,14 +87,8 @@ export async function runWatchdogCycle(): Promise<void> {
                 connectionState: 'open'
               });
             }
-          } else if (reconnectRes?.data?.requiresQr) {
-            console.log(`⚠️ [Watchdog] Instancia "${instance_name}" requiere escaneo de QR (sesión expirada o desvinculada).`);
-            await pool.query(
-              "UPDATE instances SET status = 'disconnected', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1",
-              [instance_name]
-            );
           } else {
-            // Mantener en estado reconnecting para que el frontend informe al usuario que está auto-recuperando
+            // Mantener en 'reconnecting' para preservar la sesión persistida
             if (status !== 'reconnecting') {
               await pool.query(
                 "UPDATE instances SET status = 'reconnecting', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1",
@@ -98,9 +104,15 @@ export async function runWatchdogCycle(): Promise<void> {
               }
             }
           }
+
+          try {
+            await redis.del(lockKey);
+          } catch {}
         }
       } catch (instErr: any) {
-        // Ignorar fallos individuales para no interrumpir la verificación de otras instancias
+        try {
+          await redis.del(lockKey);
+        } catch {}
         console.warn(`[Watchdog] Error evaluando instancia "${instance_name}":`, instErr.message);
       }
     }
@@ -110,18 +122,18 @@ export async function runWatchdogCycle(): Promise<void> {
 }
 
 /**
- * Iniciar el centinela en segundo plano (Intervalo: cada 60 segundos)
+ * Iniciar el centinela en segundo plano (Intervalo: cada 90 segundos)
  */
 export function startInstanceWatchdog(): void {
-  console.log('🐕 [Watchdog] Centinela de auto-reconexión iniciado (Intervalo: cada 60 segundos)...');
+  console.log('🐕 [Watchdog] Centinela de auto-reconexión iniciado (Intervalo: cada 90 segundos)...');
 
-  // Ejecutar primer ciclo a los 15 segundos tras arrancar
+  // Ejecutar primer ciclo a los 20 segundos tras arrancar
   setTimeout(() => {
     runWatchdogCycle();
-  }, 15000);
+  }, 20000);
 
-  // Intervalo recurrente cada 60 segundos (60,000 ms)
+  // Intervalo recurrente cada 90 segundos (90,000 ms)
   setInterval(() => {
     runWatchdogCycle();
-  }, 60 * 1000);
+  }, 90 * 1000);
 }

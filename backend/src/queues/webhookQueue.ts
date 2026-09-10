@@ -125,25 +125,48 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
           reasonCode: reasonCode || null
         });
 
-        // Si fue una desconexión recuperable (no cierre voluntario), intentar auto-reconexión automática
+        // Si fue una desconexión recuperable (no cierre voluntario), verificar estado tras backoff sin interrumpir el socket
         if (!isConnected && !isDeviceRemoved) {
           setTimeout(async () => {
+            const lockKey = `lock:reconnect:${instance}`;
             try {
+              // Mutex distribuido en Redis para evitar tormenta de reinicios concurrentes
+              const acquired = await redis.set(lockKey, '1', 'PX', 45000, 'NX');
+              if (acquired !== 'OK') {
+                return; // Ya hay un ciclo de reconexión activo para esta instancia
+              }
+
               const { engineRouter } = await import('../engines/core/EngineRouter');
               const engine = await engineRouter.getEngineForInstance(instance);
+
+              // 1. Verificar si Baileys ya se auto-reconectó por sí solo durante los 12 segundos
+              const liveState = await engine.getConnectionState(instance);
+              if (liveState.data?.isConnected) {
+                await pool.query("UPDATE instances SET status = 'connected', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1", [instance]);
+                io.to(roomName).emit('connection_status', { instance, status: 'connected', connectionState: 'open' });
+                console.log(`✅ [QueueWorker] Instancia "${instance}" recuperada automáticamente por Baileys.`);
+                await redis.del(lockKey);
+                return;
+              }
+
+              // 2. Si sigue caída, ejecutar reinicio silencioso de socket con credenciales guardadas
               if (typeof (engine as any).reconnect === 'function') {
-                console.log(`🔄 [QueueWorker] Centinela: Auto-reconectando instancia "${instance}" tras fallo transitorio...`);
+                console.log(`🔄 [QueueWorker] Centinela: Reactivando silenciosamente instancia "${instance}"...`);
                 const recRes = await (engine as any).reconnect(instance);
                 if (recRes.data?.isConnected) {
-                  await pool.query('UPDATE instances SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE instance_name = $2', ['connected', instance]);
+                  await pool.query("UPDATE instances SET status = 'connected', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1", [instance]);
                   io.to(roomName).emit('connection_status', { instance, status: 'connected', connectionState: 'open' });
                   console.log(`✅ [QueueWorker] Instancia "${instance}" auto-reconectada con éxito.`);
                 }
               }
             } catch (recErr: any) {
               console.warn(`[QueueWorker] Reintento de auto-reconexión para "${instance}" falló:`, recErr.message);
+            } finally {
+              try {
+                await redis.del(lockKey);
+              } catch {}
             }
-          }, 3000);
+          }, 12000); // 12 segundos de margen para permitir el ciclo interno de Baileys
         }
       }
     }

@@ -159,21 +159,27 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     const start = Date.now();
     try {
       const client = this.getClient();
-      let response: any = null;
       try {
-        response = await client.get(`/instance/connect/${instanceName}`);
+        await client.post(`/instance/restart/${instanceName}`);
       } catch {
-        response = await client.post('/instance/connect', {}, { headers: { instance: instanceName } });
+        try {
+          await client.post('/instance/restart', {}, { headers: { instance: instanceName } });
+        } catch {}
       }
 
-      const resData = response?.data?.data || response?.data;
-      const hasQr = Boolean(resData?.Qrcode || resData?.qrcode || resData?.base64);
+      // Esperar que whatsmeow restaure el socket
+      let state = 'connecting';
+      let isConnected = false;
 
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      const stateRes = await this.getConnectionState(instanceName);
-      const isConnected = Boolean(stateRes.data?.isConnected);
-      const state = stateRes.data?.state || (isConnected ? 'connected' : 'disconnected');
+      for (let attempt = 0; attempt < 4; attempt++) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        const stateRes = await this.getConnectionState(instanceName);
+        if (stateRes.data?.isConnected) {
+          isConnected = true;
+          state = 'connected';
+          break;
+        }
+      }
 
       if (isConnected) {
         this.circuitBreaker.recordSuccess();
@@ -182,7 +188,7 @@ export class EvolutionGoEngine implements WhatsAppEngine {
       return EvolutionGoMapper.mapSuccess({
         state,
         isConnected,
-        requiresQr: hasQr && !isConnected
+        requiresQr: false
       }, Date.now() - start);
     } catch (err: any) {
       const latencyMs = Date.now() - start;

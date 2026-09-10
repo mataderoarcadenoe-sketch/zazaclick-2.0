@@ -619,14 +619,12 @@ router.post('/instances/:instanceName/reconnect', apiKeyOrTokenAuth, async (req:
     if (typeof (engine as any).reconnect === 'function') {
       reconnectRes = await (engine as any).reconnect(instanceName);
     } else {
-      await engine.getQRCode(instanceName);
       reconnectRes = await engine.getConnectionState(instanceName);
     }
 
     const isConnected = Boolean(reconnectRes.data?.isConnected);
-    const state = reconnectRes.data?.state || (isConnected ? 'connected' : 'disconnected');
-    const requiresQr = Boolean(reconnectRes.data?.requiresQr);
-    const newDbStatus = isConnected ? 'connected' : (state === 'connecting' ? 'reconnecting' : 'disconnected');
+    const state = reconnectRes.data?.state || (isConnected ? 'connected' : 'reconnecting');
+    const newDbStatus = isConnected ? 'connected' : 'reconnecting';
 
     await pool.query(
       "UPDATE instances SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE instance_name = $2",
@@ -639,7 +637,7 @@ router.post('/instances/:instanceName/reconnect', apiKeyOrTokenAuth, async (req:
       state,
       status: newDbStatus,
       isConnected,
-      requiresQr
+      requiresQr: false
     });
   } catch (err: any) {
     return res.status(500).json({

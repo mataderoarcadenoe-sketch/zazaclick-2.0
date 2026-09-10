@@ -125,7 +125,7 @@ export class EvolutionService {
           ]
         },
         settings: {
-          alwaysOnline: true,
+          alwaysOnline: false,
           rejectCall: false,
           groupsIgnore: false,
           readMessages: false,
@@ -174,11 +174,12 @@ export class EvolutionService {
   }
 
   /**
-   * Intentar reconectar una instancia existente utilizando las llaves de sesión guardadas
+   * Intentar reconectar silenciosamente una instancia utilizando las llaves criptográficas guardadas
+   * NUNCA solicita un nuevo código QR para no invalidar la sesión existente vinculada al teléfono.
    */
   public static async reconnect(instanceName: string): Promise<{ success: boolean; state: string; isConnected: boolean; requiresQr: boolean }> {
     try {
-      // 1. Invocar /instance/restart para reiniciar silenciosamente el socket con las llaves guardadas
+      // 1. Invocar /instance/restart para reiniciar silenciosamente el socket con las credenciales persistidas
       let restartSuccess = false;
       try {
         const restartRes = await api.post(`/instance/restart/${instanceName}`);
@@ -190,25 +191,11 @@ export class EvolutionService {
         } catch {}
       }
 
-      // Si restart falló o la instancia no estaba activa en memoria, invocar /instance/connect como fallback
-      let hasQr = false;
-      if (!restartSuccess) {
-        try {
-          const connectResponse = await api.get(`/instance/connect/${instanceName}`);
-          hasQr = Boolean(connectResponse?.data?.base64 || connectResponse?.data?.qrcode);
-        } catch {
-          try {
-            const fbConnect = await fallbackApi.get(`/instance/connect/${instanceName}`);
-            hasQr = Boolean(fbConnect?.data?.base64 || fbConnect?.data?.qrcode);
-          } catch {}
-        }
-      }
-
-      // 2. Bucle de sondeo de hasta 8 segundos para dar tiempo al handshake criptográfico de Baileys
+      // 2. Bucle de sondeo de hasta 10 segundos para dar tiempo al handshake criptográfico de Baileys
       let state = 'connecting';
       let isConnected = false;
 
-      for (let attempt = 0; attempt < 4; attempt++) {
+      for (let attempt = 0; attempt < 5; attempt++) {
         await new Promise(resolve => setTimeout(resolve, 2000));
         state = await this.getConnectionState(instanceName);
         if (state === 'open' || state === 'connected') {
@@ -221,15 +208,15 @@ export class EvolutionService {
         success: isConnected,
         state,
         isConnected,
-        requiresQr: !isConnected && hasQr
+        requiresQr: false // Jamás forzamos QR en reconexión silenciosa de fondo
       };
     } catch (err: any) {
       console.warn(`[EvolutionService] Error en intento de reconexión para ${instanceName}:`, err.message);
       return {
         success: false,
-        state: 'disconnected',
+        state: 'reconnecting',
         isConnected: false,
-        requiresQr: true
+        requiresQr: false
       };
     }
   }
