@@ -91,7 +91,7 @@ router.post('/instances', apiKeyOrTokenAuth, async (req: AuthenticatedRequest, r
     const evoResult = await engine.createInstance(instanceName);
 
     if (!evoResult.success || !evoResult.data?.token) {
-      const statusCode = evoResult.error?.statusCode || 502;
+      const statusCode = evoResult.error?.statusCode && evoResult.error.statusCode !== 502 ? evoResult.error.statusCode : 422;
       return res.status(statusCode).json({
         success: false,
         code: evoResult.error?.code || 'ENGINE_CREATE_FAILED',
@@ -245,7 +245,7 @@ router.get('/instances/:instanceName/qr', apiKeyOrTokenAuth, async (req: Authent
     const qrRes = await engine.getQRCode(instanceName);
 
     if (!qrRes.success || !qrRes.data?.qrcode) {
-      return res.status(502).json({
+      return res.status(422).json({
         success: false,
         code: qrRes.error?.code || 'QR_FETCH_FAILED',
         error: qrRes.error?.message || 'No se pudo generar el código QR. Verifica si la instancia ya está conectada.'
@@ -356,7 +356,7 @@ router.get('/instances/:instanceName/groups', apiKeyOrTokenAuth, async (req: Aut
     const groupsRes = await (engine as any).getGroups(instanceName, getParticipants);
 
     if (!groupsRes.success) {
-      return res.status(groupsRes.error?.statusCode || 502).json({
+      return res.status(groupsRes.error?.statusCode && groupsRes.error.statusCode !== 502 ? groupsRes.error.statusCode : 422).json({
         success: false,
         code: groupsRes.error?.code || 'GROUPS_FETCH_FAILED',
         error: groupsRes.error?.message || 'Error al obtener la lista de grupos desde WhatsApp.'
@@ -449,7 +449,7 @@ router.post('/instances/:instanceName/groups', apiKeyOrTokenAuth, async (req: Au
     const createRes = await (engine as any).createGroup(instanceName, subject, cleanedParticipants);
 
     if (!createRes.success) {
-      return res.status(createRes.error?.statusCode || 502).json({
+      return res.status(createRes.error?.statusCode && createRes.error.statusCode !== 502 ? createRes.error.statusCode : 422).json({
         success: false,
         code: createRes.error?.code || 'GROUP_CREATE_FAILED',
         error: createRes.error?.message || 'Error al crear grupo en WhatsApp.'
@@ -517,7 +517,7 @@ router.post('/instances/:instanceName/groups/participants', apiKeyOrTokenAuth, a
     const updateRes = await (engine as any).updateGroupParticipants(instanceName, groupJid, action, cleanParticipants);
 
     if (!updateRes.success) {
-      return res.status(updateRes.error?.statusCode || 502).json({
+      return res.status(updateRes.error?.statusCode && updateRes.error.statusCode !== 502 ? updateRes.error.statusCode : 422).json({
         success: false,
         code: updateRes.error?.code || 'GROUP_UPDATE_FAILED',
         error: updateRes.error?.message || 'Error al actualizar miembros del grupo.'
@@ -572,7 +572,7 @@ router.get('/instances/:instanceName/groups/:groupId/invite-code', apiKeyOrToken
     const inviteRes = await (engine as any).getGroupInviteCode(instanceName, groupJid);
 
     if (!inviteRes.success) {
-      return res.status(inviteRes.error?.statusCode || 502).json({
+      return res.status(inviteRes.error?.statusCode && inviteRes.error.statusCode !== 502 ? inviteRes.error.statusCode : 422).json({
         success: false,
         code: inviteRes.error?.code || 'INVITE_CODE_FAILED',
         error: inviteRes.error?.message || 'Error al obtener enlace de invitación.'
@@ -679,7 +679,7 @@ router.post('/instances/:instanceName/logout', apiKeyOrTokenAuth, async (req: Au
       });
     }
 
-    return res.status(502).json({
+    return res.status(422).json({
       success: false,
       code: 'LOGOUT_FAILED',
       error: outRes.error?.message || 'No se pudo cerrar la sesión en el motor de WhatsApp.'
@@ -1053,7 +1053,7 @@ router.post('/messages/location', licensingMiddleware, async (req: LicensedReque
 
     const errorReason = sentResult.error?.message || 'ENGINE_LOCATION_FAILED';
     await ctx.rollback('location', errorReason);
-    return res.status(sentResult.error?.statusCode || 502).json({
+    return res.status(sentResult.error?.statusCode && sentResult.error.statusCode !== 502 ? sentResult.error.statusCode : 422).json({
       success: false,
       code: sentResult.error?.code || 'SEND_FAILED',
       message: sentResult.error?.message || 'Error al enviar ubicación en WhatsApp.'
@@ -1107,7 +1107,7 @@ router.post('/messages/contact', licensingMiddleware, async (req: LicensedReques
 
     const errorReason = sentResult.error?.message || 'ENGINE_CONTACT_FAILED';
     await ctx.rollback('contact', errorReason);
-    return res.status(sentResult.error?.statusCode || 502).json({
+    return res.status(sentResult.error?.statusCode && sentResult.error.statusCode !== 502 ? sentResult.error.statusCode : 422).json({
       success: false,
       code: sentResult.error?.code || 'SEND_FAILED',
       message: sentResult.error?.message || 'Error al enviar tarjeta de contacto en WhatsApp.'

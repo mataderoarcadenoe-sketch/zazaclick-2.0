@@ -68,7 +68,7 @@ router.post('/send-text', licensingMiddleware, async (req: LicensedRequest, res:
     // Rollback si el motor rechazó el mensaje
     const errorReason = sentResult.error?.message || 'ENGINE_SEND_FAILED';
     await ctx.rollback('text', errorReason);
-    return res.status(sentResult.error?.statusCode || 502).json({
+    return res.status(sentResult.error?.statusCode && sentResult.error.statusCode !== 502 ? sentResult.error.statusCode : 422).json({
       success: false,
       code: sentResult.error?.code || 'SEND_FAILED',
       message: sentResult.error?.message || 'Error al enviar mensaje de texto en WhatsApp.',
@@ -140,7 +140,7 @@ router.post('/send-media', licensingMiddleware, async (req: LicensedRequest, res
 
     const errorReason = sentResult.error?.message || 'ENGINE_MEDIA_FAILED';
     await ctx.rollback(mediatype, errorReason);
-    return res.status(sentResult.error?.statusCode || 502).json({
+    return res.status(sentResult.error?.statusCode && sentResult.error.statusCode !== 502 ? sentResult.error.statusCode : 422).json({
       success: false,
       code: sentResult.error?.code || 'SEND_FAILED',
       message: sentResult.error?.message || 'Error al enviar archivo multimedia en WhatsApp.',
@@ -194,7 +194,7 @@ router.post('/send-audio', licensingMiddleware, async (req: LicensedRequest, res
 
     const errorReason = sentResult.error?.message || 'ENGINE_AUDIO_FAILED';
     await ctx.rollback('audio_ptt', errorReason);
-    return res.status(sentResult.error?.statusCode || 502).json({
+    return res.status(sentResult.error?.statusCode && sentResult.error.statusCode !== 502 ? sentResult.error.statusCode : 422).json({
       success: false,
       code: sentResult.error?.code || 'SEND_FAILED',
       message: sentResult.error?.message || 'Error al enviar nota de voz en WhatsApp.',
@@ -267,7 +267,7 @@ router.post('/send-location', licensingMiddleware, async (req: LicensedRequest, 
 
     const errorReason = sentResult.error?.message || 'ENGINE_LOCATION_FAILED';
     await ctx.rollback('location', errorReason);
-    return res.status(sentResult.error?.statusCode || 502).json({
+    return res.status(sentResult.error?.statusCode && sentResult.error.statusCode !== 502 ? sentResult.error.statusCode : 422).json({
       success: false,
       code: sentResult.error?.code || 'SEND_FAILED',
       message: sentResult.error?.message || 'Error al enviar ubicación en WhatsApp.',
@@ -325,7 +325,7 @@ router.post('/send-contact', licensingMiddleware, async (req: LicensedRequest, r
 
     const errorReason = sentResult.error?.message || 'ENGINE_CONTACT_FAILED';
     await ctx.rollback('contact', errorReason);
-    return res.status(sentResult.error?.statusCode || 502).json({
+    return res.status(sentResult.error?.statusCode && sentResult.error.statusCode !== 502 ? sentResult.error.statusCode : 422).json({
       success: false,
       code: sentResult.error?.code || 'SEND_FAILED',
       message: sentResult.error?.message || 'Error al enviar contacto en WhatsApp.',
