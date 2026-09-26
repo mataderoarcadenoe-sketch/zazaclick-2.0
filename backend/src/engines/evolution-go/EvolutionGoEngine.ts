@@ -139,16 +139,18 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     const start = Date.now();
     try {
       const client = this.getClient();
-      let response;
+      let response: any;
       try {
-        response = await client.get(`/instance/connectionState/${instanceName}`);
-      } catch {
         response = await client.get('/instance/status', { headers: { instance: instanceName } });
+      } catch (err: any) {
+        try {
+          response = await client.get(`/instance/connectionState/${instanceName}`);
+        } catch {}
       }
       const latencyMs = Date.now() - start;
-      const resData = response.data?.data || response.data;
-      const isConnected = resData?.connected === true || resData?.state === 'open' || resData?.state === 'connected';
-      const state = resData?.state || (isConnected ? 'connected' : 'disconnected');
+      const resData = response?.data?.data || response?.data;
+      const isConnected = Boolean(resData?.LoggedIn === true || resData?.connected === true || resData?.state === 'open' || resData?.state === 'connected');
+      const state = isConnected ? 'connected' : (resData?.Connected ? 'connecting' : 'disconnected');
 
       this.circuitBreaker.recordSuccess();
       return EvolutionGoMapper.mapSuccess({ state, isConnected }, latencyMs);
@@ -163,10 +165,10 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     try {
       const client = this.getClient();
       try {
-        await client.post(`/instance/restart/${instanceName}`);
+        await client.post('/instance/restart', {}, { headers: { instance: instanceName } });
       } catch {
         try {
-          await client.post('/instance/restart', {}, { headers: { instance: instanceName } });
+          await client.post(`/instance/restart/${instanceName}`);
         } catch {}
       }
 
@@ -207,13 +209,13 @@ export class EvolutionGoEngine implements WhatsAppEngine {
 
       for (let attempt = 1; attempt <= 4; attempt++) {
         try {
-          response = await client.get(`/instance/connect/${instanceName}`);
+          response = await client.get('/instance/qr', { headers: { instance: instanceName } });
         } catch (err: any) {
           try {
-            response = await client.get('/instance/qr', { headers: { instance: instanceName } });
+            response = await client.get(`/instance/connect/${instanceName}`);
           } catch (qrErr: any) {
             // Si la instancia no existe en Go, auto-crearla
-            if (err.response?.status === 404 || qrErr.response?.status === 404 || err.response?.data?.error?.includes('not found')) {
+            if (err.response?.status === 404 || qrErr.response?.status === 404 || err.response?.status === 401 || err.response?.data?.error?.includes('not found') || err.response?.data?.error?.includes('record not found')) {
               console.log(`⚠️ [EvolutionGoEngine] Instancia "${instanceName}" no existe en Evolution Go. Auto-creando...`);
               await this.createInstance(instanceName);
             }
@@ -221,7 +223,7 @@ export class EvolutionGoEngine implements WhatsAppEngine {
         }
 
         const resData = response?.data?.data || response?.data;
-        const qrcode = resData?.Qrcode || resData?.qrcode?.base64 || resData?.qrcode || resData?.base64;
+        const qrcode = resData?.qrcode || resData?.Qrcode || resData?.base64;
 
         if (qrcode) {
           this.circuitBreaker.recordSuccess();
