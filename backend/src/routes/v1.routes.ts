@@ -174,9 +174,10 @@ router.get('/instances/:instanceName', apiKeyOrTokenAuth, async (req: Authentica
   const { instanceName } = req.params;
 
   try {
+    const isElevated = req.userRole === 'partner' || req.userRole === 'admin';
     const instRes = await pool.query(
-      'SELECT id, instance_name, phone, status, api_key, engine_type, is_enabled, messages_sent, last_activity_at, created_at FROM instances WHERE user_id = $1 AND instance_name = $2',
-      [req.userId, instanceName]
+      'SELECT id, instance_name, phone, status, api_key, engine_type, is_enabled, messages_sent, last_activity_at, created_at FROM instances WHERE (user_id = $1 OR $3 = true) AND instance_name = $2',
+      [req.userId, instanceName, isElevated]
     );
 
     if (instRes.rows.length === 0) {
@@ -228,9 +229,10 @@ router.get('/instances/:instanceName/qr', apiKeyOrTokenAuth, async (req: Authent
   const { instanceName } = req.params;
 
   try {
+    const isElevated = req.userRole === 'partner' || req.userRole === 'admin';
     const verifyRes = await pool.query(
-      'SELECT id FROM instances WHERE user_id = $1 AND instance_name = $2',
-      [req.userId, instanceName]
+      'SELECT id FROM instances WHERE (user_id = $1 OR $3 = true) AND instance_name = $2',
+      [req.userId, instanceName, isElevated]
     );
 
     if (verifyRes.rows.length === 0) {
@@ -275,9 +277,10 @@ router.get('/instances/:instanceName/status', apiKeyOrTokenAuth, async (req: Aut
   const { instanceName } = req.params;
 
   try {
+    const isElevated = req.userRole === 'partner' || req.userRole === 'admin';
     const verifyRes = await pool.query(
-      'SELECT id, status FROM instances WHERE user_id = $1 AND instance_name = $2',
-      [req.userId, instanceName]
+      'SELECT id, status FROM instances WHERE (user_id = $1 OR $3 = true) AND instance_name = $2',
+      [req.userId, instanceName, isElevated]
     );
 
     if (verifyRes.rows.length === 0) {
@@ -601,9 +604,10 @@ router.post('/instances/:instanceName/reconnect', apiKeyOrTokenAuth, async (req:
   const { instanceName } = req.params;
 
   try {
+    const isElevated = req.userRole === 'partner' || req.userRole === 'admin';
     const verifyRes = await pool.query(
-      'SELECT id, status FROM instances WHERE user_id = $1 AND instance_name = $2',
-      [req.userId, instanceName]
+      'SELECT id, status FROM instances WHERE (user_id = $1 OR $3 = true) AND instance_name = $2',
+      [req.userId, instanceName, isElevated]
     );
 
     if (verifyRes.rows.length === 0) {
@@ -655,9 +659,10 @@ router.post('/instances/:instanceName/logout', apiKeyOrTokenAuth, async (req: Au
   const { instanceName } = req.params;
 
   try {
+    const isElevated = req.userRole === 'partner' || req.userRole === 'admin';
     const verifyRes = await pool.query(
-      'SELECT id FROM instances WHERE user_id = $1 AND instance_name = $2',
-      [req.userId, instanceName]
+      'SELECT id FROM instances WHERE (user_id = $1 OR $3 = true) AND instance_name = $2',
+      [req.userId, instanceName, isElevated]
     );
 
     if (verifyRes.rows.length === 0) {
@@ -700,9 +705,10 @@ router.delete('/instances/:instanceName', apiKeyOrTokenAuth, async (req: Authent
   const { instanceName } = req.params;
 
   try {
+    const isElevated = req.userRole === 'partner' || req.userRole === 'admin';
     const verifyRes = await pool.query(
-      'SELECT id FROM instances WHERE user_id = $1 AND instance_name = $2',
-      [req.userId, instanceName]
+      'SELECT id FROM instances WHERE (user_id = $1 OR $3 = true) AND instance_name = $2',
+      [req.userId, instanceName, isElevated]
     );
 
     if (verifyRes.rows.length === 0) {

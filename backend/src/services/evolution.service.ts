@@ -8,9 +8,9 @@ import { validateSafeUrl, normalizeBase64 } from '../utils/ssrf.util';
 dotenv.config();
 
 const EVOLUTION_URL = process.env.EVOLUTION_API_URL || 'https://wps.zazaclick.sbs';
-const EVOLUTION_KEY = process.env.EVOLUTION_API_KEY || 'F2C43224-3975-46EC-954A-FB335F5C9FDA';
+const EVOLUTION_KEY = process.env.EVOLUTION_API_KEY || '57cc9b02661880aa14711c1e3ac319ae15d561fdab66d122e9ac51f86609f435';
 const EVOLUTION_FALLBACK_URL = process.env.EVOLUTION_FALLBACK_URL || 'https://wps.zazaclick.sbs';
-const EVOLUTION_FALLBACK_KEY = process.env.EVOLUTION_FALLBACK_KEY || 'F2C43224-3975-46EC-954A-FB335F5C9FDA';
+const EVOLUTION_FALLBACK_KEY = process.env.EVOLUTION_FALLBACK_KEY || EVOLUTION_KEY;
 
 if (!EVOLUTION_URL || !EVOLUTION_KEY) {
   console.warn('⚠️ [EvolutionService] EVOLUTION_API_URL o EVOLUTION_API_KEY no configurados.');
@@ -185,10 +185,16 @@ export class EvolutionService {
         const restartRes = await api.post(`/instance/restart/${instanceName}`);
         restartSuccess = restartRes.status === 200 || restartRes.status === 201;
       } catch (rstErr: any) {
-        try {
-          const fbRestart = await fallbackApi.post(`/instance/restart/${instanceName}`);
-          restartSuccess = fbRestart.status === 200 || fbRestart.status === 201;
-        } catch {}
+        const errMsg = this.parseError(rstErr);
+        if (errMsg.includes('does not exist') || rstErr.response?.status === 404) {
+          console.log(`⚠️ [EvolutionService] Instancia "${instanceName}" no existía al reconectar. Auto-creando...`);
+          await this.createInstance(instanceName);
+        } else {
+          try {
+            const fbRestart = await fallbackApi.post(`/instance/restart/${instanceName}`);
+            restartSuccess = fbRestart.status === 200 || fbRestart.status === 201;
+          } catch {}
+        }
       }
 
       // 2. Bucle de sondeo de hasta 10 segundos para dar tiempo al handshake criptográfico de Baileys
@@ -223,21 +229,45 @@ export class EvolutionService {
 
   /**
    * Obtener el código QR en Base64 o JSON para escanear
+   * Con auto-creación/auto-recuperación de instancia y sondeo inteligente
    */
   public static async getQRCode(instanceName: string): Promise<{ success: boolean; qrcode?: string; error?: string }> {
-    try {
-      const response = await api.get(`/instance/connect/${instanceName}`);
-      if (response.data?.base64) {
-        return { success: true, qrcode: response.data.base64 };
+    for (let attempt = 1; attempt <= 4; attempt++) {
+      try {
+        const response = await api.get(`/instance/connect/${instanceName}`);
+        const data = response.data;
+        const qr = data?.base64 || data?.qrcode?.base64 || data?.code || data?.Qrcode;
+        if (qr) {
+          return { success: true, qrcode: qr };
+        }
+      } catch (err: any) {
+        const errorMsg = this.parseError(err);
+        // Si la instancia no existe en Evolution API, crearla automáticamente
+        if (errorMsg.includes('does not exist') || err.response?.status === 404) {
+          console.log(`⚠️ [EvolutionService] Instancia "${instanceName}" no existe en Evolution. Auto-creando...`);
+          const createRes = await this.createInstance(instanceName);
+          if (createRes.success && (createRes.instance?.qrcode?.base64 || createRes.instance?.qrcode?.code)) {
+            return {
+              success: true,
+              qrcode: createRes.instance.qrcode.base64 || createRes.instance.qrcode.code
+            };
+          }
+        }
       }
-    } catch {}
+
+      if (attempt < 4) {
+        await new Promise(r => setTimeout(r, 1200));
+      }
+    }
 
     try {
       const fbRes = await fallbackApi.get(`/instance/connect/${instanceName}`);
-      if (fbRes.data?.base64) {
-        return { success: true, qrcode: fbRes.data.base64 };
+      const fbData = fbRes.data;
+      const fbQr = fbData?.base64 || fbData?.qrcode?.base64 || fbData?.code || fbData?.Qrcode;
+      if (fbQr) {
+        return { success: true, qrcode: fbQr };
       }
-      return { success: false, error: 'No se generó el código QR' };
+      return { success: false, error: 'Generando código QR. Por favor espera unos segundos y pulsa Actualizar QR.' };
     } catch (fbErr: any) {
       const errorMsg = this.parseError(fbErr);
       return { success: false, error: errorMsg };

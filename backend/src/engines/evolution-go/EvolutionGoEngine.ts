@@ -83,10 +83,13 @@ export class EvolutionGoEngine implements WhatsAppEngine {
         await client.delete(`/instance/delete/${instanceName}`);
       } catch {}
 
+      const goKey = process.env.EVOLUTION_GO_API_KEY || 'F2C43224-3975-46EC-954A-FB335F5C9FDA';
+
       // Evolution Go OpenAPI: { name, token, proxy, webhook }
       const payload = {
         name: instanceName,
         instanceName: instanceName,
+        token: goKey,
         qrcode: true,
         webhook: webhookUrl
       };
@@ -95,7 +98,7 @@ export class EvolutionGoEngine implements WhatsAppEngine {
 
       const latencyMs = Date.now() - start;
       const data = response.data?.data || response.data;
-      const token = data?.token || data?.hash || data?.apikey || data?.instance?.token || 'go_token_' + Date.now();
+      const token = data?.token || data?.hash || data?.apikey || data?.instance?.token || goKey;
       const qrcode = data?.qrcode || data?.Qrcode || data?.base64;
 
       this.circuitBreaker.recordSuccess();
@@ -200,19 +203,34 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     const start = Date.now();
     try {
       const client = this.getClient();
-      let response;
-      try {
-        response = await client.get(`/instance/connect/${instanceName}`);
-      } catch {
-        response = await client.get('/instance/qr', { headers: { instance: instanceName } });
-      }
-      const latencyMs = Date.now() - start;
-      const resData = response.data?.data || response.data;
-      const qrcode = resData?.Qrcode || resData?.qrcode?.base64 || resData?.qrcode || resData?.base64;
+      let response: any;
 
-      if (qrcode) {
-        this.circuitBreaker.recordSuccess();
-        return EvolutionGoMapper.mapSuccess({ qrcode }, latencyMs);
+      for (let attempt = 1; attempt <= 4; attempt++) {
+        try {
+          response = await client.get(`/instance/connect/${instanceName}`);
+        } catch (err: any) {
+          try {
+            response = await client.get('/instance/qr', { headers: { instance: instanceName } });
+          } catch (qrErr: any) {
+            // Si la instancia no existe en Go, auto-crearla
+            if (err.response?.status === 404 || qrErr.response?.status === 404 || err.response?.data?.error?.includes('not found')) {
+              console.log(`⚠️ [EvolutionGoEngine] Instancia "${instanceName}" no existe en Evolution Go. Auto-creando...`);
+              await this.createInstance(instanceName);
+            }
+          }
+        }
+
+        const resData = response?.data?.data || response?.data;
+        const qrcode = resData?.Qrcode || resData?.qrcode?.base64 || resData?.qrcode || resData?.base64;
+
+        if (qrcode) {
+          this.circuitBreaker.recordSuccess();
+          return EvolutionGoMapper.mapSuccess({ qrcode }, Date.now() - start);
+        }
+
+        if (attempt < 4) {
+          await new Promise(r => setTimeout(r, 1200));
+        }
       }
 
       return {
@@ -220,11 +238,11 @@ export class EvolutionGoEngine implements WhatsAppEngine {
         engine: this.engineType,
         error: {
           code: 'ENGINE_SEND_FAILED',
-          message: 'No se obtuvo código QR de Evolution Go',
+          message: 'Generando código QR en Evolution Go. Por favor reintenta en unos segundos.',
           isRetryable: true,
-          statusCode: 500
+          statusCode: 422
         },
-        latencyMs
+        latencyMs: Date.now() - start
       };
     } catch (err: any) {
       const latencyMs = Date.now() - start;

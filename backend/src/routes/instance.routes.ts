@@ -174,8 +174,8 @@ const getQrHandler = async (req: AuthenticatedRequest, res: Response) => {
   const { instanceName } = req.params;
 
   try {
-    // Verificar que la instancia pertenezca al usuario
-    const verifyRes = await pool.query('SELECT id FROM instances WHERE user_id = $1 AND instance_name = $2', [req.userId, instanceName]);
+    const isElevated = req.userRole === 'partner' || req.userRole === 'admin';
+    const verifyRes = await pool.query('SELECT id FROM instances WHERE (user_id = $1 OR $3 = true) AND instance_name = $2', [req.userId, instanceName, isElevated]);
     if (verifyRes.rows.length === 0) {
       return res.status(403).json({ success: false, error: 'Acceso no autorizado a esta instancia.' });
     }
@@ -184,7 +184,7 @@ const getQrHandler = async (req: AuthenticatedRequest, res: Response) => {
     const engine = await engineRouter.getEngineForInstance(instanceName);
     const qrRes = await engine.getQRCode(instanceName);
     if (!qrRes.success || !qrRes.data?.qrcode) {
-      return res.status(500).json({ success: false, error: qrRes.error?.message || 'Error al obtener código QR.' });
+      return res.status(422).json({ success: false, error: qrRes.error?.message || 'Error al obtener código QR.' });
     }
 
     res.json({

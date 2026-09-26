@@ -159,6 +159,10 @@ export async function initDatabase() {
 
     // Columnas agregadas a instances
     await pool.query(`
+      ALTER TABLE instances ALTER COLUMN user_id DROP NOT NULL;
+      ALTER TABLE instances ALTER COLUMN api_key DROP NOT NULL;
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS name VARCHAR(255);
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS token VARCHAR(255);
       ALTER TABLE instances ADD COLUMN IF NOT EXISTS is_enabled BOOLEAN DEFAULT true;
       ALTER TABLE instances ADD COLUMN IF NOT EXISTS messages_sent INTEGER DEFAULT 0;
       ALTER TABLE instances ADD COLUMN IF NOT EXISTS last_activity_at TIMESTAMP NULL;
