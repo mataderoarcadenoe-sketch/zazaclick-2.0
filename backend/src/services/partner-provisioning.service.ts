@@ -54,7 +54,7 @@ export class PartnerProvisioningService {
       planId = 'plan_basic',
       durationMonths = 1,
       instanceName,
-      engineType = 'evolution_api',
+      engineType = 'evolution_go',
       webhookUrl
     } = data;
 
@@ -190,9 +190,9 @@ export class PartnerProvisioningService {
     // E. Si se solicitó instancia inicial, crearla en el motor de WhatsApp
     let instanceResultData: any = null;
     if (instanceName) {
-      const targetEngine: EngineType = (engineType === 'evolution_go' && process.env.EVOLUTION_GO_ENABLED === 'true')
-        ? 'evolution_go'
-        : 'evolution_api';
+      const targetEngine: EngineType = (engineType === 'evolution_api')
+        ? 'evolution_api'
+        : 'evolution_go';
 
       try {
         const engine = engineRouter.getEngineByType(targetEngine);

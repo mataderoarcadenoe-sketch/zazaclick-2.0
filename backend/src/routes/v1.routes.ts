@@ -243,8 +243,25 @@ router.get('/instances/:instanceName/qr', apiKeyOrTokenAuth, async (req: Authent
       });
     }
 
-    const engine = await engineRouter.getEngineForInstance(instanceName);
-    const qrRes = await engine.getQRCode(instanceName);
+    let engine = await engineRouter.getEngineForInstance(instanceName);
+    let qrRes = await engine.getQRCode(instanceName);
+
+    // Fallback reactivo inteligente: Si evolution_api falla en generar QR, intentar inmediatamente con evolution_go
+    if ((!qrRes.success || !qrRes.data?.qrcode) && engine.engineType !== 'evolution_go') {
+      try {
+        console.log(`⚠️ [v1/qr] Motor ${engine.engineType} no retornó QR para "${instanceName}". Intentando fallback a Evolution Go...`);
+        const goEngine = engineRouter.getEngineByType('evolution_go');
+        const goRes = await goEngine.getQRCode(instanceName);
+        if (goRes.success && goRes.data?.qrcode) {
+          console.log(`✅ [v1/qr] Fallback exitoso con Evolution Go para "${instanceName}". Actualizando base de datos.`);
+          qrRes = goRes;
+          await pool.query("UPDATE instances SET engine_type = 'evolution_go', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1", [instanceName]);
+          await engineRouter.invalidateCache(instanceName);
+        }
+      } catch (fbErr: any) {
+        console.warn(`[v1/qr] Fallback a Go falló:`, fbErr.message);
+      }
+    }
 
     if (!qrRes.success || !qrRes.data?.qrcode) {
       return res.status(422).json({
@@ -642,6 +659,105 @@ router.post('/instances/:instanceName/reconnect', apiKeyOrTokenAuth, async (req:
       status: newDbStatus,
       isConnected,
       requiresQr: false
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      code: 'INTERNAL_ERROR',
+      error: err.message
+    });
+  }
+});
+
+/**
+ * POST /v1/instances/:instanceName/restart — Reiniciar conexión de la instancia
+ */
+router.post('/instances/:instanceName/restart', apiKeyOrTokenAuth, async (req: AuthenticatedRequest, res: Response) => {
+  const { instanceName } = req.params;
+
+  try {
+    const isElevated = req.userRole === 'partner' || req.userRole === 'admin';
+    const verifyRes = await pool.query(
+      'SELECT id FROM instances WHERE (user_id = $1 OR $3 = true) AND instance_name = $2',
+      [req.userId, instanceName, isElevated]
+    );
+
+    if (verifyRes.rows.length === 0) {
+      return res.status(403).json({
+        success: false,
+        code: 'FORBIDDEN',
+        error: 'Acceso no autorizado a esta instancia.'
+      });
+    }
+
+    const engine = await engineRouter.getEngineForInstance(instanceName);
+    let restartRes: any;
+    if (typeof (engine as any).reconnect === 'function') {
+      restartRes = await (engine as any).reconnect(instanceName);
+    } else {
+      restartRes = await engine.getConnectionState(instanceName);
+    }
+
+    return res.json({
+      success: true,
+      instanceName,
+      message: 'Instancia reiniciada correctamente.',
+      data: restartRes.data
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      code: 'INTERNAL_ERROR',
+      error: err.message
+    });
+  }
+});
+
+/**
+ * POST /v1/instances/:instanceName/clean-reset — Reinicio limpio completo (purga sesión previa y recrea en Evolution Go)
+ */
+router.post('/instances/:instanceName/clean-reset', apiKeyOrTokenAuth, async (req: AuthenticatedRequest, res: Response) => {
+  const { instanceName } = req.params;
+
+  try {
+    const isElevated = req.userRole === 'partner' || req.userRole === 'admin';
+    const verifyRes = await pool.query(
+      'SELECT id FROM instances WHERE (user_id = $1 OR $3 = true) AND instance_name = $2',
+      [req.userId, instanceName, isElevated]
+    );
+
+    if (verifyRes.rows.length === 0) {
+      return res.status(403).json({
+        success: false,
+        code: 'FORBIDDEN',
+        error: 'Acceso no autorizado a esta instancia.'
+      });
+    }
+
+    // 1. Desconectar y purgar en motor actual
+    try {
+      const currentEngine = await engineRouter.getEngineForInstance(instanceName);
+      await currentEngine.logout(instanceName);
+      await currentEngine.deleteInstance(instanceName);
+    } catch {}
+
+    // 2. Recrear limpia en Evolution Go
+    const goEngine = engineRouter.getEngineByType('evolution_go');
+    const evoRes = await goEngine.createInstance(instanceName);
+    const token = evoRes.data?.token || `token_${Date.now()}`;
+
+    // 3. Actualizar Postgres a Evolution Go
+    await pool.query(
+      "UPDATE instances SET engine_type = 'evolution_go', status = 'disconnected', api_key = $1, token = $1, updated_at = CURRENT_TIMESTAMP WHERE instance_name = $2",
+      [token, instanceName]
+    );
+    await engineRouter.invalidateCache(instanceName);
+
+    return res.json({
+      success: true,
+      instanceName,
+      message: 'Reinicio limpio completado exitosamente en Evolution Go.',
+      data: evoRes.data
     });
   } catch (err: any) {
     return res.status(500).json({

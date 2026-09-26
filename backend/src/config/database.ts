@@ -174,7 +174,8 @@ export async function initDatabase() {
       ALTER TABLE instances ADD COLUMN IF NOT EXISTS messages_sent INTEGER DEFAULT 0;
       ALTER TABLE instances ADD COLUMN IF NOT EXISTS last_activity_at TIMESTAMP NULL;
       ALTER TABLE instances ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
-      ALTER TABLE instances ADD COLUMN IF NOT EXISTS engine_type VARCHAR(50) DEFAULT 'evolution_api';
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS engine_type VARCHAR(50) DEFAULT 'evolution_go';
+      ALTER TABLE instances ALTER COLUMN engine_type SET DEFAULT 'evolution_go';
       ALTER TABLE instances ADD COLUMN IF NOT EXISTS webhook_url TEXT NULL;
       ALTER TABLE instances ADD COLUMN IF NOT EXISTS webhook_secret VARCHAR(255) NULL;
       ALTER TABLE instances ADD COLUMN IF NOT EXISTS webhook_enabled BOOLEAN DEFAULT true;
@@ -182,6 +183,9 @@ export async function initDatabase() {
       -- Sincronizar name <-> instance_name existentes
       UPDATE instances SET name = instance_name WHERE name IS NULL AND instance_name IS NOT NULL;
       UPDATE instances SET instance_name = name WHERE instance_name IS NULL AND name IS NOT NULL;
+
+      -- Migrar instancias existentes a Evolution Go (Whatsmeow) para máxima velocidad y estabilidad
+      UPDATE instances SET engine_type = 'evolution_go' WHERE engine_type IS NULL OR engine_type = 'evolution_api';
     `);
 
     // Trigger de compatibilidad multi-engine (Zaza Click Core + Evolution Go + Evolution API)

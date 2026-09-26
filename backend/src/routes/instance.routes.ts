@@ -65,10 +65,10 @@ const createInstanceHandler = async (req: AuthenticatedRequest, res: Response) =
       return res.status(400).json({ success: false, error: 'El nombre de esta instancia ya está en uso. Elige otro.' });
     }
 
-    // 3. Resolver motor solicitado (default: evolution_api)
-    const targetEngine: EngineType = (engineType === 'evolution_go' && process.env.EVOLUTION_GO_ENABLED === 'true')
-      ? 'evolution_go'
-      : 'evolution_api';
+    // 3. Resolver motor solicitado (default: evolution_go)
+    const targetEngine: EngineType = (engineType === 'evolution_api')
+      ? 'evolution_api'
+      : 'evolution_go';
 
     console.log(`[Create] PASO 4 — Creando instancia en motor ${targetEngine} para ${instanceName}`);
     const engine = engineRouter.getEngineByType(targetEngine);

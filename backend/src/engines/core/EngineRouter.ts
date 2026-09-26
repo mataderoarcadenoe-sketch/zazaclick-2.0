@@ -58,7 +58,7 @@ export class EngineRouter {
 
     try {
       const res = await pool.query('SELECT engine_type FROM instances WHERE instance_name = $1 LIMIT 1', [instanceName]);
-      let resolvedType: EngineType = 'evolution_api';
+      let resolvedType: EngineType = 'evolution_go';
 
       if (res.rows.length > 0 && res.rows[0].engine_type) {
         const dbType = res.rows[0].engine_type;
@@ -75,8 +75,8 @@ export class EngineRouter {
       return resolvedType;
     } catch (dbErr: any) {
       console.error(`[EngineRouter] Error consultando base de datos para ${instanceName}:`, dbErr.message);
-      // Fallback seguro a evolution_api
-      return 'evolution_api';
+      // Fallback seguro a evolution_go
+      return 'evolution_go';
     }
   }
 

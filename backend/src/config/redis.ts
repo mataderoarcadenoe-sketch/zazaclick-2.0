@@ -3,23 +3,50 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
-const redisUrl = process.env.REDIS_PRIVATE_URL || process.env.REDIS_URL;
+const rawRedisUrl = process.env.REDIS_PRIVATE_URL || process.env.REDIS_URL;
+const isValidUrl = rawRedisUrl && !rawRedisUrl.startsWith('${{') && (rawRedisUrl.startsWith('redis://') || rawRedisUrl.startsWith('rediss://'));
+
+const redisHost = process.env.REDISHOST || process.env.REDIS_HOST;
+const redisPort = parseInt(process.env.REDISPORT || process.env.REDIS_PORT || '6379', 10);
+const redisPassword = process.env.REDISPASSWORD || process.env.REDIS_PASSWORD;
+const redisUser = process.env.REDISUSER || process.env.REDIS_USER;
 
 let redis: Redis;
 
-if (redisUrl) {
+const commonOptions = {
+  maxRetriesPerRequest: null,
+  enableReadyCheck: false,
+  enableOfflineQueue: true,
+  retryStrategy(times: number) {
+    return Math.min(times * 1000, 10000);
+  },
+  reconnectOnError(err: Error) {
+    const targetError = 'READONLY';
+    if (err.message.includes(targetError)) {
+      return true;
+    }
+    return false;
+  }
+};
+
+if (isValidUrl) {
   console.log('🔌 [Redis] Inicializando cliente de Redis con URL...');
-  redis = new Redis(redisUrl, {
-    maxRetriesPerRequest: null,
-    enableReadyCheck: false,
+  redis = new Redis(rawRedisUrl!, commonOptions);
+} else if (redisHost && !redisHost.startsWith('${{')) {
+  console.log(`🔌 [Redis] Inicializando cliente de Redis con Host ${redisHost}:${redisPort}...`);
+  redis = new Redis({
+    host: redisHost,
+    port: redisPort,
+    password: redisPassword,
+    username: redisUser,
+    ...commonOptions
   });
 } else {
-  console.warn('⚠️ [Redis] REDIS_PRIVATE_URL ni REDIS_URL configurados en el entorno. Conectando a localhost:6379 de respaldo.');
+  console.warn('⚠️ [Redis] Variables de Redis no configuradas. Usando cliente local con reintentos controlados.');
   redis = new Redis({
-    host: 'localhost',
+    host: '127.0.0.1',
     port: 6379,
-    maxRetriesPerRequest: null,
-    enableReadyCheck: false,
+    ...commonOptions
   });
 }
 
@@ -28,7 +55,9 @@ redis.on('connect', () => {
 });
 
 redis.on('error', (err) => {
-  console.error('❌ [Redis] Error en la conexión:', err.message);
+  // Loggear sólo como advertencia para no saturar los logs en caso de reconexión
+  console.warn('⚠️ [Redis] Aviso de conexión:', err.message);
 });
 
 export default redis;
+
