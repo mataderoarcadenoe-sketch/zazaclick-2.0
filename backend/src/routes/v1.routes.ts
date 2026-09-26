@@ -225,7 +225,7 @@ router.get('/instances/:instanceName', apiKeyOrTokenAuth, async (req: Authentica
 /**
  * GET /v1/instances/:instanceName/qr — Obtener código QR en Base64 para embeber en ERP
  */
-router.get('/instances/:instanceName/qr', apiKeyOrTokenAuth, async (req: AuthenticatedRequest, res: Response) => {
+const getQrEndpointHandler = async (req: AuthenticatedRequest, res: Response) => {
   const { instanceName } = req.params;
 
   try {
@@ -275,7 +275,13 @@ router.get('/instances/:instanceName/qr', apiKeyOrTokenAuth, async (req: Authent
       success: true,
       instanceName,
       qrcode: qrRes.data.qrcode,
-      base64: qrRes.data.qrcode
+      base64: qrRes.data.qrcode,
+      qr: qrRes.data.qrcode,
+      data: {
+        qrcode: qrRes.data.qrcode,
+        base64: qrRes.data.qrcode,
+        qr: qrRes.data.qrcode
+      }
     });
   } catch (err: any) {
     console.error('[v1/instances/qr] Error:', err.message);
@@ -285,12 +291,19 @@ router.get('/instances/:instanceName/qr', apiKeyOrTokenAuth, async (req: Authent
       error: 'Error interno al obtener código QR.'
     });
   }
-});
+};
+
+router.get('/instances/:instanceName/qr', apiKeyOrTokenAuth, getQrEndpointHandler);
+router.get('/instances/:instanceName/connect', apiKeyOrTokenAuth, getQrEndpointHandler);
+router.get('/instances/qr/:instanceName', apiKeyOrTokenAuth, getQrEndpointHandler);
+router.get('/instances/connect/:instanceName', apiKeyOrTokenAuth, getQrEndpointHandler);
+router.get('/instance/connect/:instanceName', apiKeyOrTokenAuth, getQrEndpointHandler);
+router.get('/instance/qr/:instanceName', apiKeyOrTokenAuth, getQrEndpointHandler);
 
 /**
  * GET /v1/instances/:instanceName/status — Consultar estado de conexión en vivo
  */
-router.get('/instances/:instanceName/status', apiKeyOrTokenAuth, async (req: AuthenticatedRequest, res: Response) => {
+const getStatusEndpointHandler = async (req: AuthenticatedRequest, res: Response) => {
   const { instanceName } = req.params;
 
   try {
@@ -324,7 +337,8 @@ router.get('/instances/:instanceName/status', apiKeyOrTokenAuth, async (req: Aut
       success: true,
       instanceName,
       state,
-      isConnected
+      isConnected,
+      status: state
     });
   } catch (err: any) {
     return res.status(500).json({
@@ -333,7 +347,14 @@ router.get('/instances/:instanceName/status', apiKeyOrTokenAuth, async (req: Aut
       error: err.message
     });
   }
-});
+};
+
+router.get('/instances/:instanceName/status', apiKeyOrTokenAuth, getStatusEndpointHandler);
+router.get('/instances/status/:instanceName', apiKeyOrTokenAuth, getStatusEndpointHandler);
+router.get('/instance/status/:instanceName', apiKeyOrTokenAuth, getStatusEndpointHandler);
+router.get('/instance/:instanceName/status', apiKeyOrTokenAuth, getStatusEndpointHandler);
+router.get('/instances/:instanceName/connectionState', apiKeyOrTokenAuth, getStatusEndpointHandler);
+router.get('/instance/connectionState/:instanceName', apiKeyOrTokenAuth, getStatusEndpointHandler);
 
 // ==========================================
 // 1.1. GESTIÓN DE GRUPOS DE WHATSAPP (ERP / API)

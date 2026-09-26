@@ -112,6 +112,8 @@ app.use('/api/v1/b2b', b2bRoutes);
 // Developer Platform v1 API Routes & OpenAPI Specification
 app.use('/v1', v1Routes);
 app.use('/api/v1', v1Routes);
+app.use('/instances', v1Routes);
+app.use('/instance', v1Routes);
 app.use('/', openapiRoutes);
 app.use('/v1', openapiRoutes);
 
