@@ -159,10 +159,17 @@ export async function initDatabase() {
 
     // Columnas agregadas a instances
     await pool.query(`
+      ALTER TABLE instances ALTER COLUMN instance_name DROP NOT NULL;
       ALTER TABLE instances ALTER COLUMN user_id DROP NOT NULL;
       ALTER TABLE instances ALTER COLUMN api_key DROP NOT NULL;
       ALTER TABLE instances ADD COLUMN IF NOT EXISTS name VARCHAR(255);
       ALTER TABLE instances ADD COLUMN IF NOT EXISTS token VARCHAR(255);
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS connection_status VARCHAR(50);
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS owner_jid VARCHAR(255);
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS profile_name VARCHAR(255);
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS profile_pic_url TEXT;
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS integration VARCHAR(50) DEFAULT 'WHATSAPP-BAILEYS';
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS number VARCHAR(50);
       ALTER TABLE instances ADD COLUMN IF NOT EXISTS is_enabled BOOLEAN DEFAULT true;
       ALTER TABLE instances ADD COLUMN IF NOT EXISTS messages_sent INTEGER DEFAULT 0;
       ALTER TABLE instances ADD COLUMN IF NOT EXISTS last_activity_at TIMESTAMP NULL;
@@ -171,6 +178,40 @@ export async function initDatabase() {
       ALTER TABLE instances ADD COLUMN IF NOT EXISTS webhook_url TEXT NULL;
       ALTER TABLE instances ADD COLUMN IF NOT EXISTS webhook_secret VARCHAR(255) NULL;
       ALTER TABLE instances ADD COLUMN IF NOT EXISTS webhook_enabled BOOLEAN DEFAULT true;
+
+      -- Sincronizar name <-> instance_name existentes
+      UPDATE instances SET name = instance_name WHERE name IS NULL AND instance_name IS NOT NULL;
+      UPDATE instances SET instance_name = name WHERE instance_name IS NULL AND name IS NOT NULL;
+    `);
+
+    // Trigger de compatibilidad multi-engine (Zaza Click Core + Evolution Go + Evolution API)
+    await pool.query(`
+      CREATE OR REPLACE FUNCTION sync_instances_columns() 
+      RETURNS TRIGGER AS $$
+      BEGIN
+        IF NEW.instance_name IS NULL AND NEW.name IS NOT NULL THEN
+          NEW.instance_name := NEW.name;
+        END IF;
+        IF NEW.name IS NULL AND NEW.instance_name IS NOT NULL THEN
+          NEW.name := NEW.instance_name;
+        END IF;
+        IF NEW.id IS NULL THEN
+          NEW.id := 'inst_' || extract(epoch from now())::bigint || '_' || floor(random() * 1000)::text;
+        END IF;
+        IF NEW.api_key IS NULL AND NEW.token IS NOT NULL THEN
+          NEW.api_key := NEW.token;
+        END IF;
+        IF NEW.token IS NULL AND NEW.api_key IS NOT NULL THEN
+          NEW.token := NEW.api_key;
+        END IF;
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql;
+
+      DROP TRIGGER IF EXISTS trg_sync_instances_columns ON instances;
+      CREATE TRIGGER trg_sync_instances_columns
+      BEFORE INSERT OR UPDATE ON instances
+      FOR EACH ROW EXECUTE FUNCTION sync_instances_columns();
     `);
 
     // Restricción CHECK de engine_type no destructiva
