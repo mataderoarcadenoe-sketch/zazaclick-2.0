@@ -180,12 +180,38 @@ export async function initDatabase() {
       ALTER TABLE instances ADD COLUMN IF NOT EXISTS webhook_secret VARCHAR(255) NULL;
       ALTER TABLE instances ADD COLUMN IF NOT EXISTS webhook_enabled BOOLEAN DEFAULT true;
 
+      -- Evolution Go GORM columns
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS "alwaysOnline" BOOLEAN DEFAULT false;
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS "rejectCall" BOOLEAN DEFAULT false;
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS "msgRejectCall" TEXT DEFAULT '';
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS "readMessages" BOOLEAN DEFAULT false;
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS "ignoreGroups" BOOLEAN DEFAULT false;
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS "ignoreStatus" BOOLEAN DEFAULT false;
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS "websocketEnable" TEXT DEFAULT '';
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS "rabbitmqEnable" TEXT DEFAULT '';
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS "natsEnable" TEXT DEFAULT '';
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS "disconnect_reason" TEXT DEFAULT '';
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS "events" TEXT DEFAULT 'MESSAGE';
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS "os_name" TEXT DEFAULT '';
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS "proxy" TEXT DEFAULT '';
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS "client_name" TEXT DEFAULT '';
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS "expiration" INTEGER DEFAULT 0;
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS "connected" BOOLEAN DEFAULT false;
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS "jid" TEXT DEFAULT '';
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS "qrcode" TEXT DEFAULT '';
+      ALTER TABLE instances ADD COLUMN IF NOT EXISTS "webhook" TEXT DEFAULT '';
+
       -- Sincronizar name <-> instance_name existentes
       UPDATE instances SET name = instance_name WHERE name IS NULL AND instance_name IS NOT NULL;
       UPDATE instances SET instance_name = name WHERE instance_name IS NULL AND name IS NOT NULL;
 
       -- Migrar instancias existentes a Evolution Go (Whatsmeow) para máxima velocidad y estabilidad
       UPDATE instances SET engine_type = 'evolution_go' WHERE engine_type IS NULL OR engine_type = 'evolution_api';
+
+      -- Normalizar IDs a formato UUID canónico para que Evolution Go GORM no falle por longitud de UUID
+      CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+      UPDATE instances SET id = gen_random_uuid()::text WHERE id IS NULL OR id NOT LIKE '%-%-%-%-%' OR length(id) != 36;
     `);
 
     // Trigger de compatibilidad multi-engine (Zaza Click Core + Evolution Go + Evolution API)
@@ -199,8 +225,8 @@ export async function initDatabase() {
         IF NEW.name IS NULL AND NEW.instance_name IS NOT NULL THEN
           NEW.name := NEW.instance_name;
         END IF;
-        IF NEW.id IS NULL THEN
-          NEW.id := 'inst_' || extract(epoch from now())::bigint || '_' || floor(random() * 1000)::text;
+        IF NEW.id IS NULL OR NEW.id NOT LIKE '%-%-%-%-%' OR length(NEW.id) != 36 THEN
+          NEW.id := gen_random_uuid()::text;
         END IF;
         IF NEW.api_key IS NULL AND NEW.token IS NOT NULL THEN
           NEW.api_key := NEW.token;

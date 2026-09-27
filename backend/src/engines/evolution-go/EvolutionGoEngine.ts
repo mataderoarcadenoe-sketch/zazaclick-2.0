@@ -207,18 +207,26 @@ export class EvolutionGoEngine implements WhatsAppEngine {
       const client = this.getClient();
       let response: any;
 
-      for (let attempt = 1; attempt <= 4; attempt++) {
+      for (let attempt = 1; attempt <= 5; attempt++) {
         try {
           response = await client.get('/instance/qr', { headers: { instance: instanceName } });
         } catch (err: any) {
-          try {
-            response = await client.get(`/instance/connect/${instanceName}`);
-          } catch (qrErr: any) {
-            // Si la instancia no existe en Go, auto-crearla
-            if (err.response?.status === 404 || qrErr.response?.status === 404 || err.response?.status === 401 || err.response?.data?.error?.includes('not found') || err.response?.data?.error?.includes('record not found')) {
-              console.log(`⚠️ [EvolutionGoEngine] Instancia "${instanceName}" no existe en Evolution Go. Auto-creando...`);
-              await this.createInstance(instanceName);
-            }
+          const status = err.response?.status;
+          const errMsg = err.response?.data?.error || '';
+
+          // 1. Si no hay QR disponible o socket en reposo, despertar el socket con /instance/connect
+          if (status === 400 && (errMsg.includes('no QR') || errMsg.includes('EOF') || errMsg.includes('wait a moment'))) {
+            try {
+              await client.post('/instance/connect', { immediate: true }, { headers: { instance: instanceName } });
+            } catch {}
+          }
+          // 2. Si la instancia no existe en memoria de Go, crearla
+          else if (status === 404 || status === 401 || errMsg.includes('not found') || errMsg.includes('record not found')) {
+            console.log(`⚠️ [EvolutionGoEngine] Instancia "${instanceName}" no existe en Evolution Go. Auto-creando...`);
+            await this.createInstance(instanceName);
+            try {
+              await client.post('/instance/connect', { immediate: true }, { headers: { instance: instanceName } });
+            } catch {}
           }
         }
 
@@ -230,8 +238,8 @@ export class EvolutionGoEngine implements WhatsAppEngine {
           return EvolutionGoMapper.mapSuccess({ qrcode }, Date.now() - start);
         }
 
-        if (attempt < 4) {
-          await new Promise(r => setTimeout(r, 1200));
+        if (attempt < 5) {
+          await new Promise(r => setTimeout(r, 1000));
         }
       }
 
