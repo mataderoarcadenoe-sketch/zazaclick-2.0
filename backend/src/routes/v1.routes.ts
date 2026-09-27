@@ -244,9 +244,9 @@ const getQrEndpointHandler = async (req: AuthenticatedRequest, res: Response) =>
         const instId = crypto.randomUUID();
         await pool.query(
           `INSERT INTO instances (id, user_id, instance_name, name, status, engine_type)
-           VALUES ($1, $2, $3, $3, 'disconnected', 'evolution_go')
+           VALUES ($1, $2, $3, $4, 'disconnected', 'evolution_go')
            ON CONFLICT DO NOTHING`,
-          [instId, req.userId, instanceName]
+          [instId, req.userId, instanceName, instanceName]
         );
       } else {
         return res.status(403).json({
@@ -327,6 +327,15 @@ const getStatusEndpointHandler = async (req: AuthenticatedRequest, res: Response
       : await pool.query('SELECT id, status FROM instances WHERE user_id = $1 AND (instance_name = $2 OR name = $2)', [req.userId, instanceName]);
 
     if (verifyRes.rows.length === 0) {
+      if (isElevated) {
+        return res.json({
+          success: true,
+          instanceName,
+          state: 'disconnected',
+          isConnected: false,
+          status: 'disconnected'
+        });
+      }
       return res.status(403).json({
         success: false,
         code: 'FORBIDDEN',

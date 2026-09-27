@@ -56,7 +56,10 @@ export async function runWatchdogCycle(): Promise<void> {
           continue;
         }
 
-        // Caso 2: Si el estado en vivo no está conectado y no está bloqueada por otro proceso
+        // Si la instancia está en estado 'disconnected', no intentar forzar reconexión automática
+        if (status === 'disconnected') {
+          continue;
+        }
         if (!isLiveConnected) {
           const acquired = await redis.set(lockKey, '1', 'PX', 45000, 'NX');
           if (acquired !== 'OK') {
