@@ -829,7 +829,7 @@ router.get('/partners', async (req: AuthenticatedRequest, res) => {
     res.json({ success: true, data: partners });
   } catch (error: any) {
     console.error('[AdminPartners Error]:', error.message);
-    res.status(500).json({ success: false, error: 'Error al listar partners B2B' });
+    res.status(500).json({ success: false, error: 'Error al listar partners B2B', detail: error.message });
   }
 });
 

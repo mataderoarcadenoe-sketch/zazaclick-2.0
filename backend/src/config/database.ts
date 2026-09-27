@@ -15,9 +15,9 @@ const isLocalOrInternal = !dbUrl || dbUrl.includes('localhost') || dbUrl.include
 const pool = new Pool({
   connectionString: dbUrl,
   ssl: isLocalOrInternal ? false : { rejectUnauthorized: false },
-  max: 25,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 15000,
+  max: 5,
+  idleTimeoutMillis: 5000,
+  connectionTimeoutMillis: 20000,
   allowExitOnIdle: true
 });
 
