@@ -224,13 +224,13 @@ export class EvolutionGoEngine implements WhatsAppEngine {
       }
 
       // 2. Polling activo de QR (REST + Base de Datos)
-      for (let attempt = 1; attempt <= 8; attempt++) {
+      for (let attempt = 1; attempt <= 12; attempt++) {
         try {
           const response = await client.get('/instance/qr', { headers: { apikey: goKey, instance: instanceName } });
           const resData = response?.data?.data || response?.data;
-          const qrcode = resData?.qrcode || resData?.Qrcode || resData?.base64;
+          const qrcode = resData?.qrcode || resData?.Qrcode || resData?.base64 || response?.data?.qrcode;
 
-          if (qrcode) {
+          if (qrcode && typeof qrcode === 'string' && qrcode.length > 20) {
             this.circuitBreaker.recordSuccess();
             return EvolutionGoMapper.mapSuccess({ qrcode }, Date.now() - start);
           }
@@ -263,7 +263,7 @@ export class EvolutionGoEngine implements WhatsAppEngine {
           }
         } catch {}
 
-        if (attempt < 8) {
+        if (attempt < 12) {
           await new Promise(r => setTimeout(r, 1000));
         }
       }

@@ -58,6 +58,19 @@ export async function initDatabase() {
       AND state_change < current_timestamp - INTERVAL '10 seconds';
   `);
 
+  // Iniciar centinela recurrente de conexiones cada 20 segundos
+  setInterval(async () => {
+    try {
+      await pool.query(`
+        SELECT pg_terminate_backend(pid) 
+        FROM pg_stat_activity 
+        WHERE pid <> pg_backend_pid() 
+          AND state IN ('idle', 'idle in transaction', 'idle in transaction (aborted)')
+          AND state_change < current_timestamp - INTERVAL '15 seconds';
+      `);
+    } catch {}
+  }, 20000);
+
   // 1. Tabla de Usuarios
   await safeQuery('Tabla users', `
     CREATE TABLE IF NOT EXISTS users (
