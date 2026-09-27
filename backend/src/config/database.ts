@@ -259,6 +259,13 @@ export async function initDatabase() {
     FOR EACH ROW EXECUTE FUNCTION sync_instances_columns();
   `);
 
+  // Migrar IDs legacy a UUIDs válidos para compatibilidad estricta con Evolution Go (GORM)
+  await safeQuery('Migrar IDs de instancias a UUIDs', `
+    UPDATE instances 
+    SET id = md5(random()::text || clock_timestamp()::text)::uuid::text 
+    WHERE length(id) != 36 OR id NOT LIKE '%-%-%-%-%';
+  `);
+
   // 5. Tabla de Pagos Administrativos
   await safeQuery('Tabla payments', `
     CREATE TABLE IF NOT EXISTS payments (

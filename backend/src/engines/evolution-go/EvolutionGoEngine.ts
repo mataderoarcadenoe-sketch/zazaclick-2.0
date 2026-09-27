@@ -17,6 +17,7 @@ import {
 import { CircuitBreaker } from '../core/CircuitBreaker';
 import { EvolutionGoMapper } from './EvolutionGoMapper';
 import { validateSafeUrl, normalizeBase64 } from '../../utils/ssrf.util';
+import pool from '../../config/database';
 
 export class EvolutionGoEngine implements WhatsAppEngine {
   public readonly engineType: EngineType = 'evolution_go';
@@ -222,8 +223,8 @@ export class EvolutionGoEngine implements WhatsAppEngine {
         }
       }
 
-      // 2. Polling activo de QR
-      for (let attempt = 1; attempt <= 6; attempt++) {
+      // 2. Polling activo de QR (REST + Base de Datos)
+      for (let attempt = 1; attempt <= 8; attempt++) {
         try {
           const response = await client.get('/instance/qr', { headers: { apikey: goKey, instance: instanceName } });
           const resData = response?.data?.data || response?.data;
@@ -249,7 +250,20 @@ export class EvolutionGoEngine implements WhatsAppEngine {
           }
         }
 
-        if (attempt < 6) {
+        // Consultar directamente si Whatsmeow guardó el QR en la base de datos
+        try {
+          const dbQr = await pool.query(
+            "SELECT qrcode FROM instances WHERE (instance_name = $1 OR name = $1) AND qrcode IS NOT NULL AND length(qrcode) > 20 LIMIT 1",
+            [instanceName]
+          );
+          if (dbQr.rows.length > 0 && dbQr.rows[0].qrcode) {
+            const dbQrcode = dbQr.rows[0].qrcode;
+            this.circuitBreaker.recordSuccess();
+            return EvolutionGoMapper.mapSuccess({ qrcode: dbQrcode }, Date.now() - start);
+          }
+        } catch {}
+
+        if (attempt < 8) {
           await new Promise(r => setTimeout(r, 1000));
         }
       }
