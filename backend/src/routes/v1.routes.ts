@@ -236,11 +236,21 @@ const getQrEndpointHandler = async (req: AuthenticatedRequest, res: Response) =>
     );
 
     if (verifyRes.rows.length === 0) {
-      return res.status(403).json({
-        success: false,
-        code: 'FORBIDDEN',
-        error: 'Acceso no autorizado a esta instancia.'
-      });
+      if (isElevated) {
+        const instId = `inst_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+        await pool.query(
+          `INSERT INTO instances (id, user_id, instance_name, name, status, engine_type)
+           VALUES ($1, $2, $3, $3, 'disconnected', 'evolution_go')
+           ON CONFLICT DO NOTHING`,
+          [instId, req.userId, instanceName]
+        );
+      } else {
+        return res.status(403).json({
+          success: false,
+          code: 'FORBIDDEN',
+          error: 'Acceso no autorizado a esta instancia.'
+        });
+      }
     }
 
     let engine = await engineRouter.getEngineForInstance(instanceName);

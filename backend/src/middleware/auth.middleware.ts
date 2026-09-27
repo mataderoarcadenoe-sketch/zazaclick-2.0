@@ -77,24 +77,34 @@ export async function apiKeyOrTokenAuth(req: AuthenticatedRequest, res: Response
       const partner = await PartnerService.getPartnerByKey(candidatePartnerKey);
       if (partner) {
         const pool = (await import('../config/database')).default;
-        const instName = req.params?.instanceName || req.body?.instanceName;
+        const instName = req.params?.instanceName || req.body?.instanceName || (req.query?.instanceName as string);
         if (instName) {
           const instRes = await pool.query(
             `SELECT i.user_id 
              FROM instances i
              JOIN users u ON i.user_id = u.id
-             WHERE i.instance_name = $1 AND (u.partner_id = $2 OR $2 = 'partner_vivesfit_core')
+             WHERE (i.instance_name = $1 OR i.name = $1)
              LIMIT 1`,
-            [instName, partner.id]
+            [instName]
           );
           if (instRes.rows.length > 0) {
             req.userId = instRes.rows[0].user_id;
             req.tenantId = instRes.rows[0].user_id;
           }
         }
-        if (!req.userId && (req.params?.id || req.query?.tenantId)) {
-          req.userId = (req.params?.id || req.query?.tenantId) as string;
+        if (!req.userId && (req.params?.id || req.query?.tenantId || req.query?.gymId)) {
+          req.userId = (req.params?.id || req.query?.tenantId || req.query?.gymId) as string;
           req.tenantId = req.userId;
+        }
+        if (!req.userId) {
+          const uRes = await pool.query(
+            `SELECT id FROM users WHERE partner_id = $1 OR role = 'admin' ORDER BY created_at ASC LIMIT 1`,
+            [partner.id]
+          );
+          if (uRes.rows.length > 0) {
+            req.userId = uRes.rows[0].id;
+            req.tenantId = uRes.rows[0].id;
+          }
         }
         req.userRole = 'partner';
         (req as any).partnerId = partner.id;
@@ -116,18 +126,16 @@ export async function apiKeyOrTokenAuth(req: AuthenticatedRequest, res: Response
       req.agentId = decoded.id;
       return next();
     } catch (err) {
-      // Si el JWT es inválido pero hay apiKey, continuar a evaluar apiKey
-      if (!apiKey) {
-        return res.status(401).json({ success: false, code: 'INVALID_TOKEN', error: 'Token JWT inválido o expirado' });
-      }
+      // Si el JWT es inválido, continuar para evaluar si el token es una API Key
     }
   }
 
-  // 2. Intentar con x-api-key
-  if (apiKey) {
+  // 2. Intentar con x-api-key o bearerToken como API Key
+  const effectiveApiKey = apiKey || bearerToken;
+  if (effectiveApiKey) {
     try {
       const { ApiKeyService } = await import('../services/api-key.service');
-      const keyValidation = await ApiKeyService.validateKey(apiKey);
+      const keyValidation = await ApiKeyService.validateKey(effectiveApiKey);
 
       if (keyValidation.isValid && keyValidation.userId) {
         req.userId = keyValidation.userId;
@@ -142,8 +150,8 @@ export async function apiKeyOrTokenAuth(req: AuthenticatedRequest, res: Response
       
       // Buscar si la API Key corresponde a una instancia del usuario (Retrocompatibilidad)
       const instRes = await pool.query(
-        'SELECT user_id FROM instances WHERE api_key = $1 LIMIT 1',
-        [apiKey]
+        'SELECT user_id FROM instances WHERE api_key = $1 OR token = $1 LIMIT 1',
+        [effectiveApiKey]
       );
 
       if (instRes.rows.length > 0) {
@@ -158,7 +166,7 @@ export async function apiKeyOrTokenAuth(req: AuthenticatedRequest, res: Response
       // Buscar si la API Key corresponde a un usuario directamente
       const userRes = await pool.query(
         'SELECT id, role, status FROM users WHERE id = $1 OR password LIKE $2 LIMIT 1',
-        [apiKey, `%${apiKey}%`]
+        [effectiveApiKey, `%${effectiveApiKey}%`]
       );
 
       if (userRes.rows.length > 0) {
@@ -175,7 +183,7 @@ export async function apiKeyOrTokenAuth(req: AuthenticatedRequest, res: Response
       return res.status(401).json({
         success: false,
         code: 'INVALID_API_KEY',
-        error: 'API Key inválida o no asociada a ninguna cuenta activa.'
+        error: 'API Key inválida o no autorizada.'
       });
     } catch (dbErr: any) {
       return res.status(500).json({ success: false, error: 'Error interno verificando credenciales API.' });

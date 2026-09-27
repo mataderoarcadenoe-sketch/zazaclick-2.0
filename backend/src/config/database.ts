@@ -426,7 +426,7 @@ export async function initDatabase() {
   `);
 
   // 15. Seed de Partners Oficiales (VivesFit + Krono)
-  const vivesfitKey = process.env.MASTER_PARTNER_KEY || 'zc_partner_master_vivesfit_2026';
+  const vivesfitKey = 'zc_partner_master_vivesfit_2026';
   const vivesfitHash = crypto.createHash('sha256').update(vivesfitKey).digest('hex');
   const vivesfitMasked = 'zc_partner_master_••••••••2026';
 
@@ -437,7 +437,8 @@ export async function initDatabase() {
       name = EXCLUDED.name,
       master_key = EXCLUDED.master_key, 
       master_key_hash = EXCLUDED.master_key_hash, 
-      masked_key = EXCLUDED.masked_key;
+      masked_key = EXCLUDED.masked_key,
+      is_active = true;
   `, [
     'partner_vivesfit_core',
     'VivesFit Gym SaaS',
@@ -460,7 +461,8 @@ export async function initDatabase() {
       name = EXCLUDED.name,
       master_key = EXCLUDED.master_key, 
       master_key_hash = EXCLUDED.master_key_hash, 
-      masked_key = EXCLUDED.masked_key;
+      masked_key = EXCLUDED.masked_key,
+      is_active = true;
   `, [
     'partner_krono_core',
     'Krono - Gestión de Personal & Asistencias',

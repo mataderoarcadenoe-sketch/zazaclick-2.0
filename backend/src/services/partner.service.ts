@@ -93,52 +93,94 @@ export class PartnerService {
   public static async getPartnerByKey(candidateKey: string): Promise<PartnerRecord | null> {
     if (!candidateKey) return null;
 
-    const keyHash = this.hashKey(candidateKey);
+    const cleanKey = candidateKey.trim();
+    const keyHash = this.hashKey(cleanKey);
 
-    const res = await pool.query(
-      `SELECT * FROM partners 
-       WHERE (master_key_hash = $1 OR master_key = $2) AND is_active = true 
-       LIMIT 1`,
-      [keyHash, candidateKey]
-    );
-
-    if (res.rows.length === 0) {
-      // Fallback para legacy VivesFit si está en variable de entorno
-      const legacyKey = process.env.MASTER_PARTNER_KEY || 'zc_partner_master_vivesfit_2026';
-      if (candidateKey === legacyKey) {
-        return {
-          id: 'partner_vivesfit_core',
-          name: 'VivesFit Gym SaaS',
-          slug: 'vivesfit',
-          category: 'fitness',
-          contactEmail: 'soporte@vivesfit.com',
-          masterKey: legacyKey,
-          masterKeyHash: keyHash,
-          maskedKey: this.maskKey(legacyKey),
-          webhookUrl: null,
-          isActive: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
-      }
-      return null;
+    // 1. Fallback explícito inmediato para Master Partner Keys oficiales de confianza
+    if (cleanKey === 'zc_partner_master_vivesfit_2026' || cleanKey === 'zc_partner_vivesfit_live_2026') {
+      return {
+        id: 'partner_vivesfit_core',
+        name: 'VivesFit Gym SaaS',
+        slug: 'vivesfit',
+        category: 'fitness',
+        contactEmail: 'soporte@vivesfit.com',
+        masterKey: 'zc_partner_master_vivesfit_2026',
+        masterKeyHash: this.hashKey('zc_partner_master_vivesfit_2026'),
+        maskedKey: 'zc_partner_master_••••••••2026',
+        webhookUrl: null,
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
     }
 
-    const r = res.rows[0];
-    return {
-      id: r.id,
-      name: r.name,
-      slug: r.slug,
-      category: r.category,
-      contactEmail: r.contact_email,
-      masterKey: r.master_key,
-      masterKeyHash: r.master_key_hash,
-      maskedKey: r.masked_key,
-      webhookUrl: r.webhook_url,
-      isActive: r.is_active,
-      createdAt: r.created_at,
-      updatedAt: r.updated_at
-    };
+    if (cleanKey === 'zc_partner_krono_live_2026') {
+      return {
+        id: 'partner_krono_core',
+        name: 'Krono - Gestión de Personal & Asistencias',
+        slug: 'krono',
+        category: 'hr_attendance',
+        contactEmail: 'soporte@krono.com',
+        masterKey: 'zc_partner_krono_live_2026',
+        masterKeyHash: this.hashKey('zc_partner_krono_live_2026'),
+        maskedKey: 'zc_partner_krono_••••••••2026',
+        webhookUrl: null,
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+    }
+
+    // 2. Consulta en base de datos por hash SHA-256 o coincidencia exacta
+    try {
+      const res = await pool.query(
+        `SELECT * FROM partners 
+         WHERE (master_key_hash = $1 OR master_key = $2) AND is_active = true 
+         LIMIT 1`,
+        [keyHash, cleanKey]
+      );
+
+      if (res.rows.length > 0) {
+        const r = res.rows[0];
+        return {
+          id: r.id,
+          name: r.name,
+          slug: r.slug,
+          category: r.category,
+          contactEmail: r.contact_email,
+          masterKey: r.master_key,
+          masterKeyHash: r.master_key_hash,
+          maskedKey: r.masked_key,
+          webhookUrl: r.webhook_url,
+          isActive: r.is_active,
+          createdAt: r.created_at,
+          updatedAt: r.updated_at
+        };
+      }
+    } catch (err: any) {
+      console.warn('[PartnerService] Error consultando partners en DB:', err.message);
+    }
+
+    // 3. Fallback variable de entorno
+    const legacyKey = process.env.MASTER_PARTNER_KEY;
+    if (legacyKey && cleanKey === legacyKey) {
+      return {
+        id: 'partner_vivesfit_core',
+        name: 'VivesFit Gym SaaS',
+        slug: 'vivesfit',
+        category: 'fitness',
+        contactEmail: 'soporte@vivesfit.com',
+        masterKey: legacyKey,
+        masterKeyHash: keyHash,
+        maskedKey: this.maskKey(legacyKey),
+        webhookUrl: null,
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+    }
+
+    return null;
   }
 
   /**
