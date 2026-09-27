@@ -49,6 +49,15 @@ export async function initDatabase() {
 
   console.log('🔄 [Database] Verificando e inicializando esquema de datos Zaza Click 2.0...');
 
+  // 0. Liberar conexiones inactivas huérfanas en Postgres para prevenir 'too many clients'
+  await safeQuery('Cleanup idle connections', `
+    SELECT pg_terminate_backend(pid) 
+    FROM pg_stat_activity 
+    WHERE pid <> pg_backend_pid() 
+      AND state IN ('idle', 'idle in transaction', 'idle in transaction (aborted)')
+      AND state_change < current_timestamp - INTERVAL '10 seconds';
+  `);
+
   // 1. Tabla de Usuarios
   await safeQuery('Tabla users', `
     CREATE TABLE IF NOT EXISTS users (

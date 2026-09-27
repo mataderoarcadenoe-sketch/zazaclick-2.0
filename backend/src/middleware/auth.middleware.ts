@@ -76,36 +76,8 @@ export async function apiKeyOrTokenAuth(req: AuthenticatedRequest, res: Response
       const { PartnerService } = await import('../services/partner.service');
       const partner = await PartnerService.getPartnerByKey(candidatePartnerKey);
       if (partner) {
-        const pool = (await import('../config/database')).default;
-        const instName = req.params?.instanceName || req.body?.instanceName || (req.query?.instanceName as string);
-        if (instName) {
-          const instRes = await pool.query(
-            `SELECT i.user_id 
-             FROM instances i
-             JOIN users u ON i.user_id = u.id
-             WHERE (i.instance_name = $1 OR i.name = $1)
-             LIMIT 1`,
-            [instName]
-          );
-          if (instRes.rows.length > 0) {
-            req.userId = instRes.rows[0].user_id;
-            req.tenantId = instRes.rows[0].user_id;
-          }
-        }
-        if (!req.userId && (req.params?.id || req.query?.tenantId || req.query?.gymId)) {
-          req.userId = (req.params?.id || req.query?.tenantId || req.query?.gymId) as string;
-          req.tenantId = req.userId;
-        }
-        if (!req.userId) {
-          const uRes = await pool.query(
-            `SELECT id FROM users WHERE partner_id = $1 OR role = 'admin' ORDER BY created_at ASC LIMIT 1`,
-            [partner.id]
-          );
-          if (uRes.rows.length > 0) {
-            req.userId = uRes.rows[0].id;
-            req.tenantId = uRes.rows[0].id;
-          }
-        }
+        req.userId = `partner_${partner.slug || 'core'}`;
+        req.tenantId = req.userId;
         req.userRole = 'partner';
         (req as any).partnerId = partner.id;
         (req as any).environment = 'live';
