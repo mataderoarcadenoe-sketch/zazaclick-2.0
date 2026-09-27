@@ -231,7 +231,7 @@ const getQrEndpointHandler = async (req: AuthenticatedRequest, res: Response) =>
   try {
     const isElevated = req.userRole === 'partner' || req.userRole === 'admin';
     const verifyRes = await pool.query(
-      'SELECT id FROM instances WHERE (user_id = $1 OR $3 = true) AND instance_name = $2',
+      'SELECT id FROM instances WHERE (user_id = $1 OR $3 = true) AND (instance_name = $2 OR name = $2)',
       [req.userId, instanceName, isElevated]
     );
 

@@ -54,22 +54,30 @@ router.post('/register', async (req, res) => {
     const trialEndDate = new Date();
     trialEndDate.setDate(now.getDate() + (trialPlan.trial_days || 7));
 
-    await pool.query('BEGIN');
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
 
-    // 3. Crear usuario con estado activo y trial registrado
-    await pool.query(`
-      INSERT INTO users (id, email, password, role, status, trial_used, trial_started_at, trial_end_date, company_name, phone, last_login_at)
-      VALUES ($1, $2, $3, $4, 'active', true, $5, $6, $7, $8, $5)
-    `, [userId, cleanEmail, hashedPassword, assignedRole, now, trialEndDate, companyName || null, phone || null]);
+      // 3. Crear usuario con estado activo y trial registrado
+      await client.query(`
+        INSERT INTO users (id, email, password, role, status, trial_used, trial_started_at, trial_end_date, company_name, phone, last_login_at)
+        VALUES ($1, $2, $3, $4, 'active', true, $5, $6, $7, $8, $5)
+      `, [userId, cleanEmail, hashedPassword, assignedRole, now, trialEndDate, companyName || null, phone || null]);
 
-    // 4. Crear suscripción de prueba con cuotas atómicas
-    const subId = generateId('sub');
-    await pool.query(`
-      INSERT INTO subscriptions (id, user_id, plan_id, status, messages_limit, messages_used, payment_status, start_date, end_date)
-      VALUES ($1, $2, $3, 'trial', $4, 0, 'trial', $5, $6)
-    `, [subId, userId, trialPlan.id, trialPlan.trial_messages || 100, now, trialEndDate]);
+      // 4. Crear suscripción de prueba con cuotas atómicas
+      const subId = generateId('sub');
+      await client.query(`
+        INSERT INTO subscriptions (id, user_id, plan_id, status, messages_limit, messages_used, payment_status, start_date, end_date)
+        VALUES ($1, $2, $3, 'trial', $4, 0, 'trial', $5, $6)
+      `, [subId, userId, trialPlan.id, trialPlan.trial_messages || 100, now, trialEndDate]);
 
-    await pool.query('COMMIT');
+      await client.query('COMMIT');
+    } catch (txErr) {
+      await client.query('ROLLBACK');
+      throw txErr;
+    } finally {
+      client.release();
+    }
 
     // 5. Generar token JWT
     const token = jwt.sign({ id: userId, role: assignedRole, tenantId: userId, email: cleanEmail }, JWT_SECRET, { expiresIn: '7d' });
@@ -192,20 +200,28 @@ router.post('/google-login', async (req, res) => {
       const trialEndDate = new Date();
       trialEndDate.setDate(now.getDate() + (trialPlan.trial_days || 7));
 
-      await pool.query('BEGIN');
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
 
-      await pool.query(`
-        INSERT INTO users (id, email, password, role, status, trial_used, trial_started_at, trial_end_date, last_login_at)
-        VALUES ($1, $2, $3, $4, 'active', true, $5, $6, $5)
-      `, [userId, cleanEmail, randomPassword, assignedRole, now, trialEndDate]);
+        await client.query(`
+          INSERT INTO users (id, email, password, role, status, trial_used, trial_started_at, trial_end_date, last_login_at)
+          VALUES ($1, $2, $3, $4, 'active', true, $5, $6, $5)
+        `, [userId, cleanEmail, randomPassword, assignedRole, now, trialEndDate]);
 
-      const subId = generateId('sub');
-      await pool.query(`
-        INSERT INTO subscriptions (id, user_id, plan_id, status, messages_limit, messages_used, payment_status, start_date, end_date)
-        VALUES ($1, $2, $3, 'trial', $4, 0, 'trial', $5, $6)
-      `, [subId, userId, trialPlan.id, trialPlan.trial_messages || 100, now, trialEndDate]);
+        const subId = generateId('sub');
+        await client.query(`
+          INSERT INTO subscriptions (id, user_id, plan_id, status, messages_limit, messages_used, payment_status, start_date, end_date)
+          VALUES ($1, $2, $3, 'trial', $4, 0, 'trial', $5, $6)
+        `, [subId, userId, trialPlan.id, trialPlan.trial_messages || 100, now, trialEndDate]);
 
-      await pool.query('COMMIT');
+        await client.query('COMMIT');
+      } catch (txErr) {
+        await client.query('ROLLBACK');
+        throw txErr;
+      } finally {
+        client.release();
+      }
 
       const freshUser = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
       user = freshUser.rows[0];

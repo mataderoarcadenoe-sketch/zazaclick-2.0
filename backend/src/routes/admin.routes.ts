@@ -21,6 +21,24 @@ function generateId(prefix: string): string {
  */
 router.get('/stats', async (req: AuthenticatedRequest, res) => {
   try {
+    const defaultStats = {
+      users: { total_users: 0, active_users: 0, suspended_users: 0, blocked_users: 0 },
+      instances: { total_instances: 0, connected_instances: 0, disabled_instances: 0 },
+      subscriptions: { active_subscriptions: 0, trial_subscriptions: 0, expired_subscriptions: 0, expiring_soon: 0, quota_exhausted: 0 },
+      traffic: { total_messages: 0, successful_messages: 0, failed_messages: 0 },
+      financial: { total_revenue: 0, pending_payments: 0 }
+    };
+
+    const runSafe = async (query: string, fallback: any) => {
+      try {
+        const r = await pool.query(query);
+        return r.rows[0] || fallback;
+      } catch (e: any) {
+        console.warn('[AdminStats partial query err]:', e.message);
+        return fallback;
+      }
+    };
+
     const [
       usersStats,
       instStats,
@@ -29,62 +47,62 @@ router.get('/stats', async (req: AuthenticatedRequest, res) => {
       paymentStats
     ] = await Promise.all([
       // 1. Métricas de Usuarios
-      pool.query(`
+      runSafe(`
         SELECT 
-          COUNT(*) as total_users,
-          COUNT(*) FILTER (WHERE status = 'active') as active_users,
-          COUNT(*) FILTER (WHERE status = 'suspended') as suspended_users,
-          COUNT(*) FILTER (WHERE status = 'blocked') as blocked_users
+          COUNT(*)::int as total_users,
+          COUNT(*) FILTER (WHERE status = 'active')::int as active_users,
+          COUNT(*) FILTER (WHERE status = 'suspended')::int as suspended_users,
+          COUNT(*) FILTER (WHERE status = 'blocked')::int as blocked_users
         FROM users WHERE role = 'client'
-      `),
+      `, defaultStats.users),
       // 2. Métricas de Instancias
-      pool.query(`
+      runSafe(`
         SELECT 
-          COUNT(*) as total_instances,
-          COUNT(*) FILTER (WHERE status = 'connected') as connected_instances,
-          COUNT(*) FILTER (WHERE is_enabled = false) as disabled_instances
+          COUNT(*)::int as total_instances,
+          COUNT(*) FILTER (WHERE status = 'connected')::int as connected_instances,
+          COUNT(*) FILTER (WHERE is_enabled = false)::int as disabled_instances
         FROM instances
-      `),
+      `, defaultStats.instances),
       // 3. Métricas de Suscripciones y Vencimientos
-      pool.query(`
+      runSafe(`
         SELECT 
-          COUNT(*) FILTER (WHERE status = 'active' AND end_date >= CURRENT_TIMESTAMP) as active_subscriptions,
-          COUNT(*) FILTER (WHERE status = 'trial' AND end_date >= CURRENT_TIMESTAMP) as trial_subscriptions,
-          COUNT(*) FILTER (WHERE end_date < CURRENT_TIMESTAMP OR status = 'expired') as expired_subscriptions,
-          COUNT(*) FILTER (WHERE end_date >= CURRENT_TIMESTAMP AND end_date <= CURRENT_TIMESTAMP + INTERVAL '3 days') as expiring_soon,
-          COUNT(*) FILTER (WHERE messages_used >= messages_limit AND status IN ('active', 'trial')) as quota_exhausted
+          COUNT(*) FILTER (WHERE status = 'active' AND end_date >= CURRENT_TIMESTAMP)::int as active_subscriptions,
+          COUNT(*) FILTER (WHERE status = 'trial' AND end_date >= CURRENT_TIMESTAMP)::int as trial_subscriptions,
+          COUNT(*) FILTER (WHERE end_date < CURRENT_TIMESTAMP OR status = 'expired')::int as expired_subscriptions,
+          COUNT(*) FILTER (WHERE end_date >= CURRENT_TIMESTAMP AND end_date <= CURRENT_TIMESTAMP + INTERVAL '3 days')::int as expiring_soon,
+          COUNT(*) FILTER (WHERE messages_used >= messages_limit AND status IN ('active', 'trial'))::int as quota_exhausted
         FROM subscriptions
-      `),
+      `, defaultStats.subscriptions),
       // 4. Métricas de Tráfico Total
-      pool.query(`
+      runSafe(`
         SELECT 
-          COUNT(*) as total_messages,
-          COUNT(*) FILTER (WHERE status = 'SUCCESS') as successful_messages,
-          COUNT(*) FILTER (WHERE status = 'FAILED') as failed_messages
+          COUNT(*)::int as total_messages,
+          COUNT(*) FILTER (WHERE status = 'SUCCESS')::int as successful_messages,
+          COUNT(*) FILTER (WHERE status = 'FAILED')::int as failed_messages
         FROM usage_logs
-      `),
+      `, defaultStats.traffic),
       // 5. Métricas Financieras
-      pool.query(`
+      runSafe(`
         SELECT 
-          COALESCE(SUM(amount) FILTER (WHERE status = 'paid'), 0) as total_revenue,
-          COUNT(*) FILTER (WHERE status = 'pending') as pending_payments
+          COALESCE(SUM(amount) FILTER (WHERE status = 'paid'), 0)::numeric as total_revenue,
+          COUNT(*) FILTER (WHERE status = 'pending')::int as pending_payments
         FROM payments
-      `)
+      `, defaultStats.financial)
     ]);
 
     res.json({
       success: true,
       data: {
-        users: usersStats.rows[0],
-        instances: instStats.rows[0],
-        subscriptions: subStats.rows[0],
-        traffic: trafficStats.rows[0],
-        financial: paymentStats.rows[0]
+        users: usersStats,
+        instances: instStats,
+        subscriptions: subStats,
+        traffic: trafficStats,
+        financial: paymentStats
       }
     });
   } catch (error: any) {
     console.error('[AdminStats Error]:', error.message);
-    res.status(500).json({ success: false, error: 'Error al cargar estadísticas globales' });
+    res.status(500).json({ success: false, error: 'Error al cargar estadísticas globales', detail: error.message });
   }
 });
 
@@ -194,20 +212,28 @@ router.post('/users', async (req: AuthenticatedRequest, res) => {
     const endDate = new Date();
     endDate.setMonth(now.getMonth() + months);
 
-    await pool.query('BEGIN');
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
 
-    await pool.query(`
-      INSERT INTO users (id, email, password, role, status, company_name, phone, trial_used)
-      VALUES ($1, $2, $3, 'client', 'active', $4, $5, false)
-    `, [userId, cleanEmail, hashedPassword, companyName || null, phone || null]);
+      await client.query(`
+        INSERT INTO users (id, email, password, role, status, company_name, phone, trial_used)
+        VALUES ($1, $2, $3, 'client', 'active', $4, $5, false)
+      `, [userId, cleanEmail, hashedPassword, companyName || null, phone || null]);
 
-    const subId = generateId('sub');
-    await pool.query(`
-      INSERT INTO subscriptions (id, user_id, plan_id, status, messages_limit, messages_used, payment_status, start_date, end_date)
-      VALUES ($1, $2, $3, 'active', $4, 0, 'paid', $5, $6)
-    `, [subId, userId, targetPlanId, plan.max_messages || 1000, now, endDate]);
+      const subId = generateId('sub');
+      await client.query(`
+        INSERT INTO subscriptions (id, user_id, plan_id, status, messages_limit, messages_used, payment_status, start_date, end_date)
+        VALUES ($1, $2, $3, 'active', $4, 0, 'paid', $5, $6)
+      `, [subId, userId, targetPlanId, plan.max_messages || 1000, now, endDate]);
 
-    await pool.query('COMMIT');
+      await client.query('COMMIT');
+    } catch (txErr) {
+      await client.query('ROLLBACK');
+      throw txErr;
+    } finally {
+      client.release();
+    }
 
     // Registrar bitácora de auditoría
     await AuditService.logAction({
@@ -225,9 +251,8 @@ router.post('/users', async (req: AuthenticatedRequest, res) => {
       data: { id: userId, email: cleanEmail }
     });
   } catch (error: any) {
-    await pool.query('ROLLBACK');
     console.error('[AdminCreateUser Error]:', error.message);
-    res.status(500).json({ success: false, error: 'Error al crear cliente' });
+    res.status(500).json({ success: false, error: 'Error al crear cliente', detail: error.message });
   }
 });
 
@@ -323,33 +348,41 @@ router.put('/users/:id/subscription', async (req: AuthenticatedRequest, res) => 
     const newStatus = status || 'active';
     const newLimit = plan?.max_messages || currentSub?.messages_limit || 1000;
     const newUsed = resetQuota ? 0 : (currentSub?.messages_used || 0);
-
-    await pool.query('BEGIN');
-
-    // Desactivar suscripciones previas
-    await pool.query('UPDATE subscriptions SET status = \'cancelled\' WHERE user_id = $1 AND status IN (\'active\', \'trial\')', [id]);
-
-    // Insertar nueva suscripción
     const subId = generateId('sub');
-    await pool.query(`
-      INSERT INTO subscriptions (id, user_id, plan_id, status, messages_limit, messages_used, payment_status, start_date, end_date)
-      VALUES ($1, $2, $3, $4, $5, $6, 'paid', $7, $8)
-    `, [subId, id, targetPlanId, newStatus, newLimit, newUsed, now, newEndDate]);
 
-    // Reactivar usuario si estaba suspendido
-    await pool.query('UPDATE users SET status = \'active\' WHERE id = $1 AND status = \'suspended\'', [id]);
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
 
-    // Manejo de Downgrade / Upgrade en Instancias:
-    const maxInstAllowed = plan?.max_instances || 1;
-    const userInstancesRes = await pool.query('SELECT id FROM instances WHERE user_id = $1 ORDER BY created_at ASC', [id]);
-    const instances = userInstancesRes.rows;
+      // Desactivar suscripciones previas
+      await client.query('UPDATE subscriptions SET status = \'cancelled\' WHERE user_id = $1 AND status IN (\'active\', \'trial\')', [id]);
 
-    for (let i = 0; i < instances.length; i++) {
-      const isEnabled = i < maxInstAllowed;
-      await pool.query('UPDATE instances SET is_enabled = $1 WHERE id = $2', [isEnabled, instances[i].id]);
+      // Insertar nueva suscripción
+      await client.query(`
+        INSERT INTO subscriptions (id, user_id, plan_id, status, messages_limit, messages_used, payment_status, start_date, end_date)
+        VALUES ($1, $2, $3, $4, $5, $6, 'paid', $7, $8)
+      `, [subId, id, targetPlanId, newStatus, newLimit, newUsed, now, newEndDate]);
+
+      // Reactivar usuario si estaba suspendido
+      await client.query('UPDATE users SET status = \'active\' WHERE id = $1 AND status = \'suspended\'', [id]);
+
+      // Manejo de Downgrade / Upgrade en Instancias:
+      const maxInstAllowed = plan?.max_instances || 1;
+      const userInstancesRes = await client.query('SELECT id FROM instances WHERE user_id = $1 ORDER BY created_at ASC', [id]);
+      const instances = userInstancesRes.rows;
+
+      for (let i = 0; i < instances.length; i++) {
+        const isEnabled = i < maxInstAllowed;
+        await client.query('UPDATE instances SET is_enabled = $1 WHERE id = $2', [isEnabled, instances[i].id]);
+      }
+
+      await client.query('COMMIT');
+    } catch (txErr) {
+      await client.query('ROLLBACK');
+      throw txErr;
+    } finally {
+      client.release();
     }
-
-    await pool.query('COMMIT');
 
     await AuditService.logAction({
       adminId: req.userId || 'admin',
@@ -367,9 +400,8 @@ router.put('/users/:id/subscription', async (req: AuthenticatedRequest, res) => 
     });
 
   } catch (error: any) {
-    await pool.query('ROLLBACK');
     console.error('[AdminSubUpdate Error]:', error.message);
-    res.status(500).json({ success: false, error: 'Error al actualizar suscripción' });
+    res.status(500).json({ success: false, error: 'Error al actualizar suscripción', detail: error.message });
   }
 });
 
@@ -515,7 +547,7 @@ router.get('/instances', async (req: AuthenticatedRequest, res) => {
         s.status as subscription_status,
         s.end_date as subscription_end_date
       FROM instances i
-      JOIN users u ON i.user_id = u.id
+      LEFT JOIN users u ON i.user_id = u.id
       LEFT JOIN subscriptions s ON u.id = s.user_id AND s.id = (
         SELECT id FROM subscriptions WHERE user_id = u.id ORDER BY created_at DESC LIMIT 1
       )
@@ -530,7 +562,7 @@ router.get('/instances', async (req: AuthenticatedRequest, res) => {
     res.json({ success: true, data: maskedRows });
   } catch (error: any) {
     console.error('[AdminInstances Error]:', error.message);
-    res.status(500).json({ success: false, error: 'Error al listar instancias' });
+    res.status(500).json({ success: false, error: 'Error al listar instancias', detail: error.message });
   }
 });
 
@@ -640,7 +672,7 @@ router.get('/payments', async (req: AuthenticatedRequest, res) => {
         u.company_name,
         pl.name as plan_name
       FROM payments p
-      JOIN users u ON p.user_id = u.id
+      LEFT JOIN users u ON p.user_id = u.id
       LEFT JOIN subscriptions s ON p.subscription_id = s.id
       LEFT JOIN plans pl ON s.plan_id = pl.id
       ORDER BY p.created_at DESC;
@@ -648,7 +680,8 @@ router.get('/payments', async (req: AuthenticatedRequest, res) => {
     const result = await pool.query(query);
     res.json({ success: true, data: result.rows });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: 'Error al consultar pagos' });
+    console.error('[AdminPayments Error]:', error.message);
+    res.status(500).json({ success: false, error: 'Error al consultar pagos', detail: error.message });
   }
 });
 
@@ -673,39 +706,48 @@ router.post('/payments', async (req: AuthenticatedRequest, res) => {
     const newEndDate = new Date(baseDate);
     newEndDate.setMonth(baseDate.getMonth() + months);
 
-    await pool.query('BEGIN');
-
-    // Desactivar previa
-    await pool.query('UPDATE subscriptions SET status = \'cancelled\' WHERE user_id = $1 AND status IN (\'active\', \'trial\')', [userId]);
-
-    // Nueva suscripción activa
-    const subId = generateId('sub');
-    await pool.query(`
-      INSERT INTO subscriptions (id, user_id, plan_id, status, messages_limit, messages_used, payment_status, start_date, end_date)
-      VALUES ($1, $2, $3, 'active', $4, 0, 'paid', $5, $6)
-    `, [subId, userId, targetPlanId, plan?.max_messages || 1000, now, newEndDate]);
-
-    // Registrar el pago
+    const client = await pool.connect();
     const paymentId = generateId('pay');
-    await pool.query(`
-      INSERT INTO payments (id, user_id, subscription_id, amount, currency, payment_method, reference, status, notes, created_by)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, 'paid', $8, $9)
-    `, [
-      paymentId,
-      userId,
-      subId,
-      amount,
-      currency || 'USD',
-      paymentMethod || 'manual',
-      reference || null,
-      notes || `Pago registrado manualmente por administración (${months} meses)`,
-      req.userId || 'admin'
-    ]);
 
-    // Reactivar usuario si estaba suspendido
-    await pool.query('UPDATE users SET status = \'active\' WHERE id = $1', [userId]);
+    try {
+      await client.query('BEGIN');
 
-    await pool.query('COMMIT');
+      // Desactivar previa
+      await client.query('UPDATE subscriptions SET status = \'cancelled\' WHERE user_id = $1 AND status IN (\'active\', \'trial\')', [userId]);
+
+      // Nueva suscripción activa
+      const subId = generateId('sub');
+      await client.query(`
+        INSERT INTO subscriptions (id, user_id, plan_id, status, messages_limit, messages_used, payment_status, start_date, end_date)
+        VALUES ($1, $2, $3, 'active', $4, 0, 'paid', $5, $6)
+      `, [subId, userId, targetPlanId, plan?.max_messages || 1000, now, newEndDate]);
+
+      // Registrar el pago
+      await client.query(`
+        INSERT INTO payments (id, user_id, subscription_id, amount, currency, payment_method, reference, status, notes, created_by)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, 'paid', $8, $9)
+      `, [
+        paymentId,
+        userId,
+        subId,
+        amount,
+        currency || 'USD',
+        paymentMethod || 'manual',
+        reference || null,
+        notes || `Pago registrado manualmente por administración (${months} meses)`,
+        req.userId || 'admin'
+      ]);
+
+      // Reactivar usuario si estaba suspendido
+      await client.query('UPDATE users SET status = \'active\' WHERE id = $1', [userId]);
+
+      await client.query('COMMIT');
+    } catch (txErr) {
+      await client.query('ROLLBACK');
+      throw txErr;
+    } finally {
+      client.release();
+    }
 
     await AuditService.logAction({
       adminId: req.userId || 'admin',
@@ -723,9 +765,8 @@ router.post('/payments', async (req: AuthenticatedRequest, res) => {
     });
 
   } catch (error: any) {
-    await pool.query('ROLLBACK');
     console.error('[AdminPayment Error]:', error.message);
-    res.status(500).json({ success: false, error: 'Error al registrar pago' });
+    res.status(500).json({ success: false, error: 'Error al registrar pago', detail: error.message });
   }
 });
 
@@ -737,7 +778,8 @@ router.get('/audit-logs', async (req: AuthenticatedRequest, res) => {
     const result = await pool.query('SELECT * FROM admin_audit_logs ORDER BY created_at DESC LIMIT 100');
     res.json({ success: true, data: result.rows });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: 'Error al consultar logs de auditoría' });
+    console.error('[AdminAuditLogs Error]:', error.message);
+    res.status(500).json({ success: false, error: 'Error al consultar logs de auditoría', detail: error.message });
   }
 });
 
@@ -749,14 +791,15 @@ router.get('/usage-logs', async (req: AuthenticatedRequest, res) => {
     const query = `
       SELECT l.*, u.email as user_email 
       FROM usage_logs l
-      JOIN users u ON l.user_id = u.id
+      LEFT JOIN users u ON l.user_id = u.id
       ORDER BY l.created_at DESC 
       LIMIT 100;
     `;
     const result = await pool.query(query);
     res.json({ success: true, data: result.rows });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: 'Error al consultar métricas de uso' });
+    console.error('[AdminUsageLogs Error]:', error.message);
+    res.status(500).json({ success: false, error: 'Error al consultar métricas de uso', detail: error.message });
   }
 });
 

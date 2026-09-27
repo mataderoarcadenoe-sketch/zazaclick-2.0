@@ -62,7 +62,7 @@ export class PartnerService {
       LEFT JOIN users u ON u.partner_id = p.id AND u.role = 'client'
       LEFT JOIN instances i ON i.user_id = u.id
       LEFT JOIN subscriptions s ON s.user_id = u.id AND s.status IN ('active', 'trial')
-      GROUP BY p.id
+      GROUP BY p.id, p.name, p.slug, p.category, p.contact_email, p.master_key, p.master_key_hash, p.masked_key, p.webhook_url, p.is_active, p.created_at, p.updated_at
       ORDER BY p.created_at ASC;
     `;
 

@@ -205,40 +205,51 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     const start = Date.now();
     try {
       const client = this.getClient();
-      let response: any;
+      const goKey = process.env.EVOLUTION_GO_API_KEY || 'F2C43224-3975-46EC-954A-FB335F5C9FDA';
 
-      for (let attempt = 1; attempt <= 5; attempt++) {
+      // 1. Despertar socket con /instance/connect { immediate: true }
+      try {
+        await client.post('/instance/connect', { immediate: true }, { headers: { apikey: goKey, instance: instanceName } });
+      } catch (connErr: any) {
+        const cStatus = connErr.response?.status;
+        const cErr = connErr.response?.data?.error || '';
+        if (cStatus === 401 || cStatus === 404 || cErr.includes('not found') || cErr.includes('not authorized')) {
+          console.log(`⚠️ [EvolutionGoEngine] Instancia "${instanceName}" no inicializada. Creando...`);
+          await this.createInstance(instanceName);
+          try {
+            await client.post('/instance/connect', { immediate: true }, { headers: { apikey: goKey, instance: instanceName } });
+          } catch {}
+        }
+      }
+
+      // 2. Polling activo de QR
+      for (let attempt = 1; attempt <= 6; attempt++) {
         try {
-          response = await client.get('/instance/qr', { headers: { instance: instanceName } });
+          const response = await client.get('/instance/qr', { headers: { apikey: goKey, instance: instanceName } });
+          const resData = response?.data?.data || response?.data;
+          const qrcode = resData?.qrcode || resData?.Qrcode || resData?.base64;
+
+          if (qrcode) {
+            this.circuitBreaker.recordSuccess();
+            return EvolutionGoMapper.mapSuccess({ qrcode }, Date.now() - start);
+          }
         } catch (err: any) {
           const status = err.response?.status;
           const errMsg = err.response?.data?.error || '';
 
-          // 1. Si no hay QR disponible o socket en reposo, despertar el socket con /instance/connect
-          if (status === 400 && (errMsg.includes('no QR') || errMsg.includes('EOF') || errMsg.includes('wait a moment'))) {
-            try {
-              await client.post('/instance/connect', { immediate: true }, { headers: { instance: instanceName } });
-            } catch {}
-          }
-          // 2. Si la instancia no existe en memoria de Go, crearla
-          else if (status === 404 || status === 401 || errMsg.includes('not found') || errMsg.includes('record not found')) {
-            console.log(`⚠️ [EvolutionGoEngine] Instancia "${instanceName}" no existe en Evolution Go. Auto-creando...`);
+          if (status === 401 || status === 404 || errMsg.includes('not found') || errMsg.includes('not authorized')) {
             await this.createInstance(instanceName);
             try {
-              await client.post('/instance/connect', { immediate: true }, { headers: { instance: instanceName } });
+              await client.post('/instance/connect', { immediate: true }, { headers: { apikey: goKey, instance: instanceName } });
+            } catch {}
+          } else if (status === 400 && (errMsg.includes('no QR') || errMsg.includes('wait a moment') || errMsg.includes('EOF'))) {
+            try {
+              await client.post('/instance/connect', { immediate: true }, { headers: { apikey: goKey, instance: instanceName } });
             } catch {}
           }
         }
 
-        const resData = response?.data?.data || response?.data;
-        const qrcode = resData?.qrcode || resData?.Qrcode || resData?.base64;
-
-        if (qrcode) {
-          this.circuitBreaker.recordSuccess();
-          return EvolutionGoMapper.mapSuccess({ qrcode }, Date.now() - start);
-        }
-
-        if (attempt < 5) {
+        if (attempt < 6) {
           await new Promise(r => setTimeout(r, 1000));
         }
       }
