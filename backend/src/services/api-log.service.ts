@@ -46,8 +46,12 @@ export class ApiLogService {
    */
   public static middleware() {
     return (req: Request, res: Response, next: NextFunction) => {
-      // Registrar únicamente rutas relevantes de API (/v1, /api) ignorando assets estáticos
-      if (!req.path.startsWith('/v1') && !req.path.startsWith('/api')) {
+      // Registrar únicamente rutas relevantes de API de desarrolladores y ERP (/v1), ignorando admin interno y health checks
+      if (!req.path.startsWith('/v1') && !req.path.startsWith('/api/v1')) {
+        return next();
+      }
+
+      if (req.path.startsWith('/api/admin') || req.path.startsWith('/admin') || req.path === '/health' || req.path === '/') {
         return next();
       }
 
