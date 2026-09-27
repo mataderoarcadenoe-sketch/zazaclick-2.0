@@ -118,7 +118,7 @@ app.use('/', openapiRoutes);
 app.use('/v1', openapiRoutes);
 
 // Root Health Check Route
-app.get('/', (req, res) => {
+app.get(['/', '/health'], (req, res) => {
   res.json({
     status: 'ok',
     service: 'Zaza Click 2.0 — WhatsApp API SaaS Gateway',
