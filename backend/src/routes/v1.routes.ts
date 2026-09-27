@@ -266,7 +266,54 @@ const getQrEndpointHandler = async (req: AuthenticatedRequest, res: Response) =>
     }
 
     let engine = await engineRouter.getEngineForInstance(instanceName);
+
+    // 0. Si la instancia ya está físicamente conectada en WhatsApp, responder inmediatamente con 200 OK
+    try {
+      const liveStateRes = await engine.getConnectionState(instanceName);
+      if (liveStateRes.data?.isConnected) {
+        await pool.query("UPDATE instances SET status = 'connected', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1", [instanceName]);
+        return res.json({
+          success: true,
+          instanceName,
+          alreadyConnected: true,
+          isConnected: true,
+          status: 'connected',
+          state: 'connected',
+          qrcode: null,
+          base64: null,
+          qr: null,
+          data: {
+            alreadyConnected: true,
+            isConnected: true,
+            status: 'connected'
+          },
+          message: 'La instancia ya se encuentra conectada y activa en WhatsApp.'
+        });
+      }
+    } catch {}
+
     let qrRes = await engine.getQRCode(instanceName);
+
+    if (qrRes.success && (qrRes.data as any)?.alreadyConnected) {
+      await pool.query("UPDATE instances SET status = 'connected', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1", [instanceName]);
+      return res.json({
+        success: true,
+        instanceName,
+        alreadyConnected: true,
+        isConnected: true,
+        status: 'connected',
+        state: 'connected',
+        qrcode: null,
+        base64: null,
+        qr: null,
+        data: {
+          alreadyConnected: true,
+          isConnected: true,
+          status: 'connected'
+        },
+        message: 'La instancia ya se encuentra conectada y activa en WhatsApp.'
+      });
+    }
 
     // Fallback reactivo inteligente: Si evolution_api falla en generar QR, intentar inmediatamente con evolution_go
     if ((!qrRes.success || !qrRes.data?.qrcode) && engine.engineType !== 'evolution_go') {

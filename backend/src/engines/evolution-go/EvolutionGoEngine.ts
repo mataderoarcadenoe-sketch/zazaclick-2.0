@@ -236,7 +236,27 @@ export class EvolutionGoEngine implements WhatsAppEngine {
           }
         } catch (err: any) {
           const status = err.response?.status;
-          const errMsg = err.response?.data?.error || '';
+          const errMsg = String(err.response?.data?.error || err.message || '');
+
+          if (errMsg.includes('already logged in') || errMsg.includes('already connected') || errMsg.includes('session already')) {
+            console.log(`✅ [EvolutionGoEngine] Instancia "${instanceName}" ya se encuentra conectada en WhatsApp.`);
+            this.circuitBreaker.recordSuccess();
+            try {
+              await pool.query("UPDATE instances SET status = 'connected', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1", [instanceName]);
+            } catch {}
+            return {
+              success: true,
+              engine: this.engineType,
+              data: {
+                qrcode: '',
+                alreadyConnected: true,
+                status: 'connected',
+                state: 'connected',
+                isConnected: true
+              } as any,
+              latencyMs: Date.now() - start
+            };
+          }
 
           if (status === 401 || status === 404 || errMsg.includes('not found') || errMsg.includes('not authorized')) {
             await this.createInstance(instanceName);
