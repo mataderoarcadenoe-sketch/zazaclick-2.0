@@ -237,7 +237,7 @@ const getQrEndpointHandler = async (req: AuthenticatedRequest, res: Response) =>
 
     if (verifyRes.rows.length === 0) {
       if (isElevated) {
-        const instId = `inst_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+        const instId = crypto.randomUUID();
         await pool.query(
           `INSERT INTO instances (id, user_id, instance_name, name, status, engine_type)
            VALUES ($1, $2, $3, $3, 'disconnected', 'evolution_go')
@@ -298,7 +298,7 @@ const getQrEndpointHandler = async (req: AuthenticatedRequest, res: Response) =>
     return res.status(500).json({
       success: false,
       code: 'INTERNAL_ERROR',
-      error: 'Error interno al obtener código QR.'
+      error: `Error interno al obtener código QR: ${err.message}`
     });
   }
 };
