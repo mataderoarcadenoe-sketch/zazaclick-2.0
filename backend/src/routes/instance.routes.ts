@@ -175,7 +175,9 @@ const getQrHandler = async (req: AuthenticatedRequest, res: Response) => {
 
   try {
     const isElevated = req.userRole === 'partner' || req.userRole === 'admin';
-    const verifyRes = await pool.query('SELECT id FROM instances WHERE (user_id = $1 OR $3 = true) AND instance_name = $2', [req.userId, instanceName, isElevated]);
+    const verifyRes = isElevated
+      ? await pool.query('SELECT id FROM instances WHERE instance_name = $1 OR name = $1', [instanceName])
+      : await pool.query('SELECT id FROM instances WHERE user_id = $1 AND (instance_name = $2 OR name = $2)', [req.userId, instanceName]);
     if (verifyRes.rows.length === 0) {
       return res.status(403).json({ success: false, error: 'Acceso no autorizado a esta instancia.' });
     }

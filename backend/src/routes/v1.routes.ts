@@ -175,10 +175,15 @@ router.get('/instances/:instanceName', apiKeyOrTokenAuth, async (req: Authentica
 
   try {
     const isElevated = req.userRole === 'partner' || req.userRole === 'admin';
-    const instRes = await pool.query(
-      'SELECT id, instance_name, phone, status, api_key, engine_type, is_enabled, messages_sent, last_activity_at, created_at FROM instances WHERE (user_id = $1 OR $3 = true) AND instance_name = $2',
-      [req.userId, instanceName, isElevated]
-    );
+    const instRes = isElevated
+      ? await pool.query(
+          'SELECT id, instance_name, phone, status, api_key, engine_type, is_enabled, messages_sent, last_activity_at, created_at FROM instances WHERE instance_name = $1 OR name = $1',
+          [instanceName]
+        )
+      : await pool.query(
+          'SELECT id, instance_name, phone, status, api_key, engine_type, is_enabled, messages_sent, last_activity_at, created_at FROM instances WHERE user_id = $1 AND (instance_name = $2 OR name = $2)',
+          [req.userId, instanceName]
+        );
 
     if (instRes.rows.length === 0) {
       return res.status(404).json({
@@ -230,10 +235,9 @@ const getQrEndpointHandler = async (req: AuthenticatedRequest, res: Response) =>
 
   try {
     const isElevated = req.userRole === 'partner' || req.userRole === 'admin';
-    const verifyRes = await pool.query(
-      'SELECT id FROM instances WHERE (user_id = $1 OR $3 = true) AND (instance_name = $2 OR name = $2)',
-      [req.userId, instanceName, isElevated]
-    );
+    const verifyRes = isElevated
+      ? await pool.query('SELECT id FROM instances WHERE instance_name = $1 OR name = $1', [instanceName])
+      : await pool.query('SELECT id FROM instances WHERE user_id = $1 AND (instance_name = $2 OR name = $2)', [req.userId, instanceName]);
 
     if (verifyRes.rows.length === 0) {
       if (isElevated) {
@@ -318,10 +322,9 @@ const getStatusEndpointHandler = async (req: AuthenticatedRequest, res: Response
 
   try {
     const isElevated = req.userRole === 'partner' || req.userRole === 'admin';
-    const verifyRes = await pool.query(
-      'SELECT id, status FROM instances WHERE (user_id = $1 OR $3 = true) AND instance_name = $2',
-      [req.userId, instanceName, isElevated]
-    );
+    const verifyRes = isElevated
+      ? await pool.query('SELECT id, status FROM instances WHERE instance_name = $1 OR name = $1', [instanceName])
+      : await pool.query('SELECT id, status FROM instances WHERE user_id = $1 AND (instance_name = $2 OR name = $2)', [req.userId, instanceName]);
 
     if (verifyRes.rows.length === 0) {
       return res.status(403).json({
@@ -653,10 +656,9 @@ router.post('/instances/:instanceName/reconnect', apiKeyOrTokenAuth, async (req:
 
   try {
     const isElevated = req.userRole === 'partner' || req.userRole === 'admin';
-    const verifyRes = await pool.query(
-      'SELECT id, status FROM instances WHERE (user_id = $1 OR $3 = true) AND instance_name = $2',
-      [req.userId, instanceName, isElevated]
-    );
+    const verifyRes = isElevated
+      ? await pool.query('SELECT id, status FROM instances WHERE instance_name = $1 OR name = $1', [instanceName])
+      : await pool.query('SELECT id, status FROM instances WHERE user_id = $1 AND (instance_name = $2 OR name = $2)', [req.userId, instanceName]);
 
     if (verifyRes.rows.length === 0) {
       return res.status(403).json({
@@ -708,10 +710,9 @@ router.post('/instances/:instanceName/restart', apiKeyOrTokenAuth, async (req: A
 
   try {
     const isElevated = req.userRole === 'partner' || req.userRole === 'admin';
-    const verifyRes = await pool.query(
-      'SELECT id FROM instances WHERE (user_id = $1 OR $3 = true) AND instance_name = $2',
-      [req.userId, instanceName, isElevated]
-    );
+    const verifyRes = isElevated
+      ? await pool.query('SELECT id FROM instances WHERE instance_name = $1 OR name = $1', [instanceName])
+      : await pool.query('SELECT id FROM instances WHERE user_id = $1 AND (instance_name = $2 OR name = $2)', [req.userId, instanceName]);
 
     if (verifyRes.rows.length === 0) {
       return res.status(403).json({
@@ -752,10 +753,9 @@ router.post('/instances/:instanceName/clean-reset', apiKeyOrTokenAuth, async (re
 
   try {
     const isElevated = req.userRole === 'partner' || req.userRole === 'admin';
-    const verifyRes = await pool.query(
-      'SELECT id FROM instances WHERE (user_id = $1 OR $3 = true) AND instance_name = $2',
-      [req.userId, instanceName, isElevated]
-    );
+    const verifyRes = isElevated
+      ? await pool.query('SELECT id FROM instances WHERE instance_name = $1 OR name = $1', [instanceName])
+      : await pool.query('SELECT id FROM instances WHERE user_id = $1 AND (instance_name = $2 OR name = $2)', [req.userId, instanceName]);
 
     if (verifyRes.rows.length === 0) {
       return res.status(403).json({
@@ -807,10 +807,9 @@ router.post('/instances/:instanceName/logout', apiKeyOrTokenAuth, async (req: Au
 
   try {
     const isElevated = req.userRole === 'partner' || req.userRole === 'admin';
-    const verifyRes = await pool.query(
-      'SELECT id FROM instances WHERE (user_id = $1 OR $3 = true) AND instance_name = $2',
-      [req.userId, instanceName, isElevated]
-    );
+    const verifyRes = isElevated
+      ? await pool.query('SELECT id FROM instances WHERE instance_name = $1 OR name = $1', [instanceName])
+      : await pool.query('SELECT id FROM instances WHERE user_id = $1 AND (instance_name = $2 OR name = $2)', [req.userId, instanceName]);
 
     if (verifyRes.rows.length === 0) {
       return res.status(403).json({
@@ -853,10 +852,9 @@ router.delete('/instances/:instanceName', apiKeyOrTokenAuth, async (req: Authent
 
   try {
     const isElevated = req.userRole === 'partner' || req.userRole === 'admin';
-    const verifyRes = await pool.query(
-      'SELECT id FROM instances WHERE (user_id = $1 OR $3 = true) AND instance_name = $2',
-      [req.userId, instanceName, isElevated]
-    );
+    const verifyRes = isElevated
+      ? await pool.query('SELECT id FROM instances WHERE instance_name = $1 OR name = $1', [instanceName])
+      : await pool.query('SELECT id FROM instances WHERE user_id = $1 AND (instance_name = $2 OR name = $2)', [req.userId, instanceName]);
 
     if (verifyRes.rows.length === 0) {
       return res.status(403).json({
