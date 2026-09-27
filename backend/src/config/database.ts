@@ -186,6 +186,8 @@ export async function initDatabase() {
     ALTER TABLE instances ADD COLUMN IF NOT EXISTS webhook_enabled BOOLEAN DEFAULT true;
 
     -- Evolution Go GORM columns
+    ALTER TABLE instances ADD COLUMN IF NOT EXISTS "name" VARCHAR(255);
+    ALTER TABLE instances ADD COLUMN IF NOT EXISTS "token" VARCHAR(255);
     ALTER TABLE instances ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
     ALTER TABLE instances ADD COLUMN IF NOT EXISTS "alwaysOnline" BOOLEAN DEFAULT false;
     ALTER TABLE instances ADD COLUMN IF NOT EXISTS "rejectCall" BOOLEAN DEFAULT false;

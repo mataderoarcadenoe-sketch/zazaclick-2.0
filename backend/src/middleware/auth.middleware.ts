@@ -186,7 +186,8 @@ export async function apiKeyOrTokenAuth(req: AuthenticatedRequest, res: Response
         error: 'API Key inválida o no autorizada.'
       });
     } catch (dbErr: any) {
-      return res.status(500).json({ success: false, error: 'Error interno verificando credenciales API.' });
+      console.error('[apiKeyOrTokenAuth] Error en validación de API Key:', dbErr.message);
+      return res.status(500).json({ success: false, error: 'Error interno verificando credenciales API: ' + dbErr.message });
     }
   }
 
