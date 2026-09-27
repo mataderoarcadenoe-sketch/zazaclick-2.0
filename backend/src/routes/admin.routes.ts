@@ -21,83 +21,48 @@ function generateId(prefix: string): string {
  */
 router.get('/stats', async (req: AuthenticatedRequest, res) => {
   try {
-    const defaultStats = {
-      users: { total_users: 0, active_users: 0, suspended_users: 0, blocked_users: 0 },
-      instances: { total_instances: 0, connected_instances: 0, disabled_instances: 0 },
-      subscriptions: { active_subscriptions: 0, trial_subscriptions: 0, expired_subscriptions: 0, expiring_soon: 0, quota_exhausted: 0 },
-      traffic: { total_messages: 0, successful_messages: 0, failed_messages: 0 },
-      financial: { total_revenue: 0, pending_payments: 0 }
-    };
+    const statsQuery = `
+      SELECT 
+        (SELECT json_build_object(
+          'total_users', COALESCE(COUNT(*), 0)::int,
+          'active_users', COALESCE(COUNT(*) FILTER (WHERE status = 'active'), 0)::int,
+          'suspended_users', COALESCE(COUNT(*) FILTER (WHERE status = 'suspended'), 0)::int,
+          'blocked_users', COALESCE(COUNT(*) FILTER (WHERE status = 'blocked'), 0)::int
+        ) FROM users WHERE role = 'client') as users,
+        (SELECT json_build_object(
+          'total_instances', COALESCE(COUNT(*), 0)::int,
+          'connected_instances', COALESCE(COUNT(*) FILTER (WHERE status = 'connected'), 0)::int,
+          'disabled_instances', COALESCE(COUNT(*) FILTER (WHERE is_enabled = false), 0)::int
+        ) FROM instances) as instances,
+        (SELECT json_build_object(
+          'active_subscriptions', COALESCE(COUNT(*) FILTER (WHERE status = 'active' AND end_date >= CURRENT_TIMESTAMP), 0)::int,
+          'trial_subscriptions', COALESCE(COUNT(*) FILTER (WHERE status = 'trial' AND end_date >= CURRENT_TIMESTAMP), 0)::int,
+          'expired_subscriptions', COALESCE(COUNT(*) FILTER (WHERE end_date < CURRENT_TIMESTAMP OR status = 'expired'), 0)::int,
+          'expiring_soon', COALESCE(COUNT(*) FILTER (WHERE end_date >= CURRENT_TIMESTAMP AND end_date <= CURRENT_TIMESTAMP + INTERVAL '3 days'), 0)::int,
+          'quota_exhausted', COALESCE(COUNT(*) FILTER (WHERE messages_used >= messages_limit AND status IN ('active', 'trial')), 0)::int
+        ) FROM subscriptions) as subscriptions,
+        (SELECT json_build_object(
+          'total_messages', COALESCE(COUNT(*), 0)::int,
+          'successful_messages', COALESCE(COUNT(*) FILTER (WHERE status = 'SUCCESS'), 0)::int,
+          'failed_messages', COALESCE(COUNT(*) FILTER (WHERE status = 'FAILED'), 0)::int
+        ) FROM usage_logs) as traffic,
+        (SELECT json_build_object(
+          'total_revenue', COALESCE(SUM(amount) FILTER (WHERE status = 'paid'), 0)::numeric,
+          'pending_payments', COALESCE(COUNT(*) FILTER (WHERE status = 'pending'), 0)::int
+        ) FROM payments) as financial;
+    `;
 
-    const runSafe = async (query: string, fallback: any) => {
-      try {
-        const r = await pool.query(query);
-        return r.rows[0] || fallback;
-      } catch (e: any) {
-        console.warn('[AdminStats partial query err]:', e.message);
-        return fallback;
-      }
-    };
-
-    const [
-      usersStats,
-      instStats,
-      subStats,
-      trafficStats,
-      paymentStats
-    ] = await Promise.all([
-      // 1. Métricas de Usuarios
-      runSafe(`
-        SELECT 
-          COUNT(*)::int as total_users,
-          COUNT(*) FILTER (WHERE status = 'active')::int as active_users,
-          COUNT(*) FILTER (WHERE status = 'suspended')::int as suspended_users,
-          COUNT(*) FILTER (WHERE status = 'blocked')::int as blocked_users
-        FROM users WHERE role = 'client'
-      `, defaultStats.users),
-      // 2. Métricas de Instancias
-      runSafe(`
-        SELECT 
-          COUNT(*)::int as total_instances,
-          COUNT(*) FILTER (WHERE status = 'connected')::int as connected_instances,
-          COUNT(*) FILTER (WHERE is_enabled = false)::int as disabled_instances
-        FROM instances
-      `, defaultStats.instances),
-      // 3. Métricas de Suscripciones y Vencimientos
-      runSafe(`
-        SELECT 
-          COUNT(*) FILTER (WHERE status = 'active' AND end_date >= CURRENT_TIMESTAMP)::int as active_subscriptions,
-          COUNT(*) FILTER (WHERE status = 'trial' AND end_date >= CURRENT_TIMESTAMP)::int as trial_subscriptions,
-          COUNT(*) FILTER (WHERE end_date < CURRENT_TIMESTAMP OR status = 'expired')::int as expired_subscriptions,
-          COUNT(*) FILTER (WHERE end_date >= CURRENT_TIMESTAMP AND end_date <= CURRENT_TIMESTAMP + INTERVAL '3 days')::int as expiring_soon,
-          COUNT(*) FILTER (WHERE messages_used >= messages_limit AND status IN ('active', 'trial'))::int as quota_exhausted
-        FROM subscriptions
-      `, defaultStats.subscriptions),
-      // 4. Métricas de Tráfico Total
-      runSafe(`
-        SELECT 
-          COUNT(*)::int as total_messages,
-          COUNT(*) FILTER (WHERE status = 'SUCCESS')::int as successful_messages,
-          COUNT(*) FILTER (WHERE status = 'FAILED')::int as failed_messages
-        FROM usage_logs
-      `, defaultStats.traffic),
-      // 5. Métricas Financieras
-      runSafe(`
-        SELECT 
-          COALESCE(SUM(amount) FILTER (WHERE status = 'paid'), 0)::numeric as total_revenue,
-          COUNT(*) FILTER (WHERE status = 'pending')::int as pending_payments
-        FROM payments
-      `, defaultStats.financial)
-    ]);
+    const result = await pool.query(statsQuery);
+    const row = result.rows[0] || {};
 
     res.json({
       success: true,
       data: {
-        users: usersStats,
-        instances: instStats,
-        subscriptions: subStats,
-        traffic: trafficStats,
-        financial: paymentStats
+        users: row.users || { total_users: 0, active_users: 0, suspended_users: 0, blocked_users: 0 },
+        instances: row.instances || { total_instances: 0, connected_instances: 0, disabled_instances: 0 },
+        subscriptions: row.subscriptions || { active_subscriptions: 0, trial_subscriptions: 0, expired_subscriptions: 0, expiring_soon: 0, quota_exhausted: 0 },
+        traffic: row.traffic || { total_messages: 0, successful_messages: 0, failed_messages: 0 },
+        financial: row.financial || { total_revenue: 0, pending_payments: 0 }
       }
     });
   } catch (error: any) {
@@ -179,7 +144,7 @@ router.get('/users', async (req: AuthenticatedRequest, res) => {
     res.json({ success: true, data: formattedUsers });
   } catch (error: any) {
     console.error('[AdminUsers Error]:', error.message);
-    res.status(500).json({ success: false, error: 'Error al listar clientes' });
+    res.status(500).json({ success: false, error: 'Error al listar clientes', detail: error.message });
   }
 });
 
@@ -599,7 +564,8 @@ router.get('/plans', async (req: AuthenticatedRequest, res) => {
     const result = await pool.query('SELECT * FROM plans ORDER BY price ASC');
     res.json({ success: true, data: result.rows });
   } catch (error: any) {
-    res.status(500).json({ success: false, error: 'Error al consultar planes' });
+    console.error('[AdminPlans Error]:', error.message);
+    res.status(500).json({ success: false, error: 'Error al consultar planes', detail: error.message });
   }
 });
 
