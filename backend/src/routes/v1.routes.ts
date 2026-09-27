@@ -242,11 +242,19 @@ const getQrEndpointHandler = async (req: AuthenticatedRequest, res: Response) =>
     if (verifyRes.rows.length === 0) {
       if (isElevated) {
         const instId = crypto.randomUUID();
+        let tenantUserId: string | null = null;
+        try {
+          const uRes = await pool.query('SELECT id FROM users WHERE id = $1 OR external_id = $2 LIMIT 1', [req.userId, instanceName]);
+          if (uRes.rows.length > 0) {
+            tenantUserId = uRes.rows[0].id;
+          }
+        } catch {}
+
         await pool.query(
           `INSERT INTO instances (id, user_id, instance_name, name, status, engine_type)
            VALUES ($1, $2, $3, $4, 'disconnected', 'evolution_go')
            ON CONFLICT DO NOTHING`,
-          [instId, req.userId, instanceName, instanceName]
+          [instId, tenantUserId, instanceName, instanceName]
         );
       } else {
         return res.status(403).json({
