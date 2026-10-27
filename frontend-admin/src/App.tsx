@@ -9,9 +9,9 @@ const AppContent: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#070B12] flex flex-col items-center justify-center space-y-4">
-        <ZazaLogo size={64} animated />
-        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest animate-pulse">Cargando Admin Zaza.click 2.0...</p>
+      <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B0F17] flex flex-col items-center justify-center space-y-4">
+        <ZazaLogo size={64} />
+        <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-widest">Cargando Consola SuperAdmin...</p>
       </div>
     );
   }
@@ -20,8 +20,7 @@ const AppContent: React.FC = () => {
     return <AuthPage />;
   }
 
-  // Verificar que única y exclusivamente syscomecosistemadigital@gmail.com con rol admin pueda visualizar el panel
-  if (user.role !== 'admin' || user.email?.toLowerCase() !== 'syscomecosistemadigital@gmail.com') {
+  if (user.role !== 'admin') {
     logout();
     return <AuthPage />;
   }

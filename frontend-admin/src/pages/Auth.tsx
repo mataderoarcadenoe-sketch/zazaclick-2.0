@@ -37,9 +37,8 @@ export default function AuthPage() {
       setError(null);
       const res = await api.post('/auth/google-login', { credential: response.credential });
       if (res.data?.success && res.data?.token) {
-        const userEmail = res.data?.user?.email?.toLowerCase()?.trim();
-        if (res.data?.user?.role !== 'admin' || userEmail !== 'syscomecosistemadigital@gmail.com') {
-          setError('Acceso Denegado: Solo la cuenta autorizada (syscomecosistemadigital@gmail.com) cuenta con privilegios de SuperAdmin.');
+        if (res.data?.user?.role !== 'admin') {
+          setError('Acceso Denegado: Esta cuenta no cuenta con privilegios de SuperAdmin.');
           return;
         }
         localStorage.setItem('saas_auth_token', res.data.token);
@@ -263,20 +262,6 @@ export default function AuthPage() {
                 </div>
               </div>
             )}
-
-            <div className="p-3.5 surface-interactive rounded-xl flex items-center gap-3 text-left">
-              <div className="w-8 h-8 rounded-lg surface-accent-emerald text-emerald-700 dark:text-emerald-300 flex items-center justify-center flex-shrink-0">
-                <CheckCircle2 size={16} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider block">
-                  Cuenta SuperAdmin Autorizada
-                </span>
-                <span className="text-xs font-mono font-bold text-slate-800 dark:text-slate-200 truncate block">
-                  syscomecosistemadigital@gmail.com
-                </span>
-              </div>
-            </div>
 
             <div className="space-y-5 pt-1">
               <div className="flex flex-col items-center justify-center min-h-[50px] relative w-full">

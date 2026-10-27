@@ -9,9 +9,9 @@ const AppContent: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center space-y-4">
-        <ZazaLogo size={64} animated />
-        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest animate-pulse">Cargando Zaza.click 2.0...</p>
+      <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B0F17] flex flex-col items-center justify-center space-y-4">
+        <ZazaLogo size={64} />
+        <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-widest">Cargando Zaza.click 2.0...</p>
       </div>
     );
   }
