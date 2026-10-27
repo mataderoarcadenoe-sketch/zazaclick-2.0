@@ -209,7 +209,7 @@ export class PartnerProvisioningService {
 
         const upsertInst = await pool.query(
           `INSERT INTO instances (id, user_id, instance_name, name, status, api_key, token, engine_type, webhook_url, webhook_secret, webhook_enabled)
-           VALUES ($1, $2, $3, $3, 'disconnected', $4, $4, $5, $6, $7, $8)
+           VALUES ($1, $2, $3, $4, 'disconnected', $5, $6, $7, $8, $9, $10)
            ON CONFLICT (instance_name) DO UPDATE SET
              user_id = EXCLUDED.user_id,
              api_key = COALESCE(EXCLUDED.api_key, instances.api_key),
@@ -220,7 +220,7 @@ export class PartnerProvisioningService {
              webhook_enabled = EXCLUDED.webhook_enabled,
              updated_at = CURRENT_TIMESTAMP
            RETURNING id, status`,
-          [fallbackId, userId, instanceName, evoToken, targetEngine, normalizedWebhookUrl, webhookSecret, Boolean(normalizedWebhookUrl)]
+          [fallbackId, userId, instanceName, instanceName, evoToken, evoToken, targetEngine, normalizedWebhookUrl, webhookSecret, Boolean(normalizedWebhookUrl)]
         );
 
         const finalInstanceId = upsertInst.rows[0]?.id || fallbackId;

@@ -61,8 +61,8 @@ router.post('/register', async (req, res) => {
       // 3. Crear usuario con estado activo y trial registrado
       await client.query(`
         INSERT INTO users (id, email, password, role, status, trial_used, trial_started_at, trial_end_date, company_name, phone, last_login_at)
-        VALUES ($1, $2, $3, $4, 'active', true, $5, $6, $7, $8, $5)
-      `, [userId, cleanEmail, hashedPassword, assignedRole, now, trialEndDate, companyName || null, phone || null]);
+        VALUES ($1, $2, $3, $4, 'active', true, $5, $6, $7, $8, $9)
+      `, [userId, cleanEmail, hashedPassword, assignedRole, now, trialEndDate, companyName || null, phone || null, now]);
 
       // 4. Crear suscripción de prueba con cuotas atómicas
       const subId = generateId('sub');
@@ -206,8 +206,8 @@ router.post('/google-login', async (req, res) => {
 
         await client.query(`
           INSERT INTO users (id, email, password, role, status, trial_used, trial_started_at, trial_end_date, last_login_at)
-          VALUES ($1, $2, $3, $4, 'active', true, $5, $6, $5)
-        `, [userId, cleanEmail, randomPassword, assignedRole, now, trialEndDate]);
+          VALUES ($1, $2, $3, $4, 'active', true, $5, $6, $7)
+        `, [userId, cleanEmail, randomPassword, assignedRole, now, trialEndDate, now]);
 
         const subId = generateId('sub');
         await client.query(`

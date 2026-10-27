@@ -90,7 +90,7 @@ const createInstanceHandler = async (req: AuthenticatedRequest, res: Response) =
 
     const upsertRes = await pool.query(`
       INSERT INTO instances (id, user_id, instance_name, name, status, api_key, token, engine_type)
-      VALUES ($1, $2, $3, $3, $4, $5, $5, $6)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       ON CONFLICT (instance_name) DO UPDATE SET
         user_id = EXCLUDED.user_id,
         status = EXCLUDED.status,
@@ -99,7 +99,7 @@ const createInstanceHandler = async (req: AuthenticatedRequest, res: Response) =
         engine_type = EXCLUDED.engine_type,
         updated_at = CURRENT_TIMESTAMP
       RETURNING id, api_key
-    `, [fallbackId, req.userId, instanceName, 'disconnected', apiKey, targetEngine]);
+    `, [fallbackId, req.userId, instanceName, instanceName, 'disconnected', apiKey, apiKey, targetEngine]);
 
     const finalId = upsertRes.rows[0]?.id || fallbackId;
     const finalApiKey = upsertRes.rows[0]?.api_key || apiKey;

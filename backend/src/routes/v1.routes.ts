@@ -105,7 +105,7 @@ router.post('/instances', apiKeyOrTokenAuth, async (req: AuthenticatedRequest, r
 
     const upsertRes = await pool.query(`
       INSERT INTO instances (id, user_id, instance_name, name, status, api_key, token, engine_type)
-      VALUES ($1, $2, $3, $3, $4, $5, $5, $6)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       ON CONFLICT (instance_name) DO UPDATE SET
         user_id = EXCLUDED.user_id,
         status = EXCLUDED.status,
@@ -114,7 +114,7 @@ router.post('/instances', apiKeyOrTokenAuth, async (req: AuthenticatedRequest, r
         engine_type = EXCLUDED.engine_type,
         updated_at = CURRENT_TIMESTAMP
       RETURNING id, api_key
-    `, [fallbackId, req.userId, instanceName, 'disconnected', apiKey, targetEngine]);
+    `, [fallbackId, req.userId, instanceName, instanceName, 'disconnected', apiKey, apiKey, targetEngine]);
 
     const finalId = upsertRes.rows[0]?.id || fallbackId;
     const finalApiKey = upsertRes.rows[0]?.api_key || apiKey;
@@ -273,14 +273,14 @@ const getQrEndpointHandler = async (req: AuthenticatedRequest, res: Response) =>
 
         await pool.query(
           `INSERT INTO instances (id, user_id, instance_name, name, status, api_key, token, engine_type)
-           VALUES ($1, $2, $3, $3, 'disconnected', $4, $4, 'evolution_go')
+           VALUES ($1, $2, $3, $4, 'disconnected', $5, $6, 'evolution_go')
            ON CONFLICT (instance_name) DO UPDATE SET
              user_id = COALESCE(instances.user_id, EXCLUDED.user_id),
              api_key = COALESCE(EXCLUDED.api_key, instances.api_key),
              token = COALESCE(EXCLUDED.token, instances.token),
              engine_type = 'evolution_go',
              updated_at = CURRENT_TIMESTAMP`,
-          [fallbackId, tenantUserId, instanceName, token]
+          [fallbackId, tenantUserId, instanceName, instanceName, token, token]
         );
       } else {
         return res.status(403).json({
