@@ -162,7 +162,7 @@ export default function AuthPage() {
               </span>
             </h1>
             <p className="text-slate-600 dark:text-slate-300 text-sm lg:text-base leading-relaxed max-w-2xl font-normal">
-              Centro de mando exclusivo para administrar inquilinos, supervisar consumo de cuotas en tiempo real, procesar pagos y controlar el clúster de Evolution API 2.4.0-rc2.
+              Centro de mando exclusivo para administrar inquilinos, supervisar consumo de cuotas en tiempo real, procesar pagos y controlar el clúster de Evolution Go (Whatsmeow Engine).
             </p>
           </div>
 
@@ -212,8 +212,8 @@ export default function AuthPage() {
                 <div className="w-9 h-9 mx-auto rounded-xl bg-gradient-to-br from-teal-500 to-emerald-600 text-white flex items-center justify-center font-bold text-xs">
                   <Server size={18} />
                 </div>
-                <h5 className="text-xs font-black text-slate-900 dark:text-slate-100">Evolution 2.4.0</h5>
-                <p className="text-[10px] font-bold text-teal-600 dark:text-teal-400">Baileys Engine</p>
+                <h5 className="text-xs font-black text-slate-900 dark:text-slate-100">Evolution Go</h5>
+                <p className="text-[10px] font-bold text-teal-600 dark:text-teal-400">Whatsmeow Engine</p>
               </div>
 
             </div>

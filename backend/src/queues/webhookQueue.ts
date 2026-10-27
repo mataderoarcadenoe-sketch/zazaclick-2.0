@@ -2,7 +2,6 @@ import { Queue, Worker, Job } from 'bullmq';
 import redis from '../config/redis';
 import { getIO } from '../config/socket';
 import pool from '../config/database';
-import { EvolutionService } from '../services/evolution.service';
 import { WebhookDispatcherService } from '../services/webhook-dispatcher.service';
 
 const redisUrl = process.env.REDIS_PRIVATE_URL || process.env.REDIS_URL;
@@ -18,21 +17,10 @@ export const webhookQueue = new Queue('webhook-queue', {
   connection: connectionConfig
 });
 
-// Helper to resolve JID to real WhatsApp JID if it is a LID
-async function resolveJidIfNeeded(instanceName: string, jid: string): Promise<string> {
+// Normalizar JID eliminando sufijos de dispositivo (:0@s.whatsapp.net -> @s.whatsapp.net)
+function normalizeJid(jid: string): string {
   if (!jid) return jid;
-  let cleanJid = jid.replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net');
-  if (cleanJid.endsWith('@lid')) {
-    try {
-      const resolved = await EvolutionService.resolveLidToPhone(instanceName, cleanJid);
-      if (resolved && resolved.endsWith('@s.whatsapp.net')) {
-        return resolved;
-      }
-    } catch (err: any) {
-      console.warn(`[QueueWorker] Error resolving LID JID ${cleanJid}:`, err.message);
-    }
-  }
-  return cleanJid;
+  return jid.replace(/:\d+@s\.whatsapp\.net/g, '@s.whatsapp.net');
 }
 
 // Crear el procesador (Worker) de la cola
@@ -42,7 +30,7 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
   const roomName = `instance_${instance}`;
   const io = getIO();
 
-  console.log(`默默 [QueueWorker] Procesando evento encolado: ${eventUpper} para ${instance}`);
+  console.log(`📨 [QueueWorker] Procesando evento encolado: ${eventUpper} para ${instance}`);
 
   try {
     if (eventUpper === 'MESSAGES_UPSERT') {
@@ -64,23 +52,17 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
 
       const remoteJid = data.key?.remoteJid;
       if (remoteJid) {
-        let cleanJid = await resolveJidIfNeeded(instance, remoteJid);
+        const cleanJid = normalizeJid(remoteJid);
         
-        // Actualizar el JID en el mensaje para que el frontend reciba el número real
+        // Actualizar el JID en el mensaje para que el frontend/ERP reciba el número limpio
         if (data.key) {
           data.key.remoteJid = cleanJid;
-        }
-        
-        // Caching automático del nombre si viene en pushName / notify y NO es un mensaje saliente
-        const pushName = data.pushName || data.key?.pushName;
-        if (pushName && !data.key?.fromMe) {
-          await EvolutionService.saveContactName(instance, cleanJid, undefined, pushName);
         }
 
         // Emitir mensaje por Socket.io
         io.to(roomName).emit('message:received', data);
         
-        // Incrementar contador de no leídos en Redis si el mensaje no es del asesor (fromMe !== true)
+        // Incrementar contador de no leídos en Redis si el mensaje no es saliente (fromMe !== true)
         if (!data.key.fromMe) {
           const redisKey = `unread:${instance}:${cleanJid}`;
           await redis.incr(redisKey);
@@ -186,14 +168,12 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
       for (const update of chatUpdates) {
         const remoteJid = update.id || update.remoteJid;
         if (remoteJid) {
-          let cleanJid = await resolveJidIfNeeded(instance, remoteJid);
+          const cleanJid = normalizeJid(remoteJid);
           if (update.id) update.id = cleanJid;
           if (update.remoteJid) update.remoteJid = cleanJid;
           if (update.unreadCount === 0 || update.unreadMessages === 0) {
             const redisKey = `unread:${instance}:${cleanJid}`;
             await redis.set(redisKey, 0);
-
-            console.log(`📉 [QueueWorker] CHATS_UPDATE: Limpiado no leídos para ${cleanJid} en ${instance}`);
 
             io.to(roomName).emit('unread_update', {
               remoteJid: cleanJid,
@@ -208,15 +188,13 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
       for (const update of msgUpdates) {
         const remoteJid = update.key?.remoteJid || update.remoteJid;
         if (remoteJid) {
-          let cleanJid = await resolveJidIfNeeded(instance, remoteJid);
+          const cleanJid = normalizeJid(remoteJid);
           if (update.key) update.key.remoteJid = cleanJid;
           if (update.remoteJid) update.remoteJid = cleanJid;
           const isRead = update.update?.status === 3 || update.status === 'READ' || update.unreadCount === 0;
           if (isRead) {
             const redisKey = `unread:${instance}:${cleanJid}`;
             await redis.set(redisKey, 0);
-
-            console.log(`📉 [QueueWorker] MESSAGES_UPDATE: Limpiado no leídos para ${cleanJid} en ${instance}`);
 
             io.to(roomName).emit('unread_update', {
               remoteJid: cleanJid,
@@ -226,30 +204,10 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
         }
       }
     }
-    else if (eventUpper === 'CONTACTS_UPSERT' || eventUpper === 'CONTACTS_UPDATE') {
-      const contacts = Array.isArray(data) ? data : [data];
-      let savedCount = 0;
-      
-      for (const contact of contacts) {
-        const jid = contact.id || contact.remoteJid;
-        if (!jid) continue;
-        
-        const agendaName = contact.name || undefined;
-        const notifyName = contact.notify || contact.pushName || undefined;
-        
-        if (agendaName || notifyName) {
-          await EvolutionService.saveContactName(instance, jid, agendaName, notifyName);
-          savedCount++;
-        }
-      }
-      if (savedCount > 0) {
-        console.log(`📇 [QueueWorker] CONTACTS_UPSERT: ${savedCount} contactos guardados en caché.`);
-      }
-    }
     else if (eventUpper === 'PRESENCE_UPDATE') {
       const remoteJid = data.id || data.remoteJid;
       if (remoteJid && data.presences) {
-        let cleanJid = await resolveJidIfNeeded(instance, remoteJid);
+        const cleanJid = normalizeJid(remoteJid);
         if (data.id) data.id = cleanJid;
         if (data.remoteJid) data.remoteJid = cleanJid;
         const jids = Object.keys(data.presences);

@@ -1149,7 +1149,7 @@ echo json_encode(['received' => true]);
             </div>
           )}
 
-          {/* 6. MULTI-ENGINE GATEWAY */}
+          {/* 6. ENGINE GATEWAY */}
           {activeSection === 'multi-engine' && (
             <div className="space-y-6">
               <div className="surface-panel p-6 rounded-2xl space-y-5">
@@ -1158,32 +1158,19 @@ echo json_encode(['received' => true]);
                     <Cpu size={20} />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">Arquitectura Multi-Engine Gateway</h2>
-                    <p className="text-xs text-slate-500">Zaza Click 2.0 unifica dos motores independientes bajo una misma API.</p>
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">Arquitectura Evolution Go (Whatsmeow Engine)</h2>
+                    <p className="text-xs text-slate-500">Zaza Click 2.0 opera sobre el motor oficial de alto rendimiento en Golang.</p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                  <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-                      <h3 className="text-sm font-bold text-slate-900 dark:text-white">Evolution API (v2.4.0-rc2)</h3>
-                    </div>
-                    <p className="text-xs text-slate-500 leading-relaxed">
-                      Motor basado en <strong>Node.js y Baileys</strong>. Excelente compatibilidad, gestión completa de grupos, presencia, historiales de chat y catálogos interactivos.
-                    </p>
-                    <div className="text-[11px] font-mono text-blue-600 dark:text-blue-400">
-                      engine: "evolution_api"
-                    </div>
-                  </div>
-
+                <div className="grid grid-cols-1 gap-4 pt-2">
                   <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-2">
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
                       <h3 className="text-sm font-bold text-slate-900 dark:text-white">Evolution Go (whatsmeow / Golang)</h3>
                     </div>
                     <p className="text-xs text-slate-500 leading-relaxed">
-                      Motor de alto rendimiento compilado en <strong>Go 1.24</strong>. Máxima velocidad de throughput, mínimo consumo de memoria RAM y latencias de envío ultrabajas.
+                      Motor de alto rendimiento compilado en <strong>Go 1.24 (Whatsmeow)</strong>. Máxima velocidad de throughput, mínimo consumo de memoria RAM, reconexión persistente sobre PostgreSQL (Supabase) y latencias de envío ultrabajas.
                     </p>
                     <div className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400">
                       engine: "evolution_go"
@@ -1219,7 +1206,6 @@ echo json_encode(['received' => true]);
                       >
                         <option value="/v1/messages/text">POST /v1/messages/text (Texto)</option>
                         <option value="/v1/messages/media">POST /v1/messages/media (Imagen)</option>
-                        <option value="/api/webhooks/send-text">POST /api/webhooks/send-text (Legacy)</option>
                       </select>
                     </div>
 

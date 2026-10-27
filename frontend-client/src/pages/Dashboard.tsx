@@ -25,7 +25,7 @@ export default function Dashboard() {
   const { isDark, toggle: toggleDark } = useDarkMode();
 
   // State Management - WhatsApp API SaaS Core
-  const [activeTab, setActiveTab] = useState<string>(user?.role === 'admin' ? 'admin_overview' : 'overview');
+  const [activeTab, setActiveTab] = useState<string>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Máquina de Estados de Operaciones Asíncronas
@@ -48,7 +48,7 @@ export default function Dashboard() {
   // Instancias / Líneas WhatsApp
   const [instances, setInstances] = useState<any[]>([]);
   const [newInstanceName, setNewInstanceName] = useState('');
-  const [selectedEngine, setSelectedEngine] = useState<'evolution_api' | 'evolution_go'>('evolution_api');
+  const [selectedEngine] = useState<'evolution_go'>('evolution_go');
   const [loadingInstances, setLoadingInstances] = useState(false);
   const [qrCodeModal, setQrCodeModal] = useState<{ open: boolean; instanceName: string; qrCode: string | null }>({
     open: false,
@@ -58,11 +58,6 @@ export default function Dashboard() {
 
   // Suscripción & Planes
   const [subscription, setSubscription] = useState<any>(null);
-
-  // SuperAdmin Data
-  const [adminUsers, setAdminUsers] = useState<any[]>([]);
-  const [adminInstances, setAdminInstances] = useState<any[]>([]);
-  const [adminStats, setAdminStats] = useState<any>(null);
 
   // Playground API (Probar Envío con soporte de Texto, Media, Audio PTT, Ubicación y Contacto)
   const [playgroundType, setPlaygroundType] = useState<'text' | 'media' | 'audio' | 'location' | 'contact'>('text');
@@ -146,29 +141,10 @@ export default function Dashboard() {
     }
   }, []);
 
-  const fetchAdminData = useCallback(async () => {
-    if (user?.role !== 'admin') return;
-    try {
-      const [usersRes, instRes, statsRes] = await Promise.all([
-        api.get('/admin/users'),
-        api.get('/admin/instances'),
-        api.get('/admin/stats')
-      ]);
-      if (usersRes.data?.success) setAdminUsers(usersRes.data.data || []);
-      if (instRes.data?.success) setAdminInstances(instRes.data.data || []);
-      if (statsRes.data?.success) setAdminStats(statsRes.data.data || null);
-    } catch (err: any) {
-      console.error('Error al cargar datos de admin:', err);
-    }
-  }, [user?.role]);
-
   useEffect(() => {
     fetchInstances();
     fetchSubscription();
-    if (user?.role === 'admin') {
-      fetchAdminData();
-    }
-  }, [fetchInstances, fetchSubscription, fetchAdminData, user?.role]);
+  }, [fetchInstances, fetchSubscription]);
 
   // Auto-detectar la conexión de WhatsApp mientras el modal de QR esté abierto
   useEffect(() => {
@@ -199,7 +175,7 @@ export default function Dashboard() {
       return;
     }
 
-    const engineName = selectedEngine === 'evolution_go' ? 'Evolution Go (Fast Engine)' : 'Evolution API 2.4.0-rc2';
+    const engineName = 'Evolution Go (Whatsmeow Engine)';
     const initialSteps: AsyncStep[] = [
       { id: '1', label: 'Enviando solicitud de creación al servidor', status: 'active' },
       { id: '2', label: `Inicializando motor WhatsApp API (${engineName})`, status: 'pending' },
@@ -446,7 +422,7 @@ export default function Dashboard() {
   const getDocCode = () => {
     const selectedInst = instances[0] || { instance_name: 'mi_linea_whatsapp', api_key: 'tu_api_key_aqui' };
 
-    let endpointPath = '/api/webhooks/send-text';
+    let endpointPath = '/v1/messages/text';
     let payloadObj: any = {
       instanceName: selectedInst.instance_name,
       number: "51912345678",
@@ -454,7 +430,7 @@ export default function Dashboard() {
     };
 
     if (docEndpoint === 'send-media') {
-      endpointPath = '/api/webhooks/send-media';
+      endpointPath = '/v1/messages/media';
       payloadObj = {
         instanceName: selectedInst.instance_name,
         number: "51912345678",
@@ -465,14 +441,14 @@ export default function Dashboard() {
         fileName: "catalogo.jpg"
       };
     } else if (docEndpoint === 'send-audio') {
-      endpointPath = '/api/webhooks/send-audio';
+      endpointPath = '/v1/messages/audio';
       payloadObj = {
         instanceName: selectedInst.instance_name,
         number: "51912345678",
         audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
       };
     } else if (docEndpoint === 'send-location') {
-      endpointPath = '/api/webhooks/send-location';
+      endpointPath = '/v1/messages/location';
       payloadObj = {
         instanceName: selectedInst.instance_name,
         number: "51912345678",
@@ -482,7 +458,7 @@ export default function Dashboard() {
         longitude: -77.028941
       };
     } else if (docEndpoint === 'send-contact') {
-      endpointPath = '/api/webhooks/send-contact';
+      endpointPath = '/v1/messages/contact';
       payloadObj = {
         instanceName: selectedInst.instance_name,
         number: "51912345678",
@@ -752,7 +728,7 @@ echo $response;`;
                   <div className="space-y-2.5 text-left relative z-10">
                     <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 rounded-full text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                      <span>Motor Evolution API 2.4.0-rc2 · Redis Queue Engine</span>
+                      <span>Motor Evolution Go (Whatsmeow) · Redis Queue Engine</span>
                     </div>
                     <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                       Infraestructura de WhatsApp API SaaS
@@ -905,31 +881,10 @@ echo $response;`;
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Crear Nueva Instancia API</h3>
                     
-                    {/* Selector de Motor */}
-                    <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/60 rounded-xl text-[11px] font-semibold">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedEngine('evolution_api')}
-                        className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-                          selectedEngine === 'evolution_api'
-                            ? 'bg-emerald-600 text-white font-bold shadow-sm'
-                            : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'
-                        }`}
-                      >
-                        ● Evolution API
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedEngine('evolution_go')}
-                        className={`px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                          selectedEngine === 'evolution_go'
-                            ? 'bg-indigo-600 text-white font-bold shadow-sm'
-                            : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'
-                        }`}
-                      >
-                        <Zap size={13} className={selectedEngine === 'evolution_go' ? 'text-amber-300' : 'text-slate-400'} />
-                        <span>Evolution Go</span>
-                      </button>
+                    {/* Motor Oficial Unificado */}
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 rounded-xl text-[11px] font-bold">
+                      <Zap size={13} className="text-amber-500" />
+                      <span>Motor Oficial: Evolution Go (Whatsmeow)</span>
                     </div>
                   </div>
 
@@ -976,13 +931,9 @@ echo $response;`;
                             <div className="space-y-0.5">
                               <div className="flex items-center gap-2">
                                 <h4 className="text-sm font-mono font-bold text-slate-900 dark:text-white">{inst.instance_name}</h4>
-                                <span className={`px-2 py-0.5 text-[9px] font-bold rounded-md uppercase flex items-center gap-1 ${
-                                  inst.engine_type === 'evolution_go'
-                                    ? 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300'
-                                    : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-                                }`}>
-                                  {inst.engine_type === 'evolution_go' ? <Zap size={10} className="text-indigo-600 dark:text-indigo-400" /> : null}
-                                  <span>{inst.engine_type === 'evolution_go' ? 'Go Engine' : 'API v2'}</span>
+                                <span className="px-2 py-0.5 text-[9px] font-bold rounded-md uppercase flex items-center gap-1 bg-indigo-500/15 text-indigo-700 dark:text-indigo-300">
+                                  <Zap size={10} className="text-indigo-600 dark:text-indigo-400" />
+                                  <span>Go Engine</span>
                                 </span>
                               </div>
                               <span className="text-xs text-slate-500 dark:text-slate-400 font-normal block">{inst.phone || 'Sin número vinculado'}</span>
@@ -1421,46 +1372,6 @@ echo $response;`;
                         ● {subscription?.days_remaining || 0} DÍAS RESTANTES
                       </span>
                     )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* SUPERADMIN VIEWS */}
-            {user?.role === 'admin' && activeTab === 'admin_overview' && (
-              <div className="space-y-6 animate-fadeIn text-left">
-                <div className="space-y-1">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold rounded-full">
-                    <Shield size={11} />
-                    <span>Panel de Control Global SaaS</span>
-                  </span>
-                  <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-                    Resumen Global de la Plataforma
-                  </h1>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">
-                    Monitoreo en tiempo real de infraestructura, clientes corporativos y líneas de WhatsApp activas.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="surface-panel p-6 rounded-2xl space-y-1">
-                    <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Clientes</span>
-                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono">{adminUsers.length}</div>
-                    <p className="text-xs text-slate-400 font-medium">Usuarios corporativos</p>
-                  </div>
-                  
-                  <div className="surface-panel p-6 rounded-2xl space-y-1">
-                    <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Líneas Registradas</span>
-                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono">{adminInstances.length}</div>
-                    <p className="text-xs text-slate-400 font-medium">Instancias en sistema</p>
-                  </div>
-
-                  <div className="surface-panel p-6 rounded-2xl space-y-1">
-                    <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Líneas Conectadas</span>
-                    <div className="text-3xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
-                      {adminInstances.filter(i => i.status === 'connected').length}
-                    </div>
-                    <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Gateway en línea</p>
                   </div>
                 </div>
               </div>

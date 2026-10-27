@@ -269,8 +269,7 @@ export const DeveloperPortal: React.FC<DeveloperPortalProps> = ({
           { name: 'API Gateway (v1 & REST)', category: 'core', status: 'operational', latencyMs: 1, description: 'Enrutamiento HTTP y autenticación' },
           { name: 'Database (PostgreSQL Core)', category: 'database', status: 'operational', latencyMs: 22, description: 'Persistencia multi-tenant y cuotas' },
           { name: 'Redis (Rate Limiting & Idempotency)', category: 'database', status: 'operational', latencyMs: 3, description: 'Control de flujo y deduplicación' },
-          { name: 'Evolution API Engine (Node.js/Baileys)', category: 'engine', status: 'operational', latencyMs: 45, description: 'Motor estándar para mensajería' },
-          { name: 'Evolution Go Engine (Golang/whatsmeow)', category: 'engine', status: 'operational', latencyMs: 14, description: 'Motor ultrarrápido transaccional' },
+          { name: 'Evolution Go Engine (Golang/Whatsmeow)', category: 'engine', status: 'operational', latencyMs: 14, description: 'Motor oficial de alto rendimiento WhatsApp' },
           { name: 'Outbound Webhook Dispatcher (BullMQ)', category: 'queue', status: 'operational', latencyMs: 8, description: 'Cola asíncrona HMAC-SHA256' }
         ],
         checkedAt: new Date().toISOString()

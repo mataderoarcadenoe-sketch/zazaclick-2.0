@@ -207,29 +207,40 @@ export async function initDatabase() {
     ALTER TABLE instances ADD COLUMN IF NOT EXISTS webhook_secret VARCHAR(255) NULL;
     ALTER TABLE instances ADD COLUMN IF NOT EXISTS webhook_enabled BOOLEAN DEFAULT true;
 
-    -- Evolution Go GORM columns
+    -- Evolution Go GORM columns (snake_case)
     ALTER TABLE instances ADD COLUMN IF NOT EXISTS "name" VARCHAR(255);
     ALTER TABLE instances ADD COLUMN IF NOT EXISTS "token" VARCHAR(255);
-    ALTER TABLE instances ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
-    ALTER TABLE instances ADD COLUMN IF NOT EXISTS "alwaysOnline" BOOLEAN DEFAULT false;
-    ALTER TABLE instances ADD COLUMN IF NOT EXISTS "rejectCall" BOOLEAN DEFAULT false;
-    ALTER TABLE instances ADD COLUMN IF NOT EXISTS "msgRejectCall" TEXT DEFAULT '';
-    ALTER TABLE instances ADD COLUMN IF NOT EXISTS "readMessages" BOOLEAN DEFAULT false;
-    ALTER TABLE instances ADD COLUMN IF NOT EXISTS "ignoreGroups" BOOLEAN DEFAULT false;
-    ALTER TABLE instances ADD COLUMN IF NOT EXISTS "ignoreStatus" BOOLEAN DEFAULT false;
-    ALTER TABLE instances ADD COLUMN IF NOT EXISTS "websocketEnable" TEXT DEFAULT '';
-    ALTER TABLE instances ADD COLUMN IF NOT EXISTS "rabbitmqEnable" TEXT DEFAULT '';
-    ALTER TABLE instances ADD COLUMN IF NOT EXISTS "natsEnable" TEXT DEFAULT '';
+    ALTER TABLE instances ADD COLUMN IF NOT EXISTS "always_online" BOOLEAN DEFAULT false;
+    ALTER TABLE instances ADD COLUMN IF NOT EXISTS "reject_call" BOOLEAN DEFAULT false;
+    ALTER TABLE instances ADD COLUMN IF NOT EXISTS "msg_reject_call" TEXT DEFAULT '';
+    ALTER TABLE instances ADD COLUMN IF NOT EXISTS "read_messages" BOOLEAN DEFAULT false;
+    ALTER TABLE instances ADD COLUMN IF NOT EXISTS "ignore_groups" BOOLEAN DEFAULT false;
+    ALTER TABLE instances ADD COLUMN IF NOT EXISTS "ignore_status" BOOLEAN DEFAULT false;
+    ALTER TABLE instances ADD COLUMN IF NOT EXISTS "web_socket_enable" TEXT DEFAULT '';
+    ALTER TABLE instances ADD COLUMN IF NOT EXISTS "rabbitmq_enable" TEXT DEFAULT '';
+    ALTER TABLE instances ADD COLUMN IF NOT EXISTS "nats_enable" TEXT DEFAULT '';
     ALTER TABLE instances ADD COLUMN IF NOT EXISTS "disconnect_reason" TEXT DEFAULT '';
     ALTER TABLE instances ADD COLUMN IF NOT EXISTS "events" TEXT DEFAULT 'MESSAGE';
     ALTER TABLE instances ADD COLUMN IF NOT EXISTS "os_name" TEXT DEFAULT '';
     ALTER TABLE instances ADD COLUMN IF NOT EXISTS "proxy" TEXT DEFAULT '';
     ALTER TABLE instances ADD COLUMN IF NOT EXISTS "client_name" TEXT DEFAULT '';
-    ALTER TABLE instances ADD COLUMN IF NOT EXISTS "expiration" INTEGER DEFAULT 0;
+    ALTER TABLE instances ADD COLUMN IF NOT EXISTS "expiration" BIGINT DEFAULT 0;
     ALTER TABLE instances ADD COLUMN IF NOT EXISTS "connected" BOOLEAN DEFAULT false;
     ALTER TABLE instances ADD COLUMN IF NOT EXISTS "jid" TEXT DEFAULT '';
     ALTER TABLE instances ADD COLUMN IF NOT EXISTS "qrcode" TEXT DEFAULT '';
     ALTER TABLE instances ADD COLUMN IF NOT EXISTS "webhook" TEXT DEFAULT '';
+
+    -- Limpiar columnas camelCase huérfanas de Prisma/Evolution Node
+    ALTER TABLE instances DROP COLUMN IF EXISTS "createdAt";
+    ALTER TABLE instances DROP COLUMN IF EXISTS "alwaysOnline";
+    ALTER TABLE instances DROP COLUMN IF EXISTS "rejectCall";
+    ALTER TABLE instances DROP COLUMN IF EXISTS "msgRejectCall";
+    ALTER TABLE instances DROP COLUMN IF EXISTS "readMessages";
+    ALTER TABLE instances DROP COLUMN IF EXISTS "ignoreGroups";
+    ALTER TABLE instances DROP COLUMN IF EXISTS "ignoreStatus";
+    ALTER TABLE instances DROP COLUMN IF EXISTS "websocketEnable";
+    ALTER TABLE instances DROP COLUMN IF EXISTS "rabbitmqEnable";
+    ALTER TABLE instances DROP COLUMN IF EXISTS "natsEnable";
   `);
 
   // Sincronizar name <-> instance_name y migrar engine_type

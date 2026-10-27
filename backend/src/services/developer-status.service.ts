@@ -36,11 +36,11 @@ export class DeveloperStatusService {
       services.push({
         name: 'Database (PostgreSQL Core)',
         category: 'database',
-        status: dbLatency > 500 ? 'degraded' : 'operational',
+        status: dbLatency > 1500 ? 'degraded' : 'operational',
         latencyMs: dbLatency,
         description: 'Persistencia multi-tenant, transacciones atómicas y cuotas'
       });
-      if (dbLatency > 500) isDegraded = true;
+      if (dbLatency > 1500) isDegraded = true;
     } catch {
       services.push({
         name: 'Database (PostgreSQL Core)',
@@ -59,11 +59,11 @@ export class DeveloperStatusService {
       services.push({
         name: 'Redis (Rate Limiting & Idempotency)',
         category: 'database',
-        status: redisLatency > 300 ? 'degraded' : 'operational',
+        status: redisLatency > 500 ? 'degraded' : 'operational',
         latencyMs: redisLatency,
         description: 'Control distribuido de flujo (120 req/min) y claves de idempotencia'
       });
-      if (redisLatency > 300) isDegraded = true;
+      if (redisLatency > 500) isDegraded = true;
     } catch {
       services.push({
         name: 'Redis (Rate Limiting & Idempotency)',
@@ -74,33 +74,7 @@ export class DeveloperStatusService {
       isDegraded = true;
     }
 
-    // 4. Evolution API (Node.js Engine)
-    try {
-      const evo = engineRegistry.get('evolution_api');
-      if (evo) {
-        const evoHealth = await evo.healthCheck();
-        const isOnline = evoHealth.status === 'ONLINE';
-        const isDegr = evoHealth.status === 'DEGRADED';
-        services.push({
-          name: 'Evolution API Engine (Node.js/Baileys)',
-          category: 'engine',
-          status: isOnline ? 'operational' : (isDegr ? 'degraded' : 'unavailable'),
-          latencyMs: evoHealth.latencyMs,
-          description: 'Motor estándar para mensajería, chats interactivos y multimedia'
-        });
-        if (!isOnline) isDegraded = true;
-      }
-    } catch {
-      services.push({
-        name: 'Evolution API Engine (Node.js/Baileys)',
-        category: 'engine',
-        status: 'unavailable',
-        description: 'Motor no disponible temporalmente'
-      });
-      isDegraded = true;
-    }
-
-    // 5. Evolution Go (Go Engine)
+    // 4. Evolution Go (Golang / Whatsmeow Engine)
     try {
       const evoGo = engineRegistry.get('evolution_go');
       if (evoGo) {
@@ -126,7 +100,7 @@ export class DeveloperStatusService {
       isDegraded = true;
     }
 
-    // 6. Webhook Queue & Dispatcher (BullMQ)
+    // 5. Webhook Queue & Dispatcher (BullMQ)
     services.push({
       name: 'Outbound Webhook Dispatcher (BullMQ)',
       category: 'queue',

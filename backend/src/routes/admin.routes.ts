@@ -2,7 +2,7 @@ import { Router } from 'express';
 import pool from '../config/database';
 import * as bcrypt from 'bcryptjs';
 import { authMiddleware, adminMiddleware, AuthenticatedRequest } from '../middleware/auth.middleware';
-import { EvolutionService } from '../services/evolution.service';
+import { engineRouter } from '../engines/core/EngineRouter';
 import { AuditService } from '../services/audit.service';
 import { PartnerService } from '../services/partner.service';
 
@@ -437,13 +437,14 @@ router.delete('/users/:id', async (req: AuthenticatedRequest, res) => {
   const { id } = req.params;
 
   try {
-    // 1. Obtener nombres de instancias para eliminarlas en Evolution API
+    // 1. Obtener nombres de instancias para eliminarlas en Evolution Go
     const instRes = await pool.query('SELECT instance_name FROM instances WHERE user_id = $1', [id]);
     for (const row of instRes.rows) {
       try {
-        await EvolutionService.deleteInstance(row.instance_name);
+        const engine = await engineRouter.getEngineForInstance(row.instance_name);
+        await engine.deleteInstance(row.instance_name);
       } catch (err: any) {
-        console.warn(`No se pudo eliminar instancia ${row.instance_name} en Evolution:`, err.message);
+        console.warn(`No se pudo eliminar instancia ${row.instance_name} en Evolution Go:`, err.message);
       }
     }
 
@@ -766,53 +767,6 @@ router.get('/usage-logs', async (req: AuthenticatedRequest, res) => {
   } catch (error: any) {
     console.error('[AdminUsageLogs Error]:', error.message);
     res.status(500).json({ success: false, error: 'Error al consultar métricas de uso', detail: error.message });
-  }
-});
-
-/**
- * Licenciamiento Evolution API
- */
-router.get('/license/status', async (req: AuthenticatedRequest, res) => {
-  try {
-    const result = await EvolutionService.getLicenseStatus();
-    if (result.success) {
-      return res.json({ success: true, data: result.data });
-    }
-    res.status(500).json({ success: false, error: result.error || 'Error al obtener estado de licencia' });
-  } catch (error: any) {
-    res.status(500).json({ success: false, error: 'Error interno al consultar licencia' });
-  }
-});
-
-router.post('/license/register', async (req: AuthenticatedRequest, res) => {
-  const { redirectUri } = req.body;
-  if (!redirectUri) {
-    return res.status(400).json({ success: false, error: 'redirectUri es requerido' });
-  }
-  try {
-    const result = await EvolutionService.registerLicense(redirectUri);
-    if (result.success) {
-      return res.json({ success: true, registerUrl: result.registerUrl });
-    }
-    res.status(500).json({ success: false, error: result.error || 'Error al registrar licencia' });
-  } catch (error: any) {
-    res.status(500).json({ success: false, error: 'Error interno al registrar licencia' });
-  }
-});
-
-router.post('/license/activate', async (req: AuthenticatedRequest, res) => {
-  const { code } = req.body;
-  if (!code) {
-    return res.status(400).json({ success: false, error: 'code es requerido' });
-  }
-  try {
-    const result = await EvolutionService.activateLicense(code);
-    if (result.success) {
-      return res.json({ success: true, data: result.data });
-    }
-    res.status(500).json({ success: false, error: result.error || 'Error al activar la licencia' });
-  } catch (error: any) {
-    res.status(500).json({ success: false, error: 'Error interno al activar licencia' });
   }
 });
 

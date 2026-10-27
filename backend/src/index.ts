@@ -13,11 +13,9 @@ import openapiRoutes from './routes/openapi.routes';
 import developerRoutes from './routes/developer.routes';
 import b2bRoutes from './routes/b2b.routes';
 import { ApiLogService } from './services/api-log.service';
-import { EvolutionService } from './services/evolution.service';
 import { startSubscriptionScheduler } from './jobs/subscription-scheduler.job';
 import { startInstanceWatchdog } from './jobs/instance-watchdog.job';
 import { engineRegistry } from './engines/core/EngineRegistry';
-import { evolutionApiEngine } from './engines/evolution-api/EvolutionApiEngine';
 import { evolutionGoEngine } from './engines/evolution-go/EvolutionGoEngine';
 import { requestIdMiddleware } from './middleware/request-id.middleware';
 import { globalRateLimiter } from './middleware/rate-limiter.middleware';
@@ -130,41 +128,14 @@ app.get(['/', '/health'], (req, res) => {
   });
 });
 
-/**
- * Configurar de forma automática los webhooks para todas las instancias registradas en base de datos al arrancar
- */
-async function configureAllWebhooks() {
-  try {
-    console.log('🔄 [Webhooks] Sincronizando configuración de webhooks en Evolution API...');
-    const result = await pool.query('SELECT instance_name FROM instances');
-    const instances = result.rows;
-    
-    for (const inst of instances) {
-      const name = inst.instance_name;
-      console.log(`[Webhooks] Sincronizando webhook para la instancia: ${name}`);
-      const success = await EvolutionService.configureWebhook(name);
-      if (success) {
-        console.log(`✅ [Webhooks] Webhook configurado con éxito para: ${name}`);
-      } else {
-        console.warn(`⚠️ [Webhooks] No se pudo configurar el webhook para: ${name}`);
-      }
-    }
-  } catch (err: any) {
-    console.error('❌ [Webhooks] Error al sincronizar webhooks:', err.message);
-  }
-}
-
 // Start Server
 async function startServer() {
   try {
     console.log('🔄 Inicializando base de datos SaaS Core...');
     await initDatabase();
 
-    console.log('🔌 [Engines] Registrando motores WhatsApp disponibles...');
-    engineRegistry.register(evolutionApiEngine);
-    if (process.env.EVOLUTION_GO_ENABLED === 'true' || process.env.EVOLUTION_GO_URL) {
-      engineRegistry.register(evolutionGoEngine);
-    }
+    console.log('🔌 [Engines] Registrando motor oficial Evolution Go (Whatsmeow)...');
+    engineRegistry.register(evolutionGoEngine);
     
     const server = createServer(app);
     initSocket(server);
@@ -175,8 +146,6 @@ async function startServer() {
       startSubscriptionScheduler();
       // Iniciar centinela de auto-reconexión de instancias WhatsApp
       startInstanceWatchdog();
-      // Configurar automáticamente los webhooks para todas las instancias existentes
-      configureAllWebhooks();
     });
   } catch (error) {
     console.error('❌ Error fatal al iniciar el servidor:', error);

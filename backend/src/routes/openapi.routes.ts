@@ -7,7 +7,7 @@ export const openApiSpec = {
   info: {
     title: 'Zaza Click 2.0 — WhatsApp API Developer Platform',
     version: '2.0.0',
-    description: 'Multi-Engine WhatsApp API Gateway for ERP, CRM, and SaaS enterprise integrations. Supports Evolution API (Node.js/Baileys) and Evolution Go (whatsmeow) seamlessly with atomic quotas, distributed idempotency and HMAC-signed outbound webhooks.',
+    description: 'High-Performance WhatsApp API Gateway for ERP, CRM, and SaaS enterprise integrations powered by Evolution Go (Whatsmeow) with atomic quotas, distributed idempotency and HMAC-signed outbound webhooks.',
     contact: {
       name: 'Zaza Click Support',
       email: 'soporte@zazaclick.sbs',
@@ -52,9 +52,9 @@ export const openApiSpec = {
           },
           engine: {
             type: 'string',
-            enum: ['evolution_api', 'evolution_go'],
-            default: 'evolution_api',
-            description: 'Underlying WhatsApp engine'
+            enum: ['evolution_go'],
+            default: 'evolution_go',
+            description: 'Underlying WhatsApp engine (Evolution Go / Whatsmeow)'
           }
         }
       },

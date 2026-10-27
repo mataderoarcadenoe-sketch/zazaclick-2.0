@@ -15,11 +15,12 @@ export interface CanonicalWebhookEvent {
   data: any;
 }
 
-const connectionConfig = {
+const redisUrl = process.env.REDIS_PRIVATE_URL || process.env.REDIS_URL;
+const connectionConfig: any = redisUrl ? { url: redisUrl, maxRetriesPerRequest: null } : {
   host: process.env.REDIS_HOST || '127.0.0.1',
   port: parseInt(process.env.REDIS_PORT || '6379', 10),
   password: process.env.REDIS_PASSWORD || undefined,
-  maxRetriesPerRequest: null as any
+  maxRetriesPerRequest: null
 };
 
 // Cola dedicada para despacho saliente de webhooks a ERPs externos con reintentos exponenciales
