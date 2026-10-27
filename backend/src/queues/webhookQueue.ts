@@ -33,8 +33,8 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
   console.log(`📨 [QueueWorker] Procesando evento encolado: ${eventUpper} para ${instance}`);
 
   try {
-    if (eventUpper === 'MESSAGES_UPSERT') {
-      const msgId = data.key?.id;
+    if (eventUpper === 'MESSAGES_UPSERT' || eventUpper === 'MESSAGE' || eventUpper === 'MESSAGES_RECEIVE') {
+      const msgId = data?.key?.id || data?.Info?.ID || data?.id;
       let isDuplicate = false;
 
       if (msgId) {
@@ -50,12 +50,12 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
         return;
       }
 
-      const remoteJid = data.key?.remoteJid;
+      const remoteJid = data?.key?.remoteJid || data?.Info?.Chat || data?.Info?.Sender;
       if (remoteJid) {
         const cleanJid = normalizeJid(remoteJid);
         
         // Actualizar el JID en el mensaje para que el frontend/ERP reciba el número limpio
-        if (data.key) {
+        if (data?.key) {
           data.key.remoteJid = cleanJid;
         }
 
@@ -63,7 +63,8 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
         io.to(roomName).emit('message:received', data);
         
         // Incrementar contador de no leídos en Redis si el mensaje no es saliente (fromMe !== true)
-        if (!data.key.fromMe) {
+        const isFromMe = Boolean(data?.key?.fromMe ?? data?.Info?.IsFromMe);
+        if (!isFromMe) {
           const redisKey = `unread:${instance}:${cleanJid}`;
           await redis.incr(redisKey);
           
@@ -75,13 +76,35 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
         }
       }
     } 
-    else if (eventUpper === 'CONNECTION_UPDATE') {
-      const connection = data.connection;
+    else if (
+      eventUpper === 'CONNECTION_UPDATE' ||
+      eventUpper === 'CONNECTION' ||
+      eventUpper === 'CONNECTED' ||
+      eventUpper === 'PAIR_SUCCESS' ||
+      eventUpper === 'DISCONNECTED' ||
+      eventUpper === 'LOGGED_OUT'
+    ) {
+      const connection = data?.connection || (eventUpper === 'CONNECTED' || eventUpper === 'PAIR_SUCCESS' ? 'open' : (eventUpper === 'LOGGED_OUT' || eventUpper === 'DISCONNECTED' ? 'close' : data?.state));
       if (connection) {
-        const isConnected = connection === 'open';
-        const reasonCode = data.disconnectionReasonCode || data.reason || data.statusCode || data.disconnectionObject?.output?.statusCode;
-        const isDeviceRemoved = reasonCode === 401 || data.disconnectionObject?.attrs?.type === 'device_removed';
-        
+        // Ignorar transiciones intermedias 'connecting' durante la generación/escaneo de QR
+        if (connection === 'connecting') {
+          return;
+        }
+
+        const isConnected = connection === 'open' || connection === 'connected' || data?.LoggedIn === true;
+        const reasonCode = data?.disconnectionReasonCode || data?.reason || data?.statusCode || data?.disconnectionObject?.output?.statusCode;
+        const isDeviceRemoved = eventUpper === 'LOGGED_OUT' || reasonCode === 401 || data?.disconnectionObject?.attrs?.type === 'device_removed';
+
+        // Verificar si la instancia ya tenía un JID vinculado en base de datos
+        const instCheck = await pool.query('SELECT jid, qrcode FROM instances WHERE instance_name = $1 OR name = $1 LIMIT 1', [instance]);
+        const hasPairedJid = Boolean(instCheck.rows[0]?.jid);
+        const hasActiveQr = Boolean(instCheck.rows[0]?.qrcode && String(instCheck.rows[0]?.qrcode).length > 10);
+
+        if (!isConnected && (!hasPairedJid || hasActiveQr) && !isDeviceRemoved) {
+          // La instancia aún no ha sido vinculada o está esperando escaneo de QR: no interferir con el socket
+          return;
+        }
+
         let dbStatus = 'reconnecting';
         if (isConnected) {
           dbStatus = 'connected';
@@ -96,7 +119,7 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
         console.log(`🔌 [QueueWorker] CONNECTION_UPDATE para "${instance}": connection=${connection}, reason=${reasonCode || 'N/A'} -> dbStatus=${dbStatus}`);
         
         await pool.query(
-          'UPDATE instances SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE instance_name = $2',
+          'UPDATE instances SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE instance_name = $2 OR name = $2',
           [dbStatus, instance]
         );
         
@@ -107,8 +130,8 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
           reasonCode: reasonCode || null
         });
 
-        // Si fue una desconexión recuperable (no cierre voluntario), verificar estado tras backoff sin interrumpir el socket
-        if (!isConnected && !isDeviceRemoved) {
+        // Si fue una desconexión recuperable de una sesión ya vinculada, verificar estado tras backoff
+        if (!isConnected && !isDeviceRemoved && hasPairedJid) {
           setTimeout(async () => {
             const lockKey = `lock:reconnect:${instance}`;
             try {
@@ -121,12 +144,12 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
               const { engineRouter } = await import('../engines/core/EngineRouter');
               const engine = await engineRouter.getEngineForInstance(instance);
 
-              // 1. Verificar si Baileys ya se auto-reconectó por sí solo durante los 12 segundos
+              // 1. Verificar si ya se auto-reconectó por sí solo durante los 12 segundos
               const liveState = await engine.getConnectionState(instance);
               if (liveState.data?.isConnected) {
-                await pool.query("UPDATE instances SET status = 'connected', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1", [instance]);
+                await pool.query("UPDATE instances SET status = 'connected', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1 OR name = $1", [instance]);
                 io.to(roomName).emit('connection_status', { instance, status: 'connected', connectionState: 'open' });
-                console.log(`✅ [QueueWorker] Instancia "${instance}" recuperada automáticamente por Baileys.`);
+                console.log(`✅ [QueueWorker] Instancia "${instance}" recuperada automáticamente.`);
                 await redis.del(lockKey);
                 return;
               }
@@ -136,7 +159,7 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
                 console.log(`🔄 [QueueWorker] Centinela: Reactivando silenciosamente instancia "${instance}"...`);
                 const recRes = await (engine as any).reconnect(instance);
                 if (recRes.data?.isConnected) {
-                  await pool.query("UPDATE instances SET status = 'connected', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1", [instance]);
+                  await pool.query("UPDATE instances SET status = 'connected', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1 OR name = $1", [instance]);
                   io.to(roomName).emit('connection_status', { instance, status: 'connected', connectionState: 'open' });
                   console.log(`✅ [QueueWorker] Instancia "${instance}" auto-reconectada con éxito.`);
                 }
@@ -148,13 +171,14 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
                 await redis.del(lockKey);
               } catch {}
             }
-          }, 12000); // 12 segundos de margen para permitir el ciclo interno de Baileys
+          }, 12000);
         }
       }
     }
-    else if (eventUpper === 'QRCODE_UPDATED') {
-      const qrcode = data.qrcode || data;
-      const base64 = qrcode.base64;
+    else if (eventUpper === 'QRCODE_UPDATED' || eventUpper === 'QRCODE' || eventUpper === 'QR') {
+      const qrcode = data?.qrcode || data;
+      const rawBase64 = typeof qrcode === 'string' ? qrcode : (qrcode?.base64 || qrcode?.qrcode);
+      const base64 = rawBase64 ? String(rawBase64).split('|')[0] : null;
       if (base64) {
         console.log(`📷 [QueueWorker] QRCODE_UPDATED para la instancia "${instance}"`);
         io.to(roomName).emit('qrcode_updated', {

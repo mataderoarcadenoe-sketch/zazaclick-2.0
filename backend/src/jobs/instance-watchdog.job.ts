@@ -15,7 +15,7 @@ import redis from '../config/redis';
 export async function runWatchdogCycle(): Promise<void> {
   try {
     const res = await pool.query(`
-      SELECT instance_name, engine_type, status, user_id
+      SELECT instance_name, engine_type, status, user_id, jid, qrcode, connected
       FROM instances
       ORDER BY updated_at ASC
     `);
@@ -24,7 +24,7 @@ export async function runWatchdogCycle(): Promise<void> {
     if (!instances || instances.length === 0) return;
 
     for (const inst of instances) {
-      const { instance_name, status, user_id } = inst;
+      const { instance_name, status, user_id, jid, qrcode } = inst;
 
       // Si el usuario cerró sesión voluntariamente, no intentar reconectar
       if (status === 'logged_out') continue;
@@ -56,8 +56,8 @@ export async function runWatchdogCycle(): Promise<void> {
           continue;
         }
 
-        // Si la instancia está en estado 'disconnected', no intentar forzar reconexión automática
-        if (status === 'disconnected') {
+        // Si la instancia está en 'disconnected', está esperando escaneo de QR, o nunca ha vinculado un JID, NO forzar reconexión
+        if (status === 'disconnected' || (qrcode && String(qrcode).length > 10) || !jid) {
           continue;
         }
         if (!isLiveConnected) {

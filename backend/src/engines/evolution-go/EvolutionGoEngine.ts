@@ -3,6 +3,7 @@
  */
 
 import axios, { AxiosInstance } from 'axios';
+import * as crypto from 'crypto';
 import http from 'http';
 import https from 'https';
 import { WhatsAppEngine } from '../contracts/WhatsAppEngine';
@@ -72,36 +73,112 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     return this.api;
   }
 
+  private getGlobalApiKey(): string {
+    return process.env.EVOLUTION_GO_API_KEY || 'F2C43224-3975-46EC-954A-FB335F5C9FDA';
+  }
+
+  /**
+   * Resuelve el ID UUID y el token específico de la instancia en PostgreSQL.
+   * Evolution Go autentica los endpoints de instancia exclusivamente mediante el header `apikey: <instance_token>`.
+   */
+  private async resolveInstanceAuth(instanceName: string): Promise<{
+    id: string | null;
+    token: string;
+    connected: boolean;
+    jid: string;
+    qrcode: string;
+  }> {
+    const globalKey = this.getGlobalApiKey();
+    try {
+      const res = await pool.query(
+        `SELECT id, token, api_key, connected, jid, qrcode
+         FROM instances
+         WHERE instance_name = $1 OR name = $1
+         ORDER BY created_at DESC
+         LIMIT 1`,
+        [instanceName]
+      );
+      if (res.rows.length > 0) {
+        const row = res.rows[0];
+        const token = row.token || row.api_key || globalKey;
+        return {
+          id: row.id || null,
+          token,
+          connected: Boolean(row.connected),
+          jid: row.jid || '',
+          qrcode: row.qrcode ? String(row.qrcode).split('|')[0] : ''
+        };
+      }
+    } catch (err: any) {
+      console.warn(`[EvolutionGoEngine] Error consultando auth de instancia "${instanceName}":`, err.message);
+    }
+    return {
+      id: null,
+      token: globalKey,
+      connected: false,
+      jid: '',
+      qrcode: ''
+    };
+  }
+
   public async createInstance(instanceName: string): Promise<EngineResult<{ token: string; qrcode?: string; instance?: any }>> {
     const start = Date.now();
     try {
       const client = this.getClient();
+      const globalKey = this.getGlobalApiKey();
       const BACKEND_URL = process.env.BACKEND_URL || 'https://api.zazaclick.sbs';
       const webhookUrl = `${BACKEND_URL}/api/webhooks/whatsapp`;
 
-      // Intentar eliminar la instancia previa en Go por si existía
+      // 1. Verificar si ya existe la instancia en BD o en Evolution Go
+      const existing = await this.resolveInstanceAuth(instanceName);
+      let instanceToken = (existing.id && existing.token && existing.token !== globalKey)
+        ? existing.token
+        : crypto.randomUUID().toUpperCase();
+
+      // Verificar en Evolution Go /instance/all si ya está cargada en memoria
       try {
-        await client.delete(`/instance/delete/${instanceName}`);
+        const allRes = await client.get('/instance/all', { headers: { apikey: globalKey } });
+        const list = Array.isArray(allRes.data?.data) ? allRes.data.data : [];
+        const foundInGo = list.find((item: any) => item.name === instanceName || item.instance_name === instanceName);
+        if (foundInGo) {
+          const foundToken = foundInGo.token || instanceToken;
+          await pool.query(
+            `UPDATE instances SET token = $1, api_key = $1, webhook = $2, events = 'ALL', updated_at = CURRENT_TIMESTAMP
+             WHERE instance_name = $3 OR name = $3`,
+            [foundToken, webhookUrl, instanceName]
+          ).catch(() => {});
+          this.circuitBreaker.recordSuccess();
+          return EvolutionGoMapper.mapSuccess({
+            token: foundToken,
+            qrcode: foundInGo.qrcode ? String(foundInGo.qrcode).split('|')[0] : undefined,
+            instance: foundInGo
+          }, Date.now() - start);
+        }
       } catch {}
 
-      const goKey = process.env.EVOLUTION_GO_API_KEY || 'F2C43224-3975-46EC-954A-FB335F5C9FDA';
+      // Si existía una fila huérfana en BD que no está en la memoria de Evolution Go, eliminarla antes de que Go haga INSERT
+      if (existing.id) {
+        try {
+          await client.delete(`/instance/delete/${existing.id}`, { headers: { apikey: globalKey } });
+        } catch {}
+      }
 
-      // Evolution Go OpenAPI: { name, instanceId, token, proxy, webhook }
       const payload = {
         name: instanceName,
-        instanceId: instanceName,
-        instanceName: instanceName,
-        token: goKey,
-        qrcode: true,
-        webhook: webhookUrl
+        token: instanceToken,
+        webhook: webhookUrl,
+        events: ['ALL']
       };
 
-      const response = await client.post('/instance/create', payload);
+      const response = await client.post('/instance/create', payload, {
+        headers: { apikey: globalKey }
+      });
 
       const latencyMs = Date.now() - start;
       const data = response.data?.data || response.data;
-      const token = data?.token || data?.hash || data?.apikey || data?.instance?.token || goKey;
-      const qrcode = data?.qrcode || data?.Qrcode || data?.base64;
+      const token = data?.token || instanceToken;
+      const rawQr = data?.qrcode || data?.Qrcode || data?.base64;
+      const qrcode = rawQr ? String(rawQr).split('|')[0] : undefined;
 
       this.circuitBreaker.recordSuccess();
       return EvolutionGoMapper.mapSuccess({
@@ -110,6 +187,19 @@ export class EvolutionGoEngine implements WhatsAppEngine {
         instance: data
       }, latencyMs);
     } catch (err: any) {
+      // Si Evolution Go responde que ya existe en BD (duplicate key), adoptarla limpiamente
+      const errMsg = String(err.response?.data?.error || err.message || '');
+      if (errMsg.includes('duplicate') || errMsg.includes('already exists') || err.response?.status === 409) {
+        const recovered = await this.resolveInstanceAuth(instanceName);
+        if (recovered.id) {
+          this.circuitBreaker.recordSuccess();
+          return EvolutionGoMapper.mapSuccess({
+            token: recovered.token,
+            qrcode: recovered.qrcode || undefined,
+            instance: { id: recovered.id, name: instanceName, token: recovered.token }
+          }, Date.now() - start);
+        }
+      }
       const latencyMs = Date.now() - start;
       this.circuitBreaker.recordFailure(err);
       return EvolutionGoMapper.mapFailure(err, latencyMs);
@@ -120,16 +210,33 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     const start = Date.now();
     try {
       const client = this.getClient();
-      let response;
-      try {
-        response = await client.delete(`/instance/delete/${instanceName}`);
-      } catch (e) {
-        response = await client.delete('/instance/delete', { headers: { instance: instanceName } });
+      const globalKey = this.getGlobalApiKey();
+      const auth = await this.resolveInstanceAuth(instanceName);
+
+      // Primero desconectar/cerrar sesión si estaba activa
+      if (auth.token) {
+        try {
+          await client.delete('/instance/logout', { headers: { apikey: auth.token } });
+        } catch {}
       }
+
+      let targetId = auth.id;
+      if (!targetId) {
+        try {
+          const allRes = await client.get('/instance/all', { headers: { apikey: globalKey } });
+          const list = Array.isArray(allRes.data?.data) ? allRes.data.data : [];
+          const found = list.find((i: any) => i.name === instanceName);
+          if (found?.id) targetId = found.id;
+        } catch {}
+      }
+
+      if (targetId) {
+        await client.delete(`/instance/delete/${targetId}`, { headers: { apikey: globalKey } });
+      }
+
       const latencyMs = Date.now() - start;
-      const success = response.status === 200 || response.status === 204;
       this.circuitBreaker.recordSuccess();
-      return EvolutionGoMapper.mapSuccess(success, latencyMs);
+      return EvolutionGoMapper.mapSuccess(true, latencyMs);
     } catch (err: any) {
       const latencyMs = Date.now() - start;
       this.circuitBreaker.recordFailure(err);
@@ -137,25 +244,25 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     }
   }
 
-  public async getConnectionState(instanceName: string): Promise<EngineResult<{ state: string; isConnected: boolean }>> {
+  public async getConnectionState(instanceName: string): Promise<EngineResult<{ state: string; isConnected: boolean; phone?: string }>> {
     const start = Date.now();
     try {
       const client = this.getClient();
-      let response: any;
-      try {
-        response = await client.get('/instance/status', { headers: { instance: instanceName } });
-      } catch (err: any) {
-        try {
-          response = await client.get(`/instance/connectionState/${instanceName}`);
-        } catch {}
-      }
+      const auth = await this.resolveInstanceAuth(instanceName);
+
+      const response = await client.get('/instance/status', {
+        headers: { apikey: auth.token }
+      });
+
       const latencyMs = Date.now() - start;
       const resData = response?.data?.data || response?.data;
-      const isConnected = Boolean(resData?.LoggedIn === true || resData?.connected === true || resData?.state === 'open' || resData?.state === 'connected');
-      const state = isConnected ? 'connected' : (resData?.Connected ? 'connecting' : 'disconnected');
+      const isLoggedIn = Boolean(resData?.LoggedIn === true || (auth.connected && auth.jid));
+      const isSocketOpen = Boolean(resData?.Connected === true);
+      const state = isLoggedIn ? 'connected' : (isSocketOpen ? 'connecting' : 'disconnected');
+      const phone = auth.jid ? auth.jid.split('@')[0].split(':')[0] : undefined;
 
       this.circuitBreaker.recordSuccess();
-      return EvolutionGoMapper.mapSuccess({ state, isConnected }, latencyMs);
+      return EvolutionGoMapper.mapSuccess({ state, isConnected: isLoggedIn, phone }, latencyMs);
     } catch (err: any) {
       const latencyMs = Date.now() - start;
       return EvolutionGoMapper.mapSuccess({ state: 'disconnected', isConnected: false }, latencyMs);
@@ -166,20 +273,27 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     const start = Date.now();
     try {
       const client = this.getClient();
-      try {
-        await client.post('/instance/restart', {}, { headers: { instance: instanceName } });
-      } catch {
-        try {
-          await client.post(`/instance/restart/${instanceName}`);
-        } catch {}
+      const auth = await this.resolveInstanceAuth(instanceName);
+
+      // Si la instancia nunca ha vinculado un JID (no tiene sesión previa), no llamar a reconnect
+      if (!auth.jid) {
+        return EvolutionGoMapper.mapSuccess({
+          state: 'disconnected',
+          isConnected: false,
+          requiresQr: true
+        }, Date.now() - start);
       }
+
+      try {
+        await client.post('/instance/reconnect', {}, { headers: { apikey: auth.token } });
+      } catch {}
 
       // Esperar que whatsmeow restaure el socket
       let state = 'connecting';
       let isConnected = false;
 
-      for (let attempt = 0; attempt < 4; attempt++) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
+      for (let attempt = 0; attempt < 3; attempt++) {
+        await new Promise(resolve => setTimeout(resolve, 1500));
         const stateRes = await this.getConnectionState(instanceName);
         if (stateRes.data?.isConnected) {
           isConnected = true;
@@ -207,44 +321,70 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     const start = Date.now();
     try {
       const client = this.getClient();
-      const goKey = process.env.EVOLUTION_GO_API_KEY || 'F2C43224-3975-46EC-954A-FB335F5C9FDA';
+      let auth = await this.resolveInstanceAuth(instanceName);
 
-      // 1. Despertar socket con /instance/connect { immediate: true }
+      // 1. Si no existe en la base de datos o en Evolution Go, inicializarla una sola vez
+      if (!auth.id) {
+        await this.createInstance(instanceName);
+        auth = await this.resolveInstanceAuth(instanceName);
+      }
+
+      // 2. Consultar el estado actual del socket en Evolution Go
+      let isSocketConnected = false;
+      let isLoggedIn = false;
+
       try {
-        await client.post('/instance/connect', { immediate: true }, { headers: { apikey: goKey, instance: instanceName } });
-      } catch (connErr: any) {
-        const cStatus = connErr.response?.status;
-        const cErr = connErr.response?.data?.error || '';
-        if (cStatus === 401 || cStatus === 404 || cErr.includes('not found') || cErr.includes('not authorized')) {
-          console.log(`⚠️ [EvolutionGoEngine] Instancia "${instanceName}" no inicializada. Creando...`);
+        const statusRes = await client.get('/instance/status', {
+          headers: { apikey: auth.token }
+        });
+        const statusData = statusRes?.data?.data || statusRes?.data;
+        isSocketConnected = Boolean(statusData?.Connected === true);
+        isLoggedIn = Boolean(statusData?.LoggedIn === true);
+      } catch (statusErr: any) {
+        const stCode = statusErr.response?.status;
+        if (stCode === 401 || stCode === 404) {
+          console.log(`⚠️ [EvolutionGoEngine] Instancia "${instanceName}" no cargada en Evolution Go. Registrando...`);
           await this.createInstance(instanceName);
-          try {
-            await client.post('/instance/connect', { immediate: true }, { headers: { apikey: goKey, instance: instanceName } });
-          } catch {}
+          auth = await this.resolveInstanceAuth(instanceName);
         }
       }
 
-      // 2. Polling activo de QR (REST + Base de Datos)
-      for (let attempt = 1; attempt <= 12; attempt++) {
+      // 3. Si ya inició sesión en WhatsApp, retornar alreadyConnected inmediatamente
+      if (isLoggedIn || (auth.connected && auth.jid)) {
+        this.circuitBreaker.recordSuccess();
+        await pool.query(
+          "UPDATE instances SET status = 'connected', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1 OR name = $1",
+          [instanceName]
+        ).catch(() => {});
+        return {
+          success: true,
+          engine: this.engineType,
+          data: {
+            qrcode: '',
+            alreadyConnected: true,
+            status: 'connected',
+            state: 'connected',
+            isConnected: true
+          } as any,
+          latencyMs: Date.now() - start
+        };
+      }
+
+      // 4. CRÍTICO: Solo llamar a POST /instance/connect si el socket NO está ya abierto.
+      // Llamar a /instance/connect cuando Connected === true envía una señal kill al socket en pleno escaneo de QR.
+      if (!isSocketConnected) {
         try {
-          const response = await client.get('/instance/qr', { headers: { apikey: goKey, instance: instanceName } });
-          const resData = response?.data?.data || response?.data;
-          const qrcode = resData?.qrcode || resData?.Qrcode || resData?.base64 || response?.data?.qrcode;
-
-          if (qrcode && typeof qrcode === 'string' && qrcode.length > 20) {
-            this.circuitBreaker.recordSuccess();
-            return EvolutionGoMapper.mapSuccess({ qrcode }, Date.now() - start);
-          }
-        } catch (err: any) {
-          const status = err.response?.status;
-          const errMsg = String(err.response?.data?.error || err.message || '');
-
-          if (errMsg.includes('already logged in') || errMsg.includes('already connected') || errMsg.includes('session already')) {
-            console.log(`✅ [EvolutionGoEngine] Instancia "${instanceName}" ya se encuentra conectada en WhatsApp.`);
-            this.circuitBreaker.recordSuccess();
-            try {
-              await pool.query("UPDATE instances SET status = 'connected', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1", [instanceName]);
-            } catch {}
+          await client.post(
+            '/instance/connect',
+            {
+              subscribe: ['MESSAGE', 'READ_RECEIPT', 'PRESENCE', 'CHAT_PRESENCE', 'CALL'],
+              immediate: false
+            },
+            { headers: { apikey: auth.token } }
+          );
+        } catch (connErr: any) {
+          const errMsg = String(connErr.response?.data?.error || connErr.message || '');
+          if (errMsg.includes('already logged in') || errMsg.includes('already connected')) {
             return {
               success: true,
               engine: this.engineType,
@@ -258,34 +398,78 @@ export class EvolutionGoEngine implements WhatsAppEngine {
               latencyMs: Date.now() - start
             };
           }
+        }
+      }
 
-          if (status === 401 || status === 404 || errMsg.includes('not found') || errMsg.includes('not authorized')) {
-            await this.createInstance(instanceName);
-            try {
-              await client.post('/instance/connect', { immediate: true }, { headers: { apikey: goKey, instance: instanceName } });
-            } catch {}
-          } else if (status === 400 && (errMsg.includes('no QR') || errMsg.includes('wait a moment') || errMsg.includes('EOF'))) {
-            try {
-              await client.post('/instance/connect', { immediate: true }, { headers: { apikey: goKey, instance: instanceName } });
-            } catch {}
+      // 5. Obtener el QR activo sin reiniciar ni interrumpir el WebSocket (máx ~5 segundos)
+      for (let attempt = 1; attempt <= 7; attempt++) {
+        try {
+          const response = await client.get('/instance/qr', {
+            headers: { apikey: auth.token }
+          });
+          const resData = response?.data?.data || response?.data;
+          const rawQr = resData?.qrcode || resData?.Qrcode || resData?.base64 || response?.data?.qrcode;
+          const cleanQr = rawQr ? String(rawQr).split('|')[0] : '';
+
+          if (cleanQr && cleanQr.length > 20) {
+            this.circuitBreaker.recordSuccess();
+            return EvolutionGoMapper.mapSuccess({ qrcode: cleanQr }, Date.now() - start);
+          }
+        } catch (err: any) {
+          const errMsg = String(err.response?.data?.error || err.message || '');
+          if (errMsg.includes('already logged in') || errMsg.includes('already connected') || errMsg.includes('session already')) {
+            this.circuitBreaker.recordSuccess();
+            await pool.query(
+              "UPDATE instances SET status = 'connected', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1 OR name = $1",
+              [instanceName]
+            ).catch(() => {});
+            return {
+              success: true,
+              engine: this.engineType,
+              data: {
+                qrcode: '',
+                alreadyConnected: true,
+                status: 'connected',
+                state: 'connected',
+                isConnected: true
+              } as any,
+              latencyMs: Date.now() - start
+            };
           }
         }
 
-        // Consultar directamente si Whatsmeow guardó el QR en la base de datos
+        // Consultar en BD si Whatsmeow ya persistió el QR o completó el login
         try {
-          const dbQr = await pool.query(
-            "SELECT qrcode FROM instances WHERE (instance_name = $1 OR name = $1) AND qrcode IS NOT NULL AND length(qrcode) > 20 LIMIT 1",
+          const dbRes = await pool.query(
+            "SELECT qrcode, connected, jid FROM instances WHERE instance_name = $1 OR name = $1 LIMIT 1",
             [instanceName]
           );
-          if (dbQr.rows.length > 0 && dbQr.rows[0].qrcode) {
-            const dbQrcode = dbQr.rows[0].qrcode;
-            this.circuitBreaker.recordSuccess();
-            return EvolutionGoMapper.mapSuccess({ qrcode: dbQrcode }, Date.now() - start);
+          if (dbRes.rows.length > 0) {
+            const row = dbRes.rows[0];
+            if (row.connected && row.jid) {
+              return {
+                success: true,
+                engine: this.engineType,
+                data: {
+                  qrcode: '',
+                  alreadyConnected: true,
+                  status: 'connected',
+                  state: 'connected',
+                  isConnected: true
+                } as any,
+                latencyMs: Date.now() - start
+              };
+            }
+            if (row.qrcode && String(row.qrcode).length > 20) {
+              const cleanDbQr = String(row.qrcode).split('|')[0];
+              this.circuitBreaker.recordSuccess();
+              return EvolutionGoMapper.mapSuccess({ qrcode: cleanDbQr }, Date.now() - start);
+            }
           }
         } catch {}
 
-        if (attempt < 12) {
-          await new Promise(r => setTimeout(r, 1000));
+        if (attempt < 7) {
+          await new Promise(r => setTimeout(r, 700));
         }
       }
 
@@ -311,12 +495,17 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     const start = Date.now();
     try {
       const client = this.getClient();
-      let response;
-      try {
-        response = await client.delete(`/instance/logout/${instanceName}`);
-      } catch {
-        response = await client.post('/instance/logout', {}, { headers: { instance: instanceName } });
-      }
+      const auth = await this.resolveInstanceAuth(instanceName);
+
+      const response = await client.delete('/instance/logout', {
+        headers: { apikey: auth.token }
+      });
+
+      await pool.query(
+        "UPDATE instances SET status = 'logged_out', connected = false, jid = '', qrcode = '', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1 OR name = $1",
+        [instanceName]
+      ).catch(() => {});
+
       const latencyMs = Date.now() - start;
       const success = response.status === 200 || response.status === 204;
       this.circuitBreaker.recordSuccess();
@@ -331,16 +520,13 @@ export class EvolutionGoEngine implements WhatsAppEngine {
   public async configureWebhook(instanceName: string, webhookUrl?: string): Promise<EngineResult<boolean>> {
     const start = Date.now();
     try {
-      const client = this.getClient();
       const url = webhookUrl || `${process.env.BACKEND_URL || 'https://api.zazaclick.sbs'}/api/webhooks/whatsapp`;
-      let response;
-      try {
-        response = await client.post(`/webhook/set/${instanceName}`, { url, enabled: true });
-      } catch {
-        response = await client.post('/webhook/set', { url, enabled: true }, { headers: { instance: instanceName } });
-      }
+      await pool.query(
+        "UPDATE instances SET webhook = $1, events = 'ALL', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $2 OR name = $2",
+        [url, instanceName]
+      );
       const latencyMs = Date.now() - start;
-      return EvolutionGoMapper.mapSuccess(response.status === 200, latencyMs);
+      return EvolutionGoMapper.mapSuccess(true, latencyMs);
     } catch (err: any) {
       const latencyMs = Date.now() - start;
       return EvolutionGoMapper.mapFailure(err, latencyMs);
@@ -364,6 +550,7 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     const start = Date.now();
     try {
       const client = this.getClient();
+      const auth = await this.resolveInstanceAuth(params.instanceName);
       let targetNumber = params.number;
       if (!targetNumber.includes('@')) {
         let cleanNumber = targetNumber.replace(/\D/g, '');
@@ -373,26 +560,12 @@ export class EvolutionGoEngine implements WhatsAppEngine {
         targetNumber = cleanNumber;
       }
 
-      let response;
-      // Intento 1: Path-based (/message/sendText/:instance)
-      // Intento 2: OpenAPI (/send/text) con header instance
-      try {
-        response = await client.post(`/message/sendText/${params.instanceName}`, {
-          number: targetNumber,
-          text: params.text
-        });
-      } catch (e: any) {
-        if (e.response?.status === 404) {
-          response = await client.post('/send/text', {
-            number: targetNumber,
-            text: params.text
-          }, {
-            headers: { instance: params.instanceName }
-          });
-        } else {
-          throw e;
-        }
-      }
+      const response = await client.post('/send/text', {
+        number: targetNumber,
+        text: params.text
+      }, {
+        headers: { apikey: auth.token }
+      });
 
       const latencyMs = Date.now() - start;
 
@@ -428,6 +601,7 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     const start = Date.now();
     try {
       const client = this.getClient();
+      const auth = await this.resolveInstanceAuth(params.instanceName);
       let targetNumber = params.number;
       if (!targetNumber.includes('@')) {
         let cleanNumber = targetNumber.replace(/\D/g, '');
@@ -455,31 +629,19 @@ export class EvolutionGoEngine implements WhatsAppEngine {
         }
       }
 
-      let response;
-      try {
-        response = await client.post(`/message/sendMedia/${params.instanceName}`, {
-          number: targetNumber,
-          media: finalMedia,
-          mediatype: params.mediatype,
-          mimetype: params.mimetype,
-          caption: params.caption,
-          fileName: params.fileName
-        });
-      } catch (e: any) {
-        if (e.response?.status === 404) {
-          response = await client.post('/send/media', {
-            number: targetNumber,
-            url: finalMedia,
-            type: params.mediatype,
-            caption: params.caption,
-            filename: params.fileName
-          }, {
-            headers: { instance: params.instanceName }
-          });
-        } else {
-          throw e;
-        }
-      }
+      const response = await client.post('/send/media', {
+        number: targetNumber,
+        url: finalMedia,
+        media: finalMedia,
+        type: params.mediatype,
+        mediatype: params.mediatype,
+        mimetype: params.mimetype,
+        caption: params.caption,
+        filename: params.fileName,
+        fileName: params.fileName
+      }, {
+        headers: { apikey: auth.token }
+      });
 
       const latencyMs = Date.now() - start;
 
@@ -513,6 +675,7 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     const start = Date.now();
     try {
       const client = this.getClient();
+      const auth = await this.resolveInstanceAuth(params.instanceName);
       let targetNumber = params.number;
       if (!targetNumber.includes('@')) {
         let cleanNumber = targetNumber.replace(/\D/g, '');
@@ -522,30 +685,15 @@ export class EvolutionGoEngine implements WhatsAppEngine {
         targetNumber = cleanNumber;
       }
 
-      let response;
-      try {
-        response = await client.post(`/message/sendLocation/${params.instanceName}`, {
-          number: targetNumber,
-          name: params.name,
-          address: params.address,
-          latitude: params.latitude,
-          longitude: params.longitude
-        });
-      } catch (e: any) {
-        if (e.response?.status === 404) {
-          response = await client.post('/send/location', {
-            number: targetNumber,
-            name: params.name,
-            address: params.address,
-            latitude: params.latitude,
-            longitude: params.longitude
-          }, {
-            headers: { instance: params.instanceName }
-          });
-        } else {
-          throw e;
-        }
-      }
+      const response = await client.post('/send/location', {
+        number: targetNumber,
+        name: params.name,
+        address: params.address,
+        latitude: params.latitude,
+        longitude: params.longitude
+      }, {
+        headers: { apikey: auth.token }
+      });
       const latencyMs = Date.now() - start;
 
       if (response.status === 200 || response.status === 201) {
@@ -567,6 +715,7 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     const start = Date.now();
     try {
       const client = this.getClient();
+      const auth = await this.resolveInstanceAuth(params.instanceName);
       let targetNumber = params.number;
       if (!targetNumber.includes('@')) {
         let cleanNumber = targetNumber.replace(/\D/g, '');
@@ -576,24 +725,13 @@ export class EvolutionGoEngine implements WhatsAppEngine {
         targetNumber = cleanNumber;
       }
 
-      let response;
-      try {
-        response = await client.post(`/message/sendContact/${params.instanceName}`, {
-          number: targetNumber,
-          contact: params.contact
-        });
-      } catch (e: any) {
-        if (e.response?.status === 404) {
-          response = await client.post('/send/contact', {
-            number: targetNumber,
-            contact: params.contact
-          }, {
-            headers: { instance: params.instanceName }
-          });
-        } else {
-          throw e;
-        }
-      }
+      const response = await client.post('/send/contact', {
+        number: targetNumber,
+        contact: params.contact,
+        vcard: params.contact
+      }, {
+        headers: { apikey: auth.token }
+      });
       const latencyMs = Date.now() - start;
 
       if (response.status === 200 || response.status === 201) {
@@ -615,18 +753,10 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     const start = Date.now();
     try {
       const client = this.getClient();
-      let response;
-      try {
-        response = await client.get(`/group/fetchAllGroups/${instanceName}?getParticipants=${getParticipants}`);
-      } catch (e: any) {
-        if (e.response?.status === 404) {
-          response = await client.get(`/group/all?getParticipants=${getParticipants}`, {
-            headers: { instance: instanceName }
-          });
-        } else {
-          throw e;
-        }
-      }
+      const auth = await this.resolveInstanceAuth(instanceName);
+      const response = await client.get(`/group/list?getParticipants=${getParticipants}`, {
+        headers: { apikey: auth.token }
+      });
       const latencyMs = Date.now() - start;
       const data = response.data?.data || response.data || [];
       this.circuitBreaker.recordSuccess();
@@ -642,18 +772,10 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     const start = Date.now();
     try {
       const client = this.getClient();
-      let response;
-      try {
-        response = await client.post(`/group/create/${instanceName}`, { subject, participants });
-      } catch (e: any) {
-        if (e.response?.status === 404) {
-          response = await client.post('/group/create', { subject, participants }, {
-            headers: { instance: instanceName }
-          });
-        } else {
-          throw e;
-        }
-      }
+      const auth = await this.resolveInstanceAuth(instanceName);
+      const response = await client.post('/group/create', { subject, participants }, {
+        headers: { apikey: auth.token }
+      });
       const latencyMs = Date.now() - start;
       this.circuitBreaker.recordSuccess();
       return EvolutionGoMapper.mapSuccess(response.data?.data || response.data, latencyMs);
@@ -668,24 +790,14 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     const start = Date.now();
     try {
       const client = this.getClient();
-      let response;
-      try {
-        response = await client.post(`/group/updateParticipant/${instanceName}?groupJid=${groupJid}`, {
-          action,
-          participants
-        });
-      } catch (e: any) {
-        if (e.response?.status === 404) {
-          response = await client.post(`/group/participants?groupJid=${groupJid}`, {
-            action,
-            participants
-          }, {
-            headers: { instance: instanceName }
-          });
-        } else {
-          throw e;
-        }
-      }
+      const auth = await this.resolveInstanceAuth(instanceName);
+      const response = await client.post(`/group/participant?groupJid=${groupJid}`, {
+        groupJid,
+        action,
+        participants
+      }, {
+        headers: { apikey: auth.token }
+      });
       const latencyMs = Date.now() - start;
       this.circuitBreaker.recordSuccess();
       return EvolutionGoMapper.mapSuccess(response.data?.data || response.data, latencyMs);
@@ -700,18 +812,10 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     const start = Date.now();
     try {
       const client = this.getClient();
-      let response;
-      try {
-        response = await client.get(`/group/inviteCode/${instanceName}?groupJid=${groupJid}`);
-      } catch (e: any) {
-        if (e.response?.status === 404) {
-          response = await client.get(`/group/invite?groupJid=${groupJid}`, {
-            headers: { instance: instanceName }
-          });
-        } else {
-          throw e;
-        }
-      }
+      const auth = await this.resolveInstanceAuth(instanceName);
+      const response = await client.get(`/group/invitelink?groupJid=${groupJid}`, {
+        headers: { apikey: auth.token }
+      });
       const latencyMs = Date.now() - start;
       this.circuitBreaker.recordSuccess();
       return EvolutionGoMapper.mapSuccess(response.data?.data || response.data, latencyMs);

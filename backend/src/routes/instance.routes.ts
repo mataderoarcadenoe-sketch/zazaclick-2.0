@@ -1,4 +1,5 @@
 import { Router, Response } from 'express';
+import * as crypto from 'crypto';
 import pool from '../config/database';
 import { authMiddleware, AuthenticatedRequest } from '../middleware/auth.middleware';
 import { engineRouter } from '../engines/core/EngineRouter';
@@ -55,10 +56,10 @@ const createInstanceHandler = async (req: AuthenticatedRequest, res: Response) =
       return res.status(400).json({ success: false, error: `Límite alcanzado: Tu plan actual solo permite un máximo de ${maxInstances} instancia(s). Elimina una instancia primero.` });
     }
 
-    // 2. Verificar si el nombre de instancia ya está tomado en nuestra BD
+    // 2. Verificar si el nombre de instancia ya está tomado en nuestra BD por otro usuario
     console.log(`[Create] PASO 3 — Verificando nombre ${instanceName}`);
-    const nameCheck = await pool.query('SELECT id FROM instances WHERE instance_name = $1', [instanceName]);
-    if (nameCheck.rows.length > 0) {
+    const nameCheck = await pool.query('SELECT id, user_id FROM instances WHERE instance_name = $1 OR name = $1', [instanceName]);
+    if (nameCheck.rows.length > 0 && nameCheck.rows[0].user_id && nameCheck.rows[0].user_id !== req.userId) {
       return res.status(400).json({ success: false, error: 'El nombre de esta instancia ya está en uso. Elige otro.' });
     }
 
@@ -75,26 +76,37 @@ const createInstanceHandler = async (req: AuthenticatedRequest, res: Response) =
       return res.status(statusCode).json({ success: false, error: evoResult.error?.message || 'Error al crear la instancia en el motor de WhatsApp' });
     }
 
-    // 4. Guardar la instancia en la base de datos de Zaza
+    // 4. Guardar o vincular la instancia en la base de datos de Zaza (Evolution Go ya inserta la fila en `instances`)
     console.log(`[Create] PASO 5 — Guardando instancia en BD con engine_type=${targetEngine}`);
-    const instanceId = generateId('inst');
+    const fallbackId = crypto.randomUUID();
     const apiKey = evoResult.data.token;
 
-    await pool.query(`
-      INSERT INTO instances (id, user_id, instance_name, status, api_key, engine_type)
-      VALUES ($1, $2, $3, $4, $5, $6)
-    `, [instanceId, req.userId, instanceName, 'disconnected', apiKey, targetEngine]);
+    const upsertRes = await pool.query(`
+      INSERT INTO instances (id, user_id, instance_name, name, status, api_key, token, engine_type)
+      VALUES ($1, $2, $3, $3, $4, $5, $5, $6)
+      ON CONFLICT (instance_name) DO UPDATE SET
+        user_id = EXCLUDED.user_id,
+        status = EXCLUDED.status,
+        api_key = COALESCE(EXCLUDED.api_key, instances.api_key),
+        token = COALESCE(EXCLUDED.token, instances.token),
+        engine_type = EXCLUDED.engine_type,
+        updated_at = CURRENT_TIMESTAMP
+      RETURNING id, api_key
+    `, [fallbackId, req.userId, instanceName, 'disconnected', apiKey, targetEngine]);
 
-    console.log(`[Create] ÉXITO — Instancia ${instanceName} creada correctamente`);
+    const finalId = upsertRes.rows[0]?.id || fallbackId;
+    const finalApiKey = upsertRes.rows[0]?.api_key || apiKey;
+
+    console.log(`[Create] ÉXITO — Instancia ${instanceName} creada correctamente (id=${finalId})`);
 
     res.status(201).json({
       success: true,
       message: 'Instancia creada exitosamente.',
       data: {
-        id: instanceId,
+        id: finalId,
         instance_name: instanceName,
         status: 'disconnected',
-        api_key: apiKey,
+        api_key: finalApiKey,
         engine_type: targetEngine
       }
     });
@@ -180,6 +192,19 @@ const getQrHandler = async (req: AuthenticatedRequest, res: Response) => {
     // Solicitar el QR al motor asignado
     const engine = await engineRouter.getEngineForInstance(instanceName);
     const qrRes = await engine.getQRCode(instanceName);
+
+    if (qrRes.success && (qrRes.data as any)?.alreadyConnected) {
+      return res.json({
+        success: true,
+        alreadyConnected: true,
+        isConnected: true,
+        status: 'connected',
+        state: 'connected',
+        qrcode: null,
+        base64: null
+      });
+    }
+
     if (!qrRes.success || !qrRes.data?.qrcode) {
       return res.status(422).json({ success: false, error: qrRes.error?.message || 'Error al obtener código QR.' });
     }

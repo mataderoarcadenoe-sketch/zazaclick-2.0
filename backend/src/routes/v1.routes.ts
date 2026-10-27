@@ -72,9 +72,9 @@ router.post('/instances', apiKeyOrTokenAuth, async (req: AuthenticatedRequest, r
       });
     }
 
-    // 2. Validar que el nombre de instancia no exista globalmente
-    const nameCheck = await pool.query('SELECT id FROM instances WHERE instance_name = $1', [instanceName]);
-    if (nameCheck.rows.length > 0) {
+    // 2. Validar que el nombre de instancia no exista globalmente bajo otro usuario
+    const nameCheck = await pool.query('SELECT id, user_id FROM instances WHERE instance_name = $1 OR name = $1', [instanceName]);
+    if (nameCheck.rows.length > 0 && nameCheck.rows[0].user_id && nameCheck.rows[0].user_id !== req.userId) {
       return res.status(409).json({
         success: false,
         code: 'INSTANCE_NAME_TAKEN',
@@ -82,10 +82,10 @@ router.post('/instances', apiKeyOrTokenAuth, async (req: AuthenticatedRequest, r
       });
     }
 
-    // 3. Resolver motor solicitado (evolution_api o evolution_go)
-    const targetEngine: EngineType = (targetEngineParam === 'evolution_go' && process.env.EVOLUTION_GO_ENABLED === 'true')
-      ? 'evolution_go'
-      : 'evolution_api';
+    // 3. Resolver motor solicitado (evolution_go por defecto)
+    const targetEngine: EngineType = (targetEngineParam === 'evolution_api' && process.env.EVOLUTION_GO_ENABLED === 'false')
+      ? 'evolution_api'
+      : 'evolution_go';
 
     const engine = engineRouter.getEngineByType(targetEngine);
     const evoResult = await engine.createInstance(instanceName);
@@ -99,23 +99,34 @@ router.post('/instances', apiKeyOrTokenAuth, async (req: AuthenticatedRequest, r
       });
     }
 
-    // 4. Guardar en base de datos
-    const instanceId = generateId('inst');
+    // 4. Guardar o vincular en base de datos
+    const fallbackId = crypto.randomUUID();
     const apiKey = evoResult.data.token;
 
-    await pool.query(`
-      INSERT INTO instances (id, user_id, instance_name, status, api_key, engine_type)
-      VALUES ($1, $2, $3, $4, $5, $6)
-    `, [instanceId, req.userId, instanceName, 'disconnected', apiKey, targetEngine]);
+    const upsertRes = await pool.query(`
+      INSERT INTO instances (id, user_id, instance_name, name, status, api_key, token, engine_type)
+      VALUES ($1, $2, $3, $3, $4, $5, $5, $6)
+      ON CONFLICT (instance_name) DO UPDATE SET
+        user_id = EXCLUDED.user_id,
+        status = EXCLUDED.status,
+        api_key = COALESCE(EXCLUDED.api_key, instances.api_key),
+        token = COALESCE(EXCLUDED.token, instances.token),
+        engine_type = EXCLUDED.engine_type,
+        updated_at = CURRENT_TIMESTAMP
+      RETURNING id, api_key
+    `, [fallbackId, req.userId, instanceName, 'disconnected', apiKey, targetEngine]);
+
+    const finalId = upsertRes.rows[0]?.id || fallbackId;
+    const finalApiKey = upsertRes.rows[0]?.api_key || apiKey;
 
     return res.status(201).json({
       success: true,
       message: 'Instancia creada exitosamente.',
       data: {
-        id: instanceId,
+        id: finalId,
         instanceName: instanceName,
         status: 'disconnected',
-        apiKey: apiKey,
+        apiKey: finalApiKey,
         engine: targetEngine,
         qrcode: evoResult.data.qrcode || null
       }
@@ -241,20 +252,35 @@ const getQrEndpointHandler = async (req: AuthenticatedRequest, res: Response) =>
 
     if (verifyRes.rows.length === 0) {
       if (isElevated) {
-        const instId = crypto.randomUUID();
         let tenantUserId: string | null = null;
         try {
-          const uRes = await pool.query('SELECT id FROM users WHERE id = $1 OR external_id = $2 LIMIT 1', [req.userId, instanceName]);
+          const uRes = await pool.query(
+            `SELECT id FROM users
+             WHERE external_id IS NOT NULL AND ($1 = external_id OR $1 LIKE (external_id || '__%'))
+             LIMIT 1`,
+            [instanceName]
+          );
           if (uRes.rows.length > 0) {
             tenantUserId = uRes.rows[0].id;
           }
         } catch {}
 
+        // Crear primero en Evolution Go para que el motor inserte su propio UUID en memoria y BD
+        const goEngine = engineRouter.getEngineByType('evolution_go');
+        const created = await goEngine.createInstance(instanceName);
+        const fallbackId = crypto.randomUUID();
+        const token = created.data?.token || crypto.randomUUID().toUpperCase();
+
         await pool.query(
-          `INSERT INTO instances (id, user_id, instance_name, name, status, engine_type)
-           VALUES ($1, $2, $3, $4, 'disconnected', 'evolution_go')
-           ON CONFLICT DO NOTHING`,
-          [instId, tenantUserId, instanceName, instanceName]
+          `INSERT INTO instances (id, user_id, instance_name, name, status, api_key, token, engine_type)
+           VALUES ($1, $2, $3, $3, 'disconnected', $4, $4, 'evolution_go')
+           ON CONFLICT (instance_name) DO UPDATE SET
+             user_id = COALESCE(instances.user_id, EXCLUDED.user_id),
+             api_key = COALESCE(EXCLUDED.api_key, instances.api_key),
+             token = COALESCE(EXCLUDED.token, instances.token),
+             engine_type = 'evolution_go',
+             updated_at = CURRENT_TIMESTAMP`,
+          [fallbackId, tenantUserId, instanceName, token]
         );
       } else {
         return res.status(403).json({

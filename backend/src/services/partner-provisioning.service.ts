@@ -72,6 +72,12 @@ export class PartnerProvisioningService {
       );
       if (extCheck.rows.length > 0) {
         const existingTenant = extCheck.rows[0];
+        if (instanceName) {
+          await pool.query(
+            'UPDATE instances SET user_id = $1, updated_at = CURRENT_TIMESTAMP WHERE (instance_name = $2 OR name = $2) AND user_id IS NULL',
+            [existingTenant.id, instanceName]
+          ).catch(() => {});
+        }
         const overview = await this.getTenantOverview(partnerId, existingTenant.id);
         return {
           zazaTenantId: existingTenant.id,
@@ -104,13 +110,13 @@ export class PartnerProvisioningService {
       throw new Error(`El correo electrónico ${cleanEmail} ya se encuentra registrado con otra cuenta.`);
     }
 
-    // 3. Si se proporciona instanceName, validar formato y unicidad global
+    // 3. Si se proporciona instanceName, validar formato y unicidad global (permitiendo adoptar filas huérfanas con user_id IS NULL)
     if (instanceName) {
       if (!/^[a-zA-Z0-9_-]+$/.test(instanceName)) {
         throw new Error('instanceName inválido. Solo letras, números, guiones y guiones bajos.');
       }
-      const instCheck = await pool.query('SELECT id FROM instances WHERE instance_name = $1', [instanceName]);
-      if (instCheck.rows.length > 0) {
+      const instCheck = await pool.query('SELECT id, user_id FROM instances WHERE instance_name = $1 OR name = $1', [instanceName]);
+      if (instCheck.rows.length > 0 && instCheck.rows[0].user_id !== null) {
         throw new Error(`El nombre de instancia "${instanceName}" ya se encuentra en uso. Elija otro.`);
       }
     }
@@ -197,20 +203,33 @@ export class PartnerProvisioningService {
       try {
         const engine = engineRouter.getEngineByType(targetEngine);
         const evoRes = await engine.createInstance(instanceName);
-        const evoToken = evoRes.data?.token || `token_${Date.now()}`;
-        const instanceId = generateId('inst');
+        const evoToken = evoRes.data?.token || crypto.randomUUID().toUpperCase();
+        const fallbackId = crypto.randomUUID();
         const webhookSecret = `whsec_${crypto.randomBytes(24).toString('hex')}`;
 
-        await pool.query(
-          `INSERT INTO instances (id, user_id, instance_name, status, api_key, engine_type, webhook_url, webhook_secret, webhook_enabled)
-           VALUES ($1, $2, $3, 'disconnected', $4, $5, $6, $7, $8)`,
-          [instanceId, userId, instanceName, evoToken, targetEngine, normalizedWebhookUrl, webhookSecret, Boolean(normalizedWebhookUrl)]
+        const upsertInst = await pool.query(
+          `INSERT INTO instances (id, user_id, instance_name, name, status, api_key, token, engine_type, webhook_url, webhook_secret, webhook_enabled)
+           VALUES ($1, $2, $3, $3, 'disconnected', $4, $4, $5, $6, $7, $8)
+           ON CONFLICT (instance_name) DO UPDATE SET
+             user_id = EXCLUDED.user_id,
+             api_key = COALESCE(EXCLUDED.api_key, instances.api_key),
+             token = COALESCE(EXCLUDED.token, instances.token),
+             engine_type = EXCLUDED.engine_type,
+             webhook_url = COALESCE(EXCLUDED.webhook_url, instances.webhook_url),
+             webhook_secret = COALESCE(EXCLUDED.webhook_secret, instances.webhook_secret),
+             webhook_enabled = EXCLUDED.webhook_enabled,
+             updated_at = CURRENT_TIMESTAMP
+           RETURNING id, status`,
+          [fallbackId, userId, instanceName, evoToken, targetEngine, normalizedWebhookUrl, webhookSecret, Boolean(normalizedWebhookUrl)]
         );
 
+        const finalInstanceId = upsertInst.rows[0]?.id || fallbackId;
+        const finalStatus = upsertInst.rows[0]?.status || 'disconnected';
+
         instanceResultData = {
-          id: instanceId,
+          id: finalInstanceId,
           instanceName,
-          status: 'disconnected',
+          status: finalStatus,
           engine: targetEngine,
           qrcode: evoRes.data?.qrcode || null,
           webhookUrl: normalizedWebhookUrl,
@@ -403,13 +422,65 @@ export class PartnerProvisioningService {
    * Obtiene el dossier completo de un tenant
    */
   public static async getTenantOverview(partnerId: string, tenantIdOrExternalId: string) {
-    const userId = await this.resolveTenantId(tenantIdOrExternalId, partnerId);
+    let userId = await this.resolveTenantId(tenantIdOrExternalId, partnerId);
+
+    // Auto-sanación si la instancia existe en BD (creada previamente por /qr) pero el registro de tenant aún no estaba en `users`
+    if (!userId) {
+      const orphanInst = await pool.query(
+        `SELECT id, instance_name, user_id FROM instances
+         WHERE instance_name = $1 OR instance_name LIKE ($1 || '__%')
+         LIMIT 1`,
+        [tenantIdOrExternalId]
+      );
+      if (orphanInst.rows.length > 0) {
+        if (orphanInst.rows[0].user_id) {
+          userId = orphanInst.rows[0].user_id;
+        } else {
+          const newUserId = generateId('user');
+          const autoEmail = `${tenantIdOrExternalId.toLowerCase().replace(/[^a-z0-9]/g, '.')}@tenant.zazaclick.sbs`;
+          const hashedPw = await bcrypt.hash(`Zz_${crypto.randomBytes(6).toString('hex')}!`, 10);
+          const now = new Date();
+          const endDate = new Date(now);
+          endDate.setMonth(endDate.getMonth() + 1);
+
+          await pool.query(
+            `INSERT INTO users (id, email, password, role, status, company_name, external_id, partner_id, created_at, updated_at)
+             VALUES ($1, $2, $3, 'client', 'active', $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+             ON CONFLICT (email) DO NOTHING`,
+            [newUserId, autoEmail, hashedPw, tenantIdOrExternalId, tenantIdOrExternalId, partnerId]
+          );
+          const uCheck = await pool.query('SELECT id FROM users WHERE external_id = $1 OR email = $2 LIMIT 1', [tenantIdOrExternalId, autoEmail]);
+          if (uCheck.rows.length > 0) {
+            userId = uCheck.rows[0].id;
+            await pool.query(
+              `INSERT INTO subscriptions (id, user_id, plan_id, status, messages_limit, messages_used, payment_status, start_date, end_date)
+               VALUES ($1, $2, 'plan_basic', 'active', 1000, 0, 'paid', $3, $4)`,
+              [generateId('sub'), userId, now, endDate]
+            ).catch(() => {});
+            await pool.query(
+              `UPDATE instances SET user_id = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
+              [userId, orphanInst.rows[0].id]
+            ).catch(() => {});
+          }
+        }
+      }
+    }
+
     if (!userId) {
       throw new Error(`Tenant "${tenantIdOrExternalId}" no encontrado.`);
     }
 
     const userRes = await pool.query('SELECT id, email, company_name, phone, external_id, status, created_at FROM users WHERE id = $1', [userId]);
     const user = userRes.rows[0];
+
+    // Vincular automáticamente cualquier instancia huérfana cuyo prefijo coincida con external_id
+    if (user?.external_id) {
+      await pool.query(
+        `UPDATE instances SET user_id = $1, updated_at = CURRENT_TIMESTAMP
+         WHERE user_id IS NULL AND (instance_name = $2 OR instance_name LIKE ($2 || '__%'))`,
+        [userId, user.external_id]
+      ).catch(() => {});
+    }
 
     const subRes = await pool.query(
       `SELECT s.*, p.name as plan_name, p.max_instances
@@ -423,12 +494,45 @@ export class PartnerProvisioningService {
     const sub = subRes.rows[0];
 
     const instRes = await pool.query(
-      `SELECT id, instance_name, phone, status, engine_type, is_enabled, messages_sent, webhook_url, created_at
+      `SELECT id, instance_name, phone, status, connected, jid, engine_type, is_enabled, messages_sent, webhook_url, created_at
        FROM instances
        WHERE user_id = $1
        ORDER BY created_at DESC`,
       [userId]
     );
+
+    const syncedInstances = await Promise.all(instRes.rows.map(async (i) => {
+      let currentStatus = i.status;
+      let currentPhone = i.phone || (i.jid ? String(i.jid).split('@')[0].split(':')[0] : null);
+
+      try {
+        const engine = await engineRouter.getEngineForInstance(i.instance_name);
+        const stateRes = await engine.getConnectionState(i.instance_name);
+        const isLiveConnected = Boolean(stateRes.data?.isConnected || (i.connected && i.jid));
+        if ((stateRes.data as any)?.phone && !currentPhone) {
+          currentPhone = (stateRes.data as any).phone;
+        }
+        if (isLiveConnected && currentStatus !== 'connected') {
+          currentStatus = 'connected';
+          await pool.query(
+            'UPDATE instances SET status = \'connected\', phone = COALESCE($1, phone), updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+            [currentPhone, i.id]
+          ).catch(() => {});
+        }
+      } catch {}
+
+      return {
+        id: i.id,
+        instanceName: i.instance_name,
+        phone: currentPhone,
+        status: currentStatus,
+        engine: i.engine_type,
+        isEnabled: i.is_enabled,
+        messagesSent: i.messages_sent,
+        webhookConfigured: Boolean(i.webhook_url),
+        createdAt: i.created_at
+      };
+    }));
 
     const now = new Date();
     let daysRemaining = 0;
@@ -460,17 +564,7 @@ export class PartnerProvisioningService {
         daysRemaining,
         isExpired
       } : null,
-      instances: instRes.rows.map(i => ({
-        id: i.id,
-        instanceName: i.instance_name,
-        phone: i.phone,
-        status: i.status,
-        engine: i.engine_type,
-        isEnabled: i.is_enabled,
-        messagesSent: i.messages_sent,
-        webhookConfigured: Boolean(i.webhook_url),
-        createdAt: i.created_at
-      }))
+      instances: syncedInstances
     };
   }
 

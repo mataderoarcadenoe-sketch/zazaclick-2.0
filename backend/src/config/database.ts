@@ -49,28 +49,6 @@ export async function initDatabase() {
 
   console.log('🔄 [Database] Verificando e inicializando esquema de datos Zaza Click 2.0...');
 
-  // 0. Liberar conexiones inactivas huérfanas en Postgres para prevenir 'too many clients'
-  await safeQuery('Cleanup idle connections', `
-    SELECT pg_terminate_backend(pid) 
-    FROM pg_stat_activity 
-    WHERE pid <> pg_backend_pid() 
-      AND state IN ('idle', 'idle in transaction', 'idle in transaction (aborted)')
-      AND state_change < current_timestamp - INTERVAL '10 seconds';
-  `);
-
-  // Iniciar centinela recurrente de conexiones cada 20 segundos
-  setInterval(async () => {
-    try {
-      await pool.query(`
-        SELECT pg_terminate_backend(pid) 
-        FROM pg_stat_activity 
-        WHERE pid <> pg_backend_pid() 
-          AND state IN ('idle', 'idle in transaction', 'idle in transaction (aborted)')
-          AND state_change < current_timestamp - INTERVAL '15 seconds';
-      `);
-    } catch {}
-  }, 20000);
-
   // 1. Tabla de Usuarios
   await safeQuery('Tabla users', `
     CREATE TABLE IF NOT EXISTS users (
@@ -284,6 +262,18 @@ export async function initDatabase() {
       IF NEW.token IS NULL AND NEW.api_key IS NOT NULL THEN
         NEW.token := NEW.api_key;
       END IF;
+      IF NEW.jid IS NOT NULL AND NEW.jid != '' THEN
+        NEW.phone := split_part(split_part(NEW.jid, '@', 1), ':', 1);
+      END IF;
+      IF NEW.connected = true AND NEW.jid IS NOT NULL AND NEW.jid != '' THEN
+        NEW.status := 'connected';
+      ELSIF TG_OP = 'UPDATE' AND NEW.connected = false AND OLD.connected = true THEN
+        IF NEW.jid IS NULL OR NEW.jid = '' THEN
+          NEW.status := 'disconnected';
+        ELSIF NEW.status = 'connected' THEN
+          NEW.status := 'reconnecting';
+        END IF;
+      END IF;
       RETURN NEW;
     END;
     $$ LANGUAGE plpgsql;
@@ -292,6 +282,14 @@ export async function initDatabase() {
     CREATE TRIGGER trg_sync_instances_columns
     BEFORE INSERT OR UPDATE ON instances
     FOR EACH ROW EXECUTE FUNCTION sync_instances_columns();
+  `);
+
+  // Sincronizar estado inicial de instancias ya vinculadas en Whatsmeow
+  await safeQuery('Sincronizar instancias conectadas con JID', `
+    UPDATE instances
+    SET status = 'connected',
+        phone = split_part(split_part(jid, '@', 1), ':', 1)
+    WHERE connected = true AND jid IS NOT NULL AND jid != '';
   `);
 
   // Migrar IDs legacy a UUIDs válidos para compatibilidad estricta con Evolution Go (GORM)

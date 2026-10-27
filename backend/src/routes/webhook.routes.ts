@@ -9,12 +9,12 @@ const router = Router();
  * POST /api/webhooks/whatsapp - Recibir eventos de WhatsApp y encolarlos asíncronamente en Redis
  */
 router.post(['/whatsapp', '/whatsapp/:event'], async (req, res) => {
-  let { event, instance, data } = req.body;
-  if (!event && req.params.event) {
-    event = req.params.event;
-  }
+  const body = req.body || {};
+  const event = body.event || body.type || req.params.event;
+  const instance = body.instance || body.instanceName || body.name || body.instanceId;
+  const data = body.data !== undefined ? body.data : body;
 
-  if (!event || !instance || !data) {
+  if (!event || !instance) {
     return res.status(200).json({ success: false, error: 'Payload de webhook incompleto' });
   }
 
