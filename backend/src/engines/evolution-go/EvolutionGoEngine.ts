@@ -86,9 +86,10 @@ export class EvolutionGoEngine implements WhatsAppEngine {
 
       const goKey = process.env.EVOLUTION_GO_API_KEY || 'F2C43224-3975-46EC-954A-FB335F5C9FDA';
 
-      // Evolution Go OpenAPI: { name, token, proxy, webhook }
+      // Evolution Go OpenAPI: { name, instanceId, token, proxy, webhook }
       const payload = {
         name: instanceName,
+        instanceId: instanceName,
         instanceName: instanceName,
         token: goKey,
         qrcode: true,
