@@ -38,8 +38,9 @@ export default function AuthPage() {
       setError(null);
       const res = await api.post('/auth/google-login', { credential: response.credential });
       if (res.data?.success && res.data?.token) {
-        if (res.data?.user?.role !== 'admin') {
-          setError('Acceso Denegado: Esta cuenta de Google no cuenta con privilegios de SuperAdmin.');
+        const userEmail = res.data?.user?.email?.toLowerCase()?.trim();
+        if (res.data?.user?.role !== 'admin' || userEmail !== 'syscomecosistemadigital@gmail.com') {
+          setError('Acceso Denegado: Solo la cuenta autorizada (syscomecosistemadigital@gmail.com) cuenta con privilegios de SuperAdmin.');
           return;
         }
         localStorage.setItem('saas_auth_token', res.data.token);
@@ -307,7 +308,7 @@ export default function AuthPage() {
                   Cuenta SuperAdmin Autorizada
                 </span>
                 <span className="text-xs font-mono font-bold text-slate-800 dark:text-slate-200 truncate block">
-                  zaza.click.app@gmail.com
+                  syscomecosistemadigital@gmail.com
                 </span>
               </div>
             </div>

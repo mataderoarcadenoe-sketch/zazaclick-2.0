@@ -453,7 +453,11 @@ export async function initDatabase() {
   await safeQuery('SuperAdmin Role', `
     UPDATE users 
     SET role = 'admin', status = 'active'
-    WHERE email IN ('zaza.click.app@gmail.com', 'syscomecosistemadigital@gmail.com');
+    WHERE email = 'syscomecosistemadigital@gmail.com';
+
+    UPDATE users
+    SET role = 'client'
+    WHERE role = 'admin' AND email != 'syscomecosistemadigital@gmail.com';
   `);
 
   // 15. Seed de Partners Oficiales (VivesFit + Krono)

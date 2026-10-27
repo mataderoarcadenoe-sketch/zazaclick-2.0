@@ -14,7 +14,7 @@ function generateId(prefix: string): string {
 
 export function isSuperAdminEmail(email: string): boolean {
   const clean = email.toLowerCase().trim();
-  return clean === 'zaza.click.app@gmail.com' || clean === 'syscomecosistemadigital@gmail.com';
+  return clean === 'syscomecosistemadigital@gmail.com';
 }
 
 /**

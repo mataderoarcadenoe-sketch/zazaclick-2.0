@@ -5,7 +5,7 @@ import AdminDashboardPage from './pages/AdminDashboard';
 import { ZazaLogo } from './components/ZazaLogo';
 
 const AppContent: React.FC = () => {
-  const { isAuthenticated, loading } = useAuth();
+  const { user, isAuthenticated, loading, logout } = useAuth();
 
   if (loading) {
     return (
@@ -16,7 +16,13 @@ const AppContent: React.FC = () => {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !user) {
+    return <AuthPage />;
+  }
+
+  // Verificar que única y exclusivamente syscomecosistemadigital@gmail.com con rol admin pueda visualizar el panel
+  if (user.role !== 'admin' || user.email?.toLowerCase() !== 'syscomecosistemadigital@gmail.com') {
+    logout();
     return <AuthPage />;
   }
 
