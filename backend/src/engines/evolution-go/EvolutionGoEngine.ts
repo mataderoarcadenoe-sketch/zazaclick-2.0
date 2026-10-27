@@ -401,12 +401,25 @@ export class EvolutionGoEngine implements WhatsAppEngine {
         }
       }
 
-      // 5. Obtener el QR activo sin reiniciar ni interrumpir el WebSocket (máx ~5 segundos)
-      for (let attempt = 1; attempt <= 7; attempt++) {
+      // 5. Obtener el QR activo sin reiniciar ni interrumpir el WebSocket (polling suave de hasta 12 intentos)
+      const globalKey = this.getGlobalApiKey();
+      for (let attempt = 1; attempt <= 12; attempt++) {
         try {
-          const response = await client.get('/instance/qr', {
-            headers: { apikey: auth.token }
-          });
+          let response: any;
+          try {
+            response = await client.get('/instance/qr', {
+              headers: { apikey: auth.token }
+            });
+          } catch (qrErr: any) {
+            if (qrErr.response?.status === 401 && auth.token !== globalKey) {
+              response = await client.get('/instance/qr', {
+                headers: { apikey: globalKey }
+              });
+            } else {
+              throw qrErr;
+            }
+          }
+
           const resData = response?.data?.data || response?.data;
           const rawQr = resData?.qrcode || resData?.Qrcode || resData?.base64 || response?.data?.qrcode;
           const cleanQr = rawQr ? String(rawQr).split('|')[0] : '';
@@ -468,8 +481,8 @@ export class EvolutionGoEngine implements WhatsAppEngine {
           }
         } catch {}
 
-        if (attempt < 7) {
-          await new Promise(r => setTimeout(r, 700));
+        if (attempt < 12) {
+          await new Promise(r => setTimeout(r, 750));
         }
       }
 

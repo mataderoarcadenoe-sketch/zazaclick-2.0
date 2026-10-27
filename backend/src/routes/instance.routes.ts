@@ -28,23 +28,30 @@ const createInstanceHandler = async (req: AuthenticatedRequest, res: Response) =
   }
 
   try {
-    // 1. Verificar límites de la suscripción del usuario
-    console.log(`[Create] PASO 1 — Consultando suscripción para userId=${req.userId}`);
-    const subRes = await pool.query(`
-      SELECT p.max_instances
-      FROM subscriptions s
-      JOIN plans p ON s.plan_id = p.id
-      WHERE s.user_id = $1 AND s.status = 'active'
-      ORDER BY s.created_at DESC LIMIT 1
-    `, [req.userId]);
+    // 1. Verificar límites de la suscripción del usuario (o permitir libre creación si es SuperAdmin)
+    let maxInstances = 1;
 
-    console.log(`[Create] PASO 1 result — rows=${subRes?.rows?.length}`);
+    if (req.userRole === 'admin') {
+      maxInstances = 99;
+    } else {
+      console.log(`[Create] PASO 1 — Consultando suscripción para userId=${req.userId}`);
+      const subRes = await pool.query(`
+        SELECT p.max_instances
+        FROM subscriptions s
+        JOIN plans p ON s.plan_id = p.id
+        WHERE s.user_id = $1 AND s.status IN ('active', 'trial')
+        ORDER BY s.created_at DESC LIMIT 1
+      `, [req.userId]);
 
-    if (!subRes || !subRes.rows || subRes.rows.length === 0) {
-      return res.status(403).json({ success: false, error: 'No tienes una suscripción activa para crear instancias.' });
+      console.log(`[Create] PASO 1 result — rows=${subRes?.rows?.length}`);
+
+      if (!subRes || !subRes.rows || subRes.rows.length === 0) {
+        return res.status(403).json({ success: false, error: 'No tienes una suscripción activa o de prueba para crear instancias.' });
+      }
+
+      maxInstances = subRes.rows[0].max_instances;
     }
 
-    const maxInstances = subRes.rows[0].max_instances;
     console.log(`[Create] PASO 2 — maxInstances=${maxInstances}`);
 
     // Contar instancias actuales creadas por el usuario
