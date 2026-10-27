@@ -32,36 +32,24 @@ export const ToastNotification: React.FC<ToastNotificationProps> = ({
 
   const typeConfig = {
     success: {
-      border: 'border-emerald-500/30',
-      bg: 'bg-white/95 dark:bg-[#0C1420]/95',
-      badgeBg: 'bg-emerald-500/15 text-emerald-500',
-      icon: <CheckCircle2 size={18} className="text-emerald-500" />,
+      badgeBg: 'surface-accent-emerald text-emerald-600 dark:text-emerald-400',
+      icon: <CheckCircle2 size={17} />,
       title: notification.title || 'Operación Exitosa',
-      barColor: 'bg-emerald-500',
     },
     error: {
-      border: 'border-rose-500/30',
-      bg: 'bg-white/95 dark:bg-[#180D14]/95',
-      badgeBg: 'bg-rose-500/15 text-rose-500',
-      icon: <AlertCircle size={18} className="text-rose-500" />,
+      badgeBg: 'surface-accent-rose text-rose-600 dark:text-rose-400',
+      icon: <AlertCircle size={17} />,
       title: notification.title || 'Error en la Operación',
-      barColor: 'bg-rose-500',
     },
     warning: {
-      border: 'border-amber-500/30',
-      bg: 'bg-white/95 dark:bg-[#18140D]/95',
-      badgeBg: 'bg-amber-500/15 text-amber-500',
-      icon: <AlertTriangle size={18} className="text-amber-500" />,
+      badgeBg: 'surface-accent-amber text-amber-600 dark:text-amber-400',
+      icon: <AlertTriangle size={17} />,
       title: notification.title || 'Atención',
-      barColor: 'bg-amber-500',
     },
     info: {
-      border: 'border-cyan-500/30',
-      bg: 'bg-white/95 dark:bg-[#0D1520]/95',
-      badgeBg: 'bg-cyan-500/15 text-cyan-500',
-      icon: <Info size={18} className="text-cyan-500" />,
+      badgeBg: 'surface-accent-indigo text-indigo-600 dark:text-indigo-400',
+      icon: <Info size={17} />,
       title: notification.title || 'Información',
-      barColor: 'bg-cyan-500',
     },
   };
 
@@ -70,11 +58,11 @@ export const ToastNotification: React.FC<ToastNotificationProps> = ({
   return (
     <aside 
       aria-label="Notificación del sistema"
-      className="fixed top-5 right-5 z-[9999] max-w-sm w-full animate-in slide-in-from-top-4 fade-in duration-200"
+      className="fixed top-5 right-5 z-[9999] max-w-sm w-full"
     >
-      <div className={`relative overflow-hidden rounded-2xl border ${config.border} ${config.bg} backdrop-blur-xl shadow-2xl shadow-black/30 p-4 transition-all`}>
+      <div className="surface-elevated rounded-xl p-4">
         <div className="flex items-start gap-3">
-          <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${config.badgeBg}`}>
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${config.badgeBg}`}>
             {config.icon}
           </div>
 
@@ -90,19 +78,11 @@ export const ToastNotification: React.FC<ToastNotificationProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
             aria-label="Cerrar notificación"
           >
             <X size={14} />
           </button>
-        </div>
-
-        {/* Barra de progreso de temporizador */}
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-200/40 dark:bg-slate-800/40 overflow-hidden">
-          <div 
-            className={`h-full ${config.barColor} animate-shrink`}
-            style={{ animationDuration: `${duration}ms` }}
-          />
         </div>
       </div>
     </aside>

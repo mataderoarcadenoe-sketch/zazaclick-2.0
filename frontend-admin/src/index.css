@@ -1,190 +1,141 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-@theme {
-  --font-sans: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  
-  /* Brand functional hierarchy */
-  --color-brand-primary: #10B981;
-  --color-brand-secondary: #14B8A6;
-  --color-brand-accent: #06B6D4;
-}
-
 @layer base {
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+  :root {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   body {
-    background-color: #F0F4F8;
-    color: #0F172A;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    margin: 0;
+    padding: 0;
     overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
-    background-image: 
-      radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.05) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, rgba(6, 182, 212, 0.04) 0px, transparent 50%),
-      radial-gradient(at 50% 100%, rgba(20, 184, 166, 0.04) 0px, transparent 50%);
-    background-attachment: fixed;
+    background-color: #F8FAFC;
+    color: #0F172A;
   }
 
-  body.dark {
-    background-color: #070B10;
+  .dark body {
+    background-color: #0B0F17;
     color: #F8FAFC;
-    background-image: 
-      radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.07) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, rgba(6, 182, 212, 0.05) 0px, transparent 50%),
-      radial-gradient(at 50% 100%, rgba(13, 20, 28, 0.8) 0px, transparent 60%);
-    background-attachment: fixed;
-  }
-
-  /* Minimalist Tech Scrollbar (No borders) */
-  ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.25); border-radius: 9999px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.45); }
-
-  body.dark ::-webkit-scrollbar-thumb { background: rgba(51, 65, 85, 0.4); }
-  body.dark ::-webkit-scrollbar-thumb:hover { background: rgba(71, 85, 105, 0.6); }
-}
-
-@layer utilities {
-  /* ═══════════════════════════════════════════════════════════════════
-     ✦  NO-BORDER / NO-SHADOW SURFACE SYSTEM
-     ═══════════════════════════════════════════════════════════════════ */
-
-  /* Level 1: Translucent Panel Atmosphere */
-  .surface-panel {
-    background-color: rgba(255, 255, 255, 0.75);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-  }
-  .dark .surface-panel {
-    background-color: rgba(10, 16, 23, 0.75);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-  }
-
-  /* Level 2: Elevated Interactive Surface */
-  .surface-elevated {
-    background-color: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-  }
-  .dark .surface-elevated {
-    background-color: rgba(13, 20, 28, 0.90);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-  }
-
-  /* Level 3: Focus & Input Surface */
-  .surface-focus {
-    background-color: #FFFFFF;
-  }
-  .dark .surface-focus {
-    background-color: #111A23;
-  }
-
-  /* Level 4: Soft Interactive Container with Luminosity Hover */
-  .surface-interactive {
-    background-color: rgba(226, 232, 240, 0.45);
-    transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s ease;
-  }
-  .surface-interactive:hover {
-    background-color: rgba(255, 255, 255, 0.85);
-  }
-  .dark .surface-interactive {
-    background-color: rgba(13, 20, 28, 0.6);
-  }
-  .dark .surface-interactive:hover {
-    background-color: rgba(17, 26, 35, 0.9);
-  }
-
-  /* Semantic Atmospheric Accents */
-  .surface-accent-emerald {
-    background-color: rgba(16, 185, 129, 0.08);
-  }
-  .dark .surface-accent-emerald {
-    background-color: rgba(16, 185, 129, 0.12);
-  }
-
-  .surface-accent-cyan {
-    background-color: rgba(6, 182, 212, 0.08);
-  }
-  .dark .surface-accent-cyan {
-    background-color: rgba(6, 182, 212, 0.12);
-  }
-
-  .surface-accent-teal {
-    background-color: rgba(20, 184, 166, 0.08);
-  }
-  .dark .surface-accent-teal {
-    background-color: rgba(20, 184, 166, 0.12);
-  }
-
-  .surface-accent-amber {
-    background-color: rgba(245, 158, 11, 0.08);
-  }
-  .dark .surface-accent-amber {
-    background-color: rgba(245, 158, 11, 0.12);
-  }
-
-  .surface-accent-rose {
-    background-color: rgba(244, 63, 94, 0.08);
-  }
-  .dark .surface-accent-rose {
-    background-color: rgba(244, 63, 94, 0.12);
-  }
-
-  /* Subtle Ambient Mesh Grid */
-  .bg-grid-tech {
-    background-image: radial-gradient(rgba(148, 163, 184, 0.12) 1px, transparent 1px);
-    background-size: 32px 32px;
-  }
-  .dark .bg-grid-tech {
-    background-image: radial-gradient(rgba(51, 65, 85, 0.20) 1px, transparent 1px);
-    background-size: 32px 32px;
-  }
-
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
   }
 }
 
-/* Fluid Keyframe Animations */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+/* ============================================================================
+   EXECUTIVE CLEAN DESIGN SYSTEM — SOLID SURFACES, CRISP BORDERS, ZERO NOISE
+   ============================================================================ */
+
+/* 1. Primary Card / Panel Surface */
+.surface-panel {
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.03);
 }
 
-@keyframes pulseBeacon {
-  0%, 100% { transform: scale(1); opacity: 0.8; }
-  50% { transform: scale(1.15); opacity: 1; }
+.dark .surface-panel {
+  background-color: #111827;
+  border: 1px solid #1E293B;
+  box-shadow: none;
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* 2. Elevated Modal / Hero Surface */
+.surface-elevated {
+  background-color: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
 }
 
-.animate-beacon {
-  animation: pulseBeacon 2.5s ease-in-out infinite;
+.dark .surface-elevated {
+  background-color: #0F172A;
+  border: 1px solid #334155;
+  box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.5);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
+/* 3. Interactive Row / Input / Sub-Card Surface */
+.surface-interactive {
+  background-color: #F8FAFC;
+  border: 1px solid #E2E8F0;
+}
+
+.surface-interactive:hover {
+  background-color: #F1F5F9;
+  border-color: #CBD5E1;
+}
+
+.dark .surface-interactive {
+  background-color: #161F30;
+  border: 1px solid #1E293B;
+}
+
+.dark .surface-interactive:hover {
+  background-color: #1E293B;
+  border-color: #334155;
+}
+
+/* 4. Semantic Accent Surfaces (Clean Solid Tints) */
+.surface-accent-emerald {
+  background-color: #ECFDF5;
+  border: 1px solid #A7F3D0;
+}
+
+.dark .surface-accent-emerald {
+  background-color: rgba(6, 78, 59, 0.28);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.surface-accent-amber {
+  background-color: #FFFBEB;
+  border: 1px solid #FDE68A;
+}
+
+.dark .surface-accent-amber {
+  background-color: rgba(120, 53, 15, 0.25);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.surface-accent-rose {
+  background-color: #FFF1F2;
+  border: 1px solid #FECDD3;
+}
+
+.dark .surface-accent-rose {
+  background-color: rgba(136, 19, 55, 0.25);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+}
+
+.surface-accent-indigo {
+  background-color: #EEF2FF;
+  border: 1px solid #C7D2FE;
+}
+
+.dark .surface-accent-indigo {
+  background-color: rgba(49, 46, 129, 0.25);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+/* 5. Clean Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.55);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
 }

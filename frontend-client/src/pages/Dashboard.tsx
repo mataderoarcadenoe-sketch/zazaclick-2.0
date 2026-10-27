@@ -6,14 +6,13 @@ import { useDarkMode } from '../hooks/useDarkMode';
 import api from '../services/api';
 import { 
   LogOut, RefreshCw, Plus, Key, Trash2, Smartphone, CheckCircle2, 
-  AlertCircle, Copy, Send, LayoutGrid, Terminal, 
-  Moon, Sun, Menu, X, Play, Shield, Building, Image, Mic, MapPin, UserPlus, ArrowRight,
+  Copy, Send, LayoutGrid, Terminal, Radio,
+  Moon, Sun, Menu, X, Play, Shield, Image, Mic, MapPin, UserPlus,
   Activity, Globe, CreditCard, AlertTriangle, Code, Zap
 } from 'lucide-react';
 
 import { AsyncOperationModal, type AsyncStep, type AsyncStatus } from '../components/AsyncOperationModal';
 import { CustomSelect } from '../components/CustomSelect';
-import { InteractiveGravityMesh } from '../components/InteractiveGravityMesh';
 import { ConfirmationModal } from '../components/ConfirmationModal';
 import { ToastNotification } from '../components/ToastNotification';
 import { ZazaLogo } from '../components/ZazaLogo';
@@ -24,9 +23,9 @@ export default function Dashboard() {
   const { user, logout } = useAuth();
   const { isDark, toggle: toggleDark } = useDarkMode();
 
-  // State Management - WhatsApp API SaaS Core
-  const [activeTab, setActiveTab] = useState<string>('overview');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Navegación Principal — 6 Apartados Únicos
+  const [activeTab, setActiveTab] = useState<'overview' | 'instances' | 'apikeys' | 'webhooks' | 'playground' | 'docs'>('overview');
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Máquina de Estados de Operaciones Asíncronas
   const [asyncOp, setAsyncOp] = useState<{
@@ -59,41 +58,28 @@ export default function Dashboard() {
   // Suscripción & Planes
   const [subscription, setSubscription] = useState<any>(null);
 
-  // Playground API (Probar Envío con soporte de Texto, Media, Audio PTT, Ubicación y Contacto)
+  // Playground API (Único Probador Interactivo: Texto, Media, Audio PTT, Ubicación y Contacto)
   const [playgroundType, setPlaygroundType] = useState<'text' | 'media' | 'audio' | 'location' | 'contact'>('text');
   const [playgroundInstance, setPlaygroundInstance] = useState('');
   const [playgroundPhone, setPlaygroundPhone] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   
-  // Parámetros de Texto
-  const [playgroundMessage, setPlaygroundMessage] = useState('¡Hola! Mensaje de prueba enviado desde la API de WhatsApp Zaza.click.');
-  
-  // Parámetros Multimedia
+  const [playgroundMessage, setPlaygroundMessage] = useState('¡Hola! Mensaje de prueba enviado desde la API de WhatsApp Zaza Click 2.0.');
   const [playgroundMediaType, setPlaygroundMediaType] = useState<'image' | 'video' | 'document' | 'audio'>('image');
   const [playgroundMimeType, setPlaygroundMimeType] = useState('image/jpeg');
   const [playgroundMedia, setPlaygroundMedia] = useState('https://images.unsplash.com/photo-1579202673506-ca3ce28943ef');
   const [playgroundCaption, setPlaygroundCaption] = useState('¡Mira esta imagen enviada vía API!');
   const [playgroundFileName, setPlaygroundFileName] = useState('catalogo.pdf');
-  
-  // Parámetros Audio PTT
   const [playgroundAudio, setPlaygroundAudio] = useState('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
-  
-  // Parámetros Ubicación
   const [playgroundLocName, setPlaygroundLocName] = useState('Sede Principal Zaza Click');
   const [playgroundLocAddress, setPlaygroundLocAddress] = useState('Av. República de Panamá 3545, San Isidro, Lima');
   const [playgroundLatitude, setPlaygroundLatitude] = useState(-12.098412);
   const [playgroundLongitude, setPlaygroundLongitude] = useState(-77.028941);
-
-  // Parámetros Contacto
   const [playgroundContactName, setPlaygroundContactName] = useState('Soporte Zaza Click');
   const [playgroundContactPhone, setPlaygroundContactPhone] = useState('+51912345678');
 
   const [playgroundLoading, setPlaygroundLoading] = useState(false);
   const [playgroundResponse, setPlaygroundResponse] = useState<any>(null);
-
-  // Documentación API
-  const [docEndpoint, setDocEndpoint] = useState<'send-text' | 'send-media' | 'send-audio' | 'send-location' | 'send-contact'>('send-text');
-  const [docLang, setDocLang] = useState<'curl' | 'js' | 'python' | 'php'>('curl');
 
   // Notificaciones Toast
   const [notification, setNotification] = useState<{ text: string; title?: string; type?: 'success' | 'error' | 'warning' | 'info' } | null>(null);
@@ -108,10 +94,10 @@ export default function Dashboard() {
       setCopiedId(id);
       setTimeout(() => setCopiedId(null), 2200);
     }
-    showNotification('Copiado al portapapeles!');
+    showNotification('Copiado al portapapeles');
   };
 
-  // Cargar datos principales al montar
+  // Cargar datos principales
   const fetchInstances = useCallback(async () => {
     try {
       setLoadingInstances(true);
@@ -179,7 +165,7 @@ export default function Dashboard() {
     const initialSteps: AsyncStep[] = [
       { id: '1', label: 'Enviando solicitud de creación al servidor', status: 'active' },
       { id: '2', label: `Inicializando motor WhatsApp API (${engineName})`, status: 'pending' },
-      { id: '3', label: 'Guardando credenciales y generador de API Key en PostgreSQL', status: 'pending' }
+      { id: '3', label: 'Guardando credenciales y API Key en PostgreSQL', status: 'pending' }
     ];
 
     setAsyncOp({
@@ -231,7 +217,6 @@ export default function Dashboard() {
     }
   };
 
-  // Modal de Confirmación Personalizado
   const [confirmModal, setConfirmModal] = useState<{
     open: boolean;
     title: string;
@@ -332,7 +317,7 @@ export default function Dashboard() {
     });
   };
 
-  // Manejador del Tester API Multi-Tipo (Playground)
+  // Manejador del Probador de API (Playground)
   const handleTestSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!playgroundInstance || !playgroundPhone) {
@@ -402,13 +387,14 @@ export default function Dashboard() {
     }
   };
 
+  // 6 Apartados Únicos — Cero Duplicidades
   const menuItems = [
-    { id: 'overview', label: 'Dashboard API', icon: LayoutGrid },
-    { id: 'developer', label: 'Developer Portal', icon: Terminal },
-    { id: 'instances', label: 'Instancias / QR', icon: Smartphone },
-    { id: 'playground', label: 'Tester de API', icon: Play },
-    { id: 'docs', label: 'Documentación API', icon: Code },
-    { id: 'subscription', label: 'Planes y Suscripción', icon: Key },
+    { id: 'overview', label: 'Resumen y Plan', icon: LayoutGrid },
+    { id: 'instances', label: 'Líneas WhatsApp', icon: Smartphone },
+    { id: 'apikeys', label: 'API Keys', icon: Key },
+    { id: 'webhooks', label: 'Webhooks y Logs', icon: Radio },
+    { id: 'playground', label: 'Probador de API', icon: Play },
+    { id: 'docs', label: 'Documentación', icon: Code },
   ];
 
   const currentBackendUrl = window.location.origin.includes('localhost') 
@@ -418,122 +404,8 @@ export default function Dashboard() {
   const activeInstancesCount = instances.filter(i => i.status === 'connected').length;
   const maxInstances = subscription?.max_instances || 1;
 
-  // Generador de código para documentación API completa
-  const getDocCode = () => {
-    const selectedInst = instances[0] || { instance_name: 'mi_linea_whatsapp', api_key: 'tu_api_key_aqui' };
-
-    let endpointPath = '/v1/messages/text';
-    let payloadObj: any = {
-      instanceName: selectedInst.instance_name,
-      number: "51912345678",
-      text: "¡Hola! Mensaje enviado desde la API de WhatsApp."
-    };
-
-    if (docEndpoint === 'send-media') {
-      endpointPath = '/v1/messages/media';
-      payloadObj = {
-        instanceName: selectedInst.instance_name,
-        number: "51912345678",
-        mediatype: "image",
-        mimetype: "image/jpeg",
-        media: "https://images.unsplash.com/photo-1579202673506-ca3ce28943ef",
-        caption: "Catálogo de Productos 2026",
-        fileName: "catalogo.jpg"
-      };
-    } else if (docEndpoint === 'send-audio') {
-      endpointPath = '/v1/messages/audio';
-      payloadObj = {
-        instanceName: selectedInst.instance_name,
-        number: "51912345678",
-        audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-      };
-    } else if (docEndpoint === 'send-location') {
-      endpointPath = '/v1/messages/location';
-      payloadObj = {
-        instanceName: selectedInst.instance_name,
-        number: "51912345678",
-        name: "Sede Principal Zaza Click",
-        address: "Av. República de Panamá 3545, San Isidro, Lima",
-        latitude: -12.098412,
-        longitude: -77.028941
-      };
-    } else if (docEndpoint === 'send-contact') {
-      endpointPath = '/v1/messages/contact';
-      payloadObj = {
-        instanceName: selectedInst.instance_name,
-        number: "51912345678",
-        contact: [
-          {
-            fullName: "Soporte Zaza Click",
-            phoneNumber: "+51912345678"
-          }
-        ]
-      };
-    }
-
-    const payloadJson = JSON.stringify(payloadObj, null, 2);
-
-    if (docLang === 'curl') {
-      return `curl -X POST "${currentBackendUrl}${endpointPath}" \\
-  -H "Content-Type: application/json" \\
-  -H "x-api-key: ${selectedInst.api_key}" \\
-  -d '${JSON.stringify(payloadObj)}'`;
-    }
-
-    if (docLang === 'js') {
-      return `const response = await fetch("${currentBackendUrl}${endpointPath}", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "x-api-key": "${selectedInst.api_key}"
-  },
-  body: JSON.stringify(${payloadJson})
-});
-
-const data = await response.json();
-console.log(data);`;
-    }
-
-    if (docLang === 'python') {
-      return `import requests
-
-url = "${currentBackendUrl}${endpointPath}"
-headers = {
-    "Content-Type": "application/json",
-    "x-api-key": "${selectedInst.api_key}"
-}
-payload = ${JSON.stringify(payloadObj, null, 4)}
-
-response = requests.post(url, json=payload, headers=headers)
-print(response.json())`;
-    }
-
-    if (docLang === 'php') {
-      return `<?php
-$ch = curl_init("${currentBackendUrl}${endpointPath}");
-curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-    'Content-Type: application/json',
-    'x-api-key: ${selectedInst.api_key}'
-));
-curl_setopt($ch, CURLOPT_POST, 1);
-curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(${JSON.stringify(payloadObj)}));
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-$response = curl_exec($ch);
-curl_close($ch);
-echo $response;`;
-    }
-    return '';
-  };
-
   return (
-    <div className="flex h-screen bg-[#F8FAFC] dark:bg-[#070B12] text-slate-900 dark:text-white transition-colors duration-250 font-sans overflow-hidden relative">
-      
-      {/* Living API Network Infrastructure Canvas (Client Connectivity Engine) */}
-      <InteractiveGravityMesh 
-        variant="client"
-        isDark={isDark}
-        className="fixed inset-0 pointer-events-none z-0 opacity-40 dark:opacity-60"
-      />
+    <div className="flex h-screen bg-[#F8FAFC] dark:bg-[#0B0F17] text-slate-900 dark:text-white font-sans overflow-hidden relative">
 
       {/* Toast Notification */}
       <ToastNotification notification={notification} onClose={() => setNotification(null)} />
@@ -541,33 +413,33 @@ echo $response;`;
       {/* Sidebar Overlay (Mobile) */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-40 lg:hidden"
+          className="fixed inset-0 bg-slate-950/50 z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      {/* Sidebar Institutional (Atmospheric Translucent Surface) */}
+      {/* Barra Lateral Limpia y Sólida */}
       <aside 
-        className={`surface-panel flex flex-col transition-all duration-250 z-50 fixed top-0 left-0 h-full ${
+        className={`surface-panel flex flex-col z-50 fixed top-0 left-0 h-full border-r border-slate-200 dark:border-slate-800 ${
           sidebarOpen ? 'w-64 translate-x-0' : 'w-20 -translate-x-full lg:translate-x-0'
         }`}
       >
         {/* Brand Header */}
-        <div className={`h-16 flex items-center ${sidebarOpen ? 'justify-between px-5' : 'justify-center'}`}>
+        <div className={`h-16 flex items-center border-b border-slate-100 dark:border-slate-800/80 ${sidebarOpen ? 'justify-between px-5' : 'justify-center'}`}>
           {sidebarOpen && (
             <div className="flex items-center gap-2.5">
-              <ZazaLogo size={36} />
+              <ZazaLogo size={34} />
               <div className="flex flex-col text-left">
                 <span className="font-black text-slate-900 dark:text-white text-sm tracking-tight">
-                  Zaza.click <span className="text-emerald-500">2.0</span>
+                  Zaza Click <span className="text-emerald-600 dark:text-emerald-400">2.0</span>
                 </span>
-                <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">WhatsApp API</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">Portal Clientes</span>
               </div>
             </div>
           )}
           <button 
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 rounded-xl transition-colors text-slate-500 dark:text-slate-400 cursor-pointer"
+            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-500 dark:text-slate-400 cursor-pointer"
             aria-label="Alternar barra lateral"
           >
             {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
@@ -575,7 +447,7 @@ echo $response;`;
         </div>
 
         {/* Menu Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto scrollbar-hide">
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {menuItems.map(item => {
             const Icon = item.icon;
             const active = activeTab === item.id;
@@ -584,29 +456,26 @@ echo $response;`;
               <button
                 key={item.id}
                 onClick={() => {
-                  setActiveTab(item.id);
+                  setActiveTab(item.id as any);
                   if (window.innerWidth < 1024) setSidebarOpen(false);
                 }}
                 className={`w-full group flex items-center ${
-                  sidebarOpen ? 'px-4 py-2.5 justify-start' : 'p-3 justify-center'
-                } rounded-xl transition-all duration-200 relative cursor-pointer ${
+                  sidebarOpen ? 'px-3.5 py-2.5 justify-start' : 'p-3 justify-center'
+                } rounded-xl relative cursor-pointer ${
                   active 
-                    ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 font-bold'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/40 dark:hover:bg-slate-800/40 hover:text-slate-900 dark:hover:text-white font-medium'
+                    ? 'bg-slate-900 text-white dark:bg-emerald-600 font-bold'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white font-medium'
                 }`}
               >
-                {active && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mr-2.5 flex-shrink-0" />
-                )}
                 <Icon 
                   size={18} 
-                  className={`flex-shrink-0 transition-colors ${active ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200'}`}
+                  className={`flex-shrink-0 ${active ? 'text-white' : 'text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200'}`}
                   strokeWidth={active ? 2.2 : 1.8}
                 />
                 {sidebarOpen ? (
                   <span className="ml-3 text-xs tracking-tight">{item.label}</span>
                 ) : (
-                  <span className="absolute left-full ml-3 px-3 py-1.5 surface-elevated text-slate-900 dark:text-white text-xs font-semibold rounded-xl whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 pointer-events-none">
+                  <span className="absolute left-full ml-3 px-3 py-1.5 surface-elevated text-slate-900 dark:text-white text-xs font-semibold rounded-xl whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible z-50 pointer-events-none">
                     {item.label}
                   </span>
                 )}
@@ -616,19 +485,19 @@ echo $response;`;
         </nav>
 
         {/* Footer Logout */}
-        <div className="p-3">
+        <div className="p-3 border-t border-slate-100 dark:border-slate-800/80">
           <button
             onClick={logout}
             className={`w-full group flex items-center ${
-              sidebarOpen ? 'px-4 py-2.5 justify-start' : 'p-3 justify-center'
-            } rounded-xl hover:bg-rose-500/15 text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer`}
+              sidebarOpen ? 'px-3.5 py-2.5 justify-start' : 'p-3 justify-center'
+            } rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/30 text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer`}
             title="Cerrar Sesión"
           >
             <LogOut size={18} className="flex-shrink-0" />
             {sidebarOpen ? (
-              <span className="ml-3 text-xs font-medium">Cerrar Sesión</span>
+              <span className="ml-3 text-xs font-semibold">Cerrar Sesión</span>
             ) : (
-              <span className="absolute left-full ml-3 px-3 py-1.5 surface-elevated text-slate-900 dark:text-white text-xs font-semibold rounded-xl whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 pointer-events-none">
+              <span className="absolute left-full ml-3 px-3 py-1.5 surface-elevated text-slate-900 dark:text-white text-xs font-semibold rounded-xl whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible z-50 pointer-events-none">
                 Cerrar Sesión
               </span>
             )}
@@ -637,52 +506,48 @@ echo $response;`;
       </aside>
 
       {/* Main Content Area */}
-      <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-250 ${sidebarOpen ? 'lg:pl-64' : 'lg:pl-20'}`}>
+      <div className={`flex-1 flex flex-col overflow-hidden ${sidebarOpen ? 'lg:pl-64' : 'lg:pl-20'}`}>
         
         {/* Top Header */}
-        <header className="h-16 surface-panel px-4 sm:px-8 lg:px-12 flex items-center justify-between z-30 transition-colors duration-250 sticky top-0">
+        <header className="h-16 surface-panel px-4 sm:px-8 lg:px-10 flex items-center justify-between z-30 border-b border-slate-200 dark:border-slate-800 sticky top-0">
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-xl transition-colors text-slate-600 dark:text-slate-300 cursor-pointer lg:hidden"
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-600 dark:text-slate-300 cursor-pointer lg:hidden"
             >
               <Menu size={20} />
             </button>
             <div className="flex flex-col text-left">
               <div className="flex items-center gap-2">
                 <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight tracking-tight">
-                  {menuItems.find(i => i.id === activeTab)?.label || 'Consola de WhatsApp API'}
+                  {menuItems.find(i => i.id === activeTab)?.label || 'Consola WhatsApp API'}
                 </h2>
-                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-mono font-bold">
-                  v2.4.0
+                <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded surface-accent-emerald text-emerald-700 dark:text-emerald-300 text-[10px] font-mono font-bold">
+                  v2.0
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 dark:text-slate-500 font-normal leading-none mt-0.5 hidden sm:block">
-                Gateway REST, enrutamiento multi-inquilino y webhooks en tiempo real.
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-normal leading-none mt-0.5 hidden sm:block">
+                Infraestructura WhatsApp API sobre Evolution Go (Whatsmeow Engine).
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             {user?.role === 'admin' && (
               <a
                 href="https://admin.zazaclick.sbs"
                 target="_blank"
                 rel="noreferrer"
-                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 dark:bg-emerald-600 hover:bg-slate-800 dark:hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 dark:bg-emerald-600 hover:bg-slate-800 dark:hover:bg-emerald-500 text-white rounded-xl text-xs font-bold cursor-pointer"
               >
                 <Shield size={13} />
-                <span>Panel SuperAdmin ➔</span>
+                <span>Panel SuperAdmin</span>
               </a>
             )}
 
-            {/* Live Gateway Telemetry Pill */}
-            <div className="hidden md:inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <span className="text-[10px] font-bold tracking-wider uppercase font-mono">Gateway Online · 18ms</span>
+            <div className="hidden md:inline-flex items-center gap-2 px-3 py-1.5 rounded-lg surface-accent-emerald text-emerald-700 dark:text-emerald-300">
+              <span className="inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              <span className="text-[10px] font-bold tracking-wider uppercase font-mono">Gateway Operativo</span>
             </div>
 
             <button
@@ -690,162 +555,211 @@ echo $response;`;
               className="p-2.5 surface-interactive rounded-xl text-slate-600 dark:text-slate-300 cursor-pointer"
               title="Cambiar Tema"
             >
-              {isDark ? <Sun size={17} className="text-amber-400" /> : <Moon size={17} className="text-emerald-600" />}
+              {isDark ? <Sun size={16} className="text-amber-400" /> : <Moon size={16} className="text-slate-600" />}
             </button>
 
             <button
-              onClick={fetchInstances}
+              onClick={() => {
+                fetchInstances();
+                fetchSubscription();
+              }}
               className="p-2.5 surface-interactive rounded-xl text-slate-600 dark:text-slate-300 cursor-pointer"
               title="Sincronizar datos"
             >
-              <RefreshCw size={17} className={loadingInstances ? 'animate-spin text-emerald-500' : ''} />
+              <RefreshCw size={16} className={loadingInstances ? 'animate-spin text-emerald-600' : ''} />
             </button>
 
-            <div className="flex items-center gap-2 pl-2">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center font-bold text-xs uppercase">
+            <div className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800">
+              <div className="w-8 h-8 rounded-lg bg-slate-900 dark:bg-emerald-600 text-white flex items-center justify-center font-bold text-xs uppercase">
                 {(user?.email || 'A')[0].toUpperCase()}
               </div>
               <div className="hidden lg:flex flex-col text-left">
-                <span className="text-xs font-semibold text-slate-900 dark:text-white leading-tight truncate max-w-[130px]">{user?.email}</span>
-                <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">{user?.role || 'Cliente'}</span>
+                <span className="text-xs font-semibold text-slate-900 dark:text-white leading-tight truncate max-w-[140px]">{user?.email}</span>
+                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">{user?.role || 'Cliente'}</span>
               </div>
             </div>
           </div>
         </header>
 
-        {/* Content Body Canvas */}
-        <main className="flex-1 bg-grid-tech relative overflow-y-auto">
-          <div className="w-full px-4 sm:px-8 lg:px-12 py-8 space-y-8 max-w-[1920px] mx-auto">
+        {/* Content Body — Fondo Sólido y Limpio */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="w-full px-4 sm:px-8 lg:px-10 py-7 space-y-6 max-w-[1600px] mx-auto">
             
-            {/* DASHBOARD API OVERVIEW */}
+            {/* ============================================================================
+                APARTADO 1: RESUMEN Y PLAN (UNIFICADO, SIN DUPLICAR EN OTRA PESTAÑA)
+               ============================================================================ */}
             {activeTab === 'overview' && (
-              <div className="space-y-6 animate-fadeIn text-left">
+              <div className="space-y-6 text-left">
                 
-                {/* Hero Atmosphere Section */}
-                <div className="surface-panel p-7 sm:p-9 rounded-3xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
-                  <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 dark:bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
-                  
-                  <div className="space-y-2.5 text-left relative z-10">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 rounded-full text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                      <span>Motor Evolution Go (Whatsmeow) · Redis Queue Engine</span>
+                {/* Cabecera Ejecutiva */}
+                <div className="surface-panel p-6 sm:p-8 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+                  <div className="space-y-2 text-left">
+                    <div className="inline-flex items-center gap-2 px-2.5 py-1 surface-accent-emerald rounded-md text-[10px] font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span>Motor Evolution Go (Whatsmeow) · Cola Asíncrona Activa</span>
                     </div>
-                    <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                      Infraestructura de WhatsApp API SaaS
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+                      Resumen Operativo y Estado de Suscripción
                     </h1>
-                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-xl leading-relaxed font-normal">
-                      Envía mensajes de texto, imágenes, audios PTT, videos, PDFs y contactos mediante tu <code className="text-emerald-600 dark:text-emerald-400 font-bold font-mono px-1.5 py-0.5 bg-emerald-500/10 rounded">x-api-key</code> de alta velocidad.
+                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
+                      Supervisa el consumo de tu cuota mensual, el estado de tus líneas de WhatsApp y la vigencia de tu licencia comercial en un solo lugar.
                     </p>
                   </div>
 
-                  <div className="flex gap-3 flex-wrap relative z-10">
+                  <div className="flex gap-3 flex-wrap shrink-0">
                     <button
                       type="button"
                       onClick={() => setActiveTab('instances')}
-                      className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
+                      className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl flex items-center gap-2 cursor-pointer"
                     >
                       <Plus size={15} />
-                      <span>Crear Línea</span>
+                      <span>Gestionar Líneas</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setActiveTab('playground')}
-                      className="px-5 py-2.5 surface-interactive text-slate-800 dark:text-slate-200 font-semibold text-xs rounded-xl flex items-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
+                      className="px-4 py-2.5 surface-interactive text-slate-800 dark:text-slate-200 font-semibold text-xs rounded-xl flex items-center gap-2 cursor-pointer"
                     >
                       <Play size={15} />
-                      <span>Probar Envíos API</span>
+                      <span>Abrir Probador API</span>
                     </button>
                   </div>
                 </div>
 
-                {/* Alerta de Estado de Licencia si está vencido */}
+                {/* Alerta de Vencimiento si aplica */}
                 {subscription?.is_expired && (
-                  <div className="p-4 surface-accent-rose rounded-2xl flex items-center justify-between text-xs font-semibold text-rose-800 dark:text-rose-200">
-                    <div className="flex items-center gap-2">
-                      <AlertTriangle size={17} className="text-rose-600" />
-                      <span>Tu suscripción ha vencido. Las llamadas a la API de WhatsApp están bloqueadas. Contacta al administrador para renovar.</span>
+                  <div className="p-4 surface-accent-rose rounded-xl flex items-center justify-between text-xs font-semibold text-rose-800 dark:text-rose-200">
+                    <div className="flex items-center gap-2.5">
+                      <AlertTriangle size={17} className="text-rose-600 shrink-0" />
+                      <span>Tu suscripción se encuentra vencida. El despacho de mensajes por API está pausado hasta renovar la licencia.</span>
                     </div>
-                    <button onClick={() => setActiveTab('subscription')} className="underline font-bold hover:text-rose-900 dark:hover:text-white">Renovar Licencia</button>
                   </div>
                 )}
 
-                {/* KPI Metrics — Composición Editorial por Tono & Tipografía */}
+                {/* 4 KPIs Principales */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="surface-panel p-6 rounded-2xl space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Consumo de Cuota</span>
-                      <div className="w-8 h-8 rounded-xl surface-accent-amber flex items-center justify-center"><Activity size={15} className="text-amber-500" /></div>
+                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Consumo de Cuota</span>
+                      <div className="w-8 h-8 rounded-lg surface-accent-amber flex items-center justify-center">
+                        <Activity size={15} className="text-amber-600 dark:text-amber-400" />
+                      </div>
                     </div>
-                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono">
+                    <div className="text-2xl font-black text-slate-900 dark:text-white font-mono">
                       {subscription?.messages_used || 0} <span className="text-xs font-normal text-slate-400 font-sans">/ {subscription?.messages_limit || 1000}</span>
                     </div>
-                    <div className="w-full h-1.5 bg-slate-200/80 dark:bg-slate-800/80 rounded-full overflow-hidden mt-2">
+                    <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden mt-2">
                       <div 
-                        className={`h-full rounded-full transition-all duration-500 ${Number(subscription?.consumption_percentage || 0) > 85 ? 'bg-rose-500' : 'bg-emerald-500'}`}
+                        className={`h-full rounded-full ${Number(subscription?.consumption_percentage || 0) > 85 ? 'bg-rose-500' : 'bg-emerald-500'}`}
                         style={{ width: `${Math.min(100, Number(subscription?.consumption_percentage || 0))}%` }}
                       />
                     </div>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                      {subscription?.consumption_percentage || 0}% consumido ({subscription?.available_messages || 0} libres)
+                      {subscription?.consumption_percentage || 0}% utilizado ({subscription?.available_messages || 0} disponibles)
                     </p>
                   </div>
 
                   <div className="surface-panel p-6 rounded-2xl space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Líneas Conectadas</span>
-                      <div className="w-8 h-8 rounded-xl surface-accent-emerald flex items-center justify-center"><Smartphone size={15} className="text-emerald-500" /></div>
+                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Líneas Conectadas</span>
+                      <div className="w-8 h-8 rounded-lg surface-accent-emerald flex items-center justify-center">
+                        <Smartphone size={15} className="text-emerald-600 dark:text-emerald-400" />
+                      </div>
                     </div>
-                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono">
+                    <div className="text-2xl font-black text-slate-900 dark:text-white font-mono">
                       {activeInstancesCount} <span className="text-xs font-normal text-slate-400 font-sans">/ {maxInstances === 99 ? '∞' : maxInstances}</span>
                     </div>
                     <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 pt-1">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <span>{activeInstancesCount > 0 ? 'Conexión activa con WhatsApp' : 'Sin líneas vinculadas'}</span>
+                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                      <span>{activeInstancesCount > 0 ? 'Sesión activa con WhatsApp' : 'Sin líneas conectadas'}</span>
                     </p>
                   </div>
 
                   <div className="surface-panel p-6 rounded-2xl space-y-2 min-w-0">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">URL Endpoint</span>
-                      <div className="w-8 h-8 rounded-xl surface-accent-cyan flex items-center justify-center"><Globe size={15} className="text-cyan-500" /></div>
+                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">URL Base API</span>
+                      <div className="w-8 h-8 rounded-lg surface-accent-indigo flex items-center justify-center">
+                        <Globe size={15} className="text-indigo-600 dark:text-indigo-400" />
+                      </div>
                     </div>
-                    <div className="text-xs font-mono font-bold text-slate-900 dark:text-white truncate px-2.5 py-1.5 surface-interactive rounded-xl" title={currentBackendUrl}>
+                    <div className="text-xs font-mono font-bold text-slate-900 dark:text-white truncate px-3 py-1.5 surface-interactive rounded-lg" title={currentBackendUrl}>
                       {currentBackendUrl}
                     </div>
                     <button 
                       type="button" 
                       onClick={() => copyToClipboard(currentBackendUrl, 'base-url')} 
-                      className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer pt-1"
+                      className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer pt-1"
                     >
                       {copiedId === 'base-url' ? (
                         <>
-                          <CheckCircle2 size={12} className="text-emerald-500" />
-                          <span className="text-emerald-600 dark:text-emerald-400 font-bold">¡Copiado!</span>
+                          <CheckCircle2 size={12} />
+                          <span>¡URL Copiada!</span>
                         </>
                       ) : (
-                        <span>Copiar URL Base ➔</span>
+                        <>
+                          <Copy size={12} />
+                          <span>Copiar URL Base</span>
+                        </>
                       )}
                     </button>
                   </div>
 
                   <div className="surface-panel p-6 rounded-2xl space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Plan y Vencimiento</span>
-                      <div className="w-8 h-8 rounded-xl surface-accent-teal flex items-center justify-center"><CreditCard size={15} className="text-teal-500" /></div>
+                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Plan Activo</span>
+                      <div className="w-8 h-8 rounded-lg surface-accent-emerald flex items-center justify-center">
+                        <CreditCard size={15} className="text-emerald-600 dark:text-emerald-400" />
+                      </div>
                     </div>
                     <div className="text-base font-black text-slate-900 dark:text-white uppercase truncate">
                       {subscription?.plan_name || 'Plan Developer'}
                     </div>
                     <div className="pt-1">
                       {subscription?.is_expired ? (
-                        <span className="px-2.5 py-1 bg-rose-500/10 text-rose-700 dark:text-rose-300 text-[10px] font-bold rounded-full uppercase">
-                          🔴 VENCIDO
+                        <span className="px-2.5 py-1 surface-accent-rose text-rose-700 dark:text-rose-300 text-[10px] font-bold rounded-md uppercase">
+                          Licencia Vencida
                         </span>
                       ) : (
-                        <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold rounded-full uppercase">
-                          ● {subscription?.days_remaining || 0} DÍAS RESTANTES
+                        <span className="px-2.5 py-1 surface-accent-emerald text-emerald-700 dark:text-emerald-300 text-[10px] font-bold rounded-md uppercase">
+                          {subscription?.days_remaining || 0} Días Restantes
                         </span>
                       )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Detalle Completo de Licencia y Suscripción (Integrado en Resumen) */}
+                <div className="surface-panel p-6 rounded-2xl space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <CreditCard size={17} className="text-emerald-600 dark:text-emerald-400" />
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-white">Detalle de Licencia y Vigencia</h3>
+                    </div>
+                    <span className="text-[11px] text-slate-400 font-mono">
+                      Cuenta: {user?.email}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="p-4 surface-interactive rounded-xl space-y-1">
+                      <span className="text-[11px] font-semibold text-slate-500 block">Fecha de Inicio del Ciclo</span>
+                      <span className="text-xs font-mono font-bold text-slate-900 dark:text-white">
+                        {subscription?.start_date ? new Date(subscription.start_date).toLocaleDateString() : 'Activo'}
+                      </span>
+                    </div>
+
+                    <div className="p-4 surface-interactive rounded-xl space-y-1">
+                      <span className="text-[11px] font-semibold text-slate-500 block">Fecha de Vencimiento</span>
+                      <span className="text-xs font-mono font-bold text-slate-900 dark:text-white">
+                        {subscription?.end_date ? new Date(subscription.end_date).toLocaleDateString() : 'Sin vencimiento'}
+                      </span>
+                    </div>
+
+                    <div className="p-4 surface-interactive rounded-xl space-y-1">
+                      <span className="text-[11px] font-semibold text-slate-500 block">Capacidad de Líneas WhatsApp</span>
+                      <span className="text-xs font-mono font-bold text-slate-900 dark:text-white">
+                        {activeInstancesCount} conectadas de {maxInstances === 99 ? 'Ilimitadas' : maxInstances} permitidas
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -853,37 +767,38 @@ echo $response;`;
               </div>
             )}
 
-            {/* DEVELOPER PORTAL & API MANAGEMENT */}
-            {activeTab === 'developer' && (
-              <div className="animate-fadeIn text-left">
-                <DeveloperPortal
-                  instances={instances}
-                  currentApiKey={instances[0]?.api_key || user?.id || 'zc_live_sec_demo'}
-                  onRefreshInstances={fetchInstances}
-                />
-              </div>
-            )}
-
-            {/* INSTANCIAS / LÍNEAS WHATSAPP */}
+            {/* ============================================================================
+                APARTADO 2: LÍNEAS WHATSAPP (INSTANCIAS Y VINCULACIÓN QR)
+               ============================================================================ */}
             {activeTab === 'instances' && (
-              <div className="space-y-6 animate-fadeIn text-left">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl surface-accent-emerald text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                    <Smartphone size={19} />
+              <div className="space-y-6 text-left">
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl surface-accent-emerald text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                      <Smartphone size={19} />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Líneas de WhatsApp</h2>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Crea tus instancias y vincula tus números de WhatsApp escaneando el código QR.</p>
+                    </div>
                   </div>
-                  <div className="space-y-0.5">
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Instancias y Conexiones WhatsApp</h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Crea nuevas conexiones de API o escanea el código QR para vincular tus líneas.</p>
-                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('apikeys')}
+                    className="px-4 py-2 surface-interactive rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2 cursor-pointer"
+                  >
+                    <Key size={14} className="text-emerald-600" />
+                    <span>Ir a Bóveda de API Keys</span>
+                  </button>
                 </div>
 
+                {/* Crear Nueva Instancia */}
                 <div className="surface-panel p-6 rounded-2xl space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Crear Nueva Instancia API</h3>
-                    
-                    {/* Motor Oficial Unificado */}
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 rounded-xl text-[11px] font-bold">
-                      <Zap size={13} className="text-amber-500" />
+                    <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Crear Nueva Línea WhatsApp</h3>
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 surface-accent-indigo text-indigo-700 dark:text-indigo-300 rounded-lg text-[11px] font-bold">
+                      <Zap size={12} />
                       <span>Motor Oficial: Evolution Go (Whatsmeow)</span>
                     </div>
                   </div>
@@ -894,21 +809,22 @@ echo $response;`;
                       value={newInstanceName}
                       onChange={(e) => setNewInstanceName(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                       placeholder="nombre_de_instancia (ej: ventas_lima)"
-                      className="flex-1 px-4 py-2.5 surface-interactive rounded-xl text-xs font-mono font-semibold text-slate-900 dark:text-white focus:outline-none transition-colors"
+                      className="flex-1 px-4 py-2.5 surface-interactive rounded-xl text-xs font-mono font-semibold text-slate-900 dark:text-white focus:outline-none"
                     />
                     <button
                       type="submit"
                       disabled={loadingInstances}
-                      className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
+                      className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl cursor-pointer flex items-center justify-center gap-2"
                     >
                       <Plus size={15} />
-                      <span>Crear Instancia</span>
+                      <span>Crear Línea</span>
                     </button>
                   </form>
                 </div>
 
+                {/* Listado de Instancias */}
                 <div className="space-y-3">
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tus Instancias ({instances.length})</h3>
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Líneas Registradas ({instances.length})</h3>
 
                   {instances.length === 0 ? (
                     <div className="surface-panel p-10 rounded-2xl text-center space-y-3">
@@ -916,8 +832,8 @@ echo $response;`;
                         <Smartphone size={24} />
                       </div>
                       <div className="space-y-1">
-                        <h4 className="text-sm font-bold text-slate-900 dark:text-white">No tienes instancias creadas</h4>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">Ingresa un nombre arriba para crear tu primera línea de API y comenzar a enviar mensajes.</p>
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-white">No tienes líneas creadas</h4>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">Ingresa un identificador arriba para crear tu primera línea de WhatsApp.</p>
                       </div>
                     </div>
                   ) : (
@@ -931,51 +847,30 @@ echo $response;`;
                             <div className="space-y-0.5">
                               <div className="flex items-center gap-2">
                                 <h4 className="text-sm font-mono font-bold text-slate-900 dark:text-white">{inst.instance_name}</h4>
-                                <span className="px-2 py-0.5 text-[9px] font-bold rounded-md uppercase flex items-center gap-1 bg-indigo-500/15 text-indigo-700 dark:text-indigo-300">
-                                  <Zap size={10} className="text-indigo-600 dark:text-indigo-400" />
-                                  <span>Go Engine</span>
+                                <span className="px-2 py-0.5 text-[9px] font-bold rounded uppercase surface-accent-indigo text-indigo-700 dark:text-indigo-300">
+                                  Go Engine
                                 </span>
                               </div>
-                              <span className="text-xs text-slate-500 dark:text-slate-400 font-normal block">{inst.phone || 'Sin número vinculado'}</span>
+                              <span className="text-xs text-slate-500 dark:text-slate-400 block">
+                                {inst.phone ? `Número: ${inst.phone}` : 'Sin número vinculado'}
+                              </span>
                             </div>
 
-                            <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase flex items-center gap-1.5 ${
+                            <span className={`px-2.5 py-1 text-[10px] font-bold rounded-md uppercase flex items-center gap-1.5 ${
                               inst.status === 'connected' 
-                                ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' 
+                                ? 'surface-accent-emerald text-emerald-700 dark:text-emerald-300' 
                                 : inst.status === 'reconnecting'
-                                  ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300'
-                                  : 'bg-rose-500/15 text-rose-700 dark:text-rose-300'
+                                  ? 'surface-accent-amber text-amber-700 dark:text-amber-300'
+                                  : 'surface-accent-rose text-rose-700 dark:text-rose-300'
                             }`}>
                               {inst.status === 'connected' ? (
-                                '● CONECTADO'
+                                '● Conectado'
                               ) : inst.status === 'reconnecting' ? (
-                                <>
-                                  <RefreshCw size={10} className="animate-spin text-amber-500" />
-                                  <span>RECONECTANDO</span>
-                                </>
+                                'Reconectando'
                               ) : (
-                                '○ DESCONECTADO'
+                                '○ Desconectado'
                               )}
                             </span>
-                          </div>
-
-                          <div className="space-y-1.5">
-                            <span className="text-[10px] font-semibold text-slate-400 uppercase block">API Key de Instancia</span>
-                            <div className="flex items-center justify-between surface-interactive px-3 py-2 rounded-xl">
-                              <code className="text-xs font-mono font-bold text-slate-800 dark:text-slate-200 truncate mr-2">{inst.api_key}</code>
-                              <button
-                                type="button"
-                                onClick={() => copyToClipboard(inst.api_key, `inst-${inst.instance_name}`)}
-                                className="p-1 hover:bg-slate-300/50 dark:hover:bg-slate-700/50 rounded-lg text-slate-500 hover:text-emerald-600 transition-colors cursor-pointer flex items-center gap-1"
-                                title="Copiar API Key"
-                              >
-                                {copiedId === `inst-${inst.instance_name}` ? (
-                                  <CheckCircle2 size={13} className="text-emerald-500" />
-                                ) : (
-                                  <Copy size={13} />
-                                )}
-                              </button>
-                            </div>
                           </div>
 
                           <div className="flex items-center gap-2.5 pt-1">
@@ -983,31 +878,25 @@ echo $response;`;
                               <button
                                 type="button"
                                 onClick={() => handleDisconnectInstance(inst.instance_name)}
-                                className="flex-1 py-2 bg-rose-500/15 hover:bg-rose-500/25 text-rose-700 dark:text-rose-300 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                                className="flex-1 py-2 surface-accent-rose text-rose-700 dark:text-rose-300 text-xs font-bold rounded-xl cursor-pointer"
                               >
-                                Desconectar Línea
+                                Desconectar Sesión
                               </button>
-                            ) : inst.status === 'reconnecting' ? (
-                              <div className="flex-1 py-2 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 select-none border border-amber-500/20">
-                                <RefreshCw size={13} className="animate-spin text-amber-500" />
-                                <span>Auto-recuperando conexión...</span>
-                              </div>
                             ) : (
                               <button
                                 type="button"
                                 onClick={() => handleGetQrCode(inst.instance_name)}
-                                className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                                title="Vincular teléfono con código QR"
+                                className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl cursor-pointer flex items-center justify-center gap-1.5"
                               >
                                 <Smartphone size={14} />
-                                <span>Vincular con QR</span>
+                                <span>Vincular con Código QR</span>
                               </button>
                             )}
 
                             <button
                               type="button"
                               onClick={() => handleDeleteInstance(inst.instance_name)}
-                              className="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
+                              className="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl surface-interactive cursor-pointer"
                               title="Eliminar Instancia"
                             >
                               <Trash2 size={15} />
@@ -1018,24 +907,49 @@ echo $response;`;
                     </div>
                   )}
                 </div>
-
               </div>
             )}
 
-            {/* TESTER DE API MULTI-TIPO (PLAYGROUND) */}
+            {/* ============================================================================
+                APARTADO 3: API KEYS (GESTIÓN EXCLUSIVA DE CREDENCIALES)
+               ============================================================================ */}
+            {activeTab === 'apikeys' && (
+              <DeveloperPortal
+                section="apikeys"
+                instances={instances}
+                currentApiKey={instances[0]?.api_key || user?.id || 'zc_live_sec_demo'}
+                onRefreshInstances={fetchInstances}
+              />
+            )}
+
+            {/* ============================================================================
+                APARTADO 4: WEBHOOKS Y LOGS (ENTREGAS HMAC + BITÁCORA HTTP)
+               ============================================================================ */}
+            {activeTab === 'webhooks' && (
+              <DeveloperPortal
+                section="webhooks"
+                instances={instances}
+                currentApiKey={instances[0]?.api_key || user?.id || 'zc_live_sec_demo'}
+                onRefreshInstances={fetchInstances}
+              />
+            )}
+
+            {/* ============================================================================
+                APARTADO 5: PROBADOR DE API (ÚNICO PLAYGROUND INTERACTIVO)
+               ============================================================================ */}
             {activeTab === 'playground' && (
-              <div className="space-y-6 animate-fadeIn text-left">
+              <div className="space-y-6 text-left">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl surface-accent-teal text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-xl surface-accent-emerald text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                     <Terminal size={19} />
                   </div>
-                  <div className="space-y-0.5">
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Tester Interactivo de API</h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Prueba el envío de Texto, Multimedia, Notas de Voz PTT, Ubicación y Contactos.</p>
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Probador Interactivo de API</h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Ejecuta envíos reales de Texto, Multimedia, Notas de Voz PTT, Ubicación y Contactos.</p>
                   </div>
                 </div>
 
-                {/* Selector de Tipo de Envío */}
+                {/* Selector de Tipo de Mensaje */}
                 <div className="flex gap-2 flex-wrap">
                   {[
                     { id: 'text', label: 'Texto', icon: Terminal },
@@ -1051,9 +965,9 @@ echo $response;`;
                         key={t.id}
                         type="button"
                         onClick={() => setPlaygroundType(t.id as any)}
-                        className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                        className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer ${
                           active
-                            ? 'bg-emerald-600 text-white font-bold'
+                            ? 'bg-slate-900 dark:bg-emerald-600 text-white font-bold'
                             : 'surface-interactive text-slate-700 dark:text-slate-300'
                         }`}
                       >
@@ -1067,10 +981,9 @@ echo $response;`;
                 <div className="surface-panel p-6 sm:p-7 rounded-2xl space-y-5">
                   <form onSubmit={handleTestSend} className="space-y-4">
                     
-                    {/* Campos Base (Instancia y Teléfono) */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 block">Instancia WhatsApp</label>
+                        <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 block">Línea WhatsApp</label>
                         <CustomSelect
                           value={playgroundInstance}
                           onChange={(val) => setPlaygroundInstance(val)}
@@ -1091,12 +1004,11 @@ echo $response;`;
                           value={playgroundPhone}
                           onChange={(e) => setPlaygroundPhone(e.target.value.replace(/[^0-9]/g, ''))}
                           placeholder="ej: 51912345678"
-                          className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none transition-colors"
+                          className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none"
                         />
                       </div>
                     </div>
 
-                    {/* Formulario Dinámico según playgroundType */}
                     {playgroundType === 'text' && (
                       <div className="space-y-1">
                         <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 block">Mensaje de Texto</label>
@@ -1104,7 +1016,7 @@ echo $response;`;
                           rows={3}
                           value={playgroundMessage}
                           onChange={(e) => setPlaygroundMessage(e.target.value)}
-                          className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none transition-colors"
+                          className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none"
                         />
                       </div>
                     )}
@@ -1191,7 +1103,7 @@ echo $response;`;
                           className="w-full px-3.5 py-2.5 surface-interactive rounded-xl text-xs font-mono text-slate-900 dark:text-white focus:outline-none"
                         />
                         <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium pt-1">
-                          ● Se enviará codificado como Nota de Voz real de WhatsApp (PTT).
+                          ● Se enviará codificado como Nota de Voz nativa de WhatsApp (PTT).
                         </p>
                       </div>
                     )}
@@ -1270,18 +1182,17 @@ echo $response;`;
                     <button
                       type="submit"
                       disabled={playgroundLoading || instances.length === 0}
-                      className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                      className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                       <Send size={14} />
-                      <span>{playgroundLoading ? 'Enviando petición a WhatsApp...' : `Ejecutar Envío de ${playgroundType.toUpperCase()}`}</span>
+                      <span>{playgroundLoading ? 'Enviando petición a WhatsApp...' : `Ejecutar Envío (${playgroundType.toUpperCase()})`}</span>
                     </button>
                   </form>
 
-                  {/* Respuesta HTTP en consola digital */}
                   {playgroundResponse && (
                     <div className="space-y-2 pt-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-slate-400 uppercase block font-mono">Respuesta HTTP:</span>
+                        <span className="text-xs font-semibold text-slate-400 uppercase block font-mono">Respuesta JSON del Gateway:</span>
                         <button
                           type="button"
                           onClick={() => copyToClipboard(JSON.stringify(playgroundResponse, null, 2), 'pg-resp')}
@@ -1300,7 +1211,7 @@ echo $response;`;
                           )}
                         </button>
                       </div>
-                      <pre className="p-4 bg-[#070B10] text-emerald-400 rounded-xl text-xs font-mono overflow-x-auto">
+                      <pre className="p-4 bg-slate-950 text-emerald-400 rounded-xl text-xs font-mono overflow-x-auto">
                         {JSON.stringify(playgroundResponse, null, 2)}
                       </pre>
                     </div>
@@ -1309,71 +1220,12 @@ echo $response;`;
               </div>
             )}
 
-            {/* DEVELOPER PLATFORM DOCS & SUITE */}
+            {/* ============================================================================
+                APARTADO 6: DOCUMENTACIÓN TÉCNICA OFICIAL
+               ============================================================================ */}
             {activeTab === 'docs' && (
-              <div className="animate-fadeIn text-left">
+              <div className="text-left">
                 <DeveloperPlatformDocs instances={instances} userApiKey={user?.id} />
-              </div>
-            )}
-
-            {/* PLANES Y SUSCRIPCIÓN */}
-            {activeTab === 'subscription' && (
-              <div className="space-y-6 animate-fadeIn text-left">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl surface-accent-amber text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-                    <CreditCard size={19} />
-                  </div>
-                  <div className="space-y-0.5">
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Planes y Licencia Activa</h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Consulta los detalles de tu plan contratado, límites de cuota y fechas de vigencia.</p>
-                  </div>
-                </div>
-
-                <div className="surface-panel p-7 rounded-2xl space-y-3">
-                  <div className="flex items-center justify-between py-3 px-4 surface-interactive rounded-xl">
-                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Plan Contratado</span>
-                    <span className="text-sm font-bold text-slate-900 dark:text-white uppercase">{subscription?.plan_name || 'Plan Developer'}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between py-3 px-4 surface-interactive rounded-xl">
-                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Cuota de Mensajes Mensual</span>
-                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 font-mono">
-                      {subscription?.messages_used || 0} / {subscription?.messages_limit || 1000} ({subscription?.consumption_percentage || 0}%)
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between py-3 px-4 surface-interactive rounded-xl">
-                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Capacidad de Instancias</span>
-                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{activeInstancesCount} / {maxInstances === 99 ? 'ILIMITADO' : maxInstances} Líneas</span>
-                  </div>
-
-                  <div className="flex items-center justify-between py-3 px-4 surface-interactive rounded-xl">
-                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Fecha de Inicio</span>
-                    <span className="text-xs font-mono font-semibold text-slate-800 dark:text-slate-200">
-                      {subscription?.start_date ? new Date(subscription.start_date).toLocaleDateString() : 'N/A'}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between py-3 px-4 surface-interactive rounded-xl">
-                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Fecha de Vencimiento</span>
-                    <span className="text-xs font-mono font-semibold text-slate-800 dark:text-slate-200">
-                      {subscription?.end_date ? new Date(subscription.end_date).toLocaleDateString() : 'N/A'}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between py-3 px-4 surface-interactive rounded-xl">
-                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Estado de la Licencia</span>
-                    {subscription?.is_expired ? (
-                      <span className="px-2.5 py-0.5 bg-rose-500/15 text-rose-700 dark:text-rose-300 text-[10px] font-bold rounded-full uppercase">
-                        🔴 LICENCIA VENCIDA
-                      </span>
-                    ) : (
-                      <span className="px-2.5 py-0.5 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold rounded-full uppercase">
-                        ● {subscription?.days_remaining || 0} DÍAS RESTANTES
-                      </span>
-                    )}
-                  </div>
-                </div>
               </div>
             )}
 
@@ -1381,35 +1233,37 @@ echo $response;`;
         </main>
       </div>
 
-      {/* Modal QR Code */}
+      {/* Modal QR Code (Estático y Limpio) */}
       {qrCodeModal.open && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/60 dark:bg-black/75 backdrop-blur-md animate-fadeIn">
-          <div className="relative bg-white dark:bg-[#0E1524] border border-slate-200/90 dark:border-slate-800 rounded-3xl p-7 max-w-sm w-full text-center space-y-4 shadow-2xl shadow-black/40 dark:shadow-black/70 overflow-hidden">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800/80">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Escanear Código QR</h3>
-              <button onClick={() => setQrCodeModal({ open: false, instanceName: '', qrCode: null })} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800/60 rounded-xl text-slate-400 cursor-pointer">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/60">
+          <div className="surface-elevated rounded-2xl p-6 max-w-sm w-full text-center space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Vincular Línea: {qrCodeModal.instanceName}</h3>
+              <button onClick={() => setQrCodeModal({ open: false, instanceName: '', qrCode: null })} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 cursor-pointer">
                 <X size={16} />
               </button>
             </div>
             
-            <div className="p-4 bg-white rounded-2xl flex items-center justify-center min-h-[220px]">
+            <div className="p-4 bg-white border border-slate-200 rounded-xl flex items-center justify-center min-h-[220px]">
               {qrCodeModal.qrCode ? (
                 <img src={qrCodeModal.qrCode} alt="WhatsApp QR Code" className="w-52 h-52 object-contain" />
               ) : (
                 <div className="space-y-2 text-slate-400 text-xs">
-                  <RefreshCw size={22} className="animate-spin mx-auto text-emerald-500" />
-                  <p>Generando código QR...</p>
+                  <RefreshCw size={20} className="animate-spin mx-auto text-emerald-600" />
+                  <p>Solicitando código QR al motor...</p>
                 </div>
               )}
             </div>
 
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">Abre WhatsApp ➔ Dispositivos vinculados ➔ Vincular un dispositivo.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Abre WhatsApp en tu teléfono ➔ Dispositivos vinculados ➔ Vincular un dispositivo.
+            </p>
           </div>
         </div>,
         document.body
       )}
 
-      {/* Modal de Confirmación Premium */}
+      {/* Modal de Confirmación */}
       <ConfirmationModal
         open={confirmModal.open}
         title={confirmModal.title}

@@ -11,16 +11,13 @@ interface ZazaLogoProps {
 export const ZazaLogo: React.FC<ZazaLogoProps> = ({
   size = 40,
   className = '',
-  animated = false,
 }) => {
   const dimension = typeof size === 'number' ? `${size}px` : size;
 
   return (
     <div
       style={{ width: dimension, height: dimension }}
-      className={`inline-flex items-center justify-center relative select-none shrink-0 bg-transparent ${
-        animated ? 'hover:scale-105 transition-transform duration-200 cursor-pointer' : ''
-      } ${className}`}
+      className={`inline-flex items-center justify-center relative select-none shrink-0 bg-transparent ${className}`}
     >
       <img
         src={logoPng}
