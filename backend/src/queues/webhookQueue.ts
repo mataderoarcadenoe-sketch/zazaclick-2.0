@@ -67,6 +67,7 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
         if (!isFromMe) {
           const redisKey = `unread:${instance}:${cleanJid}`;
           await redis.incr(redisKey);
+          await redis.expire(redisKey, 86400 * 30); // 30 días de TTL para prevenir fugas de memoria
           
           const countVal = await redis.get(redisKey);
           io.to(roomName).emit('unread_update', {
@@ -197,7 +198,7 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
           if (update.remoteJid) update.remoteJid = cleanJid;
           if (update.unreadCount === 0 || update.unreadMessages === 0) {
             const redisKey = `unread:${instance}:${cleanJid}`;
-            await redis.set(redisKey, 0);
+            await redis.del(redisKey);
 
             io.to(roomName).emit('unread_update', {
               remoteJid: cleanJid,

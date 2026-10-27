@@ -15,7 +15,7 @@ const isLocalOrInternal = !dbUrl || dbUrl.includes('localhost') || dbUrl.include
 const pool = new Pool({
   connectionString: dbUrl,
   ssl: isLocalOrInternal ? false : { rejectUnauthorized: false },
-  max: 5,
+  max: 10,
   idleTimeoutMillis: 10000,
   connectionTimeoutMillis: 15000,
   allowExitOnIdle: true
@@ -441,6 +441,10 @@ export async function initDatabase() {
   // 13. Índices de Alto Rendimiento
   await safeQuery('Índices', `
     CREATE INDEX IF NOT EXISTS idx_instances_lookup ON instances (instance_name, api_key);
+    CREATE INDEX IF NOT EXISTS idx_instances_user_id ON instances (user_id);
+    CREATE INDEX IF NOT EXISTS idx_instances_name ON instances (name);
+    CREATE INDEX IF NOT EXISTS idx_instances_user_status ON instances (user_id, status);
+    CREATE INDEX IF NOT EXISTS idx_instances_status ON instances (status);
     CREATE INDEX IF NOT EXISTS idx_instances_engine_type ON instances (engine_type);
     CREATE INDEX IF NOT EXISTS idx_subscriptions_user_status ON subscriptions (user_id, status, end_date);
     CREATE INDEX IF NOT EXISTS idx_usage_logs_user ON usage_logs (user_id, created_at);
@@ -449,6 +453,7 @@ export async function initDatabase() {
     CREATE INDEX IF NOT EXISTS idx_api_keys_lookup ON api_keys (key_hash, is_active);
     CREATE INDEX IF NOT EXISTS idx_api_keys_user ON api_keys (user_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_api_logs_user ON api_request_logs (user_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_api_logs_created ON api_request_logs (created_at);
     CREATE INDEX IF NOT EXISTS idx_api_logs_req_id ON api_request_logs (request_id);
     CREATE INDEX IF NOT EXISTS idx_wh_deliveries_user ON webhook_deliveries (user_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_wh_deliveries_event ON webhook_deliveries (event_id);

@@ -80,8 +80,21 @@ export class ApiLogService {
       };
 
       res.on('finish', () => {
-        const latencyMs = Date.now() - startTime;
         const statusCode = res.statusCode;
+
+        // Optimización de Almacenamiento: Omitir en BD sondeos repetitivos de alta frecuencia (heartbeats GET exitosos)
+        if (req.method === 'GET' && statusCode < 400) {
+          const isHeartbeatPoll = req.path.includes('/status') ||
+                                  req.path.includes('/connectionState') ||
+                                  req.path.includes('/qr') ||
+                                  req.path.includes('/connect') ||
+                                  req.path.includes('/tenants/');
+          if (isHeartbeatPoll) {
+            return;
+          }
+        }
+
+        const latencyMs = Date.now() - startTime;
         const requestId = authReq.requestId || (res.getHeader('X-Request-Id') as string) || `zc_req_${Date.now()}`;
         const correlationId = authReq.correlationId || (res.getHeader('X-Correlation-Id') as string) || null;
         const userId = authReq.userId || null;
@@ -195,5 +208,27 @@ export class ApiLogService {
         createdAt: r.created_at ? r.created_at.toISOString() : new Date().toISOString()
       }))
     };
+  }
+
+  /**
+   * Depuración periódica de logs antiguos para evitar saturar el disco de PostgreSQL (Supabase 500MB limit)
+   */
+  public static async purgeOldLogs(retentionDays: number = 7): Promise<number> {
+    try {
+      const res = await pool.query(
+        `DELETE FROM api_request_logs 
+         WHERE created_at < CURRENT_TIMESTAMP - (INTERVAL '1 day' * $1)
+         RETURNING id`,
+        [retentionDays]
+      );
+      const count = res.rowCount || 0;
+      if (count > 0) {
+        console.log(`🧹 [ApiLogService] Depuración: Se purgaron ${count} logs antiguos (> ${retentionDays} días).`);
+      }
+      return count;
+    } catch (err: any) {
+      console.warn('⚠️ [ApiLogService] Error al purgar logs antiguos:', err.message);
+      return 0;
+    }
   }
 }

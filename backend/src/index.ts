@@ -19,6 +19,7 @@ import { engineRegistry } from './engines/core/EngineRegistry';
 import { evolutionGoEngine } from './engines/evolution-go/EvolutionGoEngine';
 import { requestIdMiddleware } from './middleware/request-id.middleware';
 import { globalRateLimiter } from './middleware/rate-limiter.middleware';
+import redis from './config/redis';
 
 dotenv.config();
 
@@ -128,6 +129,80 @@ app.get(['/', '/health'], (req, res) => {
   });
 });
 
+// Deep Health Check Route (Verificación exhaustiva de dependencias)
+app.get('/health/deep', async (req, res) => {
+  const start = Date.now();
+  const checks: any = {
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptimeSeconds: Math.floor(process.uptime()),
+    components: {}
+  };
+
+  // 1. PostgreSQL check
+  try {
+    const dbStart = Date.now();
+    await pool.query('SELECT 1');
+    checks.components.database = {
+      status: 'up',
+      latencyMs: Date.now() - dbStart,
+      pool: {
+        total: pool.totalCount,
+        idle: pool.idleCount,
+        waiting: pool.waitingCount,
+        maxLimit: 10
+      }
+    };
+  } catch (dbErr: any) {
+    checks.status = 'degraded';
+    checks.components.database = {
+      status: 'down',
+      error: dbErr.message
+    };
+  }
+
+  // 2. Redis check
+  try {
+    const redisStart = Date.now();
+    await redis.ping();
+    checks.components.redis = {
+      status: 'up',
+      latencyMs: Date.now() - redisStart
+    };
+  } catch (redisErr: any) {
+    checks.status = 'degraded';
+    checks.components.redis = {
+      status: 'down',
+      error: redisErr.message
+    };
+  }
+
+  // 3. WhatsApp Engine check
+  try {
+    const engineStart = Date.now();
+    const engineHealth = await evolutionGoEngine.healthCheck();
+    checks.components.engine = {
+      status: engineHealth.status === 'ONLINE' ? 'up' : 'degraded',
+      type: 'evolution_go',
+      latencyMs: engineHealth.latencyMs || (Date.now() - engineStart),
+      engineStatus: engineHealth.status,
+      configured: engineHealth.configured,
+      error: engineHealth.error
+    };
+  } catch (engineErr: any) {
+    checks.status = 'degraded';
+    checks.components.engine = {
+      status: 'down',
+      type: 'evolution_go',
+      error: engineErr.message
+    };
+  }
+
+  checks.totalLatencyMs = Date.now() - start;
+  const statusCode = checks.status === 'healthy' ? 200 : 503;
+  res.status(statusCode).json(checks);
+});
+
 // Start Server
 async function startServer() {
   try {
@@ -146,6 +221,11 @@ async function startServer() {
       startSubscriptionScheduler();
       // Iniciar centinela de auto-reconexión de instancias WhatsApp
       startInstanceWatchdog();
+      // Depuración inicial y programada de logs antiguos (> 7 días) para proteger almacenamiento
+      ApiLogService.purgeOldLogs(7);
+      setInterval(() => {
+        ApiLogService.purgeOldLogs(7);
+      }, 24 * 60 * 60 * 1000);
     });
   } catch (error) {
     console.error('❌ Error fatal al iniciar el servidor:', error);
