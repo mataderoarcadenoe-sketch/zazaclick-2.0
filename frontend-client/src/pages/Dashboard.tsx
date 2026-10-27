@@ -54,6 +54,8 @@ export default function Dashboard() {
     instanceName: '',
     qrCode: null
   });
+  const [qrCountdown, setQrCountdown] = useState<number>(25);
+  const [refreshingQr, setRefreshingQr] = useState<boolean>(false);
 
   // Suscripción & Planes
   const [subscription, setSubscription] = useState<any>(null);
@@ -132,11 +134,30 @@ export default function Dashboard() {
     fetchSubscription();
   }, [fetchInstances, fetchSubscription]);
 
-  // Auto-detectar la conexión de WhatsApp mientras el modal de QR esté abierto
+  // Refrescar dinámicamente el código QR antes de que caduque en Whatsmeow
+  const refreshQrCode = useCallback(async (instanceName: string) => {
+    try {
+      setRefreshingQr(true);
+      const res = await api.get(`/instances/${instanceName}/connect`);
+      if (res.data?.success && res.data.base64) {
+        setQrCodeModal(prev => ({ ...prev, qrCode: res.data.base64 }));
+        setQrCountdown(25);
+      }
+    } catch (err: any) {
+      console.warn('Error refrescando código QR:', err.message);
+    } finally {
+      setRefreshingQr(false);
+    }
+  }, []);
+
+  // Auto-detectar conexión y refrescar QR automáticamente cada 25s
   useEffect(() => {
     if (!qrCodeModal.open || !qrCodeModal.instanceName) return;
 
-    const intervalId = setInterval(async () => {
+    setQrCountdown(25);
+
+    // 1. Sondeo de conexión cada 2 segundos
+    const statusInterval = setInterval(async () => {
       try {
         const res = await api.get(`/instances/${qrCodeModal.instanceName}/status`);
         if (res.data?.success && res.data.isConnected) {
@@ -149,8 +170,22 @@ export default function Dashboard() {
       }
     }, 2000);
 
-    return () => clearInterval(intervalId);
-  }, [qrCodeModal.open, qrCodeModal.instanceName, fetchInstances]);
+    // 2. Contador regresivo de 25s para refrescar automáticamente el QR
+    const countdownInterval = setInterval(() => {
+      setQrCountdown(prev => {
+        if (prev <= 1) {
+          refreshQrCode(qrCodeModal.instanceName);
+          return 25;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      clearInterval(statusInterval);
+      clearInterval(countdownInterval);
+    };
+  }, [qrCodeModal.open, qrCodeModal.instanceName, fetchInstances, refreshQrCode]);
 
   // Manejadores de Instancias WhatsApp
   const handleCreateInstance = async (e?: React.FormEvent) => {
@@ -273,9 +308,11 @@ export default function Dashboard() {
   const handleGetQrCode = async (instanceName: string) => {
     try {
       setQrCodeModal({ open: true, instanceName, qrCode: null });
+      setQrCountdown(25);
       const res = await api.get(`/instances/${instanceName}/connect`);
       if (res.data?.success && res.data.base64) {
         setQrCodeModal({ open: true, instanceName, qrCode: res.data.base64 });
+        setQrCountdown(25);
       } else {
         showNotification('No se pudo obtener el código QR de WhatsApp', 'error');
       }
@@ -1233,7 +1270,7 @@ export default function Dashboard() {
         </main>
       </div>
 
-      {/* Modal QR Code (Estático y Limpio) */}
+      {/* Modal QR Code (Dinámico con Auto-Refresco Continuo) */}
       {qrCodeModal.open && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/60">
           <div className="surface-elevated rounded-2xl p-6 max-w-sm w-full text-center space-y-4">
@@ -1244,9 +1281,16 @@ export default function Dashboard() {
               </button>
             </div>
             
-            <div className="p-4 bg-white border border-slate-200 rounded-xl flex items-center justify-center min-h-[220px]">
+            <div className="relative p-4 bg-white border border-slate-200 rounded-xl flex items-center justify-center min-h-[220px]">
               {qrCodeModal.qrCode ? (
-                <img src={qrCodeModal.qrCode} alt="WhatsApp QR Code" className="w-52 h-52 object-contain" />
+                <>
+                  <img src={qrCodeModal.qrCode} alt="WhatsApp QR Code" className="w-52 h-52 object-contain" />
+                  {refreshingQr && (
+                    <div className="absolute inset-0 bg-white/70 rounded-xl flex items-center justify-center">
+                      <RefreshCw size={24} className="animate-spin text-emerald-600" />
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="space-y-2 text-slate-400 text-xs">
                   <RefreshCw size={20} className="animate-spin mx-auto text-emerald-600" />
@@ -1255,9 +1299,27 @@ export default function Dashboard() {
               )}
             </div>
 
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Abre WhatsApp en tu teléfono ➔ Dispositivos vinculados ➔ Vincular un dispositivo.
-            </p>
+            <div className="flex items-center justify-between text-[11px] px-1 text-slate-500 dark:text-slate-400">
+              <span className="flex items-center gap-1.5 font-medium">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                Expira en: <strong className="font-mono text-slate-800 dark:text-slate-200">{qrCountdown}s</strong>
+              </span>
+              <button
+                type="button"
+                onClick={() => refreshQrCode(qrCodeModal.instanceName)}
+                disabled={refreshingQr}
+                className="text-emerald-600 dark:text-emerald-400 font-semibold hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50"
+              >
+                <RefreshCw size={12} className={refreshingQr ? 'animate-spin' : ''} />
+                Refrescar ahora
+              </button>
+            </div>
+
+            <div className="text-xs text-slate-500 dark:text-slate-400 space-y-1 text-left bg-slate-50 dark:bg-slate-900/40 p-3 rounded-xl border border-slate-100 dark:border-slate-800/60">
+              <p className="font-semibold text-slate-700 dark:text-slate-300">Pasos para conectar:</p>
+              <p>1. Abre WhatsApp en tu teléfono ➔ Menú (⋮) o Ajustes ➔ <strong>Dispositivos vinculados</strong>.</p>
+              <p>2. Toca <strong>Vincular un dispositivo</strong> y apunta al código QR antes de que termine el contador.</p>
+            </div>
           </div>
         </div>,
         document.body

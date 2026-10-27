@@ -19,6 +19,7 @@ import { CircuitBreaker } from '../core/CircuitBreaker';
 import { EvolutionGoMapper } from './EvolutionGoMapper';
 import { validateSafeUrl, normalizeBase64 } from '../../utils/ssrf.util';
 import pool from '../../config/database';
+import redis from '../../config/redis';
 
 export class EvolutionGoEngine implements WhatsAppEngine {
   public readonly engineType: EngineType = 'evolution_go';
@@ -546,6 +547,30 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     }
   }
 
+  /**
+   * Control de Cadencia Industrial Anti-Baneo (Anti-Ban Pacing)
+   * Espacia de manera inteligente las emisiones salientes de una misma instancia (mínimo 1.2s - 1.8s)
+   * para evitar que los algoritmos de detección de spam de Meta/WhatsApp restrinjan o baneen el número.
+   */
+  private async applyAntiBanPacing(instanceName: string, minIntervalMs: number = 1200): Promise<void> {
+    const key = `pacing:last_sent:${instanceName}`;
+    try {
+      const now = Date.now();
+      const lastSentStr = await redis.get(key);
+      const lastSent = lastSentStr ? parseInt(lastSentStr, 10) : 0;
+      const elapsed = now - lastSent;
+
+      if (elapsed < minIntervalMs) {
+        const waitMs = (minIntervalMs - elapsed) + Math.floor(Math.random() * 300);
+        await new Promise(r => setTimeout(r, waitMs));
+      }
+
+      await redis.set(key, String(Date.now()), 'PX', 30000);
+    } catch {
+      // Fallback seguro si Redis tuviera latencia
+    }
+  }
+
   public async sendTextMessage(params: SendTextMessageParams): Promise<EngineResult> {
     if (!this.circuitBreaker.canExecute()) {
       return {
@@ -572,6 +597,8 @@ export class EvolutionGoEngine implements WhatsAppEngine {
         }
         targetNumber = cleanNumber;
       }
+
+      await this.applyAntiBanPacing(params.instanceName);
 
       const response = await client.post('/send/text', {
         number: targetNumber,
@@ -642,6 +669,8 @@ export class EvolutionGoEngine implements WhatsAppEngine {
         }
       }
 
+      await this.applyAntiBanPacing(params.instanceName);
+
       const response = await client.post('/send/media', {
         number: targetNumber,
         url: finalMedia,
@@ -698,6 +727,8 @@ export class EvolutionGoEngine implements WhatsAppEngine {
         targetNumber = cleanNumber;
       }
 
+      await this.applyAntiBanPacing(params.instanceName);
+
       const response = await client.post('/send/location', {
         number: targetNumber,
         name: params.name,
@@ -737,6 +768,8 @@ export class EvolutionGoEngine implements WhatsAppEngine {
         }
         targetNumber = cleanNumber;
       }
+
+      await this.applyAntiBanPacing(params.instanceName);
 
       const response = await client.post('/send/contact', {
         number: targetNumber,

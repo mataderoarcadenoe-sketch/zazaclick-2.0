@@ -45,8 +45,9 @@ export function authMiddleware(req: AuthenticatedRequest, res: Response, next: N
 }
 
 export function adminMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-  if (req.userRole !== 'admin') {
-    return res.status(403).json({ success: false, error: 'Acceso denegado: Se requieren permisos de administrador' });
+  const email = (req.userEmail || '').toLowerCase().trim();
+  if (req.userRole !== 'admin' || email !== 'syscomecosistemadigital@gmail.com') {
+    return res.status(403).json({ success: false, error: 'Acceso denegado: Se requieren permisos exclusivos de SuperAdmin' });
   }
   return next();
 }

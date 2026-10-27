@@ -23,5 +23,20 @@ api.interceptors.request.use((config) => {
   return Promise.reject(error);
 });
 
+// Auto-redirect to login on expired JWT (401 Unauthorized)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401 && !error.config?.url?.includes('/auth/login') && !error.config?.url?.includes('/auth/me')) {
+      localStorage.removeItem('saas_auth_token');
+      localStorage.removeItem('saas_user');
+      if (window.location.pathname !== '/login' && window.location.pathname !== '/') {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;
 export { API_URL };
