@@ -4,7 +4,8 @@ import * as crypto from 'crypto';
 
 dotenv.config();
 
-const dbUrl = process.env.DATABASE_URL;
+const rawDbUrl = process.env.DATABASE_URL;
+const dbUrl = rawDbUrl ? rawDbUrl.replace('pooler.supabase.com:5432', 'pooler.supabase.com:6543') : rawDbUrl;
 
 if (!dbUrl) {
   console.warn('⚠️ WARNING: DATABASE_URL no configurada en el entorno.');

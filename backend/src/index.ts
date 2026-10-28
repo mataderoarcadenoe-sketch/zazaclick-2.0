@@ -218,7 +218,11 @@ async function startServer() {
   try {
     console.log('🔄 Inicializando base de datos SaaS Core...');
     await initDatabase();
-    await pool.query(MESSAGE_OPERATIONS_SCHEMA);
+    try {
+      await pool.query(MESSAGE_OPERATIONS_SCHEMA);
+    } catch (schemaErr: any) {
+      console.warn('⚠️ [Database] Esquema message_operations:', schemaErr.message);
+    }
 
     console.log('🔌 [Engines] Registrando motor oficial Evolution Go (Whatsmeow)...');
     engineRegistry.register(evolutionGoEngine);
