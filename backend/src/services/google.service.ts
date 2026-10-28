@@ -4,8 +4,10 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 const OFFICIAL_CLIENT_ID = '782722800100-4j8107m9nn2r0ngt6b4e17r2s2166l19.apps.googleusercontent.com';
+const SYSCOM_ANDROID_CLIENT_ID = '572176809201-8o2c3qpug8mkik2pvd0bcbp1nk7belks.apps.googleusercontent.com';
 const ALLOWED_CLIENT_IDS = Array.from(new Set([
   OFFICIAL_CLIENT_ID,
+  SYSCOM_ANDROID_CLIENT_ID,
   process.env.GOOGLE_CLIENT_ID,
   '6104299697-7dissi3tuvd84q94737nqmsi96nmh2d5.apps.googleusercontent.com'
 ].filter(Boolean) as string[]));
@@ -13,6 +15,7 @@ const ALLOWED_CLIENT_IDS = Array.from(new Set([
 const client = new OAuth2Client();
 
 export class GoogleService {
+  public static supportsSyscomAndroid(): boolean { return ALLOWED_CLIENT_IDS.includes(SYSCOM_ANDROID_CLIENT_ID); }
   /**
    * Verificar y decodificar el token de identidad JWT provisto por Google
    */

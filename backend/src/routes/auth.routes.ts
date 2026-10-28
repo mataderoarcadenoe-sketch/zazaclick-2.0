@@ -176,7 +176,7 @@ router.post('/google-login', async (req, res) => {
   try {
     const googleUser = await GoogleService.verifyToken(credential);
     if (!googleUser || !googleUser.email || googleUser.email_verified !== true) {
-      return res.status(401).json({ success: false, error: 'Token de Google inválido o expirado' });
+      return res.status(401).json({ success: false, code: 'GOOGLE_TOKEN_INVALID', error: 'Token de Google inválido o expirado' });
     }
 
     const cleanEmail = googleUser.email.toLowerCase();

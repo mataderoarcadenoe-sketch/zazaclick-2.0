@@ -6,7 +6,7 @@ export const openApiSpec = {
   openapi: '3.0.3',
   info: {
     title: 'Zaza Click 2.0 — WhatsApp API Developer Platform',
-    version: '2.0.1',
+    version: '2.0.2',
     description: 'High-Performance WhatsApp API Gateway for ERP, CRM, and SaaS enterprise integrations powered by Evolution Go (Whatsmeow) with atomic quotas, distributed idempotency and HMAC-signed outbound webhooks.',
     contact: {
       name: 'Zaza Click Support',

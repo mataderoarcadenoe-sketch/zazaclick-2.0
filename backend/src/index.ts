@@ -1,3 +1,4 @@
+import { GoogleService } from './services/google.service';
 import express from 'express';
 import cors from 'cors';
 import * as dotenv from 'dotenv';
@@ -128,8 +129,9 @@ app.get(['/', '/health'], (req, res) => {
   res.json({
     status: 'ok',
     service: 'Zaza Click 2.0 — WhatsApp API SaaS Gateway',
-    version: '2.0.1',
+    version: '2.0.2',
     message_operations: 'durable-v1',
+    native_google_login: GoogleService.supportsSyscomAndroid() ? 'syscom-v1' : 'unsupported',
     documentation: 'https://api.zazaclick.sbs/openapi.json',
     developer_platform: 'https://app.zazaclick.sbs',
     port: PORT,
