@@ -6,7 +6,8 @@
   "scripts": {
     "build": "rimraf dist && npx tsc",
     "start": "node dist/index.js",
-    "dev": "ts-node src/index.ts"
+    "dev": "ts-node src/index.ts",
+    "test:hardening": "node tests/hardening.cjs"
   },
   "dependencies": {
     "axios": "^1.6.8",

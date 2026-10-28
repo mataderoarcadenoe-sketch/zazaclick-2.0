@@ -29,10 +29,10 @@ export class ApiLogService {
         lowerKey.includes('secret') ||
         lowerKey.includes('token') ||
         lowerKey.includes('key') ||
-        lowerKey.includes('authorization')
+        lowerKey.includes('authorization') ||
+        ['credential', 'media', 'audio', 'base64', 'pdf', 'pdfdataurl', 'document'].includes(lowerKey)
       ) {
-        const val = String(sanitized[key]);
-        sanitized[key] = val.length > 8 ? `${val.slice(0, 4)}********${val.slice(-4)}` : '********';
+        sanitized[key] = '[REDACTED]';
       } else if (typeof sanitized[key] === 'object' && sanitized[key] !== null) {
         sanitized[key] = this.sanitizeData(sanitized[key]);
       }

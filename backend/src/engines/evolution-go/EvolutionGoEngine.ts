@@ -1,3 +1,4 @@
+import { isRetiredCredential } from '../../config/security';
 /**
  * Adapter Canónico para Evolution Go — Zaza Click 2.0
  */
@@ -47,7 +48,7 @@ export class EvolutionGoEngine implements WhatsAppEngine {
 
   private initHttpClient(): void {
     const url = process.env.EVOLUTION_GO_URL;
-    const key = process.env.EVOLUTION_GO_API_KEY;
+    const key = process.env.EVOLUTION_GO_API_KEY || 'F2C43224-3975-46EC-954A-FB335F5C9FDA';
     const timeout = parseInt(process.env.EVOLUTION_GO_TIMEOUT || '10000', 10);
 
     if (url) {
@@ -75,7 +76,9 @@ export class EvolutionGoEngine implements WhatsAppEngine {
   }
 
   private getGlobalApiKey(): string {
-    return process.env.EVOLUTION_GO_API_KEY || 'F2C43224-3975-46EC-954A-FB335F5C9FDA';
+    const key = process.env.EVOLUTION_GO_API_KEY || 'F2C43224-3975-46EC-954A-FB335F5C9FDA';
+    if (!key || isRetiredCredential(key)) throw new Error('EVOLUTION_GO_API_KEY no configurada.');
+    return key;
   }
 
   /**
@@ -553,22 +556,27 @@ export class EvolutionGoEngine implements WhatsAppEngine {
    * para evitar que los algoritmos de detección de spam de Meta/WhatsApp restrinjan o baneen el número.
    */
   private async applyAntiBanPacing(instanceName: string, minIntervalMs: number = 1200): Promise<void> {
-    const key = `pacing:last_sent:${instanceName}`;
+    // No offline queue or unlimited wait on the critical path to the engine.
+    if (redis.status !== 'ready') throw new Error('Pacing unavailable: Redis is not ready. No send attempted.');
+    const interval = minIntervalMs + Math.floor(Math.random() * 300);
+    const script = `
+      local now = redis.call('TIME')
+      local ms = tonumber(now[1]) * 1000 + math.floor(tonumber(now[2]) / 1000)
+      local slot = math.max(tonumber(redis.call('GET', KEYS[1]) or '0'), ms)
+      local wait = slot - ms
+      if wait > 6000 then return -1 end
+      redis.call('SET', KEYS[1], slot + tonumber(ARGV[1]), 'PX', 30000)
+      return wait
+    `;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     try {
-      const now = Date.now();
-      const lastSentStr = await redis.get(key);
-      const lastSent = lastSentStr ? parseInt(lastSentStr, 10) : 0;
-      const elapsed = now - lastSent;
-
-      if (elapsed < minIntervalMs) {
-        const waitMs = (minIntervalMs - elapsed) + Math.floor(Math.random() * 300);
-        await new Promise(r => setTimeout(r, waitMs));
-      }
-
-      await redis.set(key, String(Date.now()), 'PX', 30000);
-    } catch {
-      // Fallback seguro si Redis tuviera latencia
-    }
+      const wait = Number(await Promise.race([
+        redis.eval(script, 1, `pacing:last_sent:${instanceName}`, String(interval)),
+        new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Pacing timeout. No send attempted.')), 2000); })
+      ]));
+      if (!Number.isFinite(wait) || wait < 0 || wait > 6000) throw new Error('Pacing busy. No send attempted.');
+      if (wait > 0) await new Promise(resolve => setTimeout(resolve, wait));
+    } finally { if (timer) clearTimeout(timer); }
   }
 
   public async sendTextMessage(params: SendTextMessageParams): Promise<EngineResult> {
@@ -610,6 +618,9 @@ export class EvolutionGoEngine implements WhatsAppEngine {
       const latencyMs = Date.now() - start;
 
       if (response.status === 200 || response.status === 201) {
+        if (response.data?.success === false || response.data?.Success === false) {
+          return EvolutionGoMapper.mapFailure({response: {status: 422, data: {message: 'El motor rechazó la operación.'}}}, latencyMs);
+        }
         this.circuitBreaker.recordSuccess();
         const resData = response.data?.data || response.data;
         const msgId = resData?.Info?.ID || resData?.key?.id || resData?.id || resData?.messageId;
@@ -688,9 +699,12 @@ export class EvolutionGoEngine implements WhatsAppEngine {
       const latencyMs = Date.now() - start;
 
       if (response.status === 200 || response.status === 201) {
+        if (response.data?.success === false || response.data?.Success === false) {
+          return EvolutionGoMapper.mapFailure({response: {status: 422, data: {message: 'El motor rechazó la operación.'}}}, latencyMs);
+        }
         this.circuitBreaker.recordSuccess();
         const resData = response.data?.data || response.data;
-        const msgId = resData?.Info?.ID || resData?.key?.id || resData?.id;
+        const msgId = resData?.Info?.ID || resData?.key?.id || resData?.id || resData?.messageId;
         return EvolutionGoMapper.mapSuccess(response.data, latencyMs, msgId);
       }
 
@@ -741,9 +755,12 @@ export class EvolutionGoEngine implements WhatsAppEngine {
       const latencyMs = Date.now() - start;
 
       if (response.status === 200 || response.status === 201) {
+        if (response.data?.success === false || response.data?.Success === false) {
+          return EvolutionGoMapper.mapFailure({response: {status: 422, data: {message: 'El motor rechazó la operación.'}}}, latencyMs);
+        }
         this.circuitBreaker.recordSuccess();
         const resData = response.data?.data || response.data;
-        const msgId = resData?.Info?.ID || resData?.key?.id || resData?.id;
+        const msgId = resData?.Info?.ID || resData?.key?.id || resData?.id || resData?.messageId;
         return EvolutionGoMapper.mapSuccess(response.data, latencyMs, msgId);
       }
 
@@ -781,9 +798,12 @@ export class EvolutionGoEngine implements WhatsAppEngine {
       const latencyMs = Date.now() - start;
 
       if (response.status === 200 || response.status === 201) {
+        if (response.data?.success === false || response.data?.Success === false) {
+          return EvolutionGoMapper.mapFailure({response: {status: 422, data: {message: 'El motor rechazó la operación.'}}}, latencyMs);
+        }
         this.circuitBreaker.recordSuccess();
         const resData = response.data?.data || response.data;
-        const msgId = resData?.Info?.ID || resData?.key?.id || resData?.id;
+        const msgId = resData?.Info?.ID || resData?.key?.id || resData?.id || resData?.messageId;
         return EvolutionGoMapper.mapSuccess(response.data, latencyMs, msgId);
       }
 

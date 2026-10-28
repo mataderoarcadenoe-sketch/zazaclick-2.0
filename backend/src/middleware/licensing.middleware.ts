@@ -1,301 +1,85 @@
 import { Request, Response, NextFunction } from 'express';
 import * as crypto from 'crypto';
 import pool from '../config/database';
-import { 
-  getIdempotencyRecord, 
-  setIdempotencyInProgress, 
-  saveIdempotencyResult 
-} from '../utils/idempotency.util';
+import { authenticate, credential } from './auth.middleware';
+import { MessageOperationService, requestHash, replay } from '../services/message-operation.service';
+import { outgoingDocumentError } from '../utils/outgoing-document.util';
 
 export interface LicensingContext {
-  userId: string;
-  userEmail: string;
-  subscriptionId: string;
-  planId: string;
-  instanceName: string;
-  instanceId: string;
-  engineType?: string;
-  idempotencyKey?: string;
+  userId: string; userEmail: string; subscriptionId: string; planId: string;
+  instanceName: string; instanceId: string; engineType?: string; idempotencyKey?: string; operationId: string;
   confirmSuccess: (messageType: string, evolutionMsgId?: string, clientResponseData?: any) => Promise<void>;
   rollback: (messageType: string, errorReason?: string) => Promise<void>;
 }
-
-export interface LicensedRequest extends Request {
-  licensingContext?: LicensingContext;
-}
-
-/**
- * Middleware Central de Licenciamiento, Cuotas Atómicas y Aislamiento Multi-Tenant
- */
+export interface LicensedRequest extends Request { licensingContext?: LicensingContext; }
+/** Authorize, persist one operation and reserve quota atomically BEFORE invoking an engine. */
 export async function licensingMiddleware(req: LicensedRequest, res: Response, next: NextFunction) {
-  const authHeader = req.headers['authorization'];
-  const headerKey = (req.headers['x-api-key'] || req.headers['X-API-KEY']) as string;
-  const { instanceName: bodyInstance, apiKey: bodyApiKey } = req.body || {};
-  const instanceName = bodyInstance || (req.params?.instanceName as string);
-  let apiKey = headerKey || bodyApiKey;
-
-  // Si viene Authorization: Bearer <key>, extraer el token
-  if (!apiKey && authHeader && authHeader.startsWith('Bearer ')) {
-    apiKey = authHeader.substring(7).trim();
+  const instanceName = req.body?.instanceName || req.params?.instanceName;
+  const suppliedKey = req.headers['idempotency-key'];
+  if (typeof instanceName !== 'string' || !/^[A-Za-z0-9_-]{1,255}$/.test(instanceName) ||
+    (suppliedKey !== undefined && (typeof suppliedKey !== 'string' || !/^[A-Za-z0-9_.:-]{1,128}$/.test(suppliedKey)))) {
+    return res.status(400).json({success: false, code: 'INVALID_REQUEST', message: 'Instancia o Idempotency-Key no válidas.'});
   }
-
-  const isMasterPartner = Boolean(
-    apiKey && (
-      apiKey === process.env.MASTER_PARTNER_KEY ||
-      apiKey === 'zc_partner_master_vivesfit_2026' ||
-      (authHeader && (authHeader === `Bearer ${process.env.MASTER_PARTNER_KEY}` || authHeader === 'Bearer zc_partner_master_vivesfit_2026'))
-    )
-  );
-
-  // 1. Verificación básica de presencia de credenciales
-  if (!instanceName || (!apiKey && !isMasterPartner)) {
-    return res.status(401).json({
-      success: false,
-      code: 'INVALID_API_KEY',
-      message: 'Credenciales faltantes: Se requiere el nombre de la instancia y la cabecera x-api-key o Authorization Bearer.'
-    });
-  }
-
-  const idempotencyKey = req.headers['idempotency-key'] as string;
-
-  // 2. Control de Idempotencia (si el cliente envía Idempotency-Key)
-  if (idempotencyKey) {
-    const existingRecord = await getIdempotencyRecord(instanceName, idempotencyKey);
-    if (existingRecord) {
-      if (existingRecord.status === 'IN_PROGRESS') {
-        return res.status(409).json({
-          success: false,
-          code: 'IDEMPOTENCY_CONFLICT',
-          message: 'Una solicitud idéntica está siendo procesada en este momento. Espera unos segundos antes de reintentar.'
-        });
-      }
-      if (existingRecord.status === 'SUCCESS' && existingRecord.response) {
-        return res.status(existingRecord.statusCode || 200).json({
-          ...existingRecord.response,
-          _cachedIdempotent: true
-        });
-      }
-    }
-    // Marcar como en progreso
-    await setIdempotencyInProgress(instanceName, idempotencyKey);
-  }
-
   try {
-    // 3. Consulta unificada de Autoridad en PostgreSQL
-    let lookupQuery: string;
-    let queryParams: any[];
-
-    if (isMasterPartner) {
-      lookupQuery = `
-        SELECT 
-          i.id as instance_id,
-          i.instance_name,
-          i.engine_type,
-          i.is_enabled as instance_is_enabled,
-          u.id as user_id,
-          u.email as user_email,
-          u.status as user_status,
-          s.id as subscription_id,
-          s.plan_id,
-          s.status as subscription_status,
-          s.start_date,
-          s.end_date,
-          s.messages_limit,
-          s.messages_used,
-          p.name as plan_name
-        FROM instances i
-        JOIN users u ON i.user_id = u.id
-        LEFT JOIN subscriptions s ON u.id = s.user_id AND s.status IN ('active', 'trial')
-        LEFT JOIN plans p ON s.plan_id = p.id
-        WHERE i.instance_name = $1
-        ORDER BY s.created_at DESC
-        LIMIT 1;
-      `;
-      queryParams = [instanceName];
-    } else {
-      const keyHash = crypto.createHash('sha256').update(apiKey).digest('hex');
-      lookupQuery = `
-        SELECT 
-          i.id as instance_id,
-          i.instance_name,
-          i.engine_type,
-          i.is_enabled as instance_is_enabled,
-          u.id as user_id,
-          u.email as user_email,
-          u.status as user_status,
-          s.id as subscription_id,
-          s.plan_id,
-          s.status as subscription_status,
-          s.start_date,
-          s.end_date,
-          s.messages_limit,
-          s.messages_used,
-          p.name as plan_name
-        FROM instances i
-        JOIN users u ON i.user_id = u.id
-        LEFT JOIN subscriptions s ON u.id = s.user_id AND s.status IN ('active', 'trial')
-        LEFT JOIN plans p ON s.plan_id = p.id
-        LEFT JOIN api_keys ak ON ak.user_id = u.id AND ak.is_active = true
-        WHERE i.instance_name = $1 AND (i.api_key = $2 OR ak.key_hash = $3)
-        ORDER BY s.created_at DESC
-        LIMIT 1;
-      `;
-      queryParams = [instanceName, apiKey, keyHash];
+    const token = credential(req);
+    const principal = token ? await authenticate(token) : null;
+    if (!principal) return res.status(401).json({success: false, code: 'INVALID_API_KEY', message: 'Credencial inválida o cuenta no disponible.'});
+    if (principal.scopes && !principal.scopes.includes('messages:send')) return res.status(403).json({success: false, code: 'INSUFFICIENT_SCOPE', message: 'La clave no permite enviar mensajes.'});
+    if (principal.environment !== 'live') return res.status(403).json({success: false, code: 'TEST_KEY_SEND_DISABLED', message: 'Una clave de prueba no puede enviar mensajes reales.'});
+    const owned = await pool.query(`SELECT i.id AS instance_id,i.instance_name,i.engine_type,i.is_enabled,
+      u.id AS user_id,u.email AS user_email,u.status AS user_status,s.id AS subscription_id,s.plan_id,s.end_date
+      FROM instances i JOIN users u ON u.id=i.user_id
+      LEFT JOIN LATERAL (SELECT id,plan_id,end_date FROM subscriptions WHERE user_id=u.id AND status IN ('active','trial') ORDER BY created_at DESC LIMIT 1) s ON true
+      WHERE i.instance_name=$1 AND (($2::text IS NOT NULL AND u.partner_id=$2) OR ($2::text IS NULL AND u.id=$3))
+      AND ($4::text IS NULL OR i.id=$4)`, [instanceName, principal.partnerId || null, principal.userId, principal.instanceId || null]);
+    const row = owned.rows[0];
+    if (!row) return res.status(403).json({success: false, code: 'FORBIDDEN_INSTANCE', message: 'Instancia no autorizada.'});
+    if (row.is_enabled === false || ['blocked', 'suspended'].includes(row.user_status)) return res.status(403).json({success: false, code: 'ACCOUNT_DISABLED', message: 'Cuenta o instancia deshabilitada.'});
+    if (!row.subscription_id || !Number.isFinite(new Date(row.end_date).getTime()) || new Date(row.end_date).getTime() < Date.now()) {
+      return res.status(403).json({success: false, code: 'SUBSCRIPTION_REQUIRED', message: 'Revisa la vigencia de la suscripción.'});
     }
-
-    const result = await pool.query(lookupQuery, queryParams);
-
-    if (result.rows.length === 0) {
-      return res.status(401).json({
-        success: false,
-        code: 'INVALID_API_KEY',
-        message: 'Credenciales inválidas: La API Key no pertenece a la instancia especificada o la instancia no existe.'
-      });
-    }
-
-    const row = result.rows[0];
-
-    // 4. Validación de Instancia Habilitada
-    if (row.instance_is_enabled === false) {
-      return res.status(403).json({
-        success: false,
-        code: 'INSTANCE_DISABLED',
-        message: 'Esta línea de WhatsApp ha sido deshabilitada administrativamente.'
-      });
-    }
-
-    // 5. Validación de Estado del Usuario
-    if (row.user_status === 'suspended') {
-      return res.status(403).json({
-        success: false,
-        code: 'USER_SUSPENDED',
-        message: 'Tu cuenta de usuario se encuentra temporalmente suspendida. Contacta a soporte.'
-      });
-    }
-
-    if (row.user_status === 'blocked') {
-      return res.status(403).json({
-        success: false,
-        code: 'USER_BLOCKED',
-        message: 'Acceso bloqueado permanentemente por administración.'
-      });
-    }
-
-    // 6. Validación de Suscripción Existente
-    if (!row.subscription_id) {
-      return res.status(403).json({
-        success: false,
-        code: 'SUBSCRIPTION_REQUIRED',
-        message: 'No tienes una suscripción activa o período de prueba asignado.'
-      });
-    }
-
-    // 7. Validación de Vencimiento de Fecha en Tiempo Real
-    const now = new Date();
-    const endDate = new Date(row.end_date);
-
-    if (now.getTime() > endDate.getTime()) {
-      // Marcar suscripción como expired si no lo estaba
-      await pool.query('UPDATE subscriptions SET status = \'expired\' WHERE id = $1', [row.subscription_id]);
-      return res.status(403).json({
-        success: false,
-        code: 'SUBSCRIPTION_EXPIRED',
-        message: `Tu suscripción venció el ${endDate.toLocaleDateString()}. Contacta al administrador para renovar tu servicio.`
-      });
-    }
-
-    // 8. Reserva Atómica de Cuota en PostgreSQL
-    const atomicReservationQuery = `
-      UPDATE subscriptions
-      SET messages_used = messages_used + 1
-      WHERE id = $1 
-        AND messages_used < messages_limit 
-        AND status IN ('active', 'trial') 
-        AND end_date >= CURRENT_TIMESTAMP
-      RETURNING messages_used, messages_limit;
-    `;
-
-    const reserveRes = await pool.query(atomicReservationQuery, [row.subscription_id]);
-
-    if (reserveRes.rows.length === 0) {
-      return res.status(429).json({
-        success: false,
-        code: 'MESSAGE_LIMIT_REACHED',
-        message: `Has alcanzado el límite máximo de ${row.messages_limit} mensajes permitidos en tu plan actual.`
-      });
-    }
-
-    // 9. Inyección del Contexto de Licenciamiento con Callbacks Atómicos
-    const subscriptionId = row.subscription_id;
-    const userId = row.user_id;
-    const instanceId = row.instance_id;
-
+    Object.assign(req, {userId: row.user_id, environment: principal.environment});
+    const key = suppliedKey as string || crypto.randomUUID();
+    const kind = req.path.split('/').filter(Boolean).pop()!.replace(/^send-/, '');
+    const documentError = kind === 'media' ? outgoingDocumentError(req.body) : null;
+    if (documentError) return res.status(400).json({success: false, code: 'INVALID_DOCUMENT', message: documentError});
+    const hash = requestHash(kind, req.body);
+    const result = await MessageOperationService.begin(row.user_id, row.instance_id, row.subscription_id, key, hash, principal.environment);
+    const operation = result.operation;
+    res.setHeader('X-Operation-Id', operation.id);
+    if (!result.fresh) { const cached = replay(operation, hash); return res.status(cached.status).json(cached.body); }
+    let outcome = 'PROCESSING';
+    const json = res.json.bind(res);
+    res.json = (body: any) => {
+      if (outcome === 'UNKNOWN') {
+        res.status(409);
+        return json({success: false, code: 'DELIVERY_UNCERTAIN', operationId: operation.id, deliveryState: outcome,
+          message: 'No se pudo confirmar el resultado. Consulta la operación antes de reenviar.'});
+      }
+      return json(body && typeof body === 'object' ? {...body, operationId: operation.id, deliveryState: outcome} : body);
+    };
     req.licensingContext = {
-      userId,
-      userEmail: row.user_email,
-      subscriptionId,
-      planId: row.plan_id,
-      instanceName,
-      instanceId,
-      engineType: row.engine_type || 'evolution_api',
-      idempotencyKey,
-
-      // Confirmar envío exitoso
-      confirmSuccess: async (messageType: string, evolutionMsgId?: string, clientResponseData?: any) => {
-        try {
-          const logId = `log_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-          await pool.query(`
-            INSERT INTO usage_logs (id, user_id, subscription_id, instance_name, message_type, status, evolution_message_id)
-            VALUES ($1, $2, $3, $4, $5, 'SUCCESS', $6)
-          `, [logId, userId, subscriptionId, instanceName, messageType, evolutionMsgId || null]);
-
-          // Actualizar última actividad de la instancia
-          await pool.query(`
-            UPDATE instances 
-            SET messages_sent = messages_sent + 1, last_activity_at = CURRENT_TIMESTAMP 
-            WHERE id = $1
-          `, [instanceId]);
-
-          if (idempotencyKey) {
-            await saveIdempotencyResult(instanceName, idempotencyKey, 'SUCCESS', clientResponseData, 200);
-          }
-        } catch (err: any) {
-          console.error('[Licensing] Error confirmando consumo:', err.message);
-        }
+      userId: row.user_id, userEmail: row.user_email, subscriptionId: row.subscription_id,
+      planId: row.plan_id, instanceName, instanceId: row.instance_id, engineType: row.engine_type,
+      idempotencyKey: key, operationId: operation.id,
+      confirmSuccess: async (type, messageId, payload) => {
+        const response = {...payload, operationId: operation.id, deliveryState: 'ACCEPTED'};
+        outcome = await MessageOperationService.finish(operation, 'ACCEPTED', type, response, 200, messageId);
       },
-
-      // Rollback de cuota si Evolution API falló
-      rollback: async (messageType: string, errorReason?: string) => {
+      rollback: async (type, reason = '') => {
+        const rejected = /^INVALID_(PARAMS|MEDIATYPE|CONTACT|COORDINATES)$/.test(reason);
+        const state = rejected ? 'REJECTED' : 'UNKNOWN';
+        const response = {success: false, code: rejected ? 'INVALID_REQUEST' : 'DELIVERY_UNCERTAIN',
+          operationId: operation.id, deliveryState: state,
+          message: rejected ? 'Solicitud inválida; no se envió el mensaje.' : 'No se pudo confirmar el resultado. Consulta la operación antes de reenviar.'};
         try {
-          console.warn(`⚠️ [Licensing] Ejecutando Rollback de cuota para usuario ${userId} en instancia ${instanceName}. Motivo: ${errorReason}`);
-          await pool.query(`
-            UPDATE subscriptions 
-            SET messages_used = GREATEST(0, messages_used - 1) 
-            WHERE id = $1
-          `, [subscriptionId]);
-
-          const logId = `log_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-          await pool.query(`
-            INSERT INTO usage_logs (id, user_id, subscription_id, instance_name, message_type, status, evolution_message_id)
-            VALUES ($1, $2, $3, $4, $5, 'FAILED', $6)
-          `, [logId, userId, subscriptionId, instanceName, messageType, errorReason || 'SEND_ERROR']);
-
-          if (idempotencyKey) {
-            await saveIdempotencyResult(instanceName, idempotencyKey, 'FAILED', { error: errorReason }, 502);
-          }
-        } catch (err: any) {
-          console.error('[Licensing] Error ejecutando Rollback:', err.message);
-        }
+          outcome = await MessageOperationService.finish(operation, state, type, response, rejected ? 400 : 409);
+        } catch { outcome = 'UNKNOWN'; }
       }
     };
-
     return next();
-  } catch (error: any) {
-    console.error('❌ [Licensing Middleware Error]:', error.message);
-    return res.status(500).json({
-      success: false,
-      code: 'INTERNAL_ERROR',
-      message: `Error interno de validación de licenciamiento: ${error.message}`
-    });
+  } catch {
+    return res.status(503).json({success: false, code: 'OPERATION_UNAVAILABLE',
+      message: 'No se pudo verificar o reservar la operación. Si ya tienes una clave de envío, consulta su estado antes de reenviar.'});
   }
 }

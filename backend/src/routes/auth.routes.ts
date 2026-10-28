@@ -1,3 +1,4 @@
+import { jwtSecret } from '../config/security';
 import { Router } from 'express';
 import pool from '../config/database';
 import * as bcrypt from 'bcryptjs';
@@ -6,7 +7,7 @@ import { authMiddleware, AuthenticatedRequest } from '../middleware/auth.middlew
 import { GoogleService } from '../services/google.service';
 
 const router = Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'whatsapp-secret-key-2024';
+
 
 function generateId(prefix: string): string {
   return `${prefix}_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
@@ -80,7 +81,7 @@ router.post('/register', async (req, res) => {
     }
 
     // 5. Generar token JWT
-    const token = jwt.sign({ id: userId, role: assignedRole, tenantId: userId, email: cleanEmail }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: userId, role: assignedRole, tenantId: userId, email: cleanEmail }, jwtSecret(), { expiresIn: '7d' });
 
     res.status(201).json({
       success: true,
@@ -140,7 +141,7 @@ router.post('/login', async (req, res) => {
     await pool.query('UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = $1', [user.id]);
 
     const tenantId = user.parent_id || user.id;
-    const token = jwt.sign({ id: user.id, role: user.role, tenantId, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user.id, role: user.role, tenantId, email: user.email }, jwtSecret(), { expiresIn: '7d' });
 
     res.json({
       success: true,
@@ -168,13 +169,13 @@ router.post('/login', async (req, res) => {
 router.post('/google-login', async (req, res) => {
   const { credential } = req.body;
 
-  if (!credential) {
+  if (typeof credential !== 'string' || credential.length > 8192 || !credential) {
     return res.status(400).json({ success: false, error: 'Token de Google es requerido' });
   }
 
   try {
     const googleUser = await GoogleService.verifyToken(credential);
-    if (!googleUser || !googleUser.email) {
+    if (!googleUser || !googleUser.email || googleUser.email_verified !== true) {
       return res.status(401).json({ success: false, error: 'Token de Google inválido o expirado' });
     }
 
@@ -246,7 +247,7 @@ router.post('/google-login', async (req, res) => {
     }
 
     const tenantId = user.parent_id || user.id;
-    const token = jwt.sign({ id: user.id, role: user.role, tenantId, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user.id, role: user.role, tenantId, email: user.email }, jwtSecret(), { expiresIn: '7d' });
 
     res.json({
       success: true,

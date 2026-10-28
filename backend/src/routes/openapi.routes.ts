@@ -6,7 +6,7 @@ export const openApiSpec = {
   openapi: '3.0.3',
   info: {
     title: 'Zaza Click 2.0 — WhatsApp API Developer Platform',
-    version: '2.0.0',
+    version: '2.0.1',
     description: 'High-Performance WhatsApp API Gateway for ERP, CRM, and SaaS enterprise integrations powered by Evolution Go (Whatsmeow) with atomic quotas, distributed idempotency and HMAC-signed outbound webhooks.',
     contact: {
       name: 'Zaza Click Support',
@@ -106,13 +106,13 @@ export const openApiSpec = {
           mediatype: {
             type: 'string',
             enum: ['image', 'video', 'document', 'audio'],
-            example: 'image'
+            example: 'document'
           },
-          mimetype: { type: 'string', example: 'image/jpeg' },
+          mimetype: { type: 'string', example: 'application/pdf' },
           media: {
             type: 'string',
-            example: 'https://images.unsplash.com/photo-1579202673506-ca3ce28943ef',
-            description: 'Public HTTPS URL or Base64 data URI'
+            example: 'data:application/pdf;base64,JVBERi0...',
+            description: 'Public HTTPS URL, raw Base64, or Base64 data URI. Locally supplied PDF: maximum 8 MiB, valid header and EOF.'
           },
           caption: { type: 'string', example: 'Comprobante de Pago' },
           fileName: { type: 'string', example: 'factura_10492.pdf' }
@@ -232,6 +232,12 @@ export const openApiSpec = {
               'INVALID_API_KEY',
               'INVALID_REQUEST',
               'IDEMPOTENCY_CONFLICT',
+              'IDEMPOTENCY_PAYLOAD_MISMATCH',
+              'DELIVERY_UNCERTAIN',
+              'INSUFFICIENT_SCOPE',
+              'TEST_KEY_SEND_DISABLED',
+              'OPERATION_UNAVAILABLE',
+              'INVALID_DOCUMENT',
               'RATE_LIMIT_EXCEEDED',
               'MESSAGE_LIMIT_REACHED',
               'SSRF_BLOCKED',
@@ -385,34 +391,58 @@ export const openApiSpec = {
       post: {
         summary: 'Enviar mensaje de texto',
         description: 'Envía un mensaje de texto de WhatsApp con reserva atómica de cuotas y protección de idempotencia.',
-        security: [{ ApiKeyAuth: [] }],
+        security: [{ ApiKeyAuth: [] }, { BearerAuth: [] }],
         parameters: [
-          { name: 'Idempotency-Key', in: 'header', required: false, schema: { type: 'string' } }
+          { name: 'Idempotency-Key', in: 'header', required: false, description: 'Stable operation UUID, reused only for identical retries. Persist before sending. Never generate a new key on timeout.', schema: { type: 'string', maxLength: 128 } }
         ],
         requestBody: {
           required: true,
           content: { 'application/json': { schema: { $ref: '#/components/schemas/SendTextRequest' } } }
         },
         responses: {
-          200: { description: 'Mensaje enviado exitosamente' },
-          409: { description: 'Conflicto de idempotencia (solicitud en proceso)' },
+          200: { description: 'ACCEPTED by engine; does not prove recipient delivery. Includes operationId and messageId when supplied by engine.' },
+          409: { description: 'Operation in progress, uncertain outcome, or changed payload. Query operation before retrying.' },
           429: { description: 'Límite de mensajes alcanzado' },
-          502: { description: 'Fallo en motor de WhatsApp' }
+          503: { description: 'Authorization or durable operation storage unavailable; query the existing key before retrying.' }
         }
       }
     },
     '/v1/messages/media': {
       post: {
         summary: 'Enviar mensaje multimedia',
-        description: 'Envía imagen, video, documento o audio a un número de WhatsApp.',
-        security: [{ ApiKeyAuth: [] }],
+        description: 'Envía multimedia con operación durable. PDFs locales: document/application/pdf, base64, hasta 8 MiB. Una aceptación del motor no demuestra entrega al cliente.',
+        security: [{ ApiKeyAuth: [] }, { BearerAuth: [] }],
+        parameters: [{ name: 'Idempotency-Key', in: 'header', required: false, schema: { type: 'string', maxLength: 128 }, description: 'Reuse the same key and content for retries. Query state after a timeout; do not create a second operation.' }],
         requestBody: {
           required: true,
           content: { 'application/json': { schema: { $ref: '#/components/schemas/SendMediaRequest' } } }
         },
         responses: {
-          200: { description: 'Archivo multimedia enviado' }
+          200: { description: 'ACCEPTED by engine; response includes operationId. Recipient delivery is not asserted.' },
+          400: { description: 'Invalid or incomplete PDF; nothing sent.' },
+          409: { description: 'Existing, uncertain or mismatched operation; no second send.' },
+          429: { description: 'No available subscription quota.' },
+          503: { description: 'Durable operation storage or authorization unavailable.' }
         }
+      }
+    },
+    '/v1/message-operations/{operationId}': {
+      get: {
+        summary: 'Consultar una operación propia sin reenviarla',
+        security: [{ ApiKeyAuth: [] }, { BearerAuth: [] }],
+        parameters: [{name: 'operationId', in: 'path', required: true, schema: {type: 'string', format: 'uuid'}}],
+        responses: {200: {description: 'PROCESSING, ACCEPTED, REJECTED or UNKNOWN; delivered/read are null until a verified event exists.'}, 404: {description: 'No authorized operation found.'}}
+      }
+    },
+    '/v1/message-operations/by-key/{instanceName}/{key}': {
+      get: {
+        summary: 'Reconciliar una respuesta perdida usando la clave original',
+        security: [{ ApiKeyAuth: [] }, { BearerAuth: [] }],
+        parameters: [
+          {name: 'instanceName', in: 'path', required: true, schema: {type: 'string'}},
+          {name: 'key', in: 'path', required: true, schema: {type: 'string', maxLength: 128}}
+        ],
+        responses: {200: {description: 'Current authorized operation state, without resending.'},404: {description: 'Operation not found; does not prove a pre-upgrade request was not delivered.'}}
       }
     },
     '/v1/messages/audio': {

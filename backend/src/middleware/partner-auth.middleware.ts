@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import pool from '../config/database';
 import { ApiKeyService } from '../services/api-key.service';
 import { PartnerService } from '../services/partner.service';
+import { isRetiredCredential } from '../config/security';
 
 export interface PartnerRequest extends Request {
   partnerId?: string;
@@ -27,7 +28,7 @@ export async function partnerAuthMiddleware(req: PartnerRequest, res: Response, 
     }
   }
 
-  if (!candidateKey) {
+  if (!candidateKey || isRetiredCredential(candidateKey)) {
     return res.status(401).json({
       success: false,
       code: 'UNAUTHORIZED_PARTNER',
@@ -59,13 +60,14 @@ export async function partnerAuthMiddleware(req: PartnerRequest, res: Response, 
     const dbRes = await pool.query(
       `SELECT id, user_id, name, scopes, environment, is_active
        FROM api_keys
-       WHERE (key_hash = $1 OR masked_key = $2) AND is_active = true
+       WHERE key_hash = $1 AND is_active = true
        LIMIT 1`,
-      [keyHash, candidateKey]
+      [keyHash]
     );
 
     if (dbRes.rows.length > 0) {
       const keyRow = dbRes.rows[0];
+      if (keyRow.environment === 'test') return res.status(403).json({success: false, code: 'TEST_KEY_PROVISION_DISABLED'});
       const scopes = typeof keyRow.scopes === 'string' ? JSON.parse(keyRow.scopes) : keyRow.scopes;
 
       if (keyRow.environment === 'partner' || scopes.includes('partner:all') || scopes.includes('partner:tenants:write')) {

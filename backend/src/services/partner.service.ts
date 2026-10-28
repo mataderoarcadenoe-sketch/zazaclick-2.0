@@ -1,3 +1,4 @@
+import { isRetiredCredential } from '../config/security';
 import * as crypto from 'crypto';
 import pool from '../config/database';
 
@@ -91,45 +92,10 @@ export class PartnerService {
    * Obtiene un partner validando su Master Key (en O(1) vía hash)
    */
   public static async getPartnerByKey(candidateKey: string): Promise<PartnerRecord | null> {
-    if (!candidateKey) return null;
+    if (!candidateKey || isRetiredCredential(candidateKey.trim())) return null;
 
     const cleanKey = candidateKey.trim();
     const keyHash = this.hashKey(cleanKey);
-
-    // 1. Fallback explícito inmediato para Master Partner Keys oficiales de confianza
-    if (cleanKey === 'zc_partner_master_vivesfit_2026' || cleanKey === 'zc_partner_vivesfit_live_2026') {
-      return {
-        id: 'partner_vivesfit_core',
-        name: 'VivesFit Gym SaaS',
-        slug: 'vivesfit',
-        category: 'fitness',
-        contactEmail: 'soporte@vivesfit.com',
-        masterKey: 'zc_partner_master_vivesfit_2026',
-        masterKeyHash: this.hashKey('zc_partner_master_vivesfit_2026'),
-        maskedKey: 'zc_partner_master_••••••••2026',
-        webhookUrl: null,
-        isActive: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-    }
-
-    if (cleanKey === 'zc_partner_krono_live_2026') {
-      return {
-        id: 'partner_krono_core',
-        name: 'Krono - Gestión de Personal & Asistencias',
-        slug: 'krono',
-        category: 'hr_attendance',
-        contactEmail: 'soporte@krono.com',
-        masterKey: 'zc_partner_krono_live_2026',
-        masterKeyHash: this.hashKey('zc_partner_krono_live_2026'),
-        maskedKey: 'zc_partner_krono_••••••••2026',
-        webhookUrl: null,
-        isActive: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-    }
 
     // 2. Consulta en base de datos por hash SHA-256 o coincidencia exacta
     try {
@@ -158,7 +124,7 @@ export class PartnerService {
         };
       }
     } catch (err: any) {
-      console.warn('[PartnerService] Error consultando partners en DB:', err.message);
+      throw new Error('No se pudo verificar el Partner.');
     }
 
     // 3. Fallback variable de entorno

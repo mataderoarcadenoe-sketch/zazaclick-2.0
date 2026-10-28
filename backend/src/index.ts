@@ -20,8 +20,12 @@ import { evolutionGoEngine } from './engines/evolution-go/EvolutionGoEngine';
 import { requestIdMiddleware } from './middleware/request-id.middleware';
 import { globalRateLimiter } from './middleware/rate-limiter.middleware';
 import redis from './config/redis';
+import { jwtSecret } from './config/security';
+import { MESSAGE_OPERATIONS_SCHEMA } from './config/message-operations-schema';
+import messageOperationRoutes from './routes/message-operation.routes';
 
 dotenv.config();
+jwtSecret();
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
@@ -81,7 +85,8 @@ app.use(cors({
     'X-Correlation-Id',
     'X-RateLimit-Limit',
     'X-RateLimit-Remaining',
-    'Retry-After'
+    'Retry-After',
+    'X-Operation-Id'
   ],
   credentials: true,
   optionsSuccessStatus: 200
@@ -111,6 +116,8 @@ app.use('/api/v1/b2b', b2bRoutes);
 // Developer Platform v1 API Routes & OpenAPI Specification
 app.use('/v1', v1Routes);
 app.use('/api/v1', v1Routes);
+app.use('/v1/message-operations', messageOperationRoutes);
+app.use('/api/v1/message-operations', messageOperationRoutes);
 app.use('/instances', v1Routes);
 app.use('/instance', v1Routes);
 app.use('/', openapiRoutes);
@@ -121,7 +128,8 @@ app.get(['/', '/health'], (req, res) => {
   res.json({
     status: 'ok',
     service: 'Zaza Click 2.0 — WhatsApp API SaaS Gateway',
-    version: '2.0.0',
+    version: '2.0.1',
+    message_operations: 'durable-v1',
     documentation: 'https://api.zazaclick.sbs/openapi.json',
     developer_platform: 'https://app.zazaclick.sbs',
     port: PORT,
@@ -208,6 +216,7 @@ async function startServer() {
   try {
     console.log('🔄 Inicializando base de datos SaaS Core...');
     await initDatabase();
+    await pool.query(MESSAGE_OPERATIONS_SCHEMA);
 
     console.log('🔌 [Engines] Registrando motor oficial Evolution Go (Whatsmeow)...');
     engineRegistry.register(evolutionGoEngine);
@@ -229,6 +238,7 @@ async function startServer() {
     });
   } catch (error) {
     console.error('❌ Error fatal al iniciar el servidor:', error);
+    process.exit(1);
   }
 }
 

@@ -474,62 +474,8 @@ export async function initDatabase() {
     WHERE role = 'admin' AND email != 'syscomecosistemadigital@gmail.com';
   `);
 
-  // 15. Seed de Partners Oficiales (VivesFit + Krono)
-  const vivesfitKey = 'zc_partner_master_vivesfit_2026';
-  const vivesfitHash = crypto.createHash('sha256').update(vivesfitKey).digest('hex');
-  const vivesfitMasked = 'zc_partner_master_••••••••2026';
+  // Partners and tenant membership are provisioned explicitly; startup never restores public keys.
 
-  await safeQuery('Seed VivesFit', `
-    INSERT INTO partners (id, name, slug, category, contact_email, master_key, master_key_hash, masked_key, is_active)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true)
-    ON CONFLICT (id) DO UPDATE SET 
-      name = EXCLUDED.name,
-      master_key = EXCLUDED.master_key, 
-      master_key_hash = EXCLUDED.master_key_hash, 
-      masked_key = EXCLUDED.masked_key,
-      is_active = true;
-  `, [
-    'partner_vivesfit_core',
-    'VivesFit Gym SaaS',
-    'vivesfit',
-    'fitness',
-    'soporte@vivesfit.com',
-    vivesfitKey,
-    vivesfitHash,
-    vivesfitMasked
-  ]);
-
-  const kronoKey = 'zc_partner_krono_live_2026';
-  const kronoHash = crypto.createHash('sha256').update(kronoKey).digest('hex');
-  const kronoMasked = 'zc_partner_krono_••••••••2026';
-
-  await safeQuery('Seed Krono', `
-    INSERT INTO partners (id, name, slug, category, contact_email, master_key, master_key_hash, masked_key, is_active)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true)
-    ON CONFLICT (id) DO UPDATE SET 
-      name = EXCLUDED.name,
-      master_key = EXCLUDED.master_key, 
-      master_key_hash = EXCLUDED.master_key_hash, 
-      masked_key = EXCLUDED.masked_key,
-      is_active = true;
-  `, [
-    'partner_krono_core',
-    'Krono - Gestión de Personal & Asistencias',
-    'krono',
-    'hr_attendance',
-    'soporte@krono.com',
-    kronoKey,
-    kronoHash,
-    kronoMasked
-  ]);
-
-  // Asignar los gimnasios existentes formalmente a partner_vivesfit_core
-  await safeQuery('Assign VivesFit gyms', `
-    UPDATE users 
-    SET partner_id = 'partner_vivesfit_core' 
-    WHERE (external_id LIKE 'gym_%' OR email LIKE '%vivesfit%' OR email LIKE '%gymbra%')
-      AND (partner_id IS NULL OR partner_id = '');
-  `);
 
   console.log('🚀 [Database] Estructura SaaS Core, Licenciamiento, Partners Multi-Tenant y Auditoría inicializadas exitosamente.');
 }
