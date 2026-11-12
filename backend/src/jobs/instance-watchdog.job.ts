@@ -37,37 +37,37 @@ export async function runWatchdogCycle(): Promise<void> {
         const isLiveConnected = Boolean(stateRes.data?.isConnected);
         const liveState = stateRes.data?.state || (isLiveConnected ? 'connected' : 'disconnected');
 
-        // Caso 1: La instancia está físicamente conectada en WhatsApp pero en BD figuraba desconectada o reconectando
-        if (isLiveConnected && status !== 'connected') {
-          console.log(`✅ [Watchdog] Instancia "${instance_name}" detectada viva. Sincronizando BD a 'connected'.`);
-          await pool.query(
-            "UPDATE instances SET status = 'connected', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1",
-            [instance_name]
-          );
+        // Caso 1: La instancia está físicamente conectada en WhatsApp
+        if (isLiveConnected) {
+          if (status !== 'connected') {
+            console.log(`✅ [Watchdog] Instancia "${instance_name}" detectada viva. Sincronizando BD a 'connected'.`);
+            await pool.query(
+              "UPDATE instances SET status = 'connected', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1",
+              [instance_name]
+            );
 
-          const io = getIO();
-          if (io) {
-            io.to(`user_${user_id}`).emit('connection_status', {
-              instance: instance_name,
-              status: 'connected',
-              connectionState: 'open'
-            });
+            const io = getIO();
+            if (io) {
+              io.to(`user_${user_id}`).emit('connection_status', {
+                instance: instance_name,
+                status: 'connected',
+                connectionState: 'open'
+              });
+            }
           }
           continue;
         }
 
-        // Si la instancia está en 'disconnected', está esperando escaneo de QR, o nunca ha vinculado un JID, NO forzar reconexión
-        if (status === 'disconnected' || (qrcode && String(qrcode).length > 10) || !jid) {
-          continue;
-        }
-        if (!isLiveConnected) {
+        // Caso 2: Instancia con JID guardado (sesión previa vinculada) que perdió la conexión
+        // NO omitir si status es 'disconnected': Si se cayó la conexión, ¡precisamente hay que revivirla!
+        if (jid && !isLiveConnected) {
           const acquired = await redis.set(lockKey, '1', 'PX', 45000, 'NX');
           if (acquired !== 'OK') {
             // Ya hay una reconexión activa por webhook o llamada previa
             continue;
           }
 
-          console.log(`🐕 [Watchdog] Instancia "${instance_name}" sin conexión activa (liveState=${liveState}, status=${status}). Intentando reactivación silenciosa...`);
+          console.log(`🐕 [Watchdog] Instancia vinculada "${instance_name}" (${jid}) desconectada (liveState=${liveState}, status=${status}). Auto-recuperando silenciosamente...`);
 
           let reconnectRes: any = null;
           if (typeof (engine as any).reconnect === 'function') {
@@ -91,7 +91,7 @@ export async function runWatchdogCycle(): Promise<void> {
               });
             }
           } else {
-            // Mantener en 'reconnecting' para preservar la sesión persistida
+            // Marcar en 'reconnecting' para indicar al frontend que el centinela sigue intentando
             if (status !== 'reconnecting') {
               await pool.query(
                 "UPDATE instances SET status = 'reconnecting', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1",
@@ -125,18 +125,18 @@ export async function runWatchdogCycle(): Promise<void> {
 }
 
 /**
- * Iniciar el centinela en segundo plano (Intervalo: cada 90 segundos)
+ * Iniciar el centinela en segundo plano (Intervalo optimizado: cada 60 segundos)
  */
 export function startInstanceWatchdog(): void {
-  console.log('🐕 [Watchdog] Centinela de auto-reconexión iniciado (Intervalo: cada 90 segundos)...');
+  console.log('🐕 [Watchdog] Centinela de auto-reconexión iniciado (Intervalo: cada 60 segundos)...');
 
-  // Ejecutar primer ciclo a los 20 segundos tras arrancar
+  // Ejecutar primer ciclo a los 15 segundos tras arrancar el backend
   setTimeout(() => {
     runWatchdogCycle();
-  }, 20000);
+  }, 15000);
 
-  // Intervalo recurrente cada 90 segundos (90,000 ms)
+  // Intervalo recurrente cada 60 segundos (60,000 ms)
   setInterval(() => {
     runWatchdogCycle();
-  }, 90 * 1000);
+  }, 60 * 1000);
 }

@@ -341,6 +341,44 @@ router.post('/reconnect/:instanceName', authMiddleware, reconnectHandler);
 router.post('/:instanceName/reconnect', authMiddleware, reconnectHandler);
 
 /**
+ * POST /reset/:instanceName y POST /:instanceName/reset - Reciclaje y auto-curación de socket
+ */
+const resetHandler = async (req: AuthenticatedRequest, res: Response) => {
+  const { instanceName } = req.params;
+  try {
+    const isElevated = req.userRole === 'admin' || req.userRole === 'partner';
+    const verifyRes = isElevated
+      ? await pool.query('SELECT id, status FROM instances WHERE instance_name = $1 OR name = $1', [instanceName])
+      : await pool.query('SELECT id, status FROM instances WHERE user_id = $1 AND (instance_name = $2 OR name = $2)', [req.userId, instanceName]);
+
+    if (verifyRes.rows.length === 0) {
+      return res.status(403).json({ success: false, error: 'Acceso no autorizado a esta instancia.' });
+    }
+
+    const engine = await engineRouter.getEngineForInstance(instanceName);
+    if (typeof (engine as any).recycleInstanceSocket === 'function') {
+      await (engine as any).recycleInstanceSocket(instanceName);
+    } else if (typeof (engine as any).reconnect === 'function') {
+      await (engine as any).reconnect(instanceName);
+    }
+
+    const stateRes = await engine.getConnectionState(instanceName);
+    res.json({
+      success: true,
+      instanceName,
+      message: 'Socket reciclado exitosamente sin reiniciar contenedor.',
+      state: stateRes.data?.state || 'disconnected',
+      isConnected: Boolean(stateRes.data?.isConnected)
+    });
+  } catch (err: any) {
+    console.error('[ResetHandler] Error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+router.post('/reset/:instanceName', authMiddleware, resetHandler);
+router.post('/:instanceName/reset', authMiddleware, resetHandler);
+
+/**
  * DELETE /delete/:instanceName y DELETE /:instanceName - Eliminar instancia
  */
 const deleteInstanceHandler = async (req: AuthenticatedRequest, res: Response) => {

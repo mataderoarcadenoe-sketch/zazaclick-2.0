@@ -288,16 +288,37 @@ export class EvolutionGoEngine implements WhatsAppEngine {
         }, Date.now() - start);
       }
 
+      let reconnectedOk = false;
       try {
-        await client.post('/instance/reconnect', {}, { headers: { apikey: auth.token } });
-      } catch {}
+        const recRes = await client.post('/instance/reconnect', {}, { headers: { apikey: auth.token } });
+        if (recRes.status === 200) reconnectedOk = true;
+      } catch (recErr: any) {
+        const errDetail = String(recErr.response?.data?.error || recErr.message || '');
+        console.warn(`[EvolutionGoEngine] /instance/reconnect para "${instanceName}" falló (${errDetail}). Activando fallback /instance/connect...`);
+      }
+
+      // Si /instance/reconnect falló o el cliente estaba cerrado en Whatsmeow, llamar a /instance/connect
+      if (!reconnectedOk) {
+        try {
+          await client.post(
+            '/instance/connect',
+            {
+              subscribe: ['MESSAGE', 'READ_RECEIPT', 'PRESENCE', 'CHAT_PRESENCE', 'CALL'],
+              immediate: true
+            },
+            { headers: { apikey: auth.token } }
+          );
+        } catch (connErr: any) {
+          console.warn(`[EvolutionGoEngine] /instance/connect en reconnect fallback falló:`, connErr.message);
+        }
+      }
 
       // Esperar que whatsmeow restaure el socket
       let state = 'connecting';
       let isConnected = false;
 
-      for (let attempt = 0; attempt < 3; attempt++) {
-        await new Promise(resolve => setTimeout(resolve, 1500));
+      for (let attempt = 0; attempt < 4; attempt++) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
         const stateRes = await this.getConnectionState(instanceName);
         if (stateRes.data?.isConnected) {
           isConnected = true;
@@ -318,6 +339,88 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     } catch (err: any) {
       const latencyMs = Date.now() - start;
       return EvolutionGoMapper.mapFailure(err, latencyMs);
+    }
+  }
+
+  /**
+   * Auto-Curación: Recicla el socket y cliente Go en memoria de Evolution Go sin reiniciar el contenedor.
+   * Elimina el cliente zombi trabado de la memoria RAM de Go, recrea el runtime con las mismas
+   * credenciales y reconecta el socket limpiamente.
+   */
+  public async recycleInstanceSocket(instanceName: string): Promise<EngineResult<boolean>> {
+    const start = Date.now();
+    try {
+      const client = this.getClient();
+      const globalKey = this.getGlobalApiKey();
+      const BACKEND_URL = process.env.BACKEND_URL || 'https://api.zazaclick.sbs';
+      const webhookUrl = `${BACKEND_URL}/api/webhooks/whatsapp`;
+
+      // 1. Resolver ID y token de la instancia
+      let auth = await this.resolveInstanceAuth(instanceName);
+
+      let targetId = auth.id;
+      if (!targetId) {
+        try {
+          const allRes = await client.get('/instance/all', { headers: { apikey: globalKey } });
+          const list = Array.isArray(allRes.data?.data) ? allRes.data.data : [];
+          const found = list.find((i: any) => i.name === instanceName);
+          if (found?.id) targetId = found.id;
+        } catch {}
+      }
+
+      // 2. Destruir el runtime zombi de la memoria de Go
+      if (targetId) {
+        try {
+          await client.delete(`/instance/delete/${targetId}`, { headers: { apikey: globalKey } });
+          console.log(`🧹 [EvolutionGoEngine] Socket zombi de "${instanceName}" (ID=${targetId}) purgado de memoria.`);
+        } catch (delErr: any) {
+          console.warn(`[EvolutionGoEngine] Advertencia purgando socket zombi:`, delErr.message);
+        }
+      }
+
+      // 3. Recrear el runtime fresco en Evolution Go con el mismo token
+      const instanceToken = (auth.token && auth.token !== globalKey) ? auth.token : crypto.randomUUID().toUpperCase();
+      const payload = {
+        name: instanceName,
+        token: instanceToken,
+        webhook: webhookUrl,
+        events: ['ALL']
+      };
+
+      try {
+        await client.post('/instance/create', payload, { headers: { apikey: globalKey } });
+      } catch (createErr: any) {
+        const errMsg = String(createErr.response?.data?.error || createErr.message || '');
+        if (!errMsg.includes('duplicate') && !errMsg.includes('already exists')) {
+          console.warn(`[EvolutionGoEngine] Error al recrear instancia en create:`, errMsg);
+        }
+      }
+
+      // 4. Reconectar inmediatamente con suscripciones completas
+      try {
+        await client.post(
+          '/instance/connect',
+          {
+            subscribe: ['MESSAGE', 'READ_RECEIPT', 'PRESENCE', 'CHAT_PRESENCE', 'CALL'],
+            immediate: true
+          },
+          { headers: { apikey: instanceToken } }
+        );
+      } catch {}
+
+      // 5. Sincronizar en base de datos
+      await pool.query(
+        `UPDATE instances 
+         SET token = $1, api_key = $1, status = 'disconnected', qrcode = NULL, updated_at = CURRENT_TIMESTAMP
+         WHERE instance_name = $2 OR name = $2`,
+        [instanceToken, instanceName]
+      ).catch(() => {});
+
+      this.circuitBreaker.recordSuccess();
+      return EvolutionGoMapper.mapSuccess(true, Date.now() - start);
+    } catch (err: any) {
+      console.error(`❌ [EvolutionGoEngine] Error en recycleInstanceSocket para "${instanceName}":`, err.message);
+      return EvolutionGoMapper.mapFailure(err, Date.now() - start);
     }
   }
 
@@ -374,15 +477,14 @@ export class EvolutionGoEngine implements WhatsAppEngine {
         };
       }
 
-      // 4. CRÍTICO: Solo llamar a POST /instance/connect si el socket NO está ya abierto.
-      // Llamar a /instance/connect cuando Connected === true envía una señal kill al socket en pleno escaneo de QR.
+      // 4. Iniciar socket solo si no está conectado
       if (!isSocketConnected) {
         try {
           await client.post(
             '/instance/connect',
             {
               subscribe: ['MESSAGE', 'READ_RECEIPT', 'PRESENCE', 'CHAT_PRESENCE', 'CALL'],
-              immediate: false
+              immediate: true
             },
             { headers: { apikey: auth.token } }
           );
@@ -405,9 +507,11 @@ export class EvolutionGoEngine implements WhatsAppEngine {
         }
       }
 
-      // 5. Obtener el QR activo sin reiniciar ni interrumpir el WebSocket (polling suave de hasta 12 intentos)
+      // 5. Polling inicial rápido para obtener el QR activo (hasta 3 intentos de 700ms)
       const globalKey = this.getGlobalApiKey();
-      for (let attempt = 1; attempt <= 12; attempt++) {
+      let foundQr = '';
+
+      for (let attempt = 1; attempt <= 3; attempt++) {
         try {
           let response: any;
           try {
@@ -429,8 +533,8 @@ export class EvolutionGoEngine implements WhatsAppEngine {
           const cleanQr = rawQr ? String(rawQr).split('|')[0] : '';
 
           if (cleanQr && cleanQr.length > 20) {
-            this.circuitBreaker.recordSuccess();
-            return EvolutionGoMapper.mapSuccess({ qrcode: cleanQr }, Date.now() - start);
+            foundQr = cleanQr;
+            break;
           }
         } catch (err: any) {
           const errMsg = String(err.response?.data?.error || err.message || '');
@@ -478,24 +582,81 @@ export class EvolutionGoEngine implements WhatsAppEngine {
               };
             }
             if (row.qrcode && String(row.qrcode).length > 20) {
-              const cleanDbQr = String(row.qrcode).split('|')[0];
-              this.circuitBreaker.recordSuccess();
-              return EvolutionGoMapper.mapSuccess({ qrcode: cleanDbQr }, Date.now() - start);
+              foundQr = String(row.qrcode).split('|')[0];
+              break;
             }
           }
         } catch {}
 
-        if (attempt < 12) {
-          await new Promise(r => setTimeout(r, 750));
+        await new Promise(r => setTimeout(r, 700));
+      }
+
+      if (foundQr) {
+        this.circuitBreaker.recordSuccess();
+        return EvolutionGoMapper.mapSuccess({ qrcode: foundQr }, Date.now() - start);
+      }
+
+      // 6. HOT SOCKET RECYCLING AUTÓNOMO:
+      // Si tras 3 intentos no hubo QR o el socket está zombi en memoria,
+      // reciclar el socket automáticamente purgando la memoria de Go sin reiniciar contenedor.
+      console.log(`🔄 [EvolutionGoEngine] Socket trabado detectado en "${instanceName}". Ejecutando Hot Socket Recycling autónomo...`);
+      await this.recycleInstanceSocket(instanceName);
+      auth = await this.resolveInstanceAuth(instanceName);
+
+      // 7. Polling post-reciclaje (hasta 6 intentos)
+      for (let postAttempt = 1; postAttempt <= 6; postAttempt++) {
+        await new Promise(r => setTimeout(r, 800));
+        try {
+          let response: any;
+          try {
+            response = await client.get('/instance/qr', {
+              headers: { apikey: auth.token }
+            });
+          } catch (qrErr: any) {
+            if (qrErr.response?.status === 401 && auth.token !== globalKey) {
+              response = await client.get('/instance/qr', {
+                headers: { apikey: globalKey }
+              });
+            } else {
+              throw qrErr;
+            }
+          }
+
+          const resData = response?.data?.data || response?.data;
+          const rawQr = resData?.qrcode || resData?.Qrcode || resData?.base64 || response?.data?.qrcode;
+          const cleanQr = rawQr ? String(rawQr).split('|')[0] : '';
+
+          if (cleanQr && cleanQr.length > 20) {
+            console.log(`✅ [EvolutionGoEngine] QR generado exitosamente tras Hot Socket Recycling en intento ${postAttempt}!`);
+            this.circuitBreaker.recordSuccess();
+            return EvolutionGoMapper.mapSuccess({ qrcode: cleanQr }, Date.now() - start);
+          }
+        } catch (postErr: any) {
+          const errMsg = String(postErr.response?.data?.error || postErr.message || '');
+          if (errMsg.includes('already logged in') || errMsg.includes('already connected')) {
+            return {
+              success: true,
+              engine: this.engineType,
+              data: {
+                qrcode: '',
+                alreadyConnected: true,
+                status: 'connected',
+                state: 'connected',
+                isConnected: true
+              } as any,
+              latencyMs: Date.now() - start
+            };
+          }
         }
       }
 
+      // 8. Mensaje amigable y auto-reintentable
       return {
         success: false,
         engine: this.engineType,
         error: {
           code: 'ENGINE_SEND_FAILED',
-          message: 'Generando código QR en Evolution Go. Por favor reintenta en unos segundos.',
+          message: 'Código QR en generación tras auto-reciclaje de socket. Por favor reintenta en 3 segundos.',
           isRetryable: true,
           statusCode: 422
         },

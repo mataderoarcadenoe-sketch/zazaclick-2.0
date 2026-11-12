@@ -459,6 +459,55 @@ router.get('/instance/:instanceName/status', apiKeyOrTokenAuth, getStatusEndpoin
 router.get('/instances/:instanceName/connectionState', apiKeyOrTokenAuth, getStatusEndpointHandler);
 router.get('/instance/connectionState/:instanceName', apiKeyOrTokenAuth, getStatusEndpointHandler);
 
+/**
+ * POST /v1/instances/:instanceName/reset — Auto-curación y reseteo en caliente de socket
+ */
+const resetEndpointHandler = async (req: AuthenticatedRequest, res: Response) => {
+  const { instanceName } = req.params;
+  try {
+    const isElevated = req.userRole === 'partner' || req.userRole === 'admin';
+    const verifyRes = isElevated
+      ? await pool.query('SELECT id FROM instances WHERE instance_name = $1 OR name = $1', [instanceName])
+      : await pool.query('SELECT id FROM instances WHERE user_id = $1 AND (instance_name = $2 OR name = $2)', [req.userId, instanceName]);
+
+    if (verifyRes.rows.length === 0) {
+      return res.status(403).json({
+        success: false,
+        code: 'FORBIDDEN',
+        error: 'Acceso no autorizado a esta instancia.'
+      });
+    }
+
+    const engine = await engineRouter.getEngineForInstance(instanceName);
+    if (typeof (engine as any).recycleInstanceSocket === 'function') {
+      await (engine as any).recycleInstanceSocket(instanceName);
+    } else if (typeof (engine as any).reconnect === 'function') {
+      await (engine as any).reconnect(instanceName);
+    }
+
+    const stateRes = await engine.getConnectionState(instanceName);
+    return res.json({
+      success: true,
+      instanceName,
+      message: 'Socket y descriptor en memoria reciclados exitosamente sin reiniciar contenedor.',
+      state: stateRes.data?.state || 'disconnected',
+      isConnected: Boolean(stateRes.data?.isConnected)
+    });
+  } catch (err: any) {
+    console.error('[v1/instances/reset] Error:', err.message);
+    return res.status(500).json({
+      success: false,
+      code: 'INTERNAL_ERROR',
+      error: `Error al reiniciar socket: ${err.message}`
+    });
+  }
+};
+
+router.post('/instances/:instanceName/reset', apiKeyOrTokenAuth, resetEndpointHandler);
+router.post('/instances/reset/:instanceName', apiKeyOrTokenAuth, resetEndpointHandler);
+router.post('/instance/:instanceName/reset', apiKeyOrTokenAuth, resetEndpointHandler);
+router.post('/instance/reset/:instanceName', apiKeyOrTokenAuth, resetEndpointHandler);
+
 // ==========================================
 // 1.1. GESTIÓN DE GRUPOS DE WHATSAPP (ERP / API)
 // ==========================================
