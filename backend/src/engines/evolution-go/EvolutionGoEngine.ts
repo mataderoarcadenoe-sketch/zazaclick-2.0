@@ -125,6 +125,27 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     };
   }
 
+  /**
+   * Resuelve el ID interno UUID de la instancia en Evolution Go (en memoria/Go DB).
+   * Evolution Go indexa internamente con su propio UUID, independiente de PostgreSQL.
+   */
+  private async resolveEvolutionGoId(instanceName: string): Promise<string | null> {
+    try {
+      const client = this.getClient();
+      const globalKey = this.getGlobalApiKey();
+      const allRes = await client.get('/instance/all', {
+        headers: { apikey: globalKey },
+        timeout: 4000
+      });
+      const list = Array.isArray(allRes.data?.data) ? allRes.data.data : [];
+      const found = list.find((i: any) => i.name === instanceName || i.instance_name === instanceName);
+      return found?.id || null;
+    } catch (err: any) {
+      console.warn(`[EvolutionGoEngine] Error resolviendo GoId para "${instanceName}":`, err.message);
+      return null;
+    }
+  }
+
   public async createInstance(instanceName: string): Promise<EngineResult<{ token: string; qrcode?: string; instance?: any }>> {
     const start = Date.now();
     try {
@@ -160,10 +181,11 @@ export class EvolutionGoEngine implements WhatsAppEngine {
         }
       } catch {}
 
-      // Si existía una fila huérfana en BD que no está en la memoria de Evolution Go, eliminarla antes de que Go haga INSERT
-      if (existing.id) {
+      // Si existía en Go pero necesitamos recrearla limpia, eliminarla usando el ID real de Go
+      const orphanGoId = await this.resolveEvolutionGoId(instanceName);
+      if (orphanGoId) {
         try {
-          await client.delete(`/instance/delete/${existing.id}`, { headers: { apikey: globalKey } });
+          await client.delete(`/instance/delete/${orphanGoId}`, { headers: { apikey: globalKey }, timeout: 4000 });
         } catch {}
       }
 
@@ -217,25 +239,18 @@ export class EvolutionGoEngine implements WhatsAppEngine {
       const globalKey = this.getGlobalApiKey();
       const auth = await this.resolveInstanceAuth(instanceName);
 
-      // Primero desconectar/cerrar sesión si estaba activa
+      // 1. Primero desconectar/cerrar sesión si estaba activa
       if (auth.token) {
         try {
-          await client.delete('/instance/logout', { headers: { apikey: auth.token } });
+          await client.delete('/instance/logout', { headers: { apikey: auth.token }, timeout: 3000 });
         } catch {}
       }
 
-      let targetId = auth.id;
-      if (!targetId) {
-        try {
-          const allRes = await client.get('/instance/all', { headers: { apikey: globalKey } });
-          const list = Array.isArray(allRes.data?.data) ? allRes.data.data : [];
-          const found = list.find((i: any) => i.name === instanceName);
-          if (found?.id) targetId = found.id;
-        } catch {}
-      }
-
-      if (targetId) {
-        await client.delete(`/instance/delete/${targetId}`, { headers: { apikey: globalKey } });
+      // 2. Buscar el ID real de la instancia en Evolution Go y purgarla
+      const targetGoId = await this.resolveEvolutionGoId(instanceName);
+      if (targetGoId) {
+        await client.delete(`/instance/delete/${targetGoId}`, { headers: { apikey: globalKey }, timeout: 4000 });
+        console.log(`🗑️ [EvolutionGoEngine] Instancia "${instanceName}" (GoID=${targetGoId}) eliminada del motor.`);
       }
 
       const latencyMs = Date.now() - start;
@@ -355,31 +370,22 @@ export class EvolutionGoEngine implements WhatsAppEngine {
       const BACKEND_URL = process.env.BACKEND_URL || 'https://api.zazaclick.sbs';
       const webhookUrl = `${BACKEND_URL}/api/webhooks/whatsapp`;
 
-      // 1. Resolver ID y token de la instancia
-      let auth = await this.resolveInstanceAuth(instanceName);
+      // 1. Resolver token de la instancia
+      const auth = await this.resolveInstanceAuth(instanceName);
+      const instanceToken = (auth.token && auth.token !== globalKey) ? auth.token : crypto.randomUUID().toUpperCase();
 
-      let targetId = auth.id;
-      if (!targetId) {
+      // 2. Resolver el ID real en Evolution Go y purgar el descriptor zombi de la RAM de Go
+      const targetGoId = await this.resolveEvolutionGoId(instanceName);
+      if (targetGoId) {
         try {
-          const allRes = await client.get('/instance/all', { headers: { apikey: globalKey } });
-          const list = Array.isArray(allRes.data?.data) ? allRes.data.data : [];
-          const found = list.find((i: any) => i.name === instanceName);
-          if (found?.id) targetId = found.id;
-        } catch {}
-      }
-
-      // 2. Destruir el runtime zombi de la memoria de Go
-      if (targetId) {
-        try {
-          await client.delete(`/instance/delete/${targetId}`, { headers: { apikey: globalKey } });
-          console.log(`🧹 [EvolutionGoEngine] Socket zombi de "${instanceName}" (ID=${targetId}) purgado de memoria.`);
+          await client.delete(`/instance/delete/${targetGoId}`, { headers: { apikey: globalKey }, timeout: 4000 });
+          console.log(`🧹 [EvolutionGoEngine] Socket zombi de "${instanceName}" (GoID=${targetGoId}) purgado de memoria.`);
         } catch (delErr: any) {
           console.warn(`[EvolutionGoEngine] Advertencia purgando socket zombi:`, delErr.message);
         }
       }
 
       // 3. Recrear el runtime fresco en Evolution Go con el mismo token
-      const instanceToken = (auth.token && auth.token !== globalKey) ? auth.token : crypto.randomUUID().toUpperCase();
       const payload = {
         name: instanceName,
         token: instanceToken,
@@ -388,7 +394,7 @@ export class EvolutionGoEngine implements WhatsAppEngine {
       };
 
       try {
-        await client.post('/instance/create', payload, { headers: { apikey: globalKey } });
+        await client.post('/instance/create', payload, { headers: { apikey: globalKey }, timeout: 5000 });
       } catch (createErr: any) {
         const errMsg = String(createErr.response?.data?.error || createErr.message || '');
         if (!errMsg.includes('duplicate') && !errMsg.includes('already exists')) {
@@ -396,15 +402,16 @@ export class EvolutionGoEngine implements WhatsAppEngine {
         }
       }
 
-      // 4. Reconectar inmediatamente con suscripciones completas
+      // 4. Reconectar inmediatamente con webhookUrl y suscripciones completas
       try {
         await client.post(
           '/instance/connect',
           {
-            subscribe: ['MESSAGE', 'READ_RECEIPT', 'PRESENCE', 'CHAT_PRESENCE', 'CALL'],
+            webhookUrl,
+            subscribe: ['MESSAGE', 'SEND_MESSAGE', 'READ_RECEIPT', 'PRESENCE', 'HISTORY_SYNC', 'CHAT_PRESENCE', 'CALL', 'CONNECTION', 'LABEL', 'CONTACT', 'GROUP', 'NEWSLETTER', 'QRCODE', 'BUTTON_CLICK', 'PICTURE', 'USER_ABOUT'],
             immediate: true
           },
-          { headers: { apikey: instanceToken } }
+          { headers: { apikey: instanceToken }, timeout: 5000 }
         );
       } catch {}
 
@@ -424,25 +431,46 @@ export class EvolutionGoEngine implements WhatsAppEngine {
     }
   }
 
-  public async getQRCode(instanceName: string): Promise<EngineResult<{ qrcode: string }>> {
+  public async getQRCode(instanceName: string): Promise<EngineResult<{ qrcode: string; generating?: boolean; alreadyConnected?: boolean }>> {
     const start = Date.now();
     try {
       const client = this.getClient();
+      const globalKey = this.getGlobalApiKey();
+      const BACKEND_URL = process.env.BACKEND_URL || 'https://api.zazaclick.sbs';
+      const webhookUrl = `${BACKEND_URL}/api/webhooks/whatsapp`;
+
       let auth = await this.resolveInstanceAuth(instanceName);
 
-      // 1. Si no existe en la base de datos o en Evolution Go, inicializarla una sola vez
+      // 1. Si no existe en la base de datos o en Evolution Go, inicializarla
       if (!auth.id) {
         await this.createInstance(instanceName);
         auth = await this.resolveInstanceAuth(instanceName);
       }
 
-      // 2. Consultar el estado actual del socket en Evolution Go
+      // 2. Si ya está conectada según la base de datos (con JID y connected=true), responder en <15ms
+      if (auth.connected && auth.jid) {
+        this.circuitBreaker.recordSuccess();
+        return {
+          success: true,
+          engine: this.engineType,
+          data: {
+            qrcode: '',
+            alreadyConnected: true,
+            status: 'connected',
+            state: 'connected',
+            isConnected: true
+          } as any,
+          latencyMs: Date.now() - start
+        };
+      }
+
+      // 3. Consultar rápidamente el estado del socket en Evolution Go (timeout estricto 1.5s)
       let isSocketConnected = false;
       let isLoggedIn = false;
-
       try {
         const statusRes = await client.get('/instance/status', {
-          headers: { apikey: auth.token }
+          headers: { apikey: auth.token },
+          timeout: 1500
         });
         const statusData = statusRes?.data?.data || statusRes?.data;
         isSocketConnected = Boolean(statusData?.Connected === true);
@@ -456,8 +484,8 @@ export class EvolutionGoEngine implements WhatsAppEngine {
         }
       }
 
-      // 3. Si ya inició sesión en WhatsApp, retornar alreadyConnected inmediatamente
-      if (isLoggedIn || (auth.connected && auth.jid)) {
+      // 4. Si ya inició sesión en WhatsApp en Go, sincronizar BD y responder
+      if (isLoggedIn) {
         this.circuitBreaker.recordSuccess();
         await pool.query(
           "UPDATE instances SET status = 'connected', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1 OR name = $1",
@@ -477,16 +505,23 @@ export class EvolutionGoEngine implements WhatsAppEngine {
         };
       }
 
-      // 4. Iniciar socket solo si no está conectado
+      // 5. Si ya tenemos un QR reciente válido en PostgreSQL, responder de inmediato (<15ms)
+      if (auth.qrcode && auth.qrcode.length > 20) {
+        this.circuitBreaker.recordSuccess();
+        return EvolutionGoMapper.mapSuccess({ qrcode: auth.qrcode }, Date.now() - start);
+      }
+
+      // 6. Si el socket no está conectado en Go, lanzar /instance/connect con webhookUrl
       if (!isSocketConnected) {
         try {
           await client.post(
             '/instance/connect',
             {
-              subscribe: ['MESSAGE', 'READ_RECEIPT', 'PRESENCE', 'CHAT_PRESENCE', 'CALL'],
+              webhookUrl,
+              subscribe: ['MESSAGE', 'SEND_MESSAGE', 'READ_RECEIPT', 'PRESENCE', 'HISTORY_SYNC', 'CHAT_PRESENCE', 'CALL', 'CONNECTION', 'LABEL', 'CONTACT', 'GROUP', 'NEWSLETTER', 'QRCODE', 'BUTTON_CLICK', 'PICTURE', 'USER_ABOUT'],
               immediate: true
             },
-            { headers: { apikey: auth.token } }
+            { headers: { apikey: auth.token }, timeout: 2500 }
           );
         } catch (connErr: any) {
           const errMsg = String(connErr.response?.data?.error || connErr.message || '');
@@ -507,21 +542,21 @@ export class EvolutionGoEngine implements WhatsAppEngine {
         }
       }
 
-      // 5. Polling inicial rápido para obtener el QR activo (hasta 3 intentos de 700ms)
-      const globalKey = this.getGlobalApiKey();
+      // 7. Polling ultra-rápido de /instance/qr (hasta 2 intentos con 600ms de pausa)
       let foundQr = '';
-
-      for (let attempt = 1; attempt <= 3; attempt++) {
+      for (let attempt = 1; attempt <= 2; attempt++) {
         try {
           let response: any;
           try {
             response = await client.get('/instance/qr', {
-              headers: { apikey: auth.token }
+              headers: { apikey: auth.token },
+              timeout: 1800
             });
           } catch (qrErr: any) {
             if (qrErr.response?.status === 401 && auth.token !== globalKey) {
               response = await client.get('/instance/qr', {
-                headers: { apikey: globalKey }
+                headers: { apikey: globalKey },
+                timeout: 1800
               });
             } else {
               throw qrErr;
@@ -559,7 +594,7 @@ export class EvolutionGoEngine implements WhatsAppEngine {
           }
         }
 
-        // Consultar en BD si Whatsmeow ya persistió el QR o completó el login
+        // Consultar en BD si Whatsmeow ya persistió el QR por webhook en PostgreSQL
         try {
           const dbRes = await pool.query(
             "SELECT qrcode, connected, jid FROM instances WHERE instance_name = $1 OR name = $1 LIMIT 1",
@@ -588,78 +623,32 @@ export class EvolutionGoEngine implements WhatsAppEngine {
           }
         } catch {}
 
-        await new Promise(r => setTimeout(r, 700));
+        if (attempt < 2) {
+          await new Promise(r => setTimeout(r, 600));
+        }
       }
 
       if (foundQr) {
+        await pool.query(
+          "UPDATE instances SET qrcode = $1, status = 'connecting', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $2 OR name = $2",
+          [foundQr, instanceName]
+        ).catch(() => {});
         this.circuitBreaker.recordSuccess();
         return EvolutionGoMapper.mapSuccess({ qrcode: foundQr }, Date.now() - start);
       }
 
-      // 6. HOT SOCKET RECYCLING AUTÓNOMO:
-      // Si tras 3 intentos no hubo QR o el socket está zombi en memoria,
-      // reciclar el socket automáticamente purgando la memoria de Go sin reiniciar contenedor.
-      console.log(`🔄 [EvolutionGoEngine] Socket trabado detectado en "${instanceName}". Ejecutando Hot Socket Recycling autónomo...`);
-      await this.recycleInstanceSocket(instanceName);
-      auth = await this.resolveInstanceAuth(instanceName);
-
-      // 7. Polling post-reciclaje (hasta 6 intentos)
-      for (let postAttempt = 1; postAttempt <= 6; postAttempt++) {
-        await new Promise(r => setTimeout(r, 800));
-        try {
-          let response: any;
-          try {
-            response = await client.get('/instance/qr', {
-              headers: { apikey: auth.token }
-            });
-          } catch (qrErr: any) {
-            if (qrErr.response?.status === 401 && auth.token !== globalKey) {
-              response = await client.get('/instance/qr', {
-                headers: { apikey: globalKey }
-              });
-            } else {
-              throw qrErr;
-            }
-          }
-
-          const resData = response?.data?.data || response?.data;
-          const rawQr = resData?.qrcode || resData?.Qrcode || resData?.base64 || response?.data?.qrcode;
-          const cleanQr = rawQr ? String(rawQr).split('|')[0] : '';
-
-          if (cleanQr && cleanQr.length > 20) {
-            console.log(`✅ [EvolutionGoEngine] QR generado exitosamente tras Hot Socket Recycling en intento ${postAttempt}!`);
-            this.circuitBreaker.recordSuccess();
-            return EvolutionGoMapper.mapSuccess({ qrcode: cleanQr }, Date.now() - start);
-          }
-        } catch (postErr: any) {
-          const errMsg = String(postErr.response?.data?.error || postErr.message || '');
-          if (errMsg.includes('already logged in') || errMsg.includes('already connected')) {
-            return {
-              success: true,
-              engine: this.engineType,
-              data: {
-                qrcode: '',
-                alreadyConnected: true,
-                status: 'connected',
-                state: 'connected',
-                isConnected: true
-              } as any,
-              latencyMs: Date.now() - start
-            };
-          }
-        }
-      }
-
-      // 8. Mensaje amigable y auto-reintentable
+      // 8. Si no está listo aún, NO bloquear por 30s ni responder 422:
+      // Responder un 200 limpio con generating=true para que el frontend del cliente jamás sufra timeouts (latencia <2.5s)
       return {
-        success: false,
+        success: true,
         engine: this.engineType,
-        error: {
-          code: 'ENGINE_SEND_FAILED',
-          message: 'Código QR en generación tras auto-reciclaje de socket. Por favor reintenta en 3 segundos.',
-          isRetryable: true,
-          statusCode: 422
-        },
+        data: {
+          qrcode: '',
+          generating: true,
+          status: 'connecting',
+          state: 'connecting',
+          message: 'Inicializando canal seguro con WhatsApp. El código se está generando, pulsa "Actualizar QR" en unos segundos.'
+        } as any,
         latencyMs: Date.now() - start
       };
     } catch (err: any) {

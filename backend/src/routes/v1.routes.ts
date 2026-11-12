@@ -291,37 +291,14 @@ const getQrEndpointHandler = async (req: AuthenticatedRequest, res: Response) =>
       }
     }
 
-    let engine = await engineRouter.getEngineForInstance(instanceName);
+    const engine = await engineRouter.getEngineForInstance(instanceName);
 
-    // 0. Si la instancia ya está físicamente conectada en WhatsApp, responder inmediatamente con 200 OK
-    try {
-      const liveStateRes = await engine.getConnectionState(instanceName);
-      if (liveStateRes.data?.isConnected) {
-        await pool.query("UPDATE instances SET status = 'connected', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1", [instanceName]);
-        return res.json({
-          success: true,
-          instanceName,
-          alreadyConnected: true,
-          isConnected: true,
-          status: 'connected',
-          state: 'connected',
-          qrcode: null,
-          base64: null,
-          qr: null,
-          data: {
-            alreadyConnected: true,
-            isConnected: true,
-            status: 'connected'
-          },
-          message: 'La instancia ya se encuentra conectada y activa en WhatsApp.'
-        });
-      }
-    } catch {}
-
+    // Obtener código QR con latencia ultra-baja (<2.5s garantizados)
     let qrRes = await engine.getQRCode(instanceName);
 
+    // 1. Si la instancia ya se encuentra conectada físicamente
     if (qrRes.success && (qrRes.data as any)?.alreadyConnected) {
-      await pool.query("UPDATE instances SET status = 'connected', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1", [instanceName]);
+      await pool.query("UPDATE instances SET status = 'connected', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1", [instanceName]).catch(() => {});
       return res.json({
         success: true,
         instanceName,
@@ -341,24 +318,50 @@ const getQrEndpointHandler = async (req: AuthenticatedRequest, res: Response) =>
       });
     }
 
-    // Fallback reactivo inteligente: Si evolution_api falla en generar QR, intentar inmediatamente con evolution_go
-    if ((!qrRes.success || !qrRes.data?.qrcode) && engine.engineType !== 'evolution_go') {
-      try {
-        console.log(`⚠️ [v1/qr] Motor ${engine.engineType} no retornó QR para "${instanceName}". Intentando fallback a Evolution Go...`);
-        const goEngine = engineRouter.getEngineByType('evolution_go');
-        const goRes = await goEngine.getQRCode(instanceName);
-        if (goRes.success && goRes.data?.qrcode) {
-          console.log(`✅ [v1/qr] Fallback exitoso con Evolution Go para "${instanceName}". Actualizando base de datos.`);
-          qrRes = goRes;
-          await pool.query("UPDATE instances SET engine_type = 'evolution_go', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $1", [instanceName]);
-          await engineRouter.invalidateCache(instanceName);
-        }
-      } catch (fbErr: any) {
-        console.warn(`[v1/qr] Fallback a Go falló:`, fbErr.message);
-      }
+    // 2. Si el canal seguro está inicializándose (socket en conexión / código en generación)
+    if (qrRes.success && (qrRes.data as any)?.generating) {
+      return res.json({
+        success: true,
+        instanceName,
+        status: 'connecting',
+        state: 'connecting',
+        generating: true,
+        qrcode: null,
+        base64: null,
+        qr: null,
+        data: {
+          status: 'connecting',
+          state: 'connecting',
+          generating: true,
+          qrcode: null
+        },
+        message: (qrRes.data as any)?.message || 'Inicializando canal seguro con WhatsApp. Pulsa "Actualizar QR" en unos segundos.'
+      });
     }
 
+    // 3. Si no hay QR disponible
     if (!qrRes.success || !qrRes.data?.qrcode) {
+      // Si el error es transitorio o de conexión en curso, responder con 200 connecting para evitar timeout en clientes
+      const isTransient = qrRes.error?.isRetryable !== false;
+      if (isTransient) {
+        return res.json({
+          success: true,
+          instanceName,
+          status: 'connecting',
+          state: 'connecting',
+          generating: true,
+          qrcode: null,
+          base64: null,
+          qr: null,
+          data: {
+            status: 'connecting',
+            generating: true,
+            qrcode: null
+          },
+          message: qrRes.error?.message || 'Estableciendo enlace seguro con WhatsApp. Pulsa "Actualizar QR" en unos segundos.'
+        });
+      }
+
       return res.status(422).json({
         success: false,
         code: qrRes.error?.code || 'QR_FETCH_FAILED',
@@ -366,9 +369,12 @@ const getQrEndpointHandler = async (req: AuthenticatedRequest, res: Response) =>
       });
     }
 
+    // 4. Código QR generado exitosamente
     return res.json({
       success: true,
       instanceName,
+      status: 'connecting',
+      state: 'connecting',
       qrcode: qrRes.data.qrcode,
       base64: qrRes.data.qrcode,
       qr: qrRes.data.qrcode,

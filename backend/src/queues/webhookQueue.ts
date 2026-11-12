@@ -119,10 +119,23 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
         
         console.log(`🔌 [QueueWorker] CONNECTION_UPDATE para "${instance}": connection=${connection}, reason=${reasonCode || 'N/A'} -> dbStatus=${dbStatus}`);
         
-        await pool.query(
-          'UPDATE instances SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE instance_name = $2 OR name = $2',
-          [dbStatus, instance]
-        );
+        const detectedJid = data?.jid || data?.owner || data?.userJid || data?.phone;
+        if (isConnected) {
+          await pool.query(
+            `UPDATE instances 
+             SET status = $1, qrcode = NULL, 
+                 jid = COALESCE($2, jid), 
+                 connected = true,
+                 updated_at = CURRENT_TIMESTAMP 
+             WHERE instance_name = $3 OR name = $3`,
+            [dbStatus, detectedJid || null, instance]
+          ).catch(() => {});
+        } else {
+          await pool.query(
+            'UPDATE instances SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE instance_name = $2 OR name = $2',
+            [dbStatus, instance]
+          ).catch(() => {});
+        }
         
         io.to(roomName).emit('connection_status', {
           instance: instance,
@@ -182,6 +195,12 @@ const worker = new Worker('webhook-queue', async (job: Job) => {
       const base64 = rawBase64 ? String(rawBase64).split('|')[0] : null;
       if (base64) {
         console.log(`📷 [QueueWorker] QRCODE_UPDATED para la instancia "${instance}"`);
+        // Persistir el código QR en Postgres para que cualquier consulta REST o B2B responda en <15ms
+        await pool.query(
+          "UPDATE instances SET qrcode = $1, status = 'connecting', updated_at = CURRENT_TIMESTAMP WHERE instance_name = $2 OR name = $2",
+          [base64, instance]
+        ).catch((err: any) => console.warn(`[QueueWorker] Error guardando QR en BD para "${instance}":`, err.message));
+
         io.to(roomName).emit('qrcode_updated', {
           instance: instance,
           qrcode: base64
